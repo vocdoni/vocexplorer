@@ -5,14 +5,14 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-// ProcsView renders the processes page
-type ProcsView struct {
+// ProcessView renders the processes page
+type ProcessView struct {
 	vecty.Core
 }
 
-// Render renders the ProcsView component
-func (t *ProcsView) Render() vecty.ComponentOrHTML {
-	return elem.Div{
-		NavBar{},
-	}
+// Render renders the ProcessView component
+func (t *ProcessView) Render() vecty.ComponentOrHTML {
+	return elem.Div(
+		&Header{currentPage: "processes"},
+	)
 }

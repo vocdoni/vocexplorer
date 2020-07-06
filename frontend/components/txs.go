@@ -12,7 +12,7 @@ type TxsView struct {
 
 // Render renders the TxsView component
 func (t *TxsView) Render() vecty.ComponentOrHTML {
-	return elem.Div{
-		NavBar{},
-	}
+	return elem.Div(
+		&Header{currentPage: "transactions"},
+	)
 }

@@ -12,7 +12,7 @@ type BlocksView struct {
 
 // Render renders the BlocksView component
 func (t *BlocksView) Render() vecty.ComponentOrHTML {
-	return elem.Div{
-		NavBar{},
-	}
+	return elem.Div(
+		&Header{currentPage: "blocks"},
+	)
 }

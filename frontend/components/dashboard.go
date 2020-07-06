@@ -12,7 +12,7 @@ type DashboardView struct {
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	return elem.Div{
-		&NavBar{},
-	}
+	return elem.Div(
+		&Header{currentPage: "dashboard"},
+	)
 }
