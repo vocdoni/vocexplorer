@@ -3,10 +3,9 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/nathanhack/vectyUI/nav"
 )
 
-// TxsView renders the transation page
+// TxsView renders the transaction page
 type TxsView struct {
 	vecty.Core
 }
@@ -14,7 +13,6 @@ type TxsView struct {
 // Render renders the TxsView component
 func (t *TxsView) Render() vecty.ComponentOrHTML {
 	return elem.Div{
-		NavBar{}
+		NavBar{},
 	}
 }
-
