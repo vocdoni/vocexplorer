@@ -33,7 +33,7 @@ func (nf *notFound) Render() vecty.ComponentOrHTML {
 		elem.Div(
 			vecty.Markup(prop.ID("home-top")),
 			elem.Heading1(
-				vecty.Text("page not found"),
+				vecty.Text("page not found!"),
 			),
 		),
 	)

@@ -21,6 +21,9 @@ func main() {
 	}
 	log.Infof("Server on: %v\n", urlR)
 	http.Handle("/", http.FileServer(http.Dir("./static")))
+	// http.Handle("/processes/", http.FileServer(http.Dir("./static")))
+	// http.Handle("/blocks/", http.FileServer(http.Dir("./static")))
+	// http.Handle("/txs/", http.FileServer(http.Dir("./static")))
 	err = http.ListenAndServe(urlR.Host, nil)
 	if err != nil {
 		log.Error(err)
