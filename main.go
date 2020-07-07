@@ -20,12 +20,18 @@ func main() {
 		return
 	}
 	log.Infof("Server on: %v\n", urlR)
+	// http.HandleFunc("/", indexHandler)
 	http.Handle("/", http.FileServer(http.Dir("./static")))
-	// http.Handle("/processes/", http.FileServer(http.Dir("./static")))
-	// http.Handle("/blocks/", http.FileServer(http.Dir("./static")))
-	// http.Handle("/txs/", http.FileServer(http.Dir("./static")))
+	http.HandleFunc("/processes", redirectHandler)
+	http.HandleFunc("/blocks", redirectHandler)
+	http.HandleFunc("/txs", redirectHandler)
+
 	err = http.ListenAndServe(urlR.Host, nil)
 	if err != nil {
 		log.Error(err)
 	}
+}
+
+func redirectHandler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusFound)
 }
