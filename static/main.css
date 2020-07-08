@@ -1,19 +1,30 @@
 pre {
-    padding: 5px 10px 15px 5px;
-    background: rgb(63,63,63);
-    color: white;
-    border-radius: 3px;
-    overflow: scroll;
-  }
-
-  body {
-    /*font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;*/
-    /*font-family: 'Bellefair', serif;*/
-    font-family: 'Work Sans', sans-serif;
+  padding: 5px 10px 15px 5px;
+  background: rgb(63, 63, 63);
+  color: white;
+  border-radius: 3px;
+  overflow: scroll;
 }
 
-.button {
-    margin: 20px;
-    cursor: pointer;
-    background-color: #9b6d6d
+body {
+  /*font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;*/
+  /*font-family: 'Bellefair', serif;*/
+  font-family: 'Work Sans', sans-serif;
+}
+
+h5 {
+  font-size: larger;
+}
+
+.header {
+  margin-bottom: 2%;
+  padding: 2%;
+}
+
+.info-pane {
+  margin-top: 5%;
+  margin: auto;
+  padding: 2%;
+  background-color: #818abd;
+  
 }
