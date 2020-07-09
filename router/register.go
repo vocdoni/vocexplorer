@@ -9,12 +9,15 @@ import (
 // RegisterRoutes takes a mux and registers all the routes callbacks within this package
 func RegisterRoutes(m *mux.Router) {
 
-	m.HandleFunc("/", homeHandler)
+	m.HandleFunc("/", indexHandler)
+	m.HandleFunc("/blocks", indexHandler)
+	m.HandleFunc("/processes", indexHandler)
+	m.HandleFunc("/txs", indexHandler)
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./static/index.html")
 }
 

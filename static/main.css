@@ -5,12 +5,21 @@ pre {
   border-radius: 3px;
   overflow: scroll;
 }
+      body {
+        margin: 0;
+        font-family: Open Sans, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-weight: 300;
+        color: #444;
+        line-height: 1.6em
+      }
 
-body {
+/* body { */
   /*font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;*/
   /*font-family: 'Bellefair', serif;*/
-  font-family: 'Work Sans', sans-serif;
-}
+  /* font-family: 'Work Sans', sans-serif; */
+/* } */
 
 h5 {
   font-size: larger;
@@ -26,5 +35,4 @@ h5 {
   margin: auto;
   padding: 2%;
   background-color: #818abd;
-  
 }
