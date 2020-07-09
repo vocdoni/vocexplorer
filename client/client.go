@@ -99,7 +99,7 @@ type MetaResponse struct {
 
 // New starts a connection with the given endpoint address. From unreleased go-dvote/client
 func New(addr string) (*Client, context.CancelFunc, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	conn, _, err := websocket.Dial(ctx, addr, nil)
 	if err != nil {
 		return nil, cancel, err
@@ -186,4 +186,13 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 	return &respInner, nil
+}
+
+func (c *Client) Close() {
+	err := c.Conn.Close(websocket.StatusNormalClosure, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Closed websocket connection")
+	}
 }

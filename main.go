@@ -7,7 +7,9 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/gorilla/mux"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/router"
 )
 
 func main() {
@@ -29,21 +31,11 @@ func main() {
 	}
 	log.Infof("Server on: %v\n", urlR)
 
-	// Home serves app which can be navigated via buttons.
-	// TODO (possibly): make this stateless, sub-urls handle their own requests instead of redirecting
-	// Not sure how to do this with vecty-router
-	http.Handle("/", http.FileServer(http.Dir("./static")))
+	r := mux.NewRouter()
+	router.RegisterRoutes(r)
 
-	http.HandleFunc("/processes", redirectHandler)
-	http.HandleFunc("/blocks", redirectHandler)
-	http.HandleFunc("/txs", redirectHandler)
-
-	err = http.ListenAndServe(urlR.Host, nil)
+	err = http.ListenAndServe(urlR.Host, r)
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
-}
-
-func redirectHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/", http.StatusFound)
 }

@@ -13,7 +13,8 @@ After steps 1 and 2, on the commandline navigate into the directory containing `
 
 #### 4. Running dvotenode
 The easiest way is to simply run the gatway binary:
-`go run go-dvote/cmd/dvotenode/dvotenode.go --w3Enabled=False --vochainNoWaitSync`  
+`cd go-dvote`
+`go run cmd/dvotenode/dvotenode.go --w3Enabled=False --vochainNoWaitSync`  
 Make sure that the no-sync options are enabled.
 
 ----

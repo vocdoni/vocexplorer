@@ -1,9 +1,11 @@
 package components
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
+	"syscall/js"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -21,24 +23,28 @@ type GatewayView struct {
 // Render renders the DashboardView component
 func (gw *GatewayView) Render() vecty.ComponentOrHTML {
 	// After rendering, run gouroutine to call api again
-	defer func() { go gw.updateGatewayInfo() }()
+	// defer func() { go gw.updateGatewayInfo() }()
+	// defer func() { gw.updateGatewayInfo() }()
 	return elem.Div(
 		renderGatewayInfo(gw.gwInfo),
 	)
 }
 
-// Recursively calls gateway api, calls rerender, exits. Rerender starts new update routine
-func (gw *GatewayView) updateGatewayInfo() {
-	time.Sleep(5 * time.Second)
-	fmt.Println("Getting info")
-	resp, err := gw.c.GetGatewayInfo()
-	if err != nil {
-		fmt.Println("Unable to get gateway info")
-		fmt.Println(err.Error())
+// Iteratively calls gateway api until "gateway" env variable is set to false.
+func (gw *GatewayView) updateGatewayInfo(cancel context.CancelFunc) {
+	defer gw.c.Close()
+	for js.Global().Get("gateway").Bool() {
+		fmt.Println("Getting info")
+		resp, err := gw.c.GetGatewayInfo()
+		if err != nil {
+			fmt.Println("Unable to get gateway info")
+			fmt.Println(err.Error())
+		}
+		gw.gwInfo = resp
+		fmt.Println("body")
+		vecty.Rerender(gw)
+		time.Sleep(5 * time.Second)
 	}
-	gw.gwInfo = resp
-	fmt.Println("body")
-	vecty.Rerender(gw)
 }
 
 func renderGatewayInfo(info *client.MetaResponse) *vecty.HTML {
@@ -59,17 +65,19 @@ func renderGatewayInfo(info *client.MetaResponse) *vecty.HTML {
 
 // InitGatewayView connects to gateway websocket and returns a GatewayView component
 func initGatewayView(d *client.MetaResponse) *GatewayView {
+	js.Global().Set("gateway", true)
 	gatewayHost := "ws://0.0.0.0:9090/dvote"
 	// Establishing connection with gateway host
 	fmt.Println("connecting to %s", gatewayHost)
 	gw, cancel, err := client.New(gatewayHost)
 	defer cancel()
 	if err != nil {
-		fmt.Println("Unable to connect to gateway")
+		js.Global().Get("alert").Invoke("Unable to connect to Gateway client. Please see readme file")
+		return nil
 	}
-	// defer gw.Conn.Close(websocket.StatusNormalClosure, "")
-	return &GatewayView{
-		c:      gw,
-		gwInfo: d,
-	}
+	var gwView GatewayView
+	gwView.c = gw
+	gwView.gwInfo = d
+	go (&gwView).updateGatewayInfo(cancel)
+	return &gwView
 }
