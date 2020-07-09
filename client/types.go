@@ -105,6 +105,7 @@ type VochainInfo struct {
 	ProcessIDs     []string
 	Entities       []EntityInfo
 	Envelopes      []EnvelopeInfo
+	Timestamp      int32
 	Processes      []ProcessInfo
 }
 

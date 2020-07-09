@@ -18,11 +18,11 @@ type DashboardView struct {
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("page", "dashboard")
 	js.Global().Set("gateway", false)
-	var d client.MetaResponse
+	var vc client.VochainInfo
 	return elem.Div(
 		&Header{currentPage: "dashboard"},
 		elem.Main(
 			vecty.Markup(vecty.Class("info-pane")),
-			initGatewayView(&d),
+			initGatewayView(&vc),
 		))
 }
