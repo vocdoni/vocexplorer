@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/router"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 func main() {
@@ -25,8 +25,7 @@ func main() {
 	}
 
 	urlR, err := url.Parse(*hostURL)
-	if err != nil {
-		fmt.Println(err)
+	if util.ErrPrint(err) {
 		return
 	}
 	log.Infof("Server on: %v\n", urlR)
@@ -35,7 +34,5 @@ func main() {
 	router.RegisterRoutes(r)
 
 	err = http.ListenAndServe(urlR.Host, r)
-	if err != nil {
-		log.Fatal(err)
-	}
+	util.ErrFatal(err)
 }

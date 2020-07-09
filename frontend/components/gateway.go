@@ -11,6 +11,8 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // GatewayView renders the gateway info component
@@ -22,9 +24,7 @@ type GatewayView struct {
 
 // Render renders the DashboardView component
 func (gw *GatewayView) Render() vecty.ComponentOrHTML {
-	// After rendering, run gouroutine to call api again
 	// defer func() { go gw.updateGatewayInfo() }()
-	// defer func() { gw.updateGatewayInfo() }()
 	return elem.Div(
 		renderGatewayInfo(gw.gwInfo),
 	)
@@ -36,9 +36,8 @@ func (gw *GatewayView) updateGatewayInfo(cancel context.CancelFunc) {
 	for js.Global().Get("gateway").Bool() {
 		fmt.Println("Getting info")
 		resp, err := gw.c.GetGatewayInfo()
-		if err != nil {
+		if util.ErrPrint(err) {
 			fmt.Println("Unable to get gateway info")
-			fmt.Println(err.Error())
 		}
 		gw.gwInfo = resp
 		fmt.Println("body")
@@ -66,10 +65,9 @@ func renderGatewayInfo(info *client.MetaResponse) *vecty.HTML {
 // InitGatewayView connects to gateway websocket and returns a GatewayView component
 func initGatewayView(d *client.MetaResponse) *GatewayView {
 	js.Global().Set("gateway", true)
-	gatewayHost := "ws://0.0.0.0:9090/dvote"
 	// Establishing connection with gateway host
-	fmt.Println("connecting to %s", gatewayHost)
-	gw, cancel, err := client.New(gatewayHost)
+	fmt.Println("connecting to %s", config.GatewayHost)
+	gw, cancel, err := client.New(config.GatewayHost)
 	defer cancel()
 	if err != nil {
 		js.Global().Get("alert").Invoke("Unable to connect to Gateway client. Please see readme file")
