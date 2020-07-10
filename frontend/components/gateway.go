@@ -11,6 +11,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // GatewayView renders the gateway info component
@@ -36,8 +37,25 @@ func renderVochainInfo(vc *client.VochainInfo) *vecty.HTML {
 				vecty.If(vc.APIList != nil, elem.ListItem(vecty.Text("API list: "+strings.Join(vc.APIList, ", ")))),
 				elem.ListItem(vecty.Text("Blockchain health: "+strconv.Itoa(int(vc.Health)))),
 				elem.ListItem(vecty.Text("Ok? "+strconv.FormatBool(vc.Ok))),
-				elem.ListItem(vecty.Text("Last Updated: "+strconv.Itoa(int(vc.Timestamp)))),
+				elem.ListItem(vecty.Text("Block height: "+strconv.Itoa(int(vc.Height)))),
+				elem.ListItem(vecty.Text("Last block timestamp: "+util.SToTime(vc.BlockTimeStamp))),
+				elem.ListItem(vecty.Text("Process ID list: (first 4 id's) "+strings.Join(vc.ProcessIDs[0:4], ", "))),
+				elem.ListItem(vecty.Text("Entity ID list: (first 4 id's) "+strings.Join(vc.EntityIDs[0:4], ", "))),
 			),
+			vecty.If(vc.BlockTime != nil, elem.Table(
+				elem.Caption(vecty.Text("Average block times")),
+				elem.TableHead(
+					elem.TableRow(elem.TableHeader(vecty.Text("Time period")), elem.TableHeader(vecty.Text("Avg time"))),
+				),
+				elem.TableBody(
+					elem.TableRow(elem.TableData(vecty.Text("Last 1m")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[0])))),
+					elem.TableRow(elem.TableData(vecty.Text("Last 10m")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[1])))),
+					elem.TableRow(elem.TableData(vecty.Text("Last 1h")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[2])))),
+					elem.TableRow(elem.TableData(vecty.Text("Last 6h")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[3])))),
+					elem.TableRow(elem.TableData(vecty.Text("Last 24h")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[4])))),
+				),
+			)),
+			elem.Footer(vecty.Text("Last updated: "+util.SToTime(vc.Timestamp))),
 		)
 	}
 	return vecty.Text("Waiting for blockchain info...")

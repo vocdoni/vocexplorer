@@ -30,7 +30,7 @@ type MetaRequest struct {
 	ClaimsData []string `json:"claimsData,omitempty"`
 	Content    string   `json:"content,omitempty"`
 	Digested   bool     `json:"digested,omitempty"`
-	EntityId   string   `json:"entityId,omitempty"`
+	EntityID   string   `json:"entityId,omitempty"`
 	From       int64    `json:"from,omitempty"`
 	FromID     string   `json:"fromId,omitempty"`
 	ListSize   int64    `json:"listSize,omitempty"`
@@ -100,10 +100,11 @@ type VochainInfo struct {
 	BlockTime      *[5]int32
 	BlockTimeStamp int32
 	Health         int32
-	Height         *int64
+	Height         int64
 	Ok             bool
 	ProcessIDs     []string
 	Entities       []EntityInfo
+	EntityIDs      []string
 	Envelopes      []EnvelopeInfo
 	Timestamp      int32
 	Processes      []ProcessInfo
@@ -118,7 +119,7 @@ type EntityInfo struct {
 // EnvelopeInfo holds info about one vochain envelope
 type EnvelopeInfo struct {
 	BlockTimeStamp int32
-	Height         *int64
+	Height         int64
 	Payload        string
 	Registered     bool
 }
@@ -126,7 +127,7 @@ type EnvelopeInfo struct {
 // ProcessInfo holds info about one vochain process
 type ProcessInfo struct {
 	// List of envelopes from given point
-	Nullifiers *[]string
+	Nullifiers []string
 	Results    [][]uint32
 	State      string
 	Type       string

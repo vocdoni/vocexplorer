@@ -22,11 +22,46 @@ func New(addr string) (*Client, context.CancelFunc, error) {
 	return &Client{Addr: addr, Conn: conn, Ctx: ctx}, cancel, nil
 }
 
-// GetGatewayInfo calls gateway api and returns gateway info
-func (c *Client) GetGatewayInfo() (*MetaResponse, error) {
+// VochainInfo requests
+
+// GetGatewayInfo gets gateway info
+func (c *Client) GetGatewayInfo() ([]string, int32, bool, int32, error) {
 	var req MetaRequest
 	req.Method = "getGatewayInfo"
 	req.Timestamp = int32(time.Now().Unix())
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, 0, false, 0, err
+	}
+	if !resp.Ok {
+		return nil, 0, false, 0, fmt.Errorf("cannot get gateway infos")
+	}
+	return resp.APIList, resp.Health, resp.Ok, resp.Timestamp, nil
+}
+
+// GetBlockStatus gets latest block status for blockchain
+func (c *Client) GetBlockStatus() (*[5]int32, int32, int64, bool, error) {
+	var req MetaRequest
+	req.Method = "getBlockStatus"
+	req.Timestamp = int32(time.Now().Unix())
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, 0, 0, false, err
+	}
+	if !resp.Ok {
+		return nil, 0, 0, false, fmt.Errorf("cannot get gateway infos")
+	}
+	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, resp.Ok, nil
+}
+
+// GetFinalProcessList gets list of finished processes on the Vochain
+func (c *Client) GetFinalProcessList(fromID string) ([]string, error) {
+	var req MetaRequest
+	req.Method = "getProcListResults"
+	req.Timestamp = int32(time.Now().Unix())
+	req.FromID = fromID
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -35,8 +70,148 @@ func (c *Client) GetGatewayInfo() (*MetaResponse, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp, nil
+	return resp.ProcessIDs, nil
 }
+
+// GetLiveProcessList gets list of live processes on the Vochain
+func (c *Client) GetLiveProcessList(fromID string) ([]string, error) {
+	var req MetaRequest
+	req.Method = "getProcListLiveResults"
+	req.Timestamp = int32(time.Now().Unix())
+	req.FromID = fromID
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf("cannot get gateway infos")
+	}
+	return resp.ProcessIDs, nil
+}
+
+// GetScrutinizerEntities gets list of entities indexed by the scrutinizer on the Vochain
+func (c *Client) GetScrutinizerEntities(fromID string) ([]string, error) {
+	var req MetaRequest
+	req.Method = "getScrutinizerEntities"
+	req.Timestamp = int32(time.Now().Unix())
+	req.FromID = fromID
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf("cannot get gateway infos")
+	}
+	return resp.EntityIDs, nil
+}
+
+// EntityInfo requests
+
+// GetProcessList gets list of processes for a given entity, starting at fromID
+func (c *Client) GetProcessList(entityID, fromID string) ([]string, error) {
+	var req MetaRequest
+	req.Method = "getProcessList"
+	req.Timestamp = int32(time.Now().Unix())
+	req.EntityID = entityID
+	req.FromID = fromID
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf("cannot get gateway infos")
+	}
+	return resp.ProcessIDs, nil
+}
+
+// ProcessInfo requests
+
+// GetEnvelopeHeight gets number of envelopes in a given process
+func (c *Client) GetEnvelopeHeight(processID string) (int64, error) {
+	var req MetaRequest
+	req.Method = "getEnvelopeHeight"
+	req.ProcessID = processID
+	resp, err := c.Request(req)
+	if err != nil {
+		return 0, err
+	}
+	if !resp.Ok {
+		return 0, fmt.Errorf(resp.Message)
+	}
+	return *resp.Height, nil
+}
+
+// GetEnvelopeList gets list of envelopes in a given process, starting at fromID
+func (c *Client) GetEnvelopeList(processID, fromID string) ([]string, error) {
+	var req MetaRequest
+	req.Method = "getEnvelopeList"
+	req.ProcessID = processID
+	req.FromID = fromID
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf(resp.Message)
+	}
+	return *resp.Nullifiers, nil
+}
+
+// GetProcessResults gets the results of a given process
+func (c *Client) GetProcessResults(processID string) (string, string, [][]uint32, error) {
+	var req MetaRequest
+	req.Method = "getResults"
+	req.ProcessID = processID
+	resp, err := c.Request(req)
+	if err != nil {
+		return "", "", nil, err
+	}
+	if !resp.Ok {
+		return "", "", nil, fmt.Errorf(resp.Message)
+	}
+	return resp.Type, resp.State, resp.Results, nil
+}
+
+// EnvelopeInfo requests
+
+// GetEnvelopeStatus gets status of given envelope
+func (c *Client) GetEnvelopeStatus(nullifier, processID string) (bool, error) {
+	var req MetaRequest
+	req.Method = "getEnvelopeStatus"
+	req.ProcessID = processID
+	req.Nullifier = nullifier
+	resp, err := c.Request(req)
+	if err != nil {
+		return false, err
+	}
+	if !resp.Ok || resp.Registered == nil {
+		return false, fmt.Errorf("cannot check envelope (%s)", resp.Message)
+	}
+	return *resp.Registered, nil
+}
+
+// GetEnvelope gets contents of given envelope
+func (c *Client) GetEnvelope(processID, nullifier string) (string, error) {
+	var req MetaRequest
+	req.Method = "getEnvelope"
+	req.Timestamp = int32(time.Now().Unix())
+	req.ProcessID = processID
+	req.Nullifier = nullifier
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return "", err
+	}
+	if !resp.Ok {
+		return "", fmt.Errorf("cannot get envelope contents")
+	}
+	return resp.Payload, nil
+}
+
+//___________________________________________________________________________
 
 // Request makes a request to the previously connected endpoint
 func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
