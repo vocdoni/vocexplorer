@@ -18,6 +18,6 @@ func (t *TxsView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("gateway", false)
 
 	return elem.Div(
-		&Header{currentPage: "transactions"},
+		&Header{},
 	)
 }

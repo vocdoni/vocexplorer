@@ -53,6 +53,9 @@ func UpdateEntityList(c *Client, vc *VochainInfo) {
 // GetAllIDs iteratively calls getList until all IDs have been collected and stored in IDList
 func GetAllIDs(IDList *[]string, c *Client, getList func(string) ([]string, error)) {
 	lastID := ""
+	if len(*IDList) > 0 {
+		lastID = (*IDList)[len(*IDList)-1]
+	}
 	for {
 		tempList, err := getList(lastID)
 		util.ErrPrint(err)

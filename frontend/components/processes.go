@@ -19,6 +19,6 @@ func (t *ProcessView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("tendermint", false)
 
 	return elem.Div(
-		&Header{currentPage: "processes"},
+		&Header{},
 	)
 }

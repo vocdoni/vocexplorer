@@ -10,7 +10,6 @@ import (
 // Header renders the header
 type Header struct {
 	vecty.Core
-	currentPage string
 }
 
 // Render renders the Header component

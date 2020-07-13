@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -42,4 +43,18 @@ func GetAPIStatus(target string, APIList []string) bool {
 		}
 	}
 	return false
+}
+
+// IntToString takes an int32, int64, or int, and returns a string
+func IntToString(val interface{}) string {
+	if i, ok := val.(int); ok {
+		return strconv.Itoa(i)
+	}
+	if i, ok := val.(int32); ok {
+		return strconv.Itoa(int(i))
+	}
+	if i, ok := val.(int64); ok {
+		return strconv.Itoa(int(i))
+	}
+	return ""
 }

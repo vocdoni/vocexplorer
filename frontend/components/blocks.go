@@ -2,7 +2,6 @@ package components
 
 import (
 	"fmt"
-	"strconv"
 	"syscall/js"
 	"time"
 
@@ -30,28 +29,14 @@ func (b *BlocksView) Render() vecty.ComponentOrHTML {
 func renderTendermintInfo(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	if t != nil {
 		return elem.Div(
-			renderStatus(t),
+			renderBlocks(t),
 		)
 	}
 	return elem.Div(vecty.Text("No info struct rendered"))
 }
 
-func renderStatus(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
-	if t.Status != nil {
-		sync := t.Status.SyncInfo
-		// valid := t.Status.ValidatorInfo
-		return elem.Div(
-			// vecty.If(sync != nil, elem.UnorderedList{
-			elem.UnorderedList(
-				elem.ListItem(vecty.Text("Latest Block Hash: "+sync.LatestBlockHash.String())),
-				elem.ListItem(vecty.Text("Latest App Hash: "+sync.LatestAppHash.String())),
-				elem.ListItem(vecty.Text("Latest Block Height: "+strconv.Itoa(int(sync.LatestBlockHeight)))),
-				elem.ListItem(vecty.Text("Latest Block Time: "+sync.LatestBlockTime.String())),
-			),
-		// ),
-		)
-	}
-	return elem.Div(vecty.Text("Waiting for tendermint blockchain info..."))
+func renderBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
+	return elem.Div(vecty.Text("Blocks pane"))
 }
 
 func initBlocksView(t *rpc.TendermintInfo) *BlocksView {
@@ -72,7 +57,7 @@ func initBlocksView(t *rpc.TendermintInfo) *BlocksView {
 func updateAndRenderBlocks(bv *BlocksView) {
 	for js.Global().Get("tendermint").Bool() {
 		fmt.Println("Getting tendermint info")
-		rpc.UpdateBlockInfo(bv.c, bv.t)
+		rpc.UpdateTendermintInfo(bv.c, bv.t)
 		time.Sleep(5 * time.Second)
 		vecty.Rerender(bv)
 	}

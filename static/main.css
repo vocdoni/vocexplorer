@@ -36,3 +36,13 @@ h5 {
   padding: 2%;
   background-color: #b1b4c7;
 }
+
+thead tr th {
+  text-align: center;
+  padding: 0px 7px;
+}
+
+tbody tr td {
+  text-align: center;
+  margin: auto;
+}

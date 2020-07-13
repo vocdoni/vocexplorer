@@ -15,10 +15,10 @@ type Body struct {
 // Render body simply renders routes for application
 func (b Body) Render() vecty.ComponentOrHTML {
 	return elem.Body(
-		router.NewRoute("/", &DashboardView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocks", &BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/txs", &TxsView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/processes", &ProcessView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/", &HomeView{}, router.NewRouteOpts{ExactMatch: true}),
+		// router.NewRoute("/blocks", &BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
+		// router.NewRoute("/txs", &TxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		// router.NewRoute("/processes", &ProcessView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NotFoundHandler(&notFound{}),
 	)
 }

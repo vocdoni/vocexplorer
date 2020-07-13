@@ -236,16 +236,16 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	fmt.Println("request:", reqBody)
+	// fmt.Println("request:", reqBody)
 	if err := c.Conn.Write(ctx, websocket.MessageText, reqBody); err != nil {
 		return nil, fmt.Errorf("Error: %s: %v", method, err)
 	}
-	fmt.Println("sent request")
+	fmt.Println("sent request: " + req.Method)
 	_, message, err := c.Conn.Read(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
-	fmt.Println("response:", message)
+	fmt.Println("response: " + req.Method)
 	var respOuter ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
