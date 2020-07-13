@@ -14,7 +14,7 @@ type TendermintInfo struct {
 
 // InitClient initializes an http tendermint api client on websockets
 func InitClient() (*http.HTTP, error) {
-	c, err := http.New(config.TendermintHost, "/websocket")
+	c, err := http.NewWithTimeout(config.TendermintHost, "/websocket", 1)
 	if err != nil {
 		return nil, err
 	}
@@ -25,10 +25,15 @@ func InitClient() (*http.HTTP, error) {
 	return c, nil
 }
 
-// GetHealth call the tendermint Health api
+// GetHealth calls the tendermint Health api
 func (t *TendermintInfo) GetHealth(c *http.HTTP) {
 	status, err := c.Status()
 	if !util.ErrPrint(err) {
 		t.Status = status
 	}
+}
+
+//UpdateBlockInfo updates the block list
+func UpdateBlockInfo(c *http.HTTP, t *TendermintInfo) {
+	t.GetHealth(c)
 }

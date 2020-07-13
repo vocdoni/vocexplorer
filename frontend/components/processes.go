@@ -16,6 +16,7 @@ type ProcessView struct {
 func (t *ProcessView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("page", "processes")
 	js.Global().Set("gateway", false)
+	js.Global().Set("tendermint", false)
 
 	return elem.Div(
 		&Header{currentPage: "processes"},

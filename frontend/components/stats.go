@@ -12,17 +12,17 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 )
 
-// BlocksView renders the blocks page
-type BlocksView struct {
+// Stats renders the stats pane
+type StatsView struct {
 	vecty.Core
-	t *rpc.TendermintInfo
-	c *http.HTTP
+	t  *rpc.TendermintInfo
+	gw *client.GatewayInfo
+	c  *http.HTTP
 }
 
-// Render renders the BlocksView component
-func (b *BlocksView) Render() vecty.ComponentOrHTML {
+// Render renders the StatsView component
+func (b *StatsView) Render() vecty.ComponentOrHTML {
 	return elem.Div(
-		// &Header{currentPage: "blocks"},
 		renderTendermintInfo(b.t),
 	)
 }
@@ -54,7 +54,7 @@ func renderStatus(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("Waiting for tendermint blockchain info..."))
 }
 
-func initBlocksView(t *rpc.TendermintInfo) *BlocksView {
+func initStatsView(t *rpc.TendermintInfo) *StatsView {
 	js.Global().Set("tendermint", true)
 	c, err := rpc.InitClient()
 	if err != nil {
@@ -62,14 +62,14 @@ func initBlocksView(t *rpc.TendermintInfo) *BlocksView {
 		return nil
 	}
 	// var t *rpc.TendermintInfo
-	var blocksView BlocksView
-	blocksView.c = c
-	blocksView.t = t
-	go updateAndRenderBlocks(&blocksView)
-	return &blocksView
+	var StatsView StatsView
+	StatsView.c = c
+	StatsView.t = t
+	go updateAndRenderStats(&StatsView)
+	return &StatsView
 }
 
-func updateAndRenderBlocks(bv *BlocksView) {
+func updateAndRenderStats(bv *StatsView) {
 	for js.Global().Get("tendermint").Bool() {
 		fmt.Println("Getting tendermint info")
 		rpc.UpdateBlockInfo(bv.c, bv.t)

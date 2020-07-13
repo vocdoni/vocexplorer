@@ -62,7 +62,7 @@ func renderVochainInfo(vc *client.VochainInfo) *vecty.HTML {
 }
 
 // InitGatewayView connects to gateway websocket and returns a GatewayView component
-func initGatewayView(vc *client.VochainInfo) *GatewayView {
+func initGatewayView() *GatewayView {
 	js.Global().Set("gateway", true)
 	// Establishing connection with gateway host
 	fmt.Println("connecting to %s", config.GatewayHost)
@@ -72,15 +72,17 @@ func initGatewayView(vc *client.VochainInfo) *GatewayView {
 		js.Global().Get("alert").Invoke("Unable to connect to Gateway client. Please see readme file")
 		return nil
 	}
+	var vc client.VochainInfo
 	var gwView GatewayView
 	gwView.c = gw
-	gwView.vc = vc
-	go updateAndRender(&gwView)
+	gwView.vc = &vc
+	go updateAndRenderGateway(&gwView)
 	return &gwView
 }
 
-func updateAndRender(gw *GatewayView) {
+func updateAndRenderGateway(gw *GatewayView) {
 	defer gw.c.Close()
+	// defer js.Global().Set("tendermint", false)
 	for js.Global().Get("gateway").Bool() {
 		fmt.Println("Getting vochain info")
 		client.UpdateVochainInfo(gw.c, gw.vc)
