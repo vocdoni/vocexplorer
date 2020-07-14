@@ -35,7 +35,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						style.Padding(14, 16),
 						fontFamily.Arial,
 					),
-					router.Link("/", "dashboard", router.LinkOptions{}),
+					router.Link("/", "Dashboard", router.LinkOptions{}),
 				),
 				elem.Div(
 					vecty.Markup(
@@ -44,25 +44,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						style.Padding(14, 16),
 						fontFamily.Arial,
 					),
-					router.Link("/processes", "processes", router.LinkOptions{}),
-				),
-				elem.Div(
-					vecty.Markup(
-						marginLeft.Auto,
-						float.Left,
-						style.Padding(14, 16),
-						fontFamily.Arial,
-					),
-					router.Link("/blocks", "blocks", router.LinkOptions{}),
-				),
-				elem.Div(
-					vecty.Markup(
-						marginLeft.Auto,
-						float.Left,
-						style.Padding(14, 16),
-						fontFamily.Arial,
-					),
-					router.Link("/txs", "transactions", router.LinkOptions{}),
+					router.Link("/processes", "Voting Processes & Entities", router.LinkOptions{}),
 				),
 			},
 		},

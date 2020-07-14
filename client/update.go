@@ -4,10 +4,16 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// UpdateVochainInfo calls gateway apis, updates vs
-func UpdateVochainInfo(c *Client, vc *VochainInfo) {
+// UpdateDashboardInfo calls gateway apis, updates info needed for dashboard page
+func UpdateDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateGatewayInfo(c, vc)
 	UpdateBlockStatus(c, vc)
+	UpdateVochainProcessList(c, vc)
+	UpdateEntityList(c, vc)
+}
+
+// UpdateProcessesDashboardInfo calls gateway apis, updates info needed for dashboard page
+func UpdateProcessesDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateVochainProcessList(c, vc)
 	UpdateEntityList(c, vc)
 }
@@ -55,10 +61,21 @@ func GetAllIDs(IDList *[]string, c *Client, getList func(string) ([]string, erro
 	lastID := ""
 	if len(*IDList) > 0 {
 		lastID = (*IDList)[len(*IDList)-1]
+
+		/*THIS RETURN BREAKS THE UPDATING OF ENTITY AND PROCESS IDS.
+		 *statement is here because of bug(?) or confusion: fromID field seems not to be working for these calls.
+		 *Each call returns IDs from the beginning of the ID list, regardless of the fromID field.
+		 *This means 'lastID' does nothing, so list keeps updating with duplicate ids.
+		 */
+
+		return
 	}
 	for {
 		tempList, err := getList(lastID)
 		util.ErrPrint(err)
+		if tempList[len(tempList)-1] == lastID {
+			break
+		}
 		*IDList = append(*IDList, tempList...)
 		// Repeat if request was full, make sure never gets stuck if fromID is not working
 		if len(tempList) < 64 || tempList[len(tempList)-1] == lastID {

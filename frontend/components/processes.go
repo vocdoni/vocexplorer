@@ -5,20 +5,24 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/client"
 )
 
-// ProcessView renders the processes page
-type ProcessView struct {
+// ProcessesView renders the processes page
+type ProcessesView struct {
 	vecty.Core
 }
 
-// Render renders the ProcessView component
-func (t *ProcessView) Render() vecty.ComponentOrHTML {
+// Render renders the ProcessesView component
+func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("page", "processes")
-	js.Global().Set("gateway", false)
-	js.Global().Set("tendermint", false)
-
+	js.Global().Set("apiEnabled", false)
+	var vc client.VochainInfo
+	var dash ProcessesDashboardView
 	return elem.Div(
 		&Header{},
+		elem.Main(
+			initProcessesDashboardView(&vc, &dash),
+		),
 	)
 }

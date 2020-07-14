@@ -89,36 +89,22 @@ func renderRecentBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	if t.RecentBlocks != nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-blocks")),
-			vecty.If(len(*t.RecentBlocks) >= 0, renderBlock(&(*t.RecentBlocks)[0])),
-			vecty.If(len(*t.RecentBlocks) >= 1, renderBlock(&(*t.RecentBlocks)[1])),
-			vecty.If(len(*t.RecentBlocks) >= 2, renderBlock(&(*t.RecentBlocks)[2])),
-			vecty.If(len(*t.RecentBlocks) >= 3, renderBlock(&(*t.RecentBlocks)[3])),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-col-3")),
-				vecty.Text("Total Txs: "+util.IntToString(t.TxCount)),
-			),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 3),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 2),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 1),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 0),
 		)
 	}
 	return elem.Div(vecty.Text("No updated list of recent blocks"))
 }
 
-func renderBlock(result *coretypes.ResultBlock) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-		vecty.Text("Block Num: "+util.IntToString(result.Block.Header.Height)),
-		vecty.Text("Block Hash: "+result.BlockID.Hash.String()),
-		// vecty.Text("Total Transactions: "+util.IntToString(t.RecentBlocks[0].Block.Header.Height)),
-	)
+func renderBlock(recentBlocks []coretypes.ResultBlock, recentBlockResults []coretypes.ResultBlockResults, index int) vecty.ComponentOrHTML {
+	if len(recentBlocks) > index && len(recentBlockResults) > index {
+		return elem.Div(vecty.Markup(vecty.Class("card-col-3")),
+			vecty.Text("Block Num: "+util.IntToString(recentBlocks[index].Block.Header.Height)),
+			vecty.Text(" Block Hash: "+recentBlocks[index].BlockID.Hash.String()),
+			vecty.Text(" Total Transactions: "+util.IntToString(len(recentBlockResults[index].TxsResults))),
+		)
+	}
+	return vecty.Text("No block available ")
 }
-
-// func renderStatus(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
-// 	if t.ResultStatus != nil {
-// 		sync := t.ResultStatus.SyncInfo
-// 		return elem.Div(
-// 			elem.Div(vecty.Text("Latest Block Hash: "+sync.LatestBlockHash.String())),
-// 			elem.Div(vecty.Text("Latest App Hash: "+sync.LatestAppHash.String())),
-// 			elem.Div(vecty.Text("Latest Block Height: "+strconv.Itoa(int(sync.LatestBlockHeight)))),
-// 			elem.Div(vecty.Text("Latest Block Time: "+sync.LatestBlockTime.String())),
-// 		)
-// 	}
-// 	return elem.Div(vecty.Text("Waiting for tendermint blockchain info..."))
-// }

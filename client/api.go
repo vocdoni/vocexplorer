@@ -1,9 +1,9 @@
 package client
 
 import (
-	"context"
 	"math/rand"
 
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"

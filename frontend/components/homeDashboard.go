@@ -26,32 +26,36 @@ type DashboardView struct {
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	js.Global().Set("page", "dashboard")
-	return elem.Div(
-		elem.Main(
-			vecty.Markup(vecty.Class("info-pane")),
-			&StatsView{
-				t:  dash.t,
-				vc: dash.vc,
-			},
-		),
-		vecty.Markup(
-			event.BeforeUnload(func(i *vecty.Event) {
-				js.Global().Get("alert").Invoke("Closing page")
-				dash.gwClient.Close()
-			},
+	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
+		return elem.Div(
+			elem.Main(
+				vecty.Markup(vecty.Class("info-pane")),
+				&StatsView{
+					t:  dash.t,
+					vc: dash.vc,
+				},
 			),
-		),
-	)
+			vecty.Markup(
+				event.BeforeUnload(func(i *vecty.Event) {
+					js.Global().Get("alert").Invoke("Closing page")
+					dash.gwClient.Close()
+				},
+				),
+			),
+		)
+	}
+	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo) *DashboardView {
+func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView) *DashboardView {
 	js.Global().Set("apiEnabled", true)
 	// Init tendermint client
 	fmt.Println("connecting to %s", config.TendermintHost)
 	tClient, err := rpc.InitClient()
 	if err != nil {
-		js.Global().Get("alert").Invoke("Unable to connect to Tendermint client. Please see readme file")
+		if js.Global().Get("confirm").Invoke("Unable to connect to Tendermint client. Reload with client running").Bool() {
+			js.Global().Get("location").Call("reload")
+		}
 		return nil
 	}
 	// Init Gateway client
@@ -59,32 +63,31 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo) *Dashboard
 	gwClient, cancel, err := client.New(config.GatewayHost)
 	defer cancel()
 	if util.ErrPrint(err) {
-		js.Global().Get("alert").Invoke("Unable to connect to Gateway client. Please see readme file")
+		if js.Global().Get("confirm").Invoke("Unable to connect to Gateway client. Reload with client running").Bool() {
+			js.Global().Get("location").Call("reload")
+		}
 		return nil
 	}
 
 	// var t *rpc.TendermintInfo
-	var DashboardView DashboardView
 	DashboardView.tClient = tClient
 	DashboardView.gwClient = gwClient
 	DashboardView.t = t
 	DashboardView.vc = vc
-	go updateAndRenderDashboard(&DashboardView)
-	return &DashboardView
+	go updateAndRenderDashboard(DashboardView)
+	return DashboardView
 }
 
 func updateAndRenderDashboard(d *DashboardView) {
 	defer d.gwClient.Close()
 	first := true
 	for js.Global().Get("apiEnabled").Bool() {
-		fmt.Println("Getting tendermint info")
 		rpc.UpdateTendermintInfo(d.tClient, d.t)
-		fmt.Println("Getting vochain info")
-		client.UpdateVochainInfo(d.gwClient, d.vc)
+		client.UpdateDashboardInfo(d.gwClient, d.vc)
 		if first {
 			first = false
 		} else {
-			time.Sleep(5 * time.Second)
+			time.Sleep(config.RefreshTime * time.Second)
 		}
 		vecty.Rerender(d)
 	}

@@ -10,9 +10,7 @@ import (
 func RegisterRoutes(m *mux.Router) {
 
 	m.HandleFunc("/", indexHandler)
-	m.HandleFunc("/blocks", indexHandler)
 	m.HandleFunc("/processes", indexHandler)
-	m.HandleFunc("/txs", indexHandler)
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }

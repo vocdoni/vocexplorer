@@ -14,8 +14,8 @@ import (
 type TendermintInfo struct {
 	ResultStatus       *coretypes.ResultStatus
 	Genesis            *types.GenesisDoc
-	RecentBlocks       *[]coretypes.ResultBlock
-	RecentBlockResults *[]coretypes.ResultBlockResults
+	RecentBlocks       []coretypes.ResultBlock
+	RecentBlockResults []coretypes.ResultBlockResults
 	TxCount            int
 	TxList             []*coretypes.ResultTx
 	ChainID            int
@@ -42,6 +42,8 @@ func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo) {
 	t.GetHealth(c)
 	t.GetAllTxs(c)
 	t.GetGenesis(c)
+	t.GetRecentBlocks(c)
+	t.GetRecentBlockResults(c)
 }
 
 // GetHealth calls the tendermint Health api
@@ -75,36 +77,45 @@ func (t *TendermintInfo) GetGenesis(c *http.HTTP) {
 // GetRecentBlocks keeps a list of the four most recent blocks
 func (t *TendermintInfo) GetRecentBlocks(c *http.HTTP) {
 	var lastBlockHeight int64
-	if t.RecentBlocks != nil {
-		lastBlockHeight = (*t.RecentBlocks)[3].Block.Header.Height
+	if t.RecentBlocks != nil && len(t.RecentBlocks) > 0 {
+		lastBlockHeight = t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height
 	}
-	numNew := t.ResultStatus.SyncInfo.LatestBlockHeight - lastBlockHeight
-	*t.RecentBlocks = (*t.RecentBlocks)[numNew:3]
-	for numNew < 0 {
-		nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - numNew
+	// Number of new blocks not already stored
+	numNew := util.Min(int(t.ResultStatus.SyncInfo.LatestBlockHeight-lastBlockHeight)-1, 4)
+	if numNew <= len(t.RecentBlocks) {
+		t.RecentBlocks = t.RecentBlocks[numNew:]
+	} else {
+		t.RecentBlocks = []coretypes.ResultBlock{}
+	}
+	for numNew > 0 {
+		nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(numNew)
 		result, err := c.Block(&nextHeight)
 		if !util.ErrPrint(err) {
-			*t.RecentBlocks = append(*t.RecentBlocks, *result)
+			t.RecentBlocks = append(t.RecentBlocks, *result)
 		}
 		numNew--
 	}
 }
 
-// TODO complete this function so that we can get num txs per block
-// // GetRecentBlockResults keeps a list of the four most recent blocks' results
-// func (t *TendermintInfo) GetRecentBlockResults(c *http.HTTP) {
-// 	var lastBlockHeight int64
-// 	if t.RecentBlocks != nil {
-// 		lastBlockHeight = (*t.RecentBlocks)[3].Block.Header.Height
-// 	}
-// 	numNew := t.ResultStatus.SyncInfo.LatestBlockHeight - lastBlockHeight
-// 	*t.RecentBlocks = (*t.RecentBlocks)[numNew:4]
-// 	for numNew < 0 {
-// 		nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - numNew
-// 		result, err := c.Block(&nextHeight)
-// 		if !util.ErrPrint(err) {
-// 			*t.RecentBlocks = append(*t.RecentBlocks, *result)
-// 		}
-// 		numNew--
-// 	}
-// }
+// GetRecentBlockResults keeps a list of the four most recent blocks
+func (t *TendermintInfo) GetRecentBlockResults(c *http.HTTP) {
+	var lastBlockHeight int64
+	if t.RecentBlockResults != nil && len(t.RecentBlockResults) > 0 {
+		lastBlockHeight = t.RecentBlockResults[len(t.RecentBlockResults)-1].Height
+	}
+	// Number of new blocks not already stored
+	numNew := util.Min(int(t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height-lastBlockHeight)-1, 4)
+	if numNew <= len(t.RecentBlockResults) {
+		t.RecentBlockResults = t.RecentBlockResults[numNew:]
+	} else {
+		t.RecentBlockResults = []coretypes.ResultBlockResults{}
+	}
+	for numNew > 0 {
+		nextHeight := t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height - int64(numNew)
+		result, err := c.BlockResults(&nextHeight)
+		if !util.ErrPrint(err) {
+			t.RecentBlockResults = append(t.RecentBlockResults, *result)
+		}
+		numNew--
+	}
+}

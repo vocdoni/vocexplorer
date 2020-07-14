@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 )
 
 // ErrPrint prints an error to stdout. If err is nil, return false. If err is not nil, return true
@@ -57,4 +61,51 @@ func IntToString(val interface{}) string {
 		return strconv.Itoa(int(i))
 	}
 	return ""
+}
+
+// Min returns the min of two ints
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Max returns the max of two ints
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// SearchSlice searches a slice of strings and returns all strings who have substrings matching the search term
+func SearchSlice(source []string, search string) []string {
+	var results []string
+	for _, str := range source {
+		// for i, str := range source {
+		if strings.Contains(str, search) {
+			results = append(results, str)
+			// results = append(results, strconv.Itoa(i))
+		}
+	}
+	return results
+}
+
+// SliceToList turns a slice of strings into a list of elem.ListItems
+func SliceToList(slice []string) []vecty.MarkupOrChild {
+	var elemList []vecty.MarkupOrChild
+	for _, term := range slice {
+		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
+	}
+	return elemList
+}
+
+// TrimSlice trims a slice of strings to lim elements. If rev is set to true, trims from beginning rather than end.
+func TrimSlice(slice []string, lim int, rev bool) []string {
+	if rev {
+		return slice[Max(len(slice)-lim-1, 0):Max(len(slice)-1, 0)]
+	}
+	return slice[0:Max(Min(len(slice)-1, lim), 0)]
+
 }
