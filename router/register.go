@@ -18,13 +18,3 @@ func RegisterRoutes(m *mux.Router) {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./static/index.html")
 }
-
-// func redirectHandler(w http.ResponseWriter, r *http.Request) {
-// 	http.Redirect(w, r, "/", http.StatusFound)
-// }
-
-// http.Handle("/", http.FileServer(http.Dir("./static")))
-
-// http.HandleFunc("/processes", redirectHandler)
-// http.HandleFunc("/blocks", redirectHandler)
-// http.HandleFunc("/txs", redirectHandler)

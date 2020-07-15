@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/router"
@@ -32,7 +33,8 @@ func main() {
 
 	r := mux.NewRouter()
 	router.RegisterRoutes(r)
+	h := gziphandler.GzipHandler(r)
 
-	err = http.ListenAndServe(urlR.Host, r)
+	err = http.ListenAndServe(urlR.Host, h)
 	util.ErrFatal(err)
 }
