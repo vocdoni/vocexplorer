@@ -6,9 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 )
 
 // ErrPrint prints an error to stdout. If err is nil, return false. If err is not nil, return true
@@ -90,15 +87,6 @@ func SearchSlice(source []string, search string) []string {
 		}
 	}
 	return results
-}
-
-// SliceToList turns a slice of strings into a list of elem.ListItems
-func SliceToList(slice []string) []vecty.MarkupOrChild {
-	var elemList []vecty.MarkupOrChild
-	for _, term := range slice {
-		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
-	}
-	return elemList
 }
 
 // TrimSlice trims a slice of strings to lim elements. If rev is set to true, trims from beginning rather than end.

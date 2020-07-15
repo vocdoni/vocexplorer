@@ -23,6 +23,7 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 	if b.vc != nil {
 		// TODO: place this inside a pageload event?
 		if js.Global().Get("search").IsUndefined() || !js.Global().Get("search").Bool() {
+			// if !js.Global().Get("search").Bool() {
 			b.entitySearchIDs = util.TrimSlice(b.vc.EntityIDs, 10, false)
 			b.processSearchIDs = util.TrimSlice(b.vc.ProcessIDs, 10, false)
 		}
@@ -52,7 +53,7 @@ func renderEntityList(entityIDs []string) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Heading4(vecty.Text("Entity ID list: ")),
 		elem.UnorderedList(
-			util.SliceToList(entityIDs)...,
+			renderList(entityIDs)...,
 		),
 	)
 }
@@ -61,7 +62,15 @@ func renderProcessList(processIDs []string) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Heading4(vecty.Text("Process ID list: ")),
 		elem.UnorderedList(
-			util.SliceToList(processIDs)...,
+			renderList(processIDs)...,
 		),
 	)
+}
+
+func renderList(slice []string) []vecty.MarkupOrChild {
+	var elemList []vecty.MarkupOrChild
+	for _, term := range slice {
+		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
+	}
+	return elemList
 }

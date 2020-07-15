@@ -2,7 +2,6 @@ package components
 
 import (
 	"syscall/js"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 )
