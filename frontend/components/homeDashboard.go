@@ -1,6 +1,7 @@
 package components
 
 import (
+	"context"
 	"fmt"
 	"syscall/js"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // DashboardView renders the dashboard landing page
@@ -22,6 +22,7 @@ type DashboardView struct {
 	vc       *client.VochainInfo
 	gwClient *client.Client
 	tClient  *http.HTTP
+	quitCh   chan struct{}
 }
 
 // Render renders the DashboardView component
@@ -48,48 +49,45 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 }
 
 func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView) *DashboardView {
-	js.Global().Set("apiEnabled", true)
 	// Init tendermint client
-	fmt.Println("connecting to %s", config.TendermintHost)
-	tClient, err := rpc.InitClient()
-	if err != nil {
-		if js.Global().Get("confirm").Invoke("Unable to connect to Tendermint client. Reload with client running").Bool() {
-			js.Global().Get("location").Call("reload")
-		}
-		return nil
-	}
+	tClient := rpc.StartClient()
 	// Init Gateway client
-	fmt.Println("connecting to %s", config.GatewayHost)
-	gwClient, cancel, err := client.New(config.GatewayHost)
-	defer cancel()
-	if util.ErrPrint(err) {
-		if js.Global().Get("confirm").Invoke("Unable to connect to Gateway client. Reload with client running").Bool() {
-			js.Global().Get("location").Call("reload")
-		}
-		return nil
+	gwClient, cancel := InitGateway()
+	if gwClient == nil || tClient == nil {
+		return DashboardView
 	}
-
-	// var t *rpc.TendermintInfo
 	DashboardView.tClient = tClient
 	DashboardView.gwClient = gwClient
 	DashboardView.t = t
 	DashboardView.vc = vc
-	go updateAndRenderDashboard(DashboardView)
+	DashboardView.quitCh = make(chan struct{})
+	BeforeUnload(func() {
+		close(DashboardView.quitCh)
+	})
+	go updateAndRenderDashboard(DashboardView, cancel)
 	return DashboardView
 }
 
-func updateAndRenderDashboard(d *DashboardView) {
-	defer d.gwClient.Close()
-	first := true
-	for js.Global().Get("apiEnabled").Bool() {
-		rpc.UpdateTendermintInfo(d.tClient, d.t)
-		client.UpdateDashboardInfo(d.gwClient, d.vc)
-		if first {
-			first = false
-		} else {
-			time.Sleep(config.RefreshTime * time.Second)
-		}
-		vecty.Rerender(d)
+func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
+	ticker := time.NewTicker(config.RefreshTime * time.Second)
+	// Wait for data structs to load
+	for d == nil || d.vc == nil {
 	}
-	fmt.Println("Closing tendermint/gateway updater")
+	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	client.UpdateDashboardInfo(d.gwClient, d.vc)
+	vecty.Rerender(d)
+	for {
+		select {
+		case <-d.quitCh:
+			ticker.Stop()
+			d.gwClient.Close()
+			//cancel()
+			fmt.Println("Gateway connection closed")
+			return
+		case <-ticker.C:
+			rpc.UpdateTendermintInfo(d.tClient, d.t)
+			client.UpdateDashboardInfo(d.gwClient, d.vc)
+			vecty.Rerender(d)
+		}
+	}
 }

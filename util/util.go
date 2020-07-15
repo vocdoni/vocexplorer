@@ -92,8 +92,7 @@ func SearchSlice(source []string, search string) []string {
 // TrimSlice trims a slice of strings to lim elements. If rev is set to true, trims from beginning rather than end.
 func TrimSlice(slice []string, lim int, rev bool) []string {
 	if rev {
-		return slice[Max(len(slice)-lim-1, 0):Max(len(slice)-1, 0)]
+		return slice[Max(len(slice)-lim-1, 0):Max(len(slice), 0)]
 	}
-	return slice[0:Max(Min(len(slice)-1, lim), 0)]
-
+	return slice[0:Max(Min(len(slice), lim), 0)]
 }

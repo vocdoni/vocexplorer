@@ -245,7 +245,6 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
-	fmt.Println("response: " + req.Method)
 	var respOuter ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)

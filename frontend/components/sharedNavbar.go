@@ -9,7 +9,6 @@ import (
 	"github.com/nathanhack/vectyUI/style/float"
 	"github.com/nathanhack/vectyUI/style/fontFamily"
 	"github.com/nathanhack/vectyUI/style/marginLeft"
-	router "marwan.io/vecty-router"
 )
 
 // NavBar renders the navigation bar
@@ -19,7 +18,7 @@ type NavBar struct {
 
 // Render renders the NavBar component
 func (n *NavBar) Render() vecty.ComponentOrHTML {
-	return elem.Div(
+	return elem.Navigation(
 		vecty.Markup(
 			float.Left,
 		),
@@ -35,7 +34,8 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						style.Padding(14, 16),
 						fontFamily.Arial,
 					),
-					router.Link("/", "Dashboard", router.LinkOptions{}),
+					elem.Anchor(vecty.Markup(vecty.Attribute("href", "/")), vecty.Text("Dashboard")),
+					// router.Link("/", "Dashboard", router.LinkOptions{}),
 				),
 				elem.Div(
 					vecty.Markup(
@@ -44,7 +44,8 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						style.Padding(14, 16),
 						fontFamily.Arial,
 					),
-					router.Link("/processes", "Voting Processes & Entities", router.LinkOptions{}),
+					elem.Anchor(vecty.Markup(vecty.Attribute("href", "/processes")), vecty.Text("Voting Processes & Entities")),
+					// router.Link("/processes", "Voting Processes & Entities", router.LinkOptions{}),
 				),
 			},
 		},

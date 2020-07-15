@@ -1,16 +1,15 @@
 package components
 
 import (
+	"context"
 	"fmt"
 	"syscall/js"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessesDashboardView renders the processes dashboard page
@@ -18,6 +17,7 @@ type ProcessesDashboardView struct {
 	vecty.Core
 	vc       *client.VochainInfo
 	gwClient *client.Client
+	quitCh   chan struct{}
 }
 
 // Render renders the ProcessesDashboardView component
@@ -30,13 +30,6 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 					vc: dash.vc,
 				},
 			),
-			vecty.Markup(
-				event.BeforeUnload(func(i *vecty.Event) {
-					fmt.Println("Unloading page")
-					js.Global().Get("alert").Invoke("Closing page")
-					dash.gwClient.Close()
-				}),
-			),
 		)
 	}
 	return vecty.Text("Connecting to blockchain clients")
@@ -44,34 +37,38 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 
 func initProcessesDashboardView(vc *client.VochainInfo, ProcessesDashboardView *ProcessesDashboardView) *ProcessesDashboardView {
 	js.Global().Set("apiEnabled", true)
-	// Init Gateway client
-	fmt.Println("connecting to %s", config.GatewayHost)
-	gwClient, cancel, err := client.New(config.GatewayHost)
-	defer cancel()
-	if util.ErrPrint(err) {
-		if js.Global().Get("confirm").Invoke("Unable to connect to Gateway client. Reload with client running").Bool() {
-			js.Global().Get("location").Call("reload")
-		}
-		return nil
+	gwClient, cancel := InitGateway()
+	if gwClient == nil {
+		return ProcessesDashboardView
 	}
-
 	ProcessesDashboardView.gwClient = gwClient
 	ProcessesDashboardView.vc = vc
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView)
+	ProcessesDashboardView.quitCh = make(chan struct{})
+	BeforeUnload(func() {
+		close(ProcessesDashboardView.quitCh)
+	})
+	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel)
 	return ProcessesDashboardView
 }
 
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
-	defer d.gwClient.Close()
-	first := true
-	for js.Global().Get("apiEnabled").Bool() {
-		client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
-		if first {
-			first = false
-		} else {
-			time.Sleep(config.RefreshTime * time.Second)
-		}
-		vecty.Rerender(d)
+func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc) {
+	ticker := time.NewTicker(config.RefreshTime * time.Second)
+	// Wait for data structs to load
+	for d == nil || d.vc == nil {
 	}
-	fmt.Println("Closing gateway updater")
+	client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
+	vecty.Rerender(d)
+	for {
+		select {
+		case <-d.quitCh:
+			ticker.Stop()
+			d.gwClient.Close()
+			// cancel()
+			fmt.Println("Gateway connection closed")
+			return
+		case <-ticker.C:
+			client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
+			vecty.Rerender(d)
+		}
+	}
 }
