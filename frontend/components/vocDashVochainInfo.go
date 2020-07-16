@@ -6,61 +6,139 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // VochainInfoView renders the vochainInfo pane
 type VochainInfoView struct {
 	vecty.Core
-	vc *client.VochainInfo
+	vc             *client.VochainInfo
+	processesIndex int
+	numProcesses   int
+	entitiesIndex  int
+	numEntities    int
 }
 
 // Render renders the VochainInfoView component
 func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 	if b.vc != nil {
-		// TODO: place this inside a pageload event?
-		if js.Global().Get("search").IsUndefined() || !js.Global().Get("search").Bool() {
-			// if !js.Global().Get("search").Bool() {
-			b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, 10, true)
-			b.vc.ProcessSearchIDs = util.TrimSlice(b.vc.ProcessIDs, 10, true)
+		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
+			b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, config.SearchPageSmall, &b.entitiesIndex)
+			b.numEntities = len(b.vc.EntityIDs)
+			b.vc.ProcessSearchIDs = util.TrimSlice(b.vc.ProcessIDs, config.SearchPageSmall, &b.processesIndex)
+			b.numProcesses = len(b.vc.ProcessIDs)
+		} else {
+			search := js.Global().Get("searchTerm").String()
+			temp := util.SearchSlice(b.vc.EntityIDs, search)
+			b.vc.EntitySearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.entitiesIndex)
+			b.numEntities = len(temp)
+			temp = util.SearchSlice(b.vc.ProcessIDs, search)
+			b.vc.ProcessSearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.processesIndex)
+			b.numProcesses = len(temp)
 		}
 		return elem.Section(
 			elem.Input(vecty.Markup(
 				event.Input(func(e *vecty.Event) {
 					search := e.Target.Get("value").String()
-					js.Global().Set("search", true)
 					if search != "" {
-						b.vc.EntitySearchIDs = util.TrimSlice(util.SearchSlice(b.vc.EntityIDs, search), 10, true)
-						b.vc.ProcessSearchIDs = util.TrimSlice(util.SearchSlice(b.vc.ProcessIDs, search), 10, true)
+						js.Global().Set("searchTerm", search)
 					} else {
-						b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, 10, true)
-						b.vc.ProcessSearchIDs = util.TrimSlice(b.vc.ProcessIDs, 10, true)
+						js.Global().Set("searchTerm", "")
 					}
 					vecty.Rerender(b)
 				}),
+				prop.Placeholder("search IDs"),
 			)),
-			renderEntityList(b.vc.EntitySearchIDs),
-			renderProcessList(b.vc.ProcessSearchIDs, b.vc.EnvelopeHeights, b.vc.ProcessSearchList),
+			renderEntityList(b),
+			renderProcessList(b),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
 }
 
-func renderEntityList(entityIDs []string) vecty.ComponentOrHTML {
+func renderEntityList(b *VochainInfoView) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Heading4(vecty.Text("Entity ID list: ")),
+		elem.Button(
+			vecty.Text("prev"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.entitiesIndex--
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					b.entitiesIndex > 0,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					b.entitiesIndex < 1,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.Button(vecty.Text("next"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.entitiesIndex++
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					(b.entitiesIndex+1)*config.SearchPageSmall < b.numEntities,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					(b.entitiesIndex+1)*config.SearchPageSmall >= b.numEntities,
+					prop.Disabled(true),
+				),
+			),
+		),
 		elem.UnorderedList(
-			renderEntityItems(entityIDs)...,
+			renderEntityItems(b.vc.EntitySearchIDs)...,
 		),
 	)
 }
 
-func renderProcessList(processIDs []string, heights map[string]int64, procs map[string]client.ProcessInfo) vecty.ComponentOrHTML {
+func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 	return elem.Div(
+		elem.Button(
+			vecty.Text("prev"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.processesIndex--
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					b.processesIndex > 0,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					b.processesIndex < 1,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.Button(vecty.Text("next"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.processesIndex++
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					(b.processesIndex+1)*config.SearchPageSmall < b.numProcesses,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					(b.processesIndex+1)*config.SearchPageSmall >= b.numProcesses,
+					prop.Disabled(true),
+				),
+			),
+		),
 		elem.Heading4(vecty.Text("Process ID list: ")),
 		elem.UnorderedList(
-			renderProcessItems(processIDs, heights, procs)...,
+			renderProcessItems(b.vc.ProcessSearchIDs, b.vc.EnvelopeHeights, b.vc.ProcessSearchList)...,
 		),
 	)
 }

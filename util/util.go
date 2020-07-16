@@ -90,9 +90,17 @@ func SearchSlice(source []string, search string) []string {
 }
 
 // TrimSlice trims a slice of strings to lim elements. If rev is set to true, trims from beginning rather than end.
-func TrimSlice(slice []string, lim int, rev bool) []string {
-	if rev {
-		return slice[Max(len(slice)-lim-1, 0):Max(len(slice), 0)]
+func TrimSlice(slice []string, lim int, page *int) []string {
+	if *page < 0 {
+		*page = 0
+		fmt.Println("Invalid page number")
 	}
-	return slice[0:Max(Min(len(slice), lim), 0)]
+	len := len(slice)
+	if (*page+1)*lim > len+lim-1 {
+		*page = (len - 1) / lim
+	}
+	fmt.Println("page: " + IntToString(*page))
+	start := Min(0+(*page*lim), len)
+	end := Max(Min(len, (*page+1)*lim), 0)
+	return slice[start:end]
 }
