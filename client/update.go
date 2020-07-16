@@ -8,11 +8,11 @@ import (
 func UpdateDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateGatewayInfo(c, vc)
 	UpdateBlockStatus(c, vc)
-	UpdateVochainProcessList(c, vc)
-	UpdateEntityList(c, vc)
+	// UpdateVochainProcessList(c, vc)
+	// UpdateEntityList(c, vc)
 }
 
-// UpdateProcessesDashboardInfo calls gateway apis, updates info needed for dashboard page
+// UpdateProcessesDashboardInfo calls gateway apis, updates info needed for processes page
 func UpdateProcessesDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateVochainProcessList(c, vc)
 	UpdateEntityList(c, vc)
@@ -85,4 +85,42 @@ func GetAllIDs(IDList *[]string, c *Client, getList func(string) ([]string, erro
 		// fmt.Println("last ID " + lastID)
 
 	}
+}
+
+// UpdateProcessEnvelopeHeights updates envelope height map to include all current process IDs
+func UpdateProcessEnvelopeHeights(c *Client, vc *VochainInfo) {
+	if vc.EnvelopeHeights == nil {
+		vc.EnvelopeHeights = make(map[string]int64)
+	}
+	for _, ID := range vc.ProcessSearchIDs {
+		if _, ok := vc.EnvelopeHeights[ID]; !ok {
+			height, err := c.GetEnvelopeHeight(ID)
+			if !util.ErrPrint(err) {
+				vc.EnvelopeHeights[ID] = height
+			}
+		}
+	}
+}
+
+// UpdateProcessSearchInfo updates process search info map to include all currently displayed process IDs
+func UpdateProcessSearchInfo(c *Client, vc *VochainInfo) {
+	if vc.ProcessSearchList == nil {
+		vc.ProcessSearchList = make(map[string]ProcessInfo)
+	}
+	for _, ID := range vc.ProcessSearchIDs {
+		if _, ok := vc.ProcessSearchList[ID]; !ok {
+			t, st, _, err := c.GetProcessResults(ID)
+			if !util.ErrPrint(err) {
+				vc.ProcessSearchList[ID] = ProcessInfo{
+					ProcessType: t,
+					State:       st}
+			}
+		}
+	}
+}
+
+// UpdateAuxProcessInfo updates auxilary info for all currently displayed process id's
+func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
+	UpdateProcessEnvelopeHeights(c, vc)
+	UpdateProcessSearchInfo(c, vc)
 }

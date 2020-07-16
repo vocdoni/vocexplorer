@@ -96,18 +96,22 @@ type MetaResponse struct {
 
 // VochainInfo holds info about vochain as a whole
 type VochainInfo struct {
-	APIList        []string
-	BlockTime      *[5]int32
-	BlockTimeStamp int32
-	Health         int32
-	Height         int64
-	Ok             bool
-	ProcessIDs     []string
-	Entities       []EntityInfo
-	EntityIDs      []string
-	Envelopes      []EnvelopeInfo
-	Timestamp      int32
-	Processes      []ProcessInfo
+	APIList           []string
+	BlockTime         *[5]int32
+	BlockTimeStamp    int32
+	Health            int32
+	Height            int64
+	Ok                bool
+	ProcessIDs        []string
+	Entities          []EntityInfo
+	EntityIDs         []string
+	Envelopes         []EnvelopeInfo
+	Timestamp         int32
+	Processes         []ProcessInfo
+	EntitySearchIDs   []string
+	ProcessSearchIDs  []string
+	ProcessSearchList map[string]ProcessInfo
+	EnvelopeHeights   map[string]int64
 }
 
 // EntityInfo holds info about one vochain entity
@@ -127,8 +131,8 @@ type EnvelopeInfo struct {
 // ProcessInfo holds info about one vochain process
 type ProcessInfo struct {
 	// List of envelopes from given point
-	Nullifiers []string
-	Results    [][]uint32
-	State      string
-	Type       string
+	// Nullifiers []string
+	// Results    [][]uint32
+	State       string
+	ProcessType string
 }

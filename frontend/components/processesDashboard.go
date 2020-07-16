@@ -58,6 +58,9 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 	}
 	client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
 	vecty.Rerender(d)
+	time.Sleep(250 * time.Millisecond)
+	client.UpdateAuxProcessInfo(d.gwClient, d.vc)
+	vecty.Rerender(d)
 	for {
 		select {
 		case <-d.quitCh:
@@ -68,6 +71,10 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			return
 		case <-ticker.C:
 			client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
+
+			// if ticks%10 == 0 {
+			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
+			// }
 			vecty.Rerender(d)
 		}
 	}

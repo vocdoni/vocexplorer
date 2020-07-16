@@ -233,7 +233,7 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	}
 
 	// Set context for request
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 	defer cancel()
 
 	// fmt.Println("request:", reqBody)
@@ -245,12 +245,24 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
+
 	var respOuter ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 	if respOuter.ID != reqOuter.ID {
-		return nil, fmt.Errorf("%s: %v", method, "request ID doesn't match")
+		fmt.Printf("%s: %v", method, "request ID doesn't match\n")
+		// Try to read & trash one more message so client can catch up
+		_, message, err := c.Conn.Read(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %v", method, err)
+		}
+		if err := json.Unmarshal(message, &respOuter); err != nil {
+			return nil, fmt.Errorf("%s: %v", method, err)
+		}
+		if respOuter.ID != reqOuter.ID {
+			return nil, fmt.Errorf("%s: %v", method, "request ID doesn't match")
+		}
 	}
 	if respOuter.Signature == "" {
 		return nil, fmt.Errorf("%s: empty signature in response: %s", method, message)

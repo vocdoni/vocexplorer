@@ -16,6 +16,7 @@ import (
 func main() {
 	// gatewayHost := flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
 	// vochainHost := flag.String("vochainHost", "ws://0.0.0.0:26657/websocket", "gateway API host to connect to")
+	nozip := flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	hostURL := flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	logLevel := flag.String("logLevel", "error", "log level <debug, info, warn, error>")
 	flag.Parse()
@@ -33,8 +34,14 @@ func main() {
 
 	r := mux.NewRouter()
 	router.RegisterRoutes(r)
-	h := gziphandler.GzipHandler(r)
 
-	err = http.ListenAndServe(urlR.Host, h)
-	util.ErrFatal(err)
+	if *nozip {
+		err = http.ListenAndServe(urlR.Host, r)
+		util.ErrFatal(err)
+	} else {
+		h := gziphandler.GzipHandler(r)
+		err = http.ListenAndServe(urlR.Host, h)
+		util.ErrFatal(err)
+	}
+
 }
