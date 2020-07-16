@@ -16,7 +16,7 @@ type Body struct {
 func (b Body) Render() vecty.ComponentOrHTML {
 	return elem.Body(
 		router.NewRoute("/", &HomeView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/processes", &ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/vocdash", &VocDashView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NotFoundHandler(&notFound{}),
 	)
 }

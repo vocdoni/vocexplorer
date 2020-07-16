@@ -44,7 +44,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						style.Padding(14, 16),
 						fontFamily.Arial,
 					),
-					elem.Anchor(vecty.Markup(vecty.Attribute("href", "/processes")), vecty.Text("Voting Processes & Entities")),
+					elem.Anchor(vecty.Markup(vecty.Attribute("href", "/vocdash")), vecty.Text("Voting Processes & Entities")),
 					// router.Link("/processes", "Voting Processes & Entities", router.LinkOptions{}),
 				),
 			},

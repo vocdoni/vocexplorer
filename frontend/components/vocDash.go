@@ -8,21 +8,21 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 )
 
-// ProcessesView renders the processes page
-type ProcessesView struct {
+// VocDashView renders the processes page
+type VocDashView struct {
 	vecty.Core
 }
 
-// Render renders the ProcessesView component
-func (home *ProcessesView) Render() vecty.ComponentOrHTML {
+// Render renders the VocDashView component
+func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("page", "processes")
 	js.Global().Set("apiEnabled", false)
 	var vc client.VochainInfo
-	var dash ProcessesDashboardView
+	var dash VocDashDashboardView
 	return elem.Div(
 		&Header{},
 		elem.Main(
-			initProcessesDashboardView(&vc, &dash),
+			initVocDashDashboardView(&vc, &dash),
 		),
 	)
 }

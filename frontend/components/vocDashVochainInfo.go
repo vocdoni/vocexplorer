@@ -51,7 +51,7 @@ func renderEntityList(entityIDs []string) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Heading4(vecty.Text("Entity ID list: ")),
 		elem.UnorderedList(
-			renderList(entityIDs)...,
+			renderEntityItems(entityIDs)...,
 		),
 	)
 }
@@ -66,6 +66,9 @@ func renderProcessList(processIDs []string, heights map[string]int64, procs map[
 }
 
 func renderProcessItems(IDs []string, heights map[string]int64, procs map[string]client.ProcessInfo) []vecty.MarkupOrChild {
+	if len(IDs) == 0 {
+		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
+	}
 	var elemList []vecty.MarkupOrChild
 	for _, ID := range IDs {
 		height, hok := heights[ID]
@@ -82,7 +85,10 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 	return elemList
 }
 
-func renderList(slice []string) []vecty.MarkupOrChild {
+func renderEntityItems(slice []string) []vecty.MarkupOrChild {
+	if len(slice) == 0 {
+		return []vecty.MarkupOrChild{vecty.Text("No valid entities")}
+	}
 	var elemList []vecty.MarkupOrChild
 	for _, term := range slice {
 		elemList = append(elemList, elem.ListItem(vecty.Text(term)))

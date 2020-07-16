@@ -12,8 +12,8 @@ func UpdateDashboardInfo(c *Client, vc *VochainInfo) {
 	// UpdateEntityList(c, vc)
 }
 
-// UpdateProcessesDashboardInfo calls gateway apis, updates info needed for processes page
-func UpdateProcessesDashboardInfo(c *Client, vc *VochainInfo) {
+// UpdateVocDashDashboardInfo calls gateway apis, updates info needed for processes page
+func UpdateVocDashDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateVochainProcessList(c, vc)
 	UpdateEntityList(c, vc)
 }

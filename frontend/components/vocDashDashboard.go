@@ -12,16 +12,16 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
-// ProcessesDashboardView renders the processes dashboard page
-type ProcessesDashboardView struct {
+// VocDashDashboardView renders the processes dashboard page
+type VocDashDashboardView struct {
 	vecty.Core
 	vc       *client.VochainInfo
 	gwClient *client.Client
 	quitCh   chan struct{}
 }
 
-// Render renders the ProcessesDashboardView component
-func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
+// Render renders the VocDashDashboardView component
+func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return elem.Div(
 			elem.Main(
@@ -35,28 +35,28 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initProcessesDashboardView(vc *client.VochainInfo, ProcessesDashboardView *ProcessesDashboardView) *ProcessesDashboardView {
+func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView) *VocDashDashboardView {
 	js.Global().Set("apiEnabled", true)
 	gwClient, cancel := InitGateway()
 	if gwClient == nil {
-		return ProcessesDashboardView
+		return VocDashDashboardView
 	}
-	ProcessesDashboardView.gwClient = gwClient
-	ProcessesDashboardView.vc = vc
-	ProcessesDashboardView.quitCh = make(chan struct{})
+	VocDashDashboardView.gwClient = gwClient
+	VocDashDashboardView.vc = vc
+	VocDashDashboardView.quitCh = make(chan struct{})
 	BeforeUnload(func() {
-		close(ProcessesDashboardView.quitCh)
+		close(VocDashDashboardView.quitCh)
 	})
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel)
-	return ProcessesDashboardView
+	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel)
+	return VocDashDashboardView
 }
 
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc) {
+func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc) {
 	ticker := time.NewTicker(config.RefreshTime * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
+	client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
 	client.UpdateAuxProcessInfo(d.gwClient, d.vc)
@@ -70,7 +70,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateProcessesDashboardInfo(d.gwClient, d.vc)
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
 
 			// if ticks%10 == 0 {
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
