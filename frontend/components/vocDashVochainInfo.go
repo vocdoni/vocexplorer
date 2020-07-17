@@ -1,6 +1,7 @@
 package components
 
 import (
+	"strings"
 	"syscall/js"
 
 	"github.com/gopherjs/vecty"
@@ -36,6 +37,9 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 			b.vc.EntitySearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.entitiesIndex)
 			b.numEntities = len(temp)
 			temp = util.SearchSlice(b.vc.ProcessIDs, search)
+			if len(temp) <= 0 {
+				temp = searchStateType(b.vc, search)
+			}
 			b.vc.ProcessSearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.processesIndex)
 			b.numProcesses = len(temp)
 		}
@@ -172,4 +176,18 @@ func renderEntityItems(slice []string) []vecty.MarkupOrChild {
 		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
 	}
 	return elemList
+}
+
+func searchStateType(vc *client.VochainInfo, search string) []string {
+	var IDList []string
+	for _, key := range vc.ProcessIDs {
+		// for key, info := range vc.ProcessSearchList {
+		info, ok := vc.ProcessSearchList[key]
+		if ok {
+			if strings.Contains(info.State, search) || strings.Contains(info.ProcessType, search) {
+				IDList = append(IDList, key)
+			}
+		}
+	}
+	return IDList
 }

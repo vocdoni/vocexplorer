@@ -110,6 +110,11 @@ func UpdateProcessSearchInfo(c *Client, vc *VochainInfo) {
 	if vc.ProcessSearchList == nil {
 		vc.ProcessSearchList = make(map[string]ProcessInfo)
 	}
+	// If all processes are populated, send no requests. Process results are not updated without page refresh.
+	if len(vc.ProcessSearchList) >= len(vc.ProcessIDs) {
+		return
+	}
+	numReq := 0
 	for _, ID := range vc.ProcessSearchIDs {
 		if _, ok := vc.ProcessSearchList[ID]; !ok {
 			t, st, _, err := c.GetProcessResults(ID)
@@ -118,6 +123,23 @@ func UpdateProcessSearchInfo(c *Client, vc *VochainInfo) {
 					ProcessType: t,
 					State:       st}
 			}
+			numReq++
+		}
+	}
+	// If currently-displayed processes are populated, start to populate ones which could be displayed
+	// This reduces load time & allows for type/state search.
+	for _, ID := range vc.ProcessIDs {
+		if numReq >= 10 {
+			break
+		}
+		if _, ok := vc.ProcessSearchList[ID]; !ok {
+			t, st, _, err := c.GetProcessResults(ID)
+			if !util.ErrPrint(err) {
+				vc.ProcessSearchList[ID] = ProcessInfo{
+					ProcessType: t,
+					State:       st}
+			}
+			numReq++
 		}
 	}
 }

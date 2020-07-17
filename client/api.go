@@ -233,7 +233,7 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	}
 
 	// Set context for request
-	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	// fmt.Println("request:", reqBody)

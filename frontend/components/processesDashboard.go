@@ -24,10 +24,18 @@ type ProcessesDashboardView struct {
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.process != nil {
+		t := dash.process.ProcessType
+		if t == "" {
+			t = "unknown"
+		}
+		st := dash.process.State
+		if st == "" {
+			t = "unknown"
+		}
 		return elem.Div(
 			elem.Main(
 				elem.Heading4(vecty.Text("Process "+dash.processID)),
-				elem.Heading5(vecty.Text("Process type: "+dash.process.ProcessType+", state: "+dash.process.State)),
+				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
 				renderResults(dash.process.Results),
 				vecty.Markup(vecty.Class("info-pane")),
 				&EnvelopeListView{
