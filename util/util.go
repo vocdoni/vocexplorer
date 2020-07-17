@@ -57,6 +57,12 @@ func IntToString(val interface{}) string {
 	if i, ok := val.(int64); ok {
 		return strconv.Itoa(int(i))
 	}
+	if i, ok := val.(uint32); ok {
+		return strconv.Itoa(int(i))
+	}
+	if i, ok := val.(uint64); ok {
+		return strconv.Itoa(int(i))
+	}
 	return ""
 }
 

@@ -116,8 +116,10 @@ type VochainInfo struct {
 
 // EntityInfo holds info about one vochain entity
 type EntityInfo struct {
-	ProcessIDs     []string
-	ScrutinizerIDs []string
+	ProcessIDs       []string
+	ProcessSearchIDs []string
+	ProcessList      map[string]ProcessInfo
+	EnvelopeHeights  map[string]int64
 }
 
 // EnvelopeInfo holds info about one vochain envelope

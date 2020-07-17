@@ -12,6 +12,7 @@ func RegisterRoutes(m *mux.Router) {
 	m.HandleFunc("/", indexHandler)
 	m.HandleFunc("/vocdash", indexHandler)
 	m.HandleFunc("/processes/{id}", indexHandler)
+	m.HandleFunc("/entities/{id}", indexHandler)
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }

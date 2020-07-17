@@ -165,3 +165,52 @@ func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID
 		return c.GetEnvelopeList(processID, fromID)
 	})
 }
+
+// UpdateEntitiesDashboardInfo updates entity info to include recent processes
+func UpdateEntitiesDashboardInfo(c *Client, entity *EntityInfo, entityID string) {
+	if entity == nil {
+		entity = new(EntityInfo)
+	}
+	GetAllIDs(&entity.ProcessIDs, c, func(fromID string) ([]string, error) {
+		return c.GetProcessList(entityID, fromID)
+	})
+}
+
+// UpdateAuxEntityInfo updates process info map to include all currently displayed process IDs
+func UpdateAuxEntityInfo(c *Client, e *EntityInfo) {
+	if e.ProcessList == nil {
+		e.ProcessList = make(map[string]ProcessInfo)
+	}
+	// If all processes are populated, send no requests. Process results are not updated without page refresh.
+	if len(e.ProcessList) >= len(e.ProcessIDs) {
+		return
+	}
+	numReq := 0
+	for _, ID := range e.ProcessSearchIDs {
+		if _, ok := e.ProcessList[ID]; !ok {
+			t, st, _, err := c.GetProcessResults(ID)
+			if !util.ErrPrint(err) {
+				e.ProcessList[ID] = ProcessInfo{
+					ProcessType: t,
+					State:       st}
+			}
+			numReq++
+		}
+	}
+	// If currently-displayed processes are populated, start to populate ones which could be displayed
+	// This reduces load time & allows for type/state search.
+	for _, ID := range e.ProcessIDs {
+		if numReq >= 10 {
+			break
+		}
+		if _, ok := e.ProcessList[ID]; !ok {
+			t, st, _, err := c.GetProcessResults(ID)
+			if !util.ErrPrint(err) {
+				e.ProcessList[ID] = ProcessInfo{
+					ProcessType: t,
+					State:       st}
+			}
+			numReq++
+		}
+	}
+}

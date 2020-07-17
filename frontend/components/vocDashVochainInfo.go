@@ -162,7 +162,8 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 				vecty.If(!iok, vecty.Text(": loading process info...")),
 				vecty.If(iok, vecty.Text(": type: "+info.ProcessType+", state: "+info.State)),
 				vecty.If(hok, vecty.Text(", "+util.IntToString(height)+" envelopes")),
-			))
+			),
+		)
 	}
 	return elemList
 }
@@ -172,8 +173,13 @@ func renderEntityItems(slice []string) []vecty.MarkupOrChild {
 		return []vecty.MarkupOrChild{vecty.Text("No valid entities")}
 	}
 	var elemList []vecty.MarkupOrChild
-	for _, term := range slice {
-		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
+	for _, ID := range slice {
+		elemList = append(
+			elemList,
+			elem.ListItem(
+				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/entities/"+ID)), vecty.Text(ID)),
+			),
+		)
 	}
 	return elemList
 }

@@ -48,15 +48,32 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 }
 
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {
+	if len(results) <= 0 {
+		return elem.Heading6(vecty.Text("No results yet"))
+	}
 	var resultList []vecty.MarkupOrChild
-	for _, row := range results {
+	var header []vecty.MarkupOrChild
+	header = append(header, elem.TableHeader())
+	numCols := 0
+	for i, row := range results {
 		var resultRow []vecty.MarkupOrChild
+		resultRow = append(resultRow, elem.TableHeader(vecty.Text("Question "+util.IntToString(i)+": ")))
 		for _, val := range row {
 			resultRow = append(resultRow, elem.TableData(vecty.Text(util.IntToString(val)+" ")))
 		}
 		resultList = append(resultList, elem.TableRow(resultRow...))
+		numCols = util.Max(numCols, len(row))
 	}
-	return elem.Table(resultList...)
+	for i := 0; i < numCols; i++ {
+		header = append(header, elem.TableHeader(vecty.Text("Option "+util.IntToString(i)+": ")))
+	}
+	resultList = append(resultList, elem.TableHead(
+		elem.TableRow(header...),
+	))
+	return elem.Div(
+		elem.Heading5(vecty.Text("Process Results: ")),
+		elem.Table(resultList...),
+	)
 }
 
 func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string) *ProcessesDashboardView {

@@ -124,7 +124,7 @@ func (c *Client) GetProcessList(entityID, fromID string) ([]string, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.ProcessIDs, nil
+	return resp.ProcessList, nil
 }
 
 // ProcessInfo requests
