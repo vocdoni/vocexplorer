@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"fmt"
-	"syscall/js"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -36,7 +35,6 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 }
 
 func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView) *VocDashDashboardView {
-	js.Global().Set("apiEnabled", true)
 	gwClient, cancel := InitGateway()
 	if gwClient == nil {
 		return VocDashDashboardView
@@ -66,15 +64,11 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 		case <-d.quitCh:
 			ticker.Stop()
 			d.gwClient.Close()
-			// cancel()
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
-
-			// if ticks%10 == 0 {
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
-			// }
 			vecty.Rerender(d)
 		}
 	}

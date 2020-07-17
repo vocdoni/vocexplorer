@@ -130,9 +130,15 @@ type EnvelopeInfo struct {
 
 // ProcessInfo holds info about one vochain process
 type ProcessInfo struct {
-	// List of envelopes from given point
-	// Nullifiers []string
-	// Results    [][]uint32
+	State       string
+	ProcessType string
+}
+
+// FullProcessInfo holds info about one vochain process, including votes and results
+
+type FullProcessInfo struct {
+	Nullifiers  []string
+	Results     [][]uint32
 	State       string
 	ProcessType string
 }

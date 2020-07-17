@@ -99,7 +99,6 @@ func TrimSlice(slice []string, lim int, page *int) []string {
 	if (*page+1)*lim > len+lim-1 {
 		*page = (len - 1) / lim
 	}
-	fmt.Println("page: " + IntToString(*page))
 	start := Min(0+(*page*lim), len)
 	end := Max(Min(len, (*page+1)*lim), 0)
 	return slice[start:end]

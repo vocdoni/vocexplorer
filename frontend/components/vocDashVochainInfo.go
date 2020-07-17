@@ -52,8 +52,8 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 				}),
 				prop.Placeholder("search IDs"),
 			)),
-			renderEntityList(b),
 			renderProcessList(b),
+			renderEntityList(b),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
@@ -154,7 +154,7 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 		elemList = append(
 			elemList,
 			elem.ListItem(
-				vecty.Text(ID),
+				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/processes/"+ID)), vecty.Text(ID)),
 				vecty.If(!iok, vecty.Text(": loading process info...")),
 				vecty.If(iok, vecty.Text(": type: "+info.ProcessType+", state: "+info.State)),
 				vecty.If(hok, vecty.Text(", "+util.IntToString(height)+" envelopes")),

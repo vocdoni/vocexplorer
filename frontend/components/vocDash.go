@@ -15,8 +15,7 @@ type VocDashView struct {
 
 // Render renders the VocDashView component
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
-	js.Global().Set("page", "processes")
-	js.Global().Set("apiEnabled", false)
+	js.Global().Set("page", "Voting Processes & Entities")
 	var vc client.VochainInfo
 	var dash VocDashDashboardView
 	return elem.Div(

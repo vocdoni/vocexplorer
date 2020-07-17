@@ -73,6 +73,9 @@ func GetAllIDs(IDList *[]string, c *Client, getList func(string) ([]string, erro
 	for {
 		tempList, err := getList(lastID)
 		util.ErrPrint(err)
+		if len(tempList) <= 0 {
+			break
+		}
 		if tempList[len(tempList)-1] == lastID {
 			break
 		}
@@ -123,4 +126,20 @@ func UpdateProcessSearchInfo(c *Client, vc *VochainInfo) {
 func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
 	UpdateProcessEnvelopeHeights(c, vc)
 	UpdateProcessSearchInfo(c, vc)
+}
+
+// UpdateProcessesDashboardInfo updates process info to include status and recent envelopes
+func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID string) {
+	if process == nil {
+		process = new(FullProcessInfo)
+	}
+	t, st, res, err := c.GetProcessResults(processID)
+	if !util.ErrPrint(err) {
+		process.ProcessType = t
+		process.Results = res
+		process.State = st
+	}
+	GetAllIDs(&process.Nullifiers, c, func(fromID string) ([]string, error) {
+		return c.GetEnvelopeList(processID, fromID)
+	})
 }

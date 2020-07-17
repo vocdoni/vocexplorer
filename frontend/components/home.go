@@ -17,7 +17,6 @@ type HomeView struct {
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
 	js.Global().Set("page", "home")
-	js.Global().Set("apiEnabled", false)
 	var t rpc.TendermintInfo
 	var vc client.VochainInfo
 	var dash DashboardView
