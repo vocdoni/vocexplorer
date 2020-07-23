@@ -15,16 +15,16 @@ import (
 
 // TendermintInfo holds tendermint api results
 type TendermintInfo struct {
-	ResultStatus       *coretypes.ResultStatus
-	Genesis            *types.GenesisDoc
-	RecentBlocks       []coretypes.ResultBlock
-	RecentBlockResults []coretypes.ResultBlockResults
-	TxCount            int
-	TxList             []*coretypes.ResultTx
-	ChainID            int
-	AppVersion         int
-	MaxBlockSize       int
-	NumValidators      int
+	ResultStatus     *coretypes.ResultStatus
+	Genesis          *types.GenesisDoc
+	BlockList        [config.SearchPageSmall]coretypes.ResultBlock
+	BlockListResults [config.SearchPageSmall]coretypes.ResultBlockResults
+	TxCount          int
+	TxList           []*coretypes.ResultTx
+	ChainID          int
+	AppVersion       int
+	MaxBlockSize     int
+	NumValidators    int
 }
 
 // StartClient initializes an http tendermint api client on websockets
@@ -53,12 +53,17 @@ func initClient() (*http.HTTP, error) {
 }
 
 //UpdateTendermintInfo updates the tendermint info
-func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo) {
+func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo, i int) {
 	t.GetHealth(c)
 	t.GetAllTxs(c)
 	t.GetGenesis(c)
-	t.GetRecentBlocks(c)
-	t.GetRecentBlockResults(c)
+	UpdateBlockList(c, t, i)
+}
+
+//UpdateBlockList updates the latest blocks starting at index i
+func UpdateBlockList(c *http.HTTP, t *TendermintInfo, i int) {
+	t.GetBlockList(c, i)
+	// t.GetBlockListResults(c, i)
 }
 
 // GetHealth calls the tendermint Health api
@@ -89,48 +94,99 @@ func (t *TendermintInfo) GetGenesis(c *http.HTTP) {
 	}
 }
 
-// GetRecentBlocks keeps a list of the four most recent blocks
-func (t *TendermintInfo) GetRecentBlocks(c *http.HTTP) {
-	var lastBlockHeight int64
-	if t.RecentBlocks != nil && len(t.RecentBlocks) > 0 {
-		lastBlockHeight = t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height
+// GetBlockList keeps a list of current blocks
+func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
+	lastBlockHeight := 0
+	lastBlock := t.BlockList[config.SearchPageSmall-1].Block
+	if lastBlock != nil {
+		lastBlockHeight = int(lastBlock.Header.Height)
 	}
-	// Number of new blocks not already stored
-	numNew := util.Min(int(t.ResultStatus.SyncInfo.LatestBlockHeight-lastBlockHeight)-1, 4)
-	if numNew <= len(t.RecentBlocks) {
-		t.RecentBlocks = t.RecentBlocks[numNew:]
-	} else {
-		t.RecentBlocks = []coretypes.ResultBlock{}
+	fmt.Println("Lash block height: " + util.IntToString(lastBlockHeight))
+	// Offset from last index to new one, so we can recycle fetched blocks
+	offset := int(t.ResultStatus.SyncInfo.LatestBlockHeight) - 1 - index - lastBlockHeight
+	if offset == 0 {
+		return
 	}
-	for numNew > 0 {
-		nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(numNew)
-		result, err := c.Block(&nextHeight)
-		if !util.ErrPrint(err) {
-			t.RecentBlocks = append(t.RecentBlocks, *result)
+	fmt.Println("initial offset: " + util.IntToString(offset))
+	if offset > 0 {
+		if offset < config.SearchPageSmall {
+			for i := 0; i < config.SearchPageSmall-offset; i++ {
+				t.BlockList[i] = t.BlockList[i+offset]
+			}
+		} else {
+			offset = config.SearchPageSmall
 		}
-		numNew--
+		for offset > 0 {
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+offset)
+			fmt.Println("next height" + util.IntToString(nextHeight))
+			result, err := c.Block(&nextHeight)
+			if !util.ErrPrint(err) {
+				t.BlockList[config.SearchPageSmall-offset] = *result
+			}
+			offset--
+		}
+	} else if offset < 0 {
+		if offset > 0-config.SearchPageSmall {
+			offset = 0 - offset
+			for i := 0; i < config.SearchPageSmall-offset; i++ {
+				t.BlockList[i+offset] = t.BlockList[i]
+			}
+		} else {
+			offset = config.SearchPageSmall
+		}
+		for offset > 0 {
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.SearchPageSmall-offset+1)
+			fmt.Println("next height" + util.IntToString(nextHeight))
+			result, err := c.Block(&nextHeight)
+			if !util.ErrPrint(err) {
+				t.BlockList[offset-1] = *result
+			}
+			offset--
+		}
 	}
 }
 
-// GetRecentBlockResults keeps a list of the four most recent blocks
-func (t *TendermintInfo) GetRecentBlockResults(c *http.HTTP) {
-	var lastBlockHeight int64
-	if t.RecentBlockResults != nil && len(t.RecentBlockResults) > 0 {
-		lastBlockHeight = t.RecentBlockResults[len(t.RecentBlockResults)-1].Height
+// GetBlockListResults keeps a list of current blocks
+func (t *TendermintInfo) GetBlockListResults(c *http.HTTP, index int) {
+	lastBlockHeight := 0
+	lastBlockHeight = int(t.BlockListResults[config.SearchPageSmall-1].Height)
+	// Offset from last index to new one, so we can recycle fetched blocks
+	offset := int(t.ResultStatus.SyncInfo.LatestBlockHeight) - 1 - index - lastBlockHeight
+	if offset == 0 {
+		return
 	}
-	// Number of new blocks not already stored
-	numNew := util.Min(int(t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height-lastBlockHeight)-1, 4)
-	if numNew <= len(t.RecentBlockResults) {
-		t.RecentBlockResults = t.RecentBlockResults[numNew:]
-	} else {
-		t.RecentBlockResults = []coretypes.ResultBlockResults{}
-	}
-	for numNew > 0 {
-		nextHeight := t.RecentBlocks[len(t.RecentBlocks)-1].Block.Header.Height - int64(numNew)
-		result, err := c.BlockResults(&nextHeight)
-		if !util.ErrPrint(err) {
-			t.RecentBlockResults = append(t.RecentBlockResults, *result)
+	if offset > 0 {
+		if offset < config.SearchPageSmall {
+			for i := 0; i < config.SearchPageSmall-offset; i++ {
+				t.BlockListResults[i] = t.BlockListResults[i+offset]
+			}
+		} else {
+			offset = config.SearchPageSmall
 		}
-		numNew--
+		for offset > 0 {
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+offset-1)
+			result, err := c.BlockResults(&nextHeight)
+			if !util.ErrPrint(err) {
+				t.BlockListResults[config.SearchPageSmall-offset] = *result
+			}
+			offset--
+		}
+	} else if offset < 0 {
+		if offset > 0-config.SearchPageSmall {
+			offset = 0 - offset
+			for i := 0; i < config.SearchPageSmall-offset; i++ {
+				t.BlockListResults[i+offset] = t.BlockListResults[i]
+			}
+		} else {
+			offset = config.SearchPageSmall
+		}
+		for offset > 0 {
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.SearchPageSmall-offset)
+			result, err := c.BlockResults(&nextHeight)
+			if !util.ErrPrint(err) {
+				t.BlockListResults[offset-1] = *result
+			}
+			offset--
+		}
 	}
 }

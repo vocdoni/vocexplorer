@@ -18,11 +18,13 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	t        *rpc.TendermintInfo
-	vc       *client.VochainInfo
-	gwClient *client.Client
-	tClient  *http.HTTP
-	quitCh   chan struct{}
+	t          *rpc.TendermintInfo
+	vc         *client.VochainInfo
+	gwClient   *client.Client
+	tClient    *http.HTTP
+	quitCh     chan struct{}
+	refreshCh  chan int
+	blockIndex int
 }
 
 // Render renders the DashboardView component
@@ -32,8 +34,9 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 			elem.Main(
 				vecty.Markup(vecty.Class("info-pane")),
 				&StatsView{
-					t:  dash.t,
-					vc: dash.vc,
+					t:         dash.t,
+					vc:        dash.vc,
+					refreshCh: dash.refreshCh,
 				},
 			),
 			vecty.Markup(
@@ -61,6 +64,8 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	DashboardView.t = t
 	DashboardView.vc = vc
 	DashboardView.quitCh = make(chan struct{})
+	DashboardView.refreshCh = make(chan int, 50)
+	DashboardView.blockIndex = 0
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
@@ -73,7 +78,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
 	vecty.Rerender(d)
 	for {
@@ -85,8 +90,21 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t)
+			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
+			vecty.Rerender(d)
+		case i := <-d.refreshCh:
+			loop:
+				for {
+					// If many indices waiting in buffer, scan to last one.
+					select {
+					case i = <-d.refreshCh:
+					default:
+						break loop
+					}
+				}
+			d.blockIndex = i
+			rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
 	}
