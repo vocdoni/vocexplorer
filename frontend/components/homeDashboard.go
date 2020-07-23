@@ -18,11 +18,13 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	t        *rpc.TendermintInfo
-	vc       *client.VochainInfo
-	gwClient *client.Client
-	tClient  *http.HTTP
-	quitCh   chan struct{}
+	t          *rpc.TendermintInfo
+	vc         *client.VochainInfo
+	gwClient   *client.Client
+	tClient    *http.HTTP
+	quitCh     chan struct{}
+	refreshCh  chan int
+	blockIndex int
 }
 
 // Render renders the DashboardView component
@@ -85,9 +87,12 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t)
+			rpc.UpdateTendermintInfo(d.tClient, d.t, d.d.blockIndex)
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
+		case i <- d.refreshCh:
+			d.blockIndex = i
+			rpc.UpdateBlockList(c.tClient, d.t, d.blockIndex)
 		}
 	}
 }

@@ -19,6 +19,7 @@ type ProcessListView struct {
 	entity         *client.EntityInfo
 	processesIndex int
 	numProcesses   int
+	refreshCh      chan bool
 }
 
 // Render renders the ProcessListView component
@@ -61,6 +62,7 @@ func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
 			vecty.Markup(
 				event.Click(func(e *vecty.Event) {
 					b.processesIndex--
+					b.refreshCh <- true
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
@@ -76,6 +78,8 @@ func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
 		elem.Button(vecty.Text("next"),
 			vecty.Markup(
 				event.Click(func(e *vecty.Event) {
+					b.processesIndex++
+					b.refreshCh <- true
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
@@ -89,6 +93,7 @@ func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
 			),
 		),
 		elem.Heading4(vecty.Text("Process ID list: ")),
+		vecty.If(len(b.entity.ProcessList) < b.numProcesses, vecty.Text("Loading process info...")),
 		elem.UnorderedList(
 			entityRenderProcessItems(b.entity.ProcessSearchIDs, b.entity.EnvelopeHeights, b.entity.ProcessList)...,
 		),
