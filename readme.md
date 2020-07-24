@@ -18,4 +18,3 @@ The easiest way is to simply run the gatway binary:
 Make sure that the no-sync options are enabled.
 
 ----
-Using [vectyUI](https://github.com/nathanhack/vectyUI) and [marwanio](https://github.com/marwan-at-work/marwanio) as inspiration
