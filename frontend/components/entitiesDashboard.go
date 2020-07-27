@@ -14,11 +14,10 @@ import (
 // EntitiesDashboardView renders the entities dashboard page
 type EntitiesDashboardView struct {
 	vecty.Core
-	entityID  string
-	entity    *client.EntityInfo
-	gwClient  *client.Client
-	quitCh    chan struct{}
-	refreshCh chan bool
+	entityID string
+	entity   *client.EntityInfo
+	gwClient *client.Client
+	quitCh   chan struct{}
 }
 
 // Render renders the EntitiesDashboardView component
@@ -29,8 +28,7 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 				elem.Heading4(vecty.Text("Entity "+dash.entityID)),
 				vecty.Markup(vecty.Class("info-pane")),
 				&ProcessListView{
-					entity:    dash.entity,
-					refreshCh: dash.refreshCh,
+					entity: dash.entity,
 				},
 			),
 		)
@@ -47,7 +45,6 @@ func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	EntitiesDashboardView.entity = entity
 	EntitiesDashboardView.entityID = entityID
 	EntitiesDashboardView.quitCh = make(chan struct{})
-	EntitiesDashboardView.refreshCh = make(chan bool, 20)
 	BeforeUnload(func() {
 		close(EntitiesDashboardView.quitCh)
 	})
@@ -62,9 +59,6 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 	}
 	client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
 	vecty.Rerender(d)
-	time.Sleep(250 * time.Millisecond)
-	client.UpdateAuxEntityInfo(d.gwClient, d.entity)
-	vecty.Rerender(d)
 	for {
 		select {
 		case <-d.quitCh:
@@ -73,10 +67,6 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
-			client.UpdateAuxEntityInfo(d.gwClient, d.entity)
-			vecty.Rerender(d)
-		case <-d.refreshCh:
 			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
 			client.UpdateAuxEntityInfo(d.gwClient, d.entity)
 			vecty.Rerender(d)

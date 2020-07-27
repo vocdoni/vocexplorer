@@ -146,59 +146,8 @@ func UpdateProcessSearchInfo(c *Client, vc *VochainInfo) {
 
 // UpdateAuxProcessInfo updates auxilary info for all currently displayed process id's
 func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
-	if vc.ProcessSearchList == nil {
-		vc.ProcessSearchList = make(map[string]ProcessInfo)
-	}
-	if vc.EnvelopeHeights == nil {
-		vc.EnvelopeHeights = make(map[string]int64)
-	}
-	// If all processes are populated, send no requests. Process results are not updated without page refresh.
-	if len(vc.ProcessSearchList) >= len(vc.ProcessIDs) && len(vc.EnvelopeHeights) >= len(vc.ProcessIDs) {
-		return
-	}
-	numReq := 0
-	for _, ID := range vc.ProcessSearchIDs {
-		if _, ok := vc.ProcessSearchList[ID]; !ok {
-			t, st, _, err := c.GetProcessResults(ID)
-			if !util.ErrPrint(err) {
-				vc.ProcessSearchList[ID] = ProcessInfo{
-					ProcessType: t,
-					State:       st}
-			}
-			numReq++
-		}
-		if _, ok := vc.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				vc.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
-	}
-	// If currently-displayed processes are populated, start to populate ones which could be displayed
-	// This reduces load time & allows for type/state search.
-	for _, ID := range vc.ProcessIDs {
-		if numReq >= 20 {
-			break
-		}
-		if _, ok := vc.ProcessSearchList[ID]; !ok {
-			t, st, _, err := c.GetProcessResults(ID)
-			if !util.ErrPrint(err) {
-				vc.ProcessSearchList[ID] = ProcessInfo{
-					ProcessType: t,
-					State:       st}
-			}
-			numReq++
-		}
-		if _, ok := vc.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				vc.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
-
-	}
+	UpdateProcessEnvelopeHeights(c, vc)
+	UpdateProcessSearchInfo(c, vc)
 }
 
 // UpdateProcessesDashboardInfo updates process info to include status and recent envelopes
@@ -232,11 +181,8 @@ func UpdateAuxEntityInfo(c *Client, e *EntityInfo) {
 	if e.ProcessList == nil {
 		e.ProcessList = make(map[string]ProcessInfo)
 	}
-	if e.EnvelopeHeights == nil {
-		e.EnvelopeHeights = make(map[string]int64)
-	}
 	// If all processes are populated, send no requests. Process results are not updated without page refresh.
-	if len(e.ProcessList) >= len(e.ProcessIDs) && len(e.EnvelopeHeights) >= len(e.ProcessIDs) {
+	if len(e.ProcessList) >= len(e.ProcessIDs) {
 		return
 	}
 	numReq := 0
@@ -250,18 +196,11 @@ func UpdateAuxEntityInfo(c *Client, e *EntityInfo) {
 			}
 			numReq++
 		}
-		if _, ok := e.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				e.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
 	}
 	// If currently-displayed processes are populated, start to populate ones which could be displayed
 	// This reduces load time & allows for type/state search.
 	for _, ID := range e.ProcessIDs {
-		if numReq >= 20 {
+		if numReq >= 10 {
 			break
 		}
 		if _, ok := e.ProcessList[ID]; !ok {
@@ -273,13 +212,5 @@ func UpdateAuxEntityInfo(c *Client, e *EntityInfo) {
 			}
 			numReq++
 		}
-		if _, ok := e.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				e.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
-
 	}
 }

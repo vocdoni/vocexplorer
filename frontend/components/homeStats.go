@@ -3,11 +3,8 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"gitlab.com/vocdoni/vocexplorer/client"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -15,10 +12,8 @@ import (
 // StatsView renders the stats pane
 type StatsView struct {
 	vecty.Core
-	t          *rpc.TendermintInfo
-	vc         *client.VochainInfo
-	blockIndex int
-	refreshCh  chan int
+	t  *rpc.TendermintInfo
+	vc *client.VochainInfo
 }
 
 // Render renders the StatsView component
@@ -26,58 +21,12 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 	if b.t != nil && b.vc != nil {
 		return elem.Section(
 			renderBlockchainStats(b.t, b.vc),
-			renderBlockList(b),
+			renderRecentBlocks(b.t),
+			// renderTimeStats(b.t),
+			// renderStatus(b.t),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
-}
-
-func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
-	if b.t != nil && b.t.ResultStatus != nil {
-		return elem.Div(
-			elem.Button(
-				vecty.Text("prev"),
-				vecty.Markup(
-					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Max(b.blockIndex-config.SearchPageSmall, 0)
-						b.refreshCh <- b.blockIndex
-						vecty.Rerender(b)
-					}),
-					vecty.MarkupIf(
-						b.blockIndex > 0,
-						prop.Disabled(false),
-					),
-					vecty.MarkupIf(
-						b.blockIndex < 1,
-						prop.Disabled(true),
-					),
-				),
-			),
-			elem.Button(vecty.Text("next"),
-				vecty.Markup(
-					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Min(b.blockIndex+config.SearchPageSmall, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
-						b.refreshCh <- b.blockIndex
-						vecty.Rerender(b)
-					}),
-					vecty.MarkupIf(
-						b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-						prop.Disabled(false),
-					),
-					vecty.MarkupIf(
-						b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-						prop.Disabled(true),
-					),
-				),
-			),
-			elem.Heading4(vecty.Text("Block ID list: ")),
-			// vecty.If(len(b.vc.BlockSearchList) < b.numBlocks, vecty.Text("Loading block info...")),
-			elem.UnorderedList(
-				renderBlocks(b.t)...,
-			),
-		)
-	}
-	return elem.Div(vecty.Text("Waiting for blockchain info..."))
 }
 
 func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.ComponentOrHTML {
@@ -136,25 +85,26 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlocks(t *rpc.TendermintInfo) []vecty.MarkupOrChild {
-	if t.BlockList != nil {
-		var blockList []vecty.MarkupOrChild
-		for i, block := range t.BlockList {
-			if len(t.BlockListResults) > i {
-				blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))
-			}
-		}
-		blockList = append(blockList, elem.Div(vecty.Text("No blocks available")))
-		return blockList
+func renderRecentBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
+	if t.RecentBlocks != nil {
+		return elem.Div(
+			vecty.Markup(vecty.Class("recent-blocks")),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 3),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 2),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 1),
+			renderBlock(t.RecentBlocks, t.RecentBlockResults, 0),
+		)
 	}
-	return []vecty.MarkupOrChild{elem.Div(vecty.Text("No blocks available"))}
+	return elem.Div(vecty.Text("No updated list of recent blocks"))
 }
 
-func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
-	return elem.ListItem(
-		vecty.Markup(vecty.Class("card-col-3")),
-		vecty.Text("Block Num: "+util.IntToString(block.Block.Header.Height)),
-		vecty.Text(" Block Hash: "+block.BlockID.Hash.String()),
-		vecty.Text(" Total Transactions: "+util.IntToString(len(blockResults.TxsResults))),
-	)
+func renderBlock(recentBlocks []coretypes.ResultBlock, recentBlockResults []coretypes.ResultBlockResults, index int) vecty.ComponentOrHTML {
+	if len(recentBlocks) > index && len(recentBlockResults) > index {
+		return elem.Div(vecty.Markup(vecty.Class("card-col-3")),
+			vecty.Text("Block Num: "+util.IntToString(recentBlocks[index].Block.Header.Height)),
+			vecty.Text(" Block Hash: "+recentBlocks[index].BlockID.Hash.String()),
+			vecty.Text(" Total Transactions: "+util.IntToString(len(recentBlockResults[index].TxsResults))),
+		)
+	}
+	return vecty.Text("No block available ")
 }
