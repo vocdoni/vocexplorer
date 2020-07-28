@@ -21,6 +21,7 @@ type VochainInfoView struct {
 	numProcesses   int
 	entitiesIndex  int
 	numEntities    int
+	refreshCh      chan bool
 }
 
 // Render renders the VochainInfoView component
@@ -52,6 +53,7 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 					} else {
 						js.Global().Set("searchTerm", "")
 					}
+					b.refreshCh <- true
 					vecty.Rerender(b)
 				}),
 				prop.Placeholder("search IDs"),
@@ -112,6 +114,7 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 			vecty.Markup(
 				event.Click(func(e *vecty.Event) {
 					b.processesIndex--
+					b.refreshCh <- true
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
@@ -128,6 +131,7 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 			vecty.Markup(
 				event.Click(func(e *vecty.Event) {
 					b.processesIndex++
+					b.refreshCh <- true
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
@@ -141,6 +145,7 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 			),
 		),
 		elem.Heading4(vecty.Text("Process ID list: ")),
+		vecty.If(len(b.vc.ProcessSearchList) < b.numProcesses, vecty.Text("Loading process info...")),
 		elem.UnorderedList(
 			renderProcessItems(b.vc.ProcessSearchIDs, b.vc.EnvelopeHeights, b.vc.ProcessSearchList)...,
 		),

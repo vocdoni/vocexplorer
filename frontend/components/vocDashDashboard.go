@@ -14,9 +14,10 @@ import (
 // VocDashDashboardView renders the processes dashboard page
 type VocDashDashboardView struct {
 	vecty.Core
-	vc       *client.VochainInfo
-	gwClient *client.Client
-	quitCh   chan struct{}
+	vc        *client.VochainInfo
+	gwClient  *client.Client
+	quitCh    chan struct{}
+	refreshCh chan bool
 }
 
 // Render renders the VocDashDashboardView component
@@ -26,7 +27,8 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 			elem.Main(
 				vecty.Markup(vecty.Class("info-pane")),
 				&VochainInfoView{
-					vc: dash.vc,
+					vc:        dash.vc,
+					refreshCh: dash.refreshCh,
 				},
 			),
 		)
@@ -42,6 +44,7 @@ func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
 	VocDashDashboardView.quitCh = make(chan struct{})
+	VocDashDashboardView.refreshCh = make(chan bool, 20)
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
 	})
@@ -67,6 +70,10 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
+			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
+			vecty.Rerender(d)
+		case <-d.refreshCh:
 			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
