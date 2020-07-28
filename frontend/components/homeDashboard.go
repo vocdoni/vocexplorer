@@ -29,6 +29,7 @@ type DashboardView struct {
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
 		return elem.Div(
+			vecty.Markup(vecty.Class("container")),
 			elem.Main(
 				vecty.Markup(vecty.Class("info-pane")),
 				&StatsView{

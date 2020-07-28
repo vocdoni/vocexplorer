@@ -100,11 +100,13 @@ func renderRecentBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlock(recentBlocks []coretypes.ResultBlock, recentBlockResults []coretypes.ResultBlockResults, index int) vecty.ComponentOrHTML {
 	if len(recentBlocks) > index && len(recentBlockResults) > index {
-		return elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-			vecty.Text("Block Num: "+util.IntToString(recentBlocks[index].Block.Header.Height)),
-			vecty.Text(" Block Hash: "+recentBlocks[index].BlockID.Hash.String()),
-			vecty.Text(" Total Transactions: "+util.IntToString(len(recentBlockResults[index].TxsResults))),
-		)
+		return elem.Div(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(vecty.Markup(vecty.Class("card")),
+				vecty.Text("Block Num: "+util.IntToString(recentBlocks[index].Block.Header.Height)),
+				vecty.Text(" Block Hash: "+recentBlocks[index].BlockID.Hash.String()),
+				vecty.Text(" Total Transactions: "+util.IntToString(len(recentBlockResults[index].TxsResults))),
+			))
 	}
 	return vecty.Text("No block available ")
 }
