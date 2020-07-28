@@ -28,11 +28,15 @@ yarn gulp watch
 
 #### 3. Running
 
-After steps 1 and 2, on the commandline navigate into the directory containing `main.go` and run `go run main.go`. Then in your favorite web browser navigate to `localhost:8081`.
+After steps 1 and 2, on the commandline navigate into the directory containing `main.go` and run `go run main.go`. Then in your favorite web browser navigate to localhost at the specified port.
 
 Options for `main.go`:
-- `--logLevel=Info` sets the log level to 'info'
-- `--disableGzip` disables gzip compression on http messages
+- `--disableGzip`          use to disable gzip compression on web server
+- `--gatewayHost` `(string)`   gateway API host to connect to (default "ws://0.0.0.0:9090/dvote")
+- `--hostURL` `(string)`       url to host block explorer (default "http://localhost:8081")
+- `--logLevel` `(string)`      log level <debug, info, warn, error> (default "error")
+- `--refreshTime` `(int)`      Number of seconds between each content refresh (default 5)
+- `--vochainHost` `(string)`   gateway API host to connect to (default "http://0.0.0.0:26657")
 
 #### 4. Running dvotenode
 
