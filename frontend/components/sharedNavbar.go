@@ -67,29 +67,5 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 				),
 			),
 		),
-		// &nav.HorzBar{
-		// 	Divs: []vecty.MarkupOrChild{
-		// 		elem.Div(
-		// 			vecty.Markup(
-		// 				marginLeft.Auto,
-		// 				float.Left,
-		// 				style.Padding(14, 16),
-		// 				fontFamily.Arial,
-		// 			),
-		// 			elem.Anchor(vecty.Markup(vecty.Attribute("href", "/")), vecty.Text("Dashboard")),
-		// 			// router.Link("/", "Dashboard", router.LinkOptions{}),
-		// 		),
-		// 		elem.Div(
-		// 			vecty.Markup(
-		// 				marginLeft.Auto,
-		// 				float.Left,
-		// 				style.Padding(14, 16),
-		// 				fontFamily.Arial,
-		// 			),
-		// 			elem.Anchor(vecty.Markup(vecty.Attribute("href", "/vocdash")), vecty.Text("Voting Processes & Entities")),
-		// 			// router.Link("/processes", "Voting Processes & Entities", router.LinkOptions{}),
-		// 		),
-		// 	},
-		// },
 	)
 }
