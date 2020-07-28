@@ -4,6 +4,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -89,10 +90,16 @@ func renderRecentBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	if t.RecentBlocks != nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-blocks")),
-			renderBlock(t.RecentBlocks, t.RecentBlockResults, 3),
-			renderBlock(t.RecentBlocks, t.RecentBlockResults, 2),
-			renderBlock(t.RecentBlocks, t.RecentBlockResults, 1),
-			renderBlock(t.RecentBlocks, t.RecentBlockResults, 0),
+			elem.Heading3(
+				vecty.Text("Blocks"),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("card-deck")),
+				renderBlock(t.RecentBlocks, t.RecentBlockResults, 3),
+				renderBlock(t.RecentBlocks, t.RecentBlockResults, 2),
+				renderBlock(t.RecentBlocks, t.RecentBlockResults, 1),
+				renderBlock(t.RecentBlocks, t.RecentBlockResults, 0),
+			),
 		)
 	}
 	return elem.Div(vecty.Text("No updated list of recent blocks"))
@@ -100,13 +107,34 @@ func renderRecentBlocks(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlock(recentBlocks []coretypes.ResultBlock, recentBlockResults []coretypes.ResultBlockResults, index int) vecty.ComponentOrHTML {
 	if len(recentBlocks) > index && len(recentBlockResults) > index {
-		return elem.Div(
-			vecty.Markup(vecty.Class("row")),
-			elem.Div(vecty.Markup(vecty.Class("card")),
-				vecty.Text("Block Num: "+util.IntToString(recentBlocks[index].Block.Header.Height)),
-				vecty.Text(" Block Hash: "+recentBlocks[index].BlockID.Hash.String()),
-				vecty.Text(" Total Transactions: "+util.IntToString(len(recentBlockResults[index].TxsResults))),
-			))
+		return elem.Div(vecty.Markup(vecty.Class("card")),
+			elem.Div(
+				vecty.Markup(vecty.Class("card-header")),
+				vecty.Text(util.IntToString(recentBlocks[index].Block.Header.Height)),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("card-body")),
+				elem.Div(
+					vecty.Markup(vecty.Class("block-card-heading")),
+					elem.Div(
+						vecty.Text(util.IntToString(len(recentBlockResults[index].TxsResults))+" transactions"),
+					),
+					elem.Div(
+						vecty.Text(timeago.English.Format(recentBlocks[index].Block.Header.Time)),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Hash"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(recentBlocks[index].BlockID.Hash.String()),
+					),
+				),
+			),
+		)
 	}
 	return vecty.Text("No block available ")
 }

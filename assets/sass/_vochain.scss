@@ -1,0 +1,26 @@
+.recent-blocks {
+  .card-body {
+    font-size: $font-size-xs;
+  }
+}
+
+.block-card-heading {
+  display: flex;
+  align-content: space-between;
+
+  > div {
+    flex: 1;
+
+    &:last-of-type {
+      text-align: right;
+    }
+  }
+}
+
+.dt {
+  @extend dt;
+}
+
+.dd {
+  @extend dd;
+}
