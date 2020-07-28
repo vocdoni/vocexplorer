@@ -1,6 +1,8 @@
 package components
 
 import (
+	"encoding/json"
+
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
@@ -172,10 +174,29 @@ func renderBlocks(t *rpc.TendermintInfo, index int) []vecty.MarkupOrChild {
 }
 
 func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
+	// blockContents, err := json.MarshalIndent(block.Block, "jsonSpan", "    ")
+	// splitBlocks := strings.Split(string(blockContents), "jsonSpan")
+	blockContents, err := json.MarshalIndent(block.Block, "", "    ")
+	// var blockSpans []vecty.MarkupOrChild
+	// for _, span := range splitBlocks {
+	// 	blockSpans = append(blockSpans, elem.Span(elem.Preformatted(vecty.Text(span)), elem.Break()))
+	// }
+	if util.ErrPrint(err) {
+		return vecty.Text("Could not read block contents")
+	}
 	return elem.ListItem(
 		vecty.Markup(vecty.Class("card-col-3")),
 		vecty.Text("Block Num: "+util.IntToString(block.Block.Header.Height)),
 		vecty.Text(" Block Hash: "+block.BlockID.Hash.String()),
-		// vecty.Text(" Total Transactions: "+util.IntToString(len(blockResults.TxsResults))),
+		// elem.Div(blockSpans...),
+		elem.Div(
+			vecty.Markup(
+				vecty.Class("accordion"),
+			),
+			elem.Heading6(
+				vecty.Text(" Block Contents: "),
+			),
+			elem.Preformatted(vecty.Text(string(blockContents)))),
+	// vecty.Text(" Total Transactions: "+util.IntToString(len(blockResults.TxsResults))),
 	)
 }
