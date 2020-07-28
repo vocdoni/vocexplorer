@@ -174,13 +174,7 @@ func renderBlocks(t *rpc.TendermintInfo, index int) []vecty.MarkupOrChild {
 }
 
 func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
-	// blockContents, err := json.MarshalIndent(block.Block, "jsonSpan", "    ")
-	// splitBlocks := strings.Split(string(blockContents), "jsonSpan")
 	blockContents, err := json.MarshalIndent(block.Block, "", "    ")
-	// var blockSpans []vecty.MarkupOrChild
-	// for _, span := range splitBlocks {
-	// 	blockSpans = append(blockSpans, elem.Span(elem.Preformatted(vecty.Text(span)), elem.Break()))
-	// }
 	if util.ErrPrint(err) {
 		return vecty.Text("Could not read block contents")
 	}
@@ -188,7 +182,7 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 		vecty.Markup(vecty.Class("card-col-3")),
 		vecty.Text("Block Num: "+util.IntToString(block.Block.Header.Height)),
 		vecty.Text(" Block Hash: "+block.BlockID.Hash.String()),
-		// elem.Div(blockSpans...),
+		vecty.Text(" Block Timestamp: "+block.Block.Header.Time.Format("Mon Jan 2 15:04:05 MST 2006")),
 		elem.Div(
 			vecty.Markup(
 				vecty.Class("accordion"),
@@ -197,6 +191,5 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 				vecty.Text(" Block Contents: "),
 			),
 			elem.Preformatted(vecty.Text(string(blockContents)))),
-	// vecty.Text(" Total Transactions: "+util.IntToString(len(blockResults.TxsResults))),
 	)
 }
