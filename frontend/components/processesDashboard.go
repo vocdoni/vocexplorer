@@ -76,8 +76,8 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	)
 }
 
-func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string) *ProcessesDashboardView {
-	gwClient, cancel := InitGateway()
+func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
+	gwClient, cancel := InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return ProcessesDashboardView
 	}
@@ -88,12 +88,12 @@ func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 	BeforeUnload(func() {
 		close(ProcessesDashboardView.quitCh)
 	})
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel, processID)
+	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel, processID, cfg)
 	return ProcessesDashboardView
 }
 
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string) {
-	ticker := time.NewTicker(config.RefreshTime * time.Second)
+func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
+	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.process == nil {
 	}

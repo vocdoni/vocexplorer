@@ -1,12 +1,16 @@
 package config
 
-const (
+//Cfg is the global config to be served to pages
+type Cfg struct {
 	// GatewayHost is gateway websockets url
-	GatewayHost = "ws://0.0.0.0:9090/dvote"
+	GatewayHost string `json:"gatewayHost"`
 	// TendermintHost is tendermint api url
-	TendermintHost = "http://0.0.0.0:26657"
+	TendermintHost string `json:"tendermintHost"`
 	// RefreshTime is the number of seconds between page data refresh
-	RefreshTime = 5
-	// SearchPageSmall is the of elements on a small search page
-	SearchPageSmall = 4
+	RefreshTime int `json:"refreshTime"`
+}
+
+const (
+	//ListSize is the number of cards shown in list of blocks/processes/etc
+	ListSize = 10
 )

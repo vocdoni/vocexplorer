@@ -8,15 +8,14 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // InitGateway initializes a connection with the gateway
-func InitGateway() (*client.Client, context.CancelFunc) {
+func InitGateway(host string) (*client.Client, context.CancelFunc) {
 	// Init Gateway client
-	fmt.Println("connecting to %s", config.GatewayHost)
-	gwClient, cancel, err := client.New(config.GatewayHost)
+	fmt.Println("connecting to %s", host)
+	gwClient, cancel, err := client.New(host)
 	if util.ErrPrint(err) {
 		if js.Global().Get("confirm").Invoke("Unable to connect to Gateway client. Reload with client running").Bool() {
 			js.Global().Get("location").Call("reload")

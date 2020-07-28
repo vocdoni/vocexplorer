@@ -25,12 +25,12 @@ type EnvelopeListView struct {
 func (b *EnvelopeListView) Render() vecty.ComponentOrHTML {
 	if b.process != nil {
 		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
-			b.envelopeIDs = util.TrimSlice(b.process.Nullifiers, config.SearchPageSmall, &b.envelopesIndex)
+			b.envelopeIDs = util.TrimSlice(b.process.Nullifiers, config.ListSize, &b.envelopesIndex)
 			b.numEnvelopes = len(b.process.Nullifiers)
 		} else {
 			search := js.Global().Get("searchTerm").String()
 			temp := util.SearchSlice(b.process.Nullifiers, search)
-			b.envelopeIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.envelopesIndex)
+			b.envelopeIDs = util.TrimSlice(temp, config.ListSize, &b.envelopesIndex)
 			b.numEnvelopes = len(temp)
 		}
 		return elem.Section(
@@ -79,11 +79,11 @@ func renderEnvelopeList(b *EnvelopeListView) vecty.ComponentOrHTML {
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
-					(b.envelopesIndex+1)*config.SearchPageSmall < b.numEnvelopes,
+					(b.envelopesIndex+1)*config.ListSize < b.numEnvelopes,
 					prop.Disabled(false),
 				),
 				vecty.MarkupIf(
-					(b.envelopesIndex+1)*config.SearchPageSmall >= b.numEnvelopes,
+					(b.envelopesIndex+1)*config.ListSize >= b.numEnvelopes,
 					prop.Disabled(true),
 				),
 			),

@@ -63,7 +63,7 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 				vecty.Text("prev"),
 				vecty.Markup(
 					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Max(b.blockIndex-config.SearchPageSmall, 0)
+						b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
 						b.refreshCh <- b.blockIndex
 						vecty.Rerender(b)
 					}),
@@ -80,7 +80,7 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 			elem.Button(vecty.Text("next"),
 				vecty.Markup(
 					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Min(b.blockIndex+config.SearchPageSmall, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
+						b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
 						b.refreshCh <- b.blockIndex
 						vecty.Rerender(b)
 					}),
@@ -158,13 +158,13 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-	if t.BlockList[config.SearchPageSmall-1].Block == nil {
+	if t.BlockList[config.ListSize-1].Block == nil {
 		return elem.Div(vecty.Text("No blocks available"))
 	}
-	if t.BlockList[config.SearchPageSmall-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index) {
+	if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index) {
 		return elem.Div(vecty.Text("Loading blocks........"))
 	}
-	for i := config.SearchPageSmall - 1; i >= 0; i-- {
+	for i := config.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))

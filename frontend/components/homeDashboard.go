@@ -52,11 +52,11 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView) *DashboardView {
+func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
 	// Init tendermint client
-	tClient := rpc.StartClient()
+	tClient := rpc.StartClient(cfg.TendermintHost)
 	// Init Gateway client
-	gwClient, cancel := InitGateway()
+	gwClient, cancel := InitGateway(cfg.GatewayHost)
 	if gwClient == nil || tClient == nil {
 		return DashboardView
 	}
@@ -70,12 +70,12 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
-	go updateAndRenderDashboard(DashboardView, cancel)
+	go updateAndRenderDashboard(DashboardView, cancel, cfg)
 	return DashboardView
 }
 
-func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
-	ticker := time.NewTicker(config.RefreshTime * time.Second)
+func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
@@ -95,15 +95,15 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
-			loop:
-				for {
-					// If many indices waiting in buffer, scan to last one.
-					select {
-					case i = <-d.refreshCh:
-					default:
-						break loop
-					}
+		loop:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case i = <-d.refreshCh:
+				default:
+					break loop
 				}
+			}
 			d.blockIndex = i
 			rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)

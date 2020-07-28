@@ -6,6 +6,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -13,6 +14,7 @@ import (
 // ProcessesView renders the processes page
 type ProcessesView struct {
 	vecty.Core
+	cfg *config.Cfg
 }
 
 // Render renders the ProcessesView component
@@ -24,7 +26,7 @@ func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 	return elem.Div(
 		&Header{},
 		elem.Main(
-			initProcessesDashboardView(&process, &dash, router.GetNamedVar(home)["id"]),
+			initProcessesDashboardView(&process, &dash, router.GetNamedVar(home)["id"], home.cfg),
 		),
 	)
 }

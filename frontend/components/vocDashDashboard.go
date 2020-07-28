@@ -36,8 +36,8 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView) *VocDashDashboardView {
-	gwClient, cancel := InitGateway()
+func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
+	gwClient, cancel := InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return VocDashDashboardView
 	}
@@ -48,12 +48,12 @@ func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
 	})
-	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel)
+	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
 	return VocDashDashboardView
 }
 
-func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc) {
-	ticker := time.NewTicker(config.RefreshTime * time.Second)
+func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}

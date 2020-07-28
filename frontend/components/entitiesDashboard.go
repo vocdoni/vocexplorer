@@ -38,8 +38,8 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain client")
 }
 
-func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string) *EntitiesDashboardView {
-	gwClient, cancel := InitGateway()
+func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
+	gwClient, cancel := InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return EntitiesDashboardView
 	}
@@ -51,12 +51,12 @@ func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	BeforeUnload(func() {
 		close(EntitiesDashboardView.quitCh)
 	})
-	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, cancel, entityID)
+	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, cancel, entityID, cfg)
 	return EntitiesDashboardView
 }
 
-func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string) {
-	ticker := time.NewTicker(config.RefreshTime * time.Second)
+func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string, cfg *config.Cfg) {
+	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.entity == nil {
 	}

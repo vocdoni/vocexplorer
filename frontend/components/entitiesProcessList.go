@@ -26,7 +26,7 @@ type ProcessListView struct {
 func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 	if b.entity != nil {
 		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
-			b.entity.ProcessSearchIDs = util.TrimSlice(b.entity.ProcessIDs, config.SearchPageSmall, &b.processesIndex)
+			b.entity.ProcessSearchIDs = util.TrimSlice(b.entity.ProcessIDs, config.ListSize, &b.processesIndex)
 			b.numProcesses = len(b.entity.ProcessIDs)
 		} else {
 			search := js.Global().Get("searchTerm").String()
@@ -34,7 +34,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 			if len(temp) <= 0 {
 				temp = entitySearchStateType(b.entity, search)
 			}
-			b.entity.ProcessSearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.processesIndex)
+			b.entity.ProcessSearchIDs = util.TrimSlice(temp, config.ListSize, &b.processesIndex)
 			b.numProcesses = len(temp)
 		}
 		return elem.Section(
@@ -83,11 +83,11 @@ func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
-					(b.processesIndex+1)*config.SearchPageSmall < b.numProcesses,
+					(b.processesIndex+1)*config.ListSize < b.numProcesses,
 					prop.Disabled(false),
 				),
 				vecty.MarkupIf(
-					(b.processesIndex+1)*config.SearchPageSmall >= b.numProcesses,
+					(b.processesIndex+1)*config.ListSize >= b.numProcesses,
 					prop.Disabled(true),
 				),
 			),

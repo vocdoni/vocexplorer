@@ -28,20 +28,20 @@ type VochainInfoView struct {
 func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 	if b.vc != nil {
 		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
-			b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, config.SearchPageSmall, &b.entitiesIndex)
+			b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, config.ListSize, &b.entitiesIndex)
 			b.numEntities = len(b.vc.EntityIDs)
-			b.vc.ProcessSearchIDs = util.TrimSlice(b.vc.ProcessIDs, config.SearchPageSmall, &b.processesIndex)
+			b.vc.ProcessSearchIDs = util.TrimSlice(b.vc.ProcessIDs, config.ListSize, &b.processesIndex)
 			b.numProcesses = len(b.vc.ProcessIDs)
 		} else {
 			search := js.Global().Get("searchTerm").String()
 			temp := util.SearchSlice(b.vc.EntityIDs, search)
-			b.vc.EntitySearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.entitiesIndex)
+			b.vc.EntitySearchIDs = util.TrimSlice(temp, config.ListSize, &b.entitiesIndex)
 			b.numEntities = len(temp)
 			temp = util.SearchSlice(b.vc.ProcessIDs, search)
 			if len(temp) <= 0 {
 				temp = searchStateType(b.vc, search)
 			}
-			b.vc.ProcessSearchIDs = util.TrimSlice(temp, config.SearchPageSmall, &b.processesIndex)
+			b.vc.ProcessSearchIDs = util.TrimSlice(temp, config.ListSize, &b.processesIndex)
 			b.numProcesses = len(temp)
 		}
 		return elem.Section(
@@ -92,11 +92,11 @@ func renderEntityList(b *VochainInfoView) vecty.ComponentOrHTML {
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
-					(b.entitiesIndex+1)*config.SearchPageSmall < b.numEntities,
+					(b.entitiesIndex+1)*config.ListSize < b.numEntities,
 					prop.Disabled(false),
 				),
 				vecty.MarkupIf(
-					(b.entitiesIndex+1)*config.SearchPageSmall >= b.numEntities,
+					(b.entitiesIndex+1)*config.ListSize >= b.numEntities,
 					prop.Disabled(true),
 				),
 			),
@@ -135,11 +135,11 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 					vecty.Rerender(b)
 				}),
 				vecty.MarkupIf(
-					(b.processesIndex+1)*config.SearchPageSmall < b.numProcesses,
+					(b.processesIndex+1)*config.ListSize < b.numProcesses,
 					prop.Disabled(false),
 				),
 				vecty.MarkupIf(
-					(b.processesIndex+1)*config.SearchPageSmall >= b.numProcesses,
+					(b.processesIndex+1)*config.ListSize >= b.numProcesses,
 					prop.Disabled(true),
 				),
 			),

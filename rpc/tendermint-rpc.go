@@ -17,8 +17,8 @@ import (
 type TendermintInfo struct {
 	ResultStatus     *coretypes.ResultStatus
 	Genesis          *types.GenesisDoc
-	BlockList        [config.SearchPageSmall]coretypes.ResultBlock
-	BlockListResults [config.SearchPageSmall]coretypes.ResultBlockResults
+	BlockList        [config.ListSize]coretypes.ResultBlock
+	BlockListResults [config.ListSize]coretypes.ResultBlockResults
 	TxCount          int
 	TxList           []*coretypes.ResultTx
 	ChainID          int
@@ -28,9 +28,9 @@ type TendermintInfo struct {
 }
 
 // StartClient initializes an http tendermint api client on websockets
-func StartClient() *http.HTTP {
-	fmt.Println("connecting to %s", config.TendermintHost)
-	tClient, err := initClient()
+func StartClient(host string) *http.HTTP {
+	fmt.Println("connecting to %s", host)
+	tClient, err := initClient(host)
 	if util.ErrPrint(err) {
 		if js.Global().Get("confirm").Invoke("Unable to connect to Tendermint client. Reload with client running").Bool() {
 			js.Global().Get("location").Call("reload")
@@ -40,8 +40,8 @@ func StartClient() *http.HTTP {
 	return tClient
 }
 
-func initClient() (*http.HTTP, error) {
-	c, err := http.NewWithTimeout(config.TendermintHost, "/websocket", 1)
+func initClient(host string) (*http.HTTP, error) {
+	c, err := http.NewWithTimeout(host, "/websocket", 1)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (t *TendermintInfo) GetGenesis(c *http.HTTP) {
 // GetBlockList keeps a list of current blocks
 func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 	lastBlockHeight := 0
-	lastBlock := t.BlockList[config.SearchPageSmall-1].Block
+	lastBlock := t.BlockList[config.ListSize-1].Block
 	if lastBlock != nil {
 		lastBlockHeight = int(lastBlock.Header.Height)
 	}
@@ -109,33 +109,33 @@ func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 	}
 	fmt.Println("initial offset: " + util.IntToString(offset))
 	if offset > 0 {
-		if offset < config.SearchPageSmall {
-			for i := 0; i < config.SearchPageSmall-offset; i++ {
+		if offset < config.ListSize {
+			for i := 0; i < config.ListSize-offset; i++ {
 				t.BlockList[i] = t.BlockList[i+offset]
 			}
 		} else {
-			offset = config.SearchPageSmall
+			offset = config.ListSize
 		}
 		for offset > 0 {
 			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+offset)
 			fmt.Println("next height" + util.IntToString(nextHeight))
 			result, err := c.Block(&nextHeight)
 			if !util.ErrPrint(err) {
-				t.BlockList[config.SearchPageSmall-offset] = *result
+				t.BlockList[config.ListSize-offset] = *result
 			}
 			offset--
 		}
 	} else if offset < 0 {
-		if offset > 0-config.SearchPageSmall {
+		if offset > 0-config.ListSize {
 			offset = 0 - offset
-			for i := 0; i < config.SearchPageSmall-offset; i++ {
+			for i := 0; i < config.ListSize-offset; i++ {
 				t.BlockList[i+offset] = t.BlockList[i]
 			}
 		} else {
-			offset = config.SearchPageSmall
+			offset = config.ListSize
 		}
 		for offset > 0 {
-			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.SearchPageSmall-offset+1)
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.ListSize-offset+1)
 			fmt.Println("next height" + util.IntToString(nextHeight))
 			result, err := c.Block(&nextHeight)
 			if !util.ErrPrint(err) {
@@ -149,39 +149,39 @@ func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 // GetBlockListResults keeps a list of current blocks
 func (t *TendermintInfo) GetBlockListResults(c *http.HTTP, index int) {
 	lastBlockHeight := 0
-	lastBlockHeight = int(t.BlockListResults[config.SearchPageSmall-1].Height)
+	lastBlockHeight = int(t.BlockListResults[config.ListSize-1].Height)
 	// Offset from last index to new one, so we can recycle fetched blocks
 	offset := int(t.ResultStatus.SyncInfo.LatestBlockHeight) - 1 - index - lastBlockHeight
 	if offset == 0 {
 		return
 	}
 	if offset > 0 {
-		if offset < config.SearchPageSmall {
-			for i := 0; i < config.SearchPageSmall-offset; i++ {
+		if offset < config.ListSize {
+			for i := 0; i < config.ListSize-offset; i++ {
 				t.BlockListResults[i] = t.BlockListResults[i+offset]
 			}
 		} else {
-			offset = config.SearchPageSmall
+			offset = config.ListSize
 		}
 		for offset > 0 {
 			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+offset-1)
 			result, err := c.BlockResults(&nextHeight)
 			if !util.ErrPrint(err) {
-				t.BlockListResults[config.SearchPageSmall-offset] = *result
+				t.BlockListResults[config.ListSize-offset] = *result
 			}
 			offset--
 		}
 	} else if offset < 0 {
-		if offset > 0-config.SearchPageSmall {
+		if offset > 0-config.ListSize {
 			offset = 0 - offset
-			for i := 0; i < config.SearchPageSmall-offset; i++ {
+			for i := 0; i < config.ListSize-offset; i++ {
 				t.BlockListResults[i+offset] = t.BlockListResults[i]
 			}
 		} else {
-			offset = config.SearchPageSmall
+			offset = config.ListSize
 		}
 		for offset > 0 {
-			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.SearchPageSmall-offset)
+			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.ListSize-offset)
 			result, err := c.BlockResults(&nextHeight)
 			if !util.ErrPrint(err) {
 				t.BlockListResults[offset-1] = *result
