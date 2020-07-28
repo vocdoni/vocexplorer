@@ -5,7 +5,14 @@ const exec = require('child_process').exec
 sass.compiler = require('node-sass')
 
 gulp.task('go:generate', (done) =>
-  exec('go generate', {cwd: './frontend'}, done)
+  exec('go generate', {cwd: './frontend'}, (err, stdout, stderr) => {
+    console.log(stdout)
+    if (stderr) {
+      console.error(stderr)
+    }
+
+    return done(err)
+  })
 )
 
 gulp.task('go:watch', () =>
