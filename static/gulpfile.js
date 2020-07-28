@@ -22,4 +22,9 @@ gulp.task('sass:watch', () =>
   gulp.watch('./sass/**/*.scss', gulp.series('sass'))
 )
 
+gulp.task('watch', () => {
+  gulp.watch('../frontend/**/*.go', gulp.series('go:generate'))
+  gulp.watch('./sass/**/*.scss', gulp.series('sass'))
+})
+
 gulp.task('default', gulp.series('sass'))

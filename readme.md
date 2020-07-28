@@ -16,7 +16,15 @@ Make a copy of the `wasm_exec.js` file from `$GOROOT/misc/wasm/` directory and p
 
 In this same `static` directory, run `yarn` to install and compile the required style assets.
 
-If you want to renew the styles, run `yarn gulp`, or in case you wanna watch for changes, `yarn gulp sass:watch`. There's also a gulp task for watching changes in `./frontend` files and regenerating the `main.wasm` file: `yarn gulp go:watch`.
+If you want to renew the styles, run `yarn gulp`, or in case you wanna watch for changes, `yarn gulp sass:watch`.
+
+There's also a gulp task for watching `.go` files changes in `./frontend` files and regenerating the `main.wasm` file: `yarn gulp go:watch`.
+
+You can watch both `.go` and `.scss` file changes by just using
+
+~~~bash
+yarn gulp watch
+~~~
 
 #### 3. Running
 
