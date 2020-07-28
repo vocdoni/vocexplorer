@@ -36,6 +36,10 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
 		return elem.Div(
+			vecty.Markup(vecty.Class("recent-blocks")),
+			elem.Heading3(
+				vecty.Text("Blocks"),
+			),
 			vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
 			elem.Button(
 				vecty.Text("back to top"),
@@ -90,11 +94,7 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 					),
 				),
 			),
-			elem.Heading4(vecty.Text("Block ID list: ")),
-			// vecty.If(len(b.vc.BlockSearchList) < b.numBlocks, vecty.Text("Loading block info...")),
-			elem.UnorderedList(
-				renderBlocks(b.t, b.blockIndex),
-			),
+			renderBlocks(b.t, b.blockIndex),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
@@ -169,15 +169,9 @@ func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))
 	}
+	blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
 	return elem.Div(
-		vecty.Markup(vecty.Class("recent-blocks")),
-		elem.Heading3(
-			vecty.Text("Blocks"),
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("card-deck")),
-			elem.Div(blockList...),
-		),
+		blockList...,
 	)
 }
 
