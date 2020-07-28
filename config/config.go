@@ -8,5 +8,5 @@ const (
 	// RefreshTime is the number of seconds between page data refresh
 	RefreshTime = 5
 	// SearchPageSmall is the of elements on a small search page
-	SearchPageSmall = 10
+	SearchPageSmall = 4
 )

@@ -10,3 +10,7 @@
 ### Above combination will ignore all files without extension ###
 **/*.wasm
 wasm_exec.js
+
+node_modules
+css
+*.lock

@@ -8,6 +8,7 @@ import (
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
@@ -37,6 +38,10 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
 		return elem.Div(
+			vecty.Markup(vecty.Class("recent-blocks")),
+			elem.Heading3(
+				vecty.Text("Blocks"),
+			),
 			vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
 			elem.Button(
 				vecty.Text("back to top"),
@@ -91,11 +96,7 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 					),
 				),
 			),
-			elem.Heading4(vecty.Text("Block ID list: ")),
-			// vecty.If(len(b.vc.BlockSearchList) < b.numBlocks, vecty.Text("Loading block info...")),
-			elem.UnorderedList(
-				renderBlocks(b.t, b.blockIndex)...,
-			),
+			renderBlocks(b.t, b.blockIndex),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
@@ -157,20 +158,23 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlocks(t *rpc.TendermintInfo, index int) []vecty.MarkupOrChild {
+func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 	if t.BlockList[config.SearchPageSmall-1].Block == nil {
-		return []vecty.MarkupOrChild{elem.Div(vecty.Text("No blocks available"))}
+		return elem.Div(vecty.Text("No blocks available"))
 	}
 	if t.BlockList[config.SearchPageSmall-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index) {
-		return []vecty.MarkupOrChild{elem.Div(vecty.Text("Loading blocks........"))}
+		return elem.Div(vecty.Text("Loading blocks........"))
 	}
 	for i := config.SearchPageSmall - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))
 	}
-	return blockList
+	blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
+	return elem.Div(
+		blockList...,
+	)
 }
 
 func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
@@ -178,11 +182,33 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 	if util.ErrPrint(err) {
 		return vecty.Text("Could not read block contents")
 	}
-	return elem.ListItem(
-		vecty.Markup(vecty.Class("card-col-3")),
-		vecty.Text("Block Num: "+util.IntToString(block.Block.Header.Height)),
-		vecty.Text(" Block Hash: "+block.BlockID.Hash.String()),
-		vecty.Text(" Block Timestamp: "+block.Block.Header.Time.Format("Mon Jan 2 15:04:05 MST 2006")),
+	return elem.Div(vecty.Markup(vecty.Class("card")),
+		elem.Div(
+			vecty.Markup(vecty.Class("card-header")),
+			vecty.Text(util.IntToString(block.Block.Header.Height)),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("card-body")),
+			elem.Div(
+				vecty.Markup(vecty.Class("block-card-heading")),
+				elem.Div(
+					vecty.Text(util.IntToString(len(blockResults.TxsResults))+" transactions"),
+				),
+				elem.Div(
+					vecty.Text(timeago.English.Format(block.Block.Header.Time)),
+				),
+			),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text("Hash"),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("dd")),
+					vecty.Text(block.BlockID.Hash.String()),
+				),
+			),
+		),
 		elem.Div(
 			vecty.Markup(
 				vecty.Class("accordion"),
