@@ -14,7 +14,7 @@ On the commandline navigate into the directory `./frontend` and run `go generate
 
 Make a copy of the `wasm_exec.js` file from `$GOROOT/misc/wasm/` directory and put it in the `./static` directory.  This must be from the same golang version that you used to build `main.wasm`.
 
-In this same `static` directory, run `yarn` to install and compile the required style assets.
+Get back to the root path and run `yarn` to install and compile the required style assets.
 
 If you want to renew the styles, run `yarn gulp`, or in case you wanna watch for changes, `yarn gulp sass:watch`.
 
