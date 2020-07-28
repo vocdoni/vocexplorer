@@ -1,0 +1,9 @@
+.block-card-heading {
+  font-size: $font-size-xs;
+  display: flex;
+  align-content: space-between;
+
+  > div {
+    flex: 1;
+  }
+}
