@@ -6,7 +6,9 @@ sass.compiler = require('node-sass')
 
 gulp.task('go:generate', (done) =>
   exec('go generate', {cwd: './frontend'}, (err, stdout, stderr) => {
-    console.log(stdout)
+    if (stdout) {
+      console.log(stdout)
+    }
     if (stderr) {
       console.error(stderr)
     }
