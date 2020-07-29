@@ -40,57 +40,78 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 			elem.Heading3(
 				vecty.Text("Blocks"),
 			),
-			vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
-			elem.Button(
-				vecty.Text("back to top"),
-				vecty.Markup(
-					event.Click(func(e *vecty.Event) {
-						b.blockIndex = 0
-						b.refreshCh <- b.blockIndex
-						vecty.Rerender(b)
-					}),
-					vecty.MarkupIf(
-						b.blockIndex != 0,
-						prop.Disabled(false),
-					),
-					vecty.MarkupIf(
-						b.blockIndex == 0,
-						prop.Disabled(true),
-					),
+			elem.Navigation(
+				elem.Span(
+					vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
 				),
-			),
-			elem.Button(
-				vecty.Text("prev"),
-				vecty.Markup(
-					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
-						b.refreshCh <- b.blockIndex
-						vecty.Rerender(b)
-					}),
-					vecty.MarkupIf(
-						b.blockIndex > 0,
-						prop.Disabled(false),
+				elem.UnorderedList(
+					vecty.Markup(vecty.Class("pagination")),
+					elem.ListItem(
+						vecty.Markup(vecty.Class("page-item")),
+						elem.Button(
+							vecty.Markup(
+								vecty.Class("page-link"),
+								event.Click(func(e *vecty.Event) {
+									b.blockIndex = 0
+									b.refreshCh <- b.blockIndex
+									vecty.Rerender(b)
+								}),
+								vecty.MarkupIf(
+									b.blockIndex != 0,
+									prop.Disabled(false),
+								),
+								vecty.MarkupIf(
+									b.blockIndex == 0,
+									prop.Disabled(true),
+								),
+							),
+							elem.Span(
+								vecty.Text("«"),
+							),
+						),
 					),
-					vecty.MarkupIf(
-						b.blockIndex < 1,
-						prop.Disabled(true),
+					elem.ListItem(
+						vecty.Markup(vecty.Class("page-item")),
+						elem.Button(
+							vecty.Text("prev"),
+							vecty.Markup(
+								vecty.Class("page-link"),
+								event.Click(func(e *vecty.Event) {
+									b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
+									b.refreshCh <- b.blockIndex
+									vecty.Rerender(b)
+								}),
+								vecty.MarkupIf(
+									b.blockIndex > 0,
+									prop.Disabled(false),
+								),
+								vecty.MarkupIf(
+									b.blockIndex < 1,
+									prop.Disabled(true),
+								),
+							),
+						),
 					),
-				),
-			),
-			elem.Button(vecty.Text("next"),
-				vecty.Markup(
-					event.Click(func(e *vecty.Event) {
-						b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
-						b.refreshCh <- b.blockIndex
-						vecty.Rerender(b)
-					}),
-					vecty.MarkupIf(
-						b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-						prop.Disabled(false),
-					),
-					vecty.MarkupIf(
-						b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-						prop.Disabled(true),
+					elem.ListItem(
+						vecty.Markup(vecty.Class("page-item")),
+						elem.Button(vecty.Text("next"),
+							vecty.Markup(
+								vecty.Class("page-link"),
+								event.Click(func(e *vecty.Event) {
+									b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
+									b.refreshCh <- b.blockIndex
+									vecty.Rerender(b)
+								}),
+								vecty.MarkupIf(
+									b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+									prop.Disabled(false),
+								),
+								vecty.MarkupIf(
+									b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+									prop.Disabled(true),
+								),
+							),
+						),
 					),
 				),
 			),
