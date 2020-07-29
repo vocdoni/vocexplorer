@@ -47,7 +47,16 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 				elem.UnorderedList(
 					vecty.Markup(vecty.Class("pagination")),
 					elem.ListItem(
-						vecty.Markup(vecty.Class("page-item")),
+						vecty.Markup(
+							vecty.MarkupIf(
+								b.blockIndex != 0,
+								vecty.Class("page-item"),
+							),
+							vecty.MarkupIf(
+								b.blockIndex == 0,
+								vecty.Class("page-item", "disabled"),
+							),
+						),
 						elem.Button(
 							vecty.Markup(
 								vecty.Class("page-link"),
@@ -68,10 +77,23 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 							elem.Span(
 								vecty.Text("«"),
 							),
+							elem.Span(
+								vecty.Markup(vecty.Class("sr-only")),
+								vecty.Text("Back to top"),
+							),
 						),
 					),
 					elem.ListItem(
-						vecty.Markup(vecty.Class("page-item")),
+						vecty.Markup(
+							vecty.MarkupIf(
+								b.blockIndex > 0,
+								vecty.Class("page-item"),
+							),
+							vecty.MarkupIf(
+								b.blockIndex <= 0,
+								vecty.Class("page-item", "disabled"),
+							),
+						),
 						elem.Button(
 							vecty.Text("prev"),
 							vecty.Markup(
@@ -93,7 +115,16 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 						),
 					),
 					elem.ListItem(
-						vecty.Markup(vecty.Class("page-item")),
+						vecty.Markup(
+							vecty.MarkupIf(
+								b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+								vecty.Class("page-item"),
+							),
+							vecty.MarkupIf(
+								b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+								vecty.Class("page-item", "disabled"),
+							),
+						),
 						elem.Button(vecty.Text("next"),
 							vecty.Markup(
 								vecty.Class("page-link"),
