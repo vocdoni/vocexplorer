@@ -97,7 +97,8 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 	// Wait for data structs to load
 	for d == nil || d.process == nil {
 	}
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+	//TODO: update to  use real index
+	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID, 0)
 	vecty.Rerender(d)
 	// time.Sleep(250 * time.Millisecond)
 	// client.UpdateAuxProcessInfo(d.gwClient, d.vc)
@@ -110,7 +111,8 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+			//TODO: update to  use real index
+			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID, 0)
 			// client.UpdateAuxProcessInfo(d.gwClient, d.process)
 			vecty.Rerender(d)
 		}

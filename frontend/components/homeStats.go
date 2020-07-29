@@ -3,8 +3,6 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
@@ -16,10 +14,10 @@ import (
 // StatsView renders the stats pane
 type StatsView struct {
 	vecty.Core
-	t          *rpc.TendermintInfo
-	vc         *client.VochainInfo
-	blockIndex int
-	refreshCh  chan int
+	t           *rpc.TendermintInfo
+	vc          *client.VochainInfo
+	currentPage int
+	refreshCh   chan int
 }
 
 // Render renders the StatsView component
@@ -47,113 +45,14 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 			elem.Heading3(
 				vecty.Text("Blocks"),
 			),
-			elem.Navigation(
-				elem.Span(
-					vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
-				),
-				elem.UnorderedList(
-					vecty.Markup(vecty.Class("pagination")),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.MarkupIf(
-								b.blockIndex != 0,
-								vecty.Class("page-item"),
-							),
-							vecty.MarkupIf(
-								b.blockIndex == 0,
-								vecty.Class("page-item", "disabled"),
-							),
-						),
-						elem.Button(
-							vecty.Markup(
-								vecty.Class("page-link"),
-								event.Click(func(e *vecty.Event) {
-									b.blockIndex = 0
-									b.refreshCh <- b.blockIndex
-									vecty.Rerender(b)
-								}),
-								vecty.MarkupIf(
-									b.blockIndex != 0,
-									prop.Disabled(false),
-								),
-								vecty.MarkupIf(
-									b.blockIndex == 0,
-									prop.Disabled(true),
-								),
-							),
-							elem.Span(
-								vecty.Text("«"),
-							),
-							elem.Span(
-								vecty.Markup(vecty.Class("sr-only")),
-								vecty.Text("Back to top"),
-							),
-						),
-					),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.MarkupIf(
-								b.blockIndex > 0,
-								vecty.Class("page-item"),
-							),
-							vecty.MarkupIf(
-								b.blockIndex <= 0,
-								vecty.Class("page-item", "disabled"),
-							),
-						),
-						elem.Button(
-							vecty.Text("prev"),
-							vecty.Markup(
-								vecty.Class("page-link"),
-								event.Click(func(e *vecty.Event) {
-									b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
-									b.refreshCh <- b.blockIndex
-									vecty.Rerender(b)
-								}),
-								vecty.MarkupIf(
-									b.blockIndex > 0,
-									prop.Disabled(false),
-								),
-								vecty.MarkupIf(
-									b.blockIndex < 1,
-									prop.Disabled(true),
-								),
-							),
-						),
-					),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.MarkupIf(
-								b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-								vecty.Class("page-item"),
-							),
-							vecty.MarkupIf(
-								b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-								vecty.Class("page-item", "disabled"),
-							),
-						),
-						elem.Button(vecty.Text("next"),
-							vecty.Markup(
-								vecty.Class("page-link"),
-								event.Click(func(e *vecty.Event) {
-									b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
-									b.refreshCh <- b.blockIndex
-									vecty.Rerender(b)
-								}),
-								vecty.MarkupIf(
-									b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-									prop.Disabled(false),
-								),
-								vecty.MarkupIf(
-									b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
-									prop.Disabled(true),
-								),
-							),
-						),
-					),
-				),
-			),
-			renderBlocks(b.t, b.blockIndex),
+			&Pagination{
+				TotalPages:  int(b.t.ResultStatus.SyncInfo.LatestBlockHeight-1) / config.ListSize,
+				CurrentPage: &b.currentPage,
+				RefreshCh:   b.refreshCh,
+				RenderFunc: func(index int) vecty.ComponentOrHTML {
+					return renderBlocks(b.t, index)
+				},
+			},
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
@@ -264,3 +163,111 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 		),
 	)
 }
+
+// elem.Navigation(
+// 	elem.Span(
+// 		vecty.Text("Page "+util.IntToString(b.blockIndex/10+1)),
+// 	),
+// 	elem.UnorderedList(
+// 		vecty.Markup(vecty.Class("pagination")),
+// 		elem.ListItem(
+// 			vecty.Markup(
+// 				vecty.MarkupIf(
+// 					b.blockIndex != 0,
+// 					vecty.Class("page-item"),
+// 				),
+// 				vecty.MarkupIf(
+// 					b.blockIndex == 0,
+// 					vecty.Class("page-item", "disabled"),
+// 				),
+// 			),
+// 			elem.Button(
+// 				vecty.Markup(
+// 					vecty.Class("page-link"),
+// 					event.Click(func(e *vecty.Event) {
+// 						b.blockIndex = 0
+// 						b.refreshCh <- b.blockIndex
+// 						vecty.Rerender(b)
+// 					}),
+// 					vecty.MarkupIf(
+// 						b.blockIndex != 0,
+// 						prop.Disabled(false),
+// 					),
+// 					vecty.MarkupIf(
+// 						b.blockIndex == 0,
+// 						prop.Disabled(true),
+// 					),
+// 				),
+// 				elem.Span(
+// 					vecty.Text("«"),
+// 				),
+// 				elem.Span(
+// 					vecty.Markup(vecty.Class("sr-only")),
+// 					vecty.Text("Back to top"),
+// 				),
+// 			),
+// 		),
+// 		elem.ListItem(
+// 			vecty.Markup(
+// 				vecty.MarkupIf(
+// 					b.blockIndex > 0,
+// 					vecty.Class("page-item"),
+// 				),
+// 				vecty.MarkupIf(
+// 					b.blockIndex <= 0,
+// 					vecty.Class("page-item", "disabled"),
+// 				),
+// 			),
+// 			elem.Button(
+// 				vecty.Text("prev"),
+// 				vecty.Markup(
+// 					vecty.Class("page-link"),
+// 					event.Click(func(e *vecty.Event) {
+// 						b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
+// 						b.refreshCh <- b.blockIndex
+// 						vecty.Rerender(b)
+// 					}),
+// 					vecty.MarkupIf(
+// 						b.blockIndex > 0,
+// 						prop.Disabled(false),
+// 					),
+// 					vecty.MarkupIf(
+// 						b.blockIndex < 1,
+// 						prop.Disabled(true),
+// 					),
+// 				),
+// 			),
+// 		),
+// 		elem.ListItem(
+// 			vecty.Markup(
+// 				vecty.MarkupIf(
+// 					b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+// 					vecty.Class("page-item"),
+// 				),
+// 				vecty.MarkupIf(
+// 					b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+// 					vecty.Class("page-item", "disabled"),
+// 				),
+// 			),
+// 			elem.Button(vecty.Text("next"),
+// 				vecty.Markup(
+// 					vecty.Class("page-link"),
+// 					event.Click(func(e *vecty.Event) {
+// 						b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
+// 						b.refreshCh <- b.blockIndex
+// 						vecty.Rerender(b)
+// 					}),
+// 					vecty.MarkupIf(
+// 						b.blockIndex < int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+// 						prop.Disabled(false),
+// 					),
+// 					vecty.MarkupIf(
+// 						b.blockIndex >= int(b.t.ResultStatus.SyncInfo.LatestBlockHeight),
+// 						prop.Disabled(true),
+// 					),
+// 				),
+// 			),
+// 		),
+// 	),
+// ),
+// renderBlocks(b.t, b.blockIndex),

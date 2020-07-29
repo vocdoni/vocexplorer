@@ -60,7 +60,8 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 	// Wait for data structs to load
 	for d == nil || d.entity == nil {
 	}
-	client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
+	// TODO change to accept real index
+	client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID, 0)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
 	client.UpdateAuxEntityInfo(d.gwClient, d.entity)
@@ -73,11 +74,13 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
+			//TODO: update to  use real index
+			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID, 0)
 			client.UpdateAuxEntityInfo(d.gwClient, d.entity)
 			vecty.Rerender(d)
 		case <-d.refreshCh:
-			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID)
+			//TODO: update to  use real index
+			client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID, 0)
 			client.UpdateAuxEntityInfo(d.gwClient, d.entity)
 			vecty.Rerender(d)
 		}

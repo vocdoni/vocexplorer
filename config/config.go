@@ -12,5 +12,5 @@ type Cfg struct {
 
 const (
 	//ListSize is the number of cards shown in list of blocks/processes/etc
-	ListSize = 10
+	ListSize = 4
 )
