@@ -24,8 +24,6 @@ func (home *HomeView) Render() vecty.ComponentOrHTML {
 	var dash DashboardView
 	return elem.Div(
 		&Header{},
-		elem.Main(
-			initDashboardView(&t, &vc, &dash, home.cfg),
-		),
+		initDashboardView(&t, &vc, &dash, home.cfg),
 	)
 }

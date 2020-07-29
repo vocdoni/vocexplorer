@@ -30,16 +30,13 @@ type DashboardView struct {
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
-		return elem.Div(
-			vecty.Markup(vecty.Class("container")),
-			elem.Main(
-				vecty.Markup(vecty.Class("info-pane")),
-				&StatsView{
-					t:         dash.t,
-					vc:        dash.vc,
-					refreshCh: dash.refreshCh,
-				},
-			),
+		return elem.Main(
+			vecty.Markup(vecty.Class("home")),
+			&StatsView{
+				t:         dash.t,
+				vc:        dash.vc,
+				refreshCh: dash.refreshCh,
+			},
 			vecty.Markup(
 				event.BeforeUnload(func(i *vecty.Event) {
 					js.Global().Get("alert").Invoke("Closing page")

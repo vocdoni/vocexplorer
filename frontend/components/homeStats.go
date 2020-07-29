@@ -26,8 +26,15 @@ type StatsView struct {
 func (b *StatsView) Render() vecty.ComponentOrHTML {
 	if b.t != nil && b.vc != nil {
 		return elem.Section(
-			renderBlockchainStats(b.t, b.vc),
-			renderBlockList(b),
+			&Jumbotron{
+				vc: b.vc,
+				t:  b.t,
+			},
+			elem.Div(
+				vecty.Markup(vecty.Class("container")),
+				renderBlockchainStats(b.t, b.vc),
+				renderBlockList(b),
+			),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
@@ -158,7 +165,7 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 			vecty.Markup(vecty.Class("bc-stats")),
 			elem.Div(
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-					vecty.If(vc.BlockTime != nil, elem.Table(
+					elem.Table(
 						elem.Caption(elem.Heading2(vecty.Text("Average block times: "))),
 						elem.TableHead(
 							elem.TableRow(elem.TableHeader(vecty.Text("Time period")), elem.TableHeader(vecty.Text("Avg time"))),
@@ -170,7 +177,7 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 							vecty.If(vc.BlockTime[3] > 0, elem.TableRow(elem.TableData(vecty.Text("Last 6h")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[3]))))),
 							vecty.If(vc.BlockTime[4] > 0, elem.TableRow(elem.TableData(vecty.Text("Last 24h")), elem.TableData(vecty.Text(util.MsToString(vc.BlockTime[4]))))),
 						),
-					)),
+					),
 				),
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Current Block Height: "+util.IntToString(t.ResultStatus.SyncInfo.LatestBlockHeight)),
