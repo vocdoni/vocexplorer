@@ -1,8 +1,22 @@
 const gulp = require('gulp')
 const sass = require('gulp-sass')
 const exec = require('child_process').exec
+const uglify = require('gulp-uglify')
+const concat = require('gulp-concat')
 
 sass.compiler = require('node-sass')
+
+// node_modules js files to be compiled in static/build.js
+// NOTE: if you're using `gulp watch` you MUST restart the process after changing anything here
+const modules = [
+  'jquery/dist/jquery.js',
+  'bootstrap/js/dist/util.js',
+  'bootstrap/js/dist/collapse.js',
+]
+
+for (j in modules) {
+  modules[j] = `node_modules/${modules[j]}`
+}
 
 gulp.task('go:generate', (done) =>
   exec('go generate', {cwd: './frontend'}, (err, stdout, stderr) => {
@@ -21,6 +35,14 @@ gulp.task('go:watch', () =>
   gulp.watch('./frontend/**/*.go', gulp.series('go:generate'))
 )
 
+gulp.task('assets:js', () =>
+  gulp.src(modules)
+    .pipe(gulp.src('./assets/js/**/*.js'))
+    .pipe(concat('build.js'))
+    .pipe(uglify())
+    .pipe(gulp.dest('./static/js'))
+)
+
 gulp.task('sass', () =>
   gulp.src('./assets/sass/**/*.scss')
     .pipe(sass().on('error', sass.logError))
@@ -34,6 +56,7 @@ gulp.task('sass:watch', () =>
 gulp.task('watch', () => {
   gulp.watch('./frontend/**/*.go', gulp.series('go:generate'))
   gulp.watch('./assets/sass/**/*.scss', gulp.series('sass'))
+  gulp.watch('./assets/js/**/*.js', gulp.series('assets:js'))
 })
 
-gulp.task('default', gulp.series('sass'))
+gulp.task('default', gulp.series('sass', 'assets:js'))

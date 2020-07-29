@@ -14,3 +14,4 @@ wasm_exec.js
 node_modules
 css
 *.lock
+build.js

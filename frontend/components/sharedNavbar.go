@@ -30,7 +30,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 					vecty.Class("navbar-toggler"),
 					vecty.Attribute("type", "button"),
 					vecty.Attribute("data-toggle", "collapse"),
-					vecty.Attribute("data-target", "navbar-main"),
+					vecty.Attribute("data-target", "#navbar-main"),
 				),
 				elem.Span(vecty.Markup(vecty.Class("navbar-toggler-icon"))),
 			),
