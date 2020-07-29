@@ -25,6 +25,7 @@ type TendermintInfo struct {
 	AppVersion       int
 	MaxBlockSize     int
 	NumValidators    int
+	TotalBlocks      int
 }
 
 // StartClient initializes an http tendermint api client on websockets
@@ -41,7 +42,7 @@ func StartClient(host string) *http.HTTP {
 }
 
 func initClient(host string) (*http.HTTP, error) {
-	c, err := http.NewWithTimeout(host, "/websocket", 1)
+	c, err := http.NewWithTimeout(host, "/websocket", 2)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +64,7 @@ func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo, i int) {
 //UpdateBlockList updates the latest blocks starting at index i
 func UpdateBlockList(c *http.HTTP, t *TendermintInfo, i int) {
 	t.GetBlockList(c, i)
+	t.TotalBlocks = int(t.ResultStatus.SyncInfo.LatestBlockHeight)
 	// t.GetBlockListResults(c, i)
 }
 
@@ -101,16 +103,21 @@ func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 	if lastBlock != nil {
 		lastBlockHeight = int(lastBlock.Header.Height)
 	}
-	fmt.Println("Lash block height: " + util.IntToString(lastBlockHeight))
+	if int(t.ResultStatus.SyncInfo.LatestBlockHeight)-index < config.ListSize+1 {
+		index = int(t.ResultStatus.SyncInfo.LatestBlockHeight) - config.ListSize - 1
+	}
+
 	// Offset from last index to new one, so we can recycle fetched blocks
 	offset := int(t.ResultStatus.SyncInfo.LatestBlockHeight) - 1 - index - lastBlockHeight
 	if offset == 0 {
 		return
 	}
-	fmt.Println("initial offset: " + util.IntToString(offset))
 	if offset > 0 {
 		if offset < config.ListSize {
 			for i := 0; i < config.ListSize-offset; i++ {
+				// if int(t.ResultStatus.SyncInfo.LatestBlockHeight)-1-index < 0 || int(t.ResultStatus.SyncInfo.LatestBlockHeight)-1-index > int(t.ResultStatus.SyncInfo.LatestBlockHeight) {
+				// 	t.BlockList[i] = nil
+				// }
 				t.BlockList[i] = t.BlockList[i+offset]
 			}
 		} else {
@@ -118,7 +125,6 @@ func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 		}
 		for offset > 0 {
 			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+offset)
-			fmt.Println("next height" + util.IntToString(nextHeight))
 			result, err := c.Block(&nextHeight)
 			if !util.ErrPrint(err) {
 				t.BlockList[config.ListSize-offset] = *result
@@ -136,7 +142,6 @@ func (t *TendermintInfo) GetBlockList(c *http.HTTP, index int) {
 		}
 		for offset > 0 {
 			nextHeight := t.ResultStatus.SyncInfo.LatestBlockHeight - int64(index+config.ListSize-offset+1)
-			fmt.Println("next height" + util.IntToString(nextHeight))
 			result, err := c.Block(&nextHeight)
 			if !util.ErrPrint(err) {
 				t.BlockList[offset-1] = *result

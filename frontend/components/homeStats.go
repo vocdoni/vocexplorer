@@ -1,8 +1,12 @@
 package components
 
 import (
+	"strconv"
+
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
@@ -40,19 +44,38 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 
 func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
+		p := &Pagination{
+			TotalPages:  int(b.t.ResultStatus.SyncInfo.LatestBlockHeight-1) / config.ListSize,
+			TotalItems:  &b.t.TotalBlocks,
+			CurrentPage: &b.currentPage,
+			RefreshCh:   b.refreshCh,
+			RenderFunc: func(index int) vecty.ComponentOrHTML {
+				return renderBlocks(b.t, index)
+			},
+		}
+		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
+			return elem.Input(vecty.Markup(
+				event.Input(func(e *vecty.Event) {
+					search := e.Target.Get("value").String()
+					index, err := strconv.Atoi(e.Target.Get("value").String())
+					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
+						*self.CurrentPage = 0
+						self.RefreshCh <- *self.CurrentPage * config.ListSize
+					} else {
+						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
+						self.RefreshCh <- int(*self.TotalItems) - index - 1
+					}
+					vecty.Rerender(self)
+				}),
+				prop.Placeholder("search by block height"),
+			))
+		}
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-blocks")),
 			elem.Heading3(
 				vecty.Text("Blocks"),
 			),
-			&Pagination{
-				TotalPages:  int(b.t.ResultStatus.SyncInfo.LatestBlockHeight-1) / config.ListSize,
-				CurrentPage: &b.currentPage,
-				RefreshCh:   b.refreshCh,
-				RenderFunc: func(index int) vecty.ComponentOrHTML {
-					return renderBlocks(b.t, index)
-				},
-			},
+			p,
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
@@ -119,9 +142,9 @@ func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	if t.BlockList[config.ListSize-1].Block == nil {
 		return elem.Div(vecty.Text("No blocks available"))
 	}
-	if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index) {
-		return elem.Div(vecty.Text("Loading blocks........"))
-	}
+	// if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
+	// 	return elem.Div(vecty.Text("Loading blocks........"))
+	// }
 	for i := config.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {

@@ -13,18 +13,22 @@ import (
 type Pagination struct {
 	vecty.Core
 	TotalPages  int
+	TotalItems  *int
 	CurrentPage *int
 	RefreshCh   chan int
 	RenderFunc  func(int) vecty.ComponentOrHTML
+	SearchBar   func(*Pagination) vecty.ComponentOrHTML
 }
 
 // Render renders the pagination component
 func (p *Pagination) Render() vecty.ComponentOrHTML {
+	p.TotalPages = (*p.TotalItems - 1) / config.ListSize
 	return elem.Div(
 		elem.Navigation(
 			elem.Span(
 				vecty.Text("Page "+util.IntToString(*p.CurrentPage+1)),
 			),
+			p.SearchBar(p),
 			elem.UnorderedList(
 				vecty.Markup(vecty.Class("pagination")),
 				elem.ListItem(
