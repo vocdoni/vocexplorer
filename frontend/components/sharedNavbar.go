@@ -16,53 +16,56 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 		vecty.Markup(
 			vecty.Class("navbar", "navbar-expand-lg", "navbar-light", "bg-light"),
 		),
-		elem.Anchor(
-			vecty.Markup(
-				vecty.Attribute("href", "/"),
-				vecty.Class("navbar-brand"),
-			),
-			vecty.Text("Vochain Explorer"),
-		),
-		elem.Button(
-			vecty.Markup(
-				vecty.Class("navbar-toggler"),
-				vecty.Attribute("type", "button"),
-				vecty.Attribute("data-toggle", "collapse"),
-				vecty.Attribute("data-target", "navbar-main"),
-			),
-			elem.Span(vecty.Markup(vecty.Class("navbar-toggler-icon"))),
-		),
 		elem.Div(
-			vecty.Markup(
-				vecty.Class("collapse", "navbar-collapse"),
-				vecty.Attribute("id", "navbar-main"),
-			),
-			elem.UnorderedList(
+			vecty.Markup(vecty.Class("container-fluid")),
+			elem.Anchor(
 				vecty.Markup(
-					vecty.Class("navbar-nav", "mr-auto"),
+					vecty.Attribute("href", "/"),
+					vecty.Class("navbar-brand"),
 				),
-				elem.ListItem(
-					vecty.Markup(
-						vecty.Class("nav-item", "active"),
-					),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Class("nav-link"),
-							vecty.Attribute("href", "/"),
-						),
-						vecty.Text("Home"),
-					),
+				vecty.Text("Vochain Explorer"),
+			),
+			elem.Button(
+				vecty.Markup(
+					vecty.Class("navbar-toggler"),
+					vecty.Attribute("type", "button"),
+					vecty.Attribute("data-toggle", "collapse"),
+					vecty.Attribute("data-target", "navbar-main"),
 				),
-				elem.ListItem(
+				elem.Span(vecty.Markup(vecty.Class("navbar-toggler-icon"))),
+			),
+			elem.Div(
+				vecty.Markup(
+					vecty.Class("collapse", "navbar-collapse"),
+					vecty.Attribute("id", "navbar-main"),
+				),
+				elem.UnorderedList(
 					vecty.Markup(
-						vecty.Class("nav-item", "dropdown"),
+						vecty.Class("navbar-nav", "mr-auto"),
 					),
-					elem.Anchor(
+					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-link"),
-							vecty.Attribute("href", "/vocdash"),
+							vecty.Class("nav-item", "active"),
 						),
-						vecty.Text("Processes & Entities"),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Class("nav-link"),
+								vecty.Attribute("href", "/"),
+							),
+							vecty.Text("Home"),
+						),
+					),
+					elem.ListItem(
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Class("nav-link"),
+								vecty.Attribute("href", "/vocdash"),
+							),
+							vecty.Text("Processes & Entities"),
+						),
 					),
 				),
 			),
