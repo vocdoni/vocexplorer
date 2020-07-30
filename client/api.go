@@ -13,6 +13,17 @@ import (
 	"nhooyr.io/websocket"
 )
 
+// InitGateway initializes a connection with the gateway
+func InitGateway(host string) (*Client, context.CancelFunc) {
+	// Init Gateway client
+	fmt.Println("connecting to " + host)
+	gwClient, cancel, err := New(host)
+	if util.ErrPrint(err) {
+		return nil, cancel
+	}
+	return gwClient, cancel
+}
+
 // New starts a connection with the given endpoint address. From unreleased go-dvote/client
 func New(addr string) (*Client, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

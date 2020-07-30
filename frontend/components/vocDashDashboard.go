@@ -37,7 +37,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 }
 
 func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
-	gwClient, cancel := InitGateway(cfg.GatewayHost)
+	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return VocDashDashboardView
 	}

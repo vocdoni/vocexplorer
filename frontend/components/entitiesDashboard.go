@@ -39,7 +39,7 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 }
 
 func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
-	gwClient, cancel := InitGateway(cfg.GatewayHost)
+	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return EntitiesDashboardView
 	}

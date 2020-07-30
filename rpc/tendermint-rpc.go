@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"fmt"
-	"syscall/js"
 
 	"github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -30,12 +29,9 @@ type TendermintInfo struct {
 
 // StartClient initializes an http tendermint api client on websockets
 func StartClient(host string) *http.HTTP {
-	fmt.Println("connecting to %s", host)
+	fmt.Println("connecting to " + host)
 	tClient, err := initClient(host)
 	if util.ErrPrint(err) {
-		if js.Global().Get("confirm").Invoke("Unable to connect to Tendermint client. Reload with client running").Bool() {
-			js.Global().Get("location").Call("reload")
-		}
 		return nil
 	}
 	return tClient

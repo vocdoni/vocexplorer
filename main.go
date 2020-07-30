@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go db.UpdateDB(d)
+	go db.UpdateDB(d, &cfg)
 
 	urlR, err := url.Parse(*hostURL)
 	if util.ErrPrint(err) {

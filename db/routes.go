@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/config"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 )
@@ -37,7 +36,9 @@ func ListHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Reque
 			log.Errorf("Url Param 'from' is missing")
 			return
 		}
-		keys := list(db, config.ListSize, froms[0], prefs[0])
+		// keys := list(db, config.ListSize, froms[0], prefs[0])
+		keys := list(db, 2, froms[0], prefs[0])
+		log.Debugf("Found %d keys", len(keys))
 
 		var vals []string
 		for _, key := range keys {
@@ -54,8 +55,7 @@ func ListHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			log.Error(err)
 		}
-		log.Infof("Posting message: " + string(msg))
-
 		fmt.Fprintf(w, string(msg))
+		log.Debugf("Sent %d bytes", len(msg))
 	}
 }

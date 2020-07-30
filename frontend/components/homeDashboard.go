@@ -53,7 +53,7 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	// Init tendermint client
 	tClient := rpc.StartClient(cfg.TendermintHost)
 	// Init Gateway client
-	gwClient, cancel := InitGateway(cfg.GatewayHost)
+	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil || tClient == nil {
 		return DashboardView
 	}

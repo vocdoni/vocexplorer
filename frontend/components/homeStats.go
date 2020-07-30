@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gopherjs/vecty"
@@ -11,6 +12,7 @@ import (
 	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -140,15 +142,27 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 	if t.BlockList[config.ListSize-1].Block == nil {
-		return elem.Div(vecty.Text("No blocks available"))
+		fmt.Println("oop")
+		// return elem.Div(vecty.Text("No blocks available"))
 	}
-	// if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
-	// 	return elem.Div(vecty.Text("Loading blocks........"))
+	_ = dbapi.GetBlockList(5)
+
+	// blocks := dbapi.GetBlockList(5)
+	// for _, block := range blocks {
+	// 	blockList = append(blockList, renderBlock(block))
 	// }
+	// blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
+	// return elem.Div(
+	// 	blockList...,
+	// )
+
+	if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
+		return elem.Div(vecty.Text("Loading blocks........"))
+	}
 	for i := config.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
-		blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))
+		blockList = append(blockList, renderBlock(block))
 	}
 	blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
 	return elem.Div(
@@ -156,7 +170,7 @@ func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
+func renderBlock(block coretypes.ResultBlock) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card")),
 		elem.Div(
 			vecty.Markup(vecty.Class("card-header")),
@@ -167,7 +181,7 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 			elem.Div(
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Div(
-					vecty.Text(util.IntToString(len(blockResults.TxsResults))+" transactions"),
+					vecty.Text(util.IntToString(len(block.Block.Data.Txs))+" transactions"),
 				),
 				elem.Div(
 					vecty.Text(timeago.English.Format(block.Block.Header.Time)),
