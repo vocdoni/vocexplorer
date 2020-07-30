@@ -1214,6 +1214,7 @@ github.com/xtaci/kcp-go v5.4.20+incompatible/go.mod h1:bN6vIwHQbfHaHtFpEssmWsN45
 github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae/go.mod h1:gXtu8J62kEgmN++bm9BVICuT/e8yiLI2KFobd/TRFsE=
 gitlab.com/vocdoni/go-dvote v0.4.0 h1:s2ycQP5TZmGmv0lWNV4CLtj57ciRArZ/HtxJKD/u/Fs=
 gitlab.com/vocdoni/go-dvote v0.4.0/go.mod h1:RivoyrJpDESdkQW05koWN/ST/EBlSFf3g2JIFQVtHuk=
+gitlab.com/vocdoni/go-dvote v0.5.1 h1:rdPcvCs+dnlWtD74RopZ95EYiThspUGfTsvxzfHOVgs=
 gitlab.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da h1:qEKse/C/gOACneRkXQQZLgXjXEe8aaxzcuS60KwUX78=
 gitlab.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da/go.mod h1:IRX9TEuQAK5j8yDceSak55G0gu8S52aeK++NJuAyYSY=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
