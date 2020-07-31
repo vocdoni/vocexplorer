@@ -91,7 +91,6 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 		}
 
 		key := append([]byte(config.BlockPrefix), []byte(util.IntToString(block.Height))...)
-		log.Debugf("Setting block %d with key %s", latestHeight, string(key))
 		// value := encBuf.Bytes()
 		batch.Put(key, value)
 
@@ -100,6 +99,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 		batch.Put(key, value)
 
 	}
+	log.Debugf("Setting block %d ", latestHeight)
 	var buf bytes.Buffer
 	err = amino.EncodeInt64(&buf, latestHeight)
 	if err != nil {

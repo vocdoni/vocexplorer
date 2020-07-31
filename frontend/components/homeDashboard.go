@@ -14,6 +14,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // DashboardView renders the dashboard landing page
@@ -90,7 +91,9 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			return
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
-			d.t.BlockList = dbapi.GetBlockList(d.blockIndex)
+			d.t.BlockList = dbapi.GetBlockList(util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize, 1))
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
@@ -104,7 +107,8 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 				}
 			}
 			d.blockIndex = i
-			d.t.BlockList = dbapi.GetBlockList(d.blockIndex)
+			d.t.BlockList = dbapi.GetBlockList(util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize, 1))
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight())
 			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
