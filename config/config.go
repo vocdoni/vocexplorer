@@ -19,6 +19,8 @@ const (
 	EntityIDPrefix = "01"
 	//BlockPrefix is the key prefix for blocks
 	BlockPrefix = "02"
+	//BlockHashPrefix is the key prefix for blocks by hash
+	BlockHashPrefix = "03"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 )

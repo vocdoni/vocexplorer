@@ -8,12 +8,13 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	// coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -141,13 +142,13 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-	if t.BlockList[config.ListSize-1].Block == nil {
-		fmt.Println("oop")
-		// return elem.Div(vecty.Text("No blocks available"))
+	if t.BlockList[config.ListSize-1].IsEmpty() {
+		fmt.Println("No blocks available")
+		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
-	_ = dbapi.GetBlockList(5)
+	// _ = dbapi.GetBlockList(5)
 
-	// blocks := dbapi.GetBlockList(5)
+	// blocks := dbapi.GetBlockList(2)
 	// for _, block := range blocks {
 	// 	blockList = append(blockList, renderBlock(block))
 	// }
@@ -156,9 +157,9 @@ func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	// 	blockList...,
 	// )
 
-	if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
-		return elem.Div(vecty.Text("Loading blocks........"))
-	}
+	// if t.BlockList[config.ListSize-1].Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
+	// 	return elem.Div(vecty.Text("Loading blocks........"))
+	// }
 	for i := config.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
@@ -170,21 +171,21 @@ func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlock(block coretypes.ResultBlock) vecty.ComponentOrHTML {
+func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card")),
 		elem.Div(
 			vecty.Markup(vecty.Class("card-header")),
-			vecty.Text(util.IntToString(block.Block.Header.Height)),
+			vecty.Text(util.IntToString(block.Height)),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("card-body")),
 			elem.Div(
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Div(
-					vecty.Text(util.IntToString(len(block.Block.Data.Txs))+" transactions"),
+					vecty.Text(util.IntToString(len(block.Data.Txs))+" transactions"),
 				),
 				elem.Div(
-					vecty.Text(timeago.English.Format(block.Block.Header.Time)),
+					vecty.Text(timeago.English.Format(block.Time)),
 				),
 			),
 			elem.Div(
@@ -194,12 +195,43 @@ func renderBlock(block coretypes.ResultBlock) vecty.ComponentOrHTML {
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(block.BlockID.Hash.String()),
+					vecty.Text(block.Hash.String()),
 				),
 			),
 		),
 	)
 }
+
+// func renderBlock(block coretypes.ResultBlock) vecty.ComponentOrHTML {
+// 	return elem.Div(vecty.Markup(vecty.Class("card")),
+// 		elem.Div(
+// 			vecty.Markup(vecty.Class("card-header")),
+// 			vecty.Text(util.IntToString(block.Block.Header.Height)),
+// 		),
+// 		elem.Div(
+// 			vecty.Markup(vecty.Class("card-body")),
+// 			elem.Div(
+// 				vecty.Markup(vecty.Class("block-card-heading")),
+// 				elem.Div(
+// 					vecty.Text(util.IntToString(len(block.Block.Data.Txs))+" transactions"),
+// 				),
+// 				elem.Div(
+// 					vecty.Text(timeago.English.Format(block.Block.Header.Time)),
+// 				),
+// 			),
+// 			elem.Div(
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dt")),
+// 					vecty.Text("Hash"),
+// 				),
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dd")),
+// 					vecty.Text(block.BlockID.Hash.String()),
+// 				),
+// 			),
+// 		),
+// 	)
+// }
 
 // elem.Navigation(
 // 	elem.Span(

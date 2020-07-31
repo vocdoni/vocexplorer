@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 )
 
@@ -63,7 +64,7 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	DashboardView.vc = vc
 	DashboardView.quitCh = make(chan struct{})
 	DashboardView.refreshCh = make(chan int, 50)
-	DashboardView.blockIndex = 0
+	DashboardView.blockIndex = 1
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
@@ -89,6 +90,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			return
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
+			d.t.BlockList = dbapi.GetBlockList(d.blockIndex)
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
@@ -102,7 +104,8 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 				}
 			}
 			d.blockIndex = i
-			rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
+			d.t.BlockList = dbapi.GetBlockList(d.blockIndex)
+			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
 	}
