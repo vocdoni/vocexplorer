@@ -48,7 +48,7 @@ func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 			CurrentPage:     &b.currentPage,
 			RefreshCh:       b.refreshCh,
 			ListSize:        config.HomeWidgetBlocksListSize,
-			RenderSearchBar: true,
+			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderBlocks(p, b.t, index)

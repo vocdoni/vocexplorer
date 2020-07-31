@@ -26,6 +26,11 @@ type Pagination struct {
 // Render renders the pagination component
 func (p *Pagination) Render() vecty.ComponentOrHTML {
 	p.TotalPages = (*p.TotalItems - 1) / p.ListSize
+	if !p.RenderSearchBar {
+		p.SearchBar = func(*Pagination) vecty.ComponentOrHTML {
+			return nil
+		}
+	}
 	return elem.Div(
 		elem.Navigation(
 			elem.Div(
