@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"fmt"
-	"syscall/js"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -41,7 +40,6 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 			},
 			vecty.Markup(
 				event.BeforeUnload(func(i *vecty.Event) {
-					js.Global().Get("alert").Invoke("Closing page")
 					dash.gwClient.Close()
 				},
 				),
@@ -81,7 +79,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
-	updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
 	vecty.Rerender(d)
 	for {
 		select {
@@ -94,7 +92,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-			updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
 
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
@@ -114,14 +112,14 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			if i < 1 {
 				oldBlocks = d.t.TotalBlocks
 			}
-			updateBlocks(d, util.Max(oldBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
 			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
 	}
 }
 
-func updateBlocks(d *DashboardView, index int) {
+func updateHomeBlocks(d *DashboardView, index int) {
 	fmt.Println("Getting blocks from index " + util.IntToString(index))
 	d.t.BlockList = dbapi.GetBlockList(index)
 }

@@ -1,8 +1,6 @@
 package components
 
 import (
-	"syscall/js"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
@@ -18,7 +16,6 @@ type HomeView struct {
 
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
-	js.Global().Set("page", "home")
 	var t rpc.TendermintInfo
 	var vc client.VochainInfo
 	var dash DashboardView

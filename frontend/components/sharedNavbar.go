@@ -67,6 +67,18 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 							vecty.Text("Processes & Entities"),
 						),
 					),
+					elem.ListItem(
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Class("nav-link"),
+								vecty.Attribute("href", "/blocktxs"),
+							),
+							vecty.Text("Blocks & Transactions"),
+						),
+					),
 				),
 			),
 		),

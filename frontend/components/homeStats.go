@@ -33,14 +33,14 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("container")),
 				renderBlockchainStats(b.t, b.vc),
-				renderBlockList(b),
+				renderHomeBlockList(b),
 			),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
 }
 
-func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
+func renderHomeBlockList(b *StatsView) vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
 		p := &Pagination{
 			TotalPages:      int(b.t.TotalBlocks) / config.HomeWidgetBlocksListSize,

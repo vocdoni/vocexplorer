@@ -1,13 +1,10 @@
 package components
 
 import (
-	"syscall/js"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
 
@@ -19,8 +16,6 @@ type ProcessesView struct {
 
 // Render renders the ProcessesView component
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
-	id := router.GetNamedVar(home)["id"]
-	js.Global().Set("page", "process "+id[0:util.Min(8, len(id))]+"...")
 	var process client.FullProcessInfo
 	var dash ProcessesDashboardView
 	return elem.Div(

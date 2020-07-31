@@ -13,10 +13,15 @@ import (
 // RegisterRoutes takes a mux and registers all the routes callbacks within this package
 func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 
+	// Page Routes
 	m.HandleFunc("/", indexHandler)
 	m.HandleFunc("/vocdash", indexHandler)
 	m.HandleFunc("/processes/{id}", indexHandler)
 	m.HandleFunc("/entities/{id}", indexHandler)
+	m.HandleFunc("/blocktxs", indexHandler)
+	m.HandleFunc("blocks/{id}", indexHandler)
+
+	// API Routes
 	m.HandleFunc("/config", configHandler(cfg))
 	m.HandleFunc("/db/list/", db.ListHandler(d))
 	m.HandleFunc("/db/val/", db.ValHandler(d))
