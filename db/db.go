@@ -70,7 +70,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 	blockHeight := status.SyncInfo.LatestBlockHeight
 	batch := d.NewBatch()
 	errs := 0
-	for i := 0; i < 2 && latestHeight < blockHeight; i++ {
+	for i := 0; i < 50 && latestHeight < blockHeight; i++ {
 		// encBuf := new(bytes.Buffer)
 		// enc := gob.NewEncoder(encBuf)
 		latestHeight++
