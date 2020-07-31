@@ -1,7 +1,7 @@
 package db
 
 import (
-	"strconv"
+	"bytes"
 
 	"github.com/tendermint/go-amino"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -58,7 +58,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 		if err != nil {
 			log.Error(err)
 		}
-		latestHeight, err = strconv.ParseInt(string(val), 0, 64)
+		latestHeight, _, err = amino.DecodeInt64(val)
 		if err != nil {
 			log.Error(err)
 		}
@@ -100,7 +100,12 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 		batch.Put(key, value)
 
 	}
-	batch.Put([]byte(config.LatestBlockHeightKey), []byte(util.IntToString(latestHeight)))
+	var buf bytes.Buffer
+	err = amino.EncodeInt64(&buf, latestHeight)
+	if err != nil {
+		log.Error(err)
+	}
+	batch.Put([]byte(config.LatestBlockHeightKey), buf.Bytes())
 	batch.Write()
 }
 

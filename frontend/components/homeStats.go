@@ -142,24 +142,10 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-	if t.BlockList[config.ListSize-1].IsEmpty() {
+	if t.BlockList[0].IsEmpty() {
 		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
-	// _ = dbapi.GetBlockList(5)
-
-	// blocks := dbapi.GetBlockList(2)
-	// for _, block := range blocks {
-	// 	blockList = append(blockList, renderBlock(block))
-	// }
-	// blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
-	// return elem.Div(
-	// 	blockList...,
-	// )
-
-	// if t.BlockList[config.ListSize-1].Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
-	// 	return elem.Div(vecty.Text("Loading blocks........"))
-	// }
 	for i := config.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {

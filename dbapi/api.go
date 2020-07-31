@@ -21,18 +21,24 @@ func GetBlockList(i int) [config.ListSize]types.StoreBlock {
 	if util.ErrPrint(err) {
 		return [config.ListSize]types.StoreBlock{}
 	}
-	// var strings []string
 	var blockList [config.ListSize]types.StoreBlock
 	err = json.Unmarshal(body, &blockList)
-	// err = json.Unmarshal(body, &strings)
 	util.ErrPrint(err)
-
-	// var cdc = amino.NewCodec()
-	// cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
-	// var blockList [config.ListSize]types.StoreBlock
-	// for i, val := range strings {
-	// 	err := cdc.UnmarshalBinaryLengthPrefixed([]byte(val), &blockList[i])
-	// 	util.ErrPrint(err)
-	// }
 	return blockList
+}
+
+//GetBlockHeight returns the latest block height stored by the database
+func GetBlockHeight() int64 {
+	resp, err := http.Get("db/val/?key=" + config.LatestBlockHeightKey)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height int64
+	err = json.Unmarshal(body, &height)
+	util.ErrPrint(err)
+	return height
 }
