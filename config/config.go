@@ -12,7 +12,9 @@ type Cfg struct {
 
 const (
 	//ListSize is the number of cards shown in list of blocks/processes/etc
-	ListSize = 4
+	ListSize = 10
+	//HomeWidgetBlocksListSize is the number of blocks shown on the homepage
+	HomeWidgetBlocksListSize = 4
 	//ProcessIDPrefix is the key prefix for process id's
 	ProcessIDPrefix = "00"
 	//EntityIDPrefix is the key prefix for entity id's

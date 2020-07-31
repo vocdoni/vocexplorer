@@ -5,15 +5,20 @@
 }
 
 .block-card-heading {
-  display: flex;
-  align-content: space-between;
-
+  @extend .row;
   > div {
-    flex: 1;
+    @extend .col-12;
+    @extend .col-lg-6;
+    @extend .float-left;
+  }
+}
 
-    &:last-of-type {
-      text-align: right;
-    }
+.responsive-card-deck {
+  @extend .row;
+  .card-deck-col {
+    @extend .col-12;
+    @extend .col-md-6;
+    @extend .col-xl-3;
   }
 }
 
