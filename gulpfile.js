@@ -59,4 +59,4 @@ gulp.task('watch', () => {
   gulp.watch('./assets/js/**/*.js', gulp.series('assets:js'))
 })
 
-gulp.task('default', gulp.series('sass', 'assets:js'))
+gulp.task('default', gulp.series('go:generate', 'sass', 'assets:js'))

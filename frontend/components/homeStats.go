@@ -1,12 +1,8 @@
 package components
 
 import (
-	"strconv"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
@@ -45,30 +41,15 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 func renderBlockList(b *StatsView) vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
 		p := &Pagination{
-			TotalPages:  int(b.t.ResultStatus.SyncInfo.LatestBlockHeight-1) / config.ListSize,
-			TotalItems:  &b.t.TotalBlocks,
-			CurrentPage: &b.currentPage,
-			RefreshCh:   b.refreshCh,
-			RenderFunc: func(index int) vecty.ComponentOrHTML {
-				return renderBlocks(b.t, index)
-			},
+			TotalPages:      int(b.t.ResultStatus.SyncInfo.LatestBlockHeight-1) / config.HomeWidgetBlocksListSize,
+			TotalItems:      &b.t.TotalBlocks,
+			CurrentPage:     &b.currentPage,
+			RefreshCh:       b.refreshCh,
+			ListSize:        config.HomeWidgetBlocksListSize,
+			RenderSearchBar: true,
 		}
-		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
-			return elem.Input(vecty.Markup(
-				event.Input(func(e *vecty.Event) {
-					search := e.Target.Get("value").String()
-					index, err := strconv.Atoi(e.Target.Get("value").String())
-					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
-						*self.CurrentPage = 0
-						self.RefreshCh <- *self.CurrentPage * config.ListSize
-					} else {
-						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						self.RefreshCh <- int(*self.TotalItems) - index - 1
-					}
-					vecty.Rerender(self)
-				}),
-				prop.Placeholder("search by block height"),
-			))
+		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
+			return renderBlocks(p, b.t, index)
 		}
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-blocks")),
@@ -137,50 +118,52 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
+func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-	if t.BlockList[config.ListSize-1].Block == nil {
+	if t.BlockList[p.ListSize-1].Block == nil {
 		return elem.Div(vecty.Text("No blocks available"))
 	}
-	// if t.BlockList[config.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*config.ListSize) {
+	// if t.BlockList[p.ListSize-1].Block.Height != t.ResultStatus.SyncInfo.LatestBlockHeight-1-int64(index*p.ListSize) {
 	// 	return elem.Div(vecty.Text("Loading blocks........"))
 	// }
-	for i := config.ListSize - 1; i >= 0; i-- {
+	for i := p.ListSize - 1; i >= 0; i-- {
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block, t.BlockListResults[i]))
 	}
-	blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
+	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))
 	return elem.Div(
 		blockList...,
 	)
 }
 
 func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlockResults) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card")),
-		elem.Div(
-			vecty.Markup(vecty.Class("card-header")),
-			vecty.Text(util.IntToString(block.Block.Header.Height)),
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("card-body")),
+	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
+		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
-				vecty.Markup(vecty.Class("block-card-heading")),
-				elem.Div(
-					vecty.Text(util.IntToString(len(blockResults.TxsResults))+" transactions"),
-				),
-				elem.Div(
-					vecty.Text(timeago.English.Format(block.Block.Header.Time)),
-				),
+				vecty.Markup(vecty.Class("card-header")),
+				vecty.Text(util.IntToString(block.Block.Header.Height)),
 			),
 			elem.Div(
+				vecty.Markup(vecty.Class("card-body")),
 				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
-					vecty.Text("Hash"),
+					vecty.Markup(vecty.Class("block-card-heading")),
+					elem.Div(
+						vecty.Text(util.IntToString(len(blockResults.TxsResults))+" transactions"),
+					),
+					elem.Div(
+						vecty.Text(timeago.English.Format(block.Block.Header.Time)),
+					),
 				),
 				elem.Div(
-					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(block.BlockID.Hash.String()),
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Hash"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(block.BlockID.Hash.String()),
+					),
 				),
 			),
 		),
@@ -246,7 +229,7 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 // 				vecty.Markup(
 // 					vecty.Class("page-link"),
 // 					event.Click(func(e *vecty.Event) {
-// 						b.blockIndex = util.Max(b.blockIndex-config.ListSize, 0)
+// 						b.blockIndex = util.Max(b.blockIndex-config.HomeWidgetBlocksListSize, 0)
 // 						b.refreshCh <- b.blockIndex
 // 						vecty.Rerender(b)
 // 					}),
@@ -276,7 +259,7 @@ func renderBlock(block coretypes.ResultBlock, blockResults coretypes.ResultBlock
 // 				vecty.Markup(
 // 					vecty.Class("page-link"),
 // 					event.Click(func(e *vecty.Event) {
-// 						b.blockIndex = util.Min(b.blockIndex+config.ListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
+// 						b.blockIndex = util.Min(b.blockIndex+config.HomeWidgetBlocksListSize, int(b.t.ResultStatus.SyncInfo.LatestBlockHeight))
 // 						b.refreshCh <- b.blockIndex
 // 						vecty.Rerender(b)
 // 					}),
