@@ -57,7 +57,8 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
-	client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
+	//TODO: update to  use real index
+	client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
 	client.UpdateAuxProcessInfo(d.gwClient, d.vc)
@@ -70,11 +71,13 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
+			//TODO: update to  use real index
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case <-d.refreshCh:
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc)
+			//TODO: update to  use real index
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		}
