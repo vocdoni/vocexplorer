@@ -107,6 +107,10 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Current Block Height: "+util.IntToString(t.ResultStatus.SyncInfo.LatestBlockHeight)),
 				),
+				vecty.If(int(t.ResultStatus.SyncInfo.LatestBlockHeight)-t.TotalBlocks > 200,
+					elem.Div(vecty.Markup(vecty.Class("card-col-3")),
+						vecty.Text("Still Syncing With Gateway... "+util.IntToString(t.TotalBlocks)+" Blocks Stored")),
+				),
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Total Txs: "+util.IntToString(t.TxCount)),
 				),
@@ -142,14 +146,19 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 
 func renderBlocks(t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-	if t.BlockList[0].IsEmpty() {
-		fmt.Println("No blocks available")
-		return elem.Div(vecty.Text("Loading Blocks..."))
-	}
+
+	empty := config.ListSize
 	for i := config.ListSize - 1; i >= 0; i-- {
+		if t.BlockList[i].IsEmpty() {
+			empty--
+		}
 		block := t.BlockList[i]
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block))
+	}
+	if empty == 0 {
+		fmt.Println("No blocks available")
+		// return elem.Div(vecty.Text("Loading Blocks..."))
 	}
 	blockList = append(blockList, vecty.Markup(vecty.Class("card-deck")))
 	return elem.Div(
@@ -168,7 +177,7 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Div(
-					vecty.Text(util.IntToString(len(block.Data.Txs))+" transactions"),
+					vecty.Text(util.IntToString(block.NumTxs)+" transactions"),
 				),
 				elem.Div(
 					vecty.Text(timeago.English.Format(block.Time)),

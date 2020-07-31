@@ -69,17 +69,25 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 	}
 	blockHeight := status.SyncInfo.LatestBlockHeight
 	batch := d.NewBatch()
+	errs := 0
 	for i := 0; i < 2 && latestHeight < blockHeight; i++ {
 		// encBuf := new(bytes.Buffer)
 		// enc := gob.NewEncoder(encBuf)
 		latestHeight++
 		res, err := c.Block(&latestHeight)
 		if err != nil {
+			if errs > 2 {
+				log.Fatal("Blockchain RPC Disconnected")
+				return
+			}
+			errs++
 			log.Error(err)
-			break
+			i--
+			continue
 		}
+		errs = 0
 		var block types.StoreBlock
-		block.Data = res.Block.Data
+		block.NumTxs = len(res.Block.Data.Txs)
 		block.Hash = res.BlockID.Hash
 		block.Height = res.Block.Header.Height
 		block.Time = res.Block.Header.Time
@@ -133,7 +141,6 @@ func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 		if !has {
 			break
 		}
-		log.Debugf("Getting key %s", key)
 		keyList = append(keyList, string(key))
 		from++
 	}

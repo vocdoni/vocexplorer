@@ -4,12 +4,11 @@ import (
 	"time"
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	ttypes "github.com/tendermint/tendermint/types"
 )
 
 //StoreBlock stores the parts of a block relevant to our database
 type StoreBlock struct {
-	Data   ttypes.Data
+	NumTxs int
 	Hash   tmbytes.HexBytes
 	Height int64
 	Time   time.Time
@@ -17,7 +16,7 @@ type StoreBlock struct {
 
 //IsEmpty returns true if block is empty
 func (s StoreBlock) IsEmpty() bool {
-	if len(s.Hash) == 0 {
+	if len(s.Hash) == 0 && s.Height == 0 && s.NumTxs == 0 {
 		return true
 	}
 	return false

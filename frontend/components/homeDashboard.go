@@ -65,7 +65,7 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	DashboardView.vc = vc
 	DashboardView.quitCh = make(chan struct{})
 	DashboardView.refreshCh = make(chan int, 50)
-	DashboardView.blockIndex = 1
+	DashboardView.blockIndex = 0
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
@@ -80,6 +80,8 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
+	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+	updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize+1, 1))
 	vecty.Rerender(d)
 	for {
 		select {
@@ -91,8 +93,9 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			return
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
-			d.t.BlockList = dbapi.GetBlockList(util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize, 1))
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			fmt.Println(util.IntToString(d.blockIndex))
+			updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize+1, 1))
 
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
@@ -107,10 +110,19 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 				}
 			}
 			d.blockIndex = i
-			d.t.BlockList = dbapi.GetBlockList(util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize, 1))
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+			oldBlocks := d.t.TotalBlocks
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			if i < 1 {
+				oldBlocks = d.t.TotalBlocks
+			}
+			updateBlocks(d, util.Max(oldBlocks-d.blockIndex-config.ListSize+1, 1))
 			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
 	}
+}
+
+func updateBlocks(d *DashboardView, index int) {
+	fmt.Println("Getting blocks from index " + util.IntToString(index))
+	d.t.BlockList = dbapi.GetBlockList(index)
 }

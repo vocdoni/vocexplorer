@@ -47,7 +47,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 							vecty.Class("page-link"),
 							event.Click(func(e *vecty.Event) {
 								*p.CurrentPage = 0
-								p.RefreshCh <- *p.CurrentPage * config.ListSize
+								p.RefreshCh <- 0
 								vecty.Rerender(p)
 							}),
 							vecty.MarkupIf(
