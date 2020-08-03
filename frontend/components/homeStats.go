@@ -1,15 +1,11 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
-	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -121,60 +117,5 @@ func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
 		vecty.Markup(vecty.Class("tx-stats")),
 		vecty.Text("Txs/hr: "),
 		vecty.Text("Txs/day: "),
-	)
-}
-
-func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
-	var blockList []vecty.MarkupOrChild
-
-	empty := p.ListSize
-	for i := p.ListSize - 1; i >= 0; i-- {
-		if t.BlockList[i].IsEmpty() {
-			empty--
-		}
-		block := t.BlockList[i]
-		// for i, block := range t.BlockList {
-		blockList = append(blockList, renderBlock(block))
-	}
-	if empty == 0 {
-		fmt.Println("No blocks available")
-		// return elem.Div(vecty.Text("Loading Blocks..."))
-	}
-	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))
-	return elem.Div(
-		blockList...,
-	)
-}
-
-func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-header")),
-				vecty.Text(util.IntToString(block.Height)),
-			),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
-				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Div(
-						vecty.Text(util.IntToString(block.NumTxs)+" transactions"),
-					),
-					elem.Div(
-						vecty.Text(timeago.English.Format(block.Time)),
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Hash"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(block.Hash.String()),
-					),
-				),
-			),
-		),
 	)
 }
