@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -40,6 +41,7 @@ func newConfig() (*config.MainCfg, error) {
 	viper.SetConfigType("yml")
 	viper.SetEnvPrefix("VOCEXPLORER")
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// Set FlagVars first
 	viper.BindPFlag("dataDir", flag.Lookup("dataDir"))
@@ -58,7 +60,7 @@ func newConfig() (*config.MainCfg, error) {
 	var cfgError error
 	_, err = os.Stat(cfg.DataDir + "/vocexplorer.yml")
 	if os.IsNotExist(err) {
-		cfgError = fmt.Errorf("creating new config file in %s", cfg.DataDir)
+		log.Infof("creating new config file in %s", cfg.DataDir)
 		// creating config folder if not exists
 		err = os.MkdirAll(cfg.DataDir, os.ModePerm)
 		if err != nil {
@@ -91,7 +93,6 @@ func main() {
 		log.Error(err)
 	}
 	log.Init(cfg.LogLevel, "stdout")
-	log.Fatal(cfg.Global.TendermintHost)
 
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
