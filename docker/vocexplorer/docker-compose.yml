@@ -34,6 +34,7 @@ services:
       - "--gatewayHost=ws://localhost.localdomain:9090/dvote"
       - "--vochainHost=http://localhost.localdomain:26657"
       - "--hostURL=http://0.0.0.0:8081"
+      - "--dbPath=~/.vocexplorer"
     restart: always
     logging:
       driver: json-file
