@@ -10,6 +10,15 @@ type Cfg struct {
 	RefreshTime int `json:"refreshTime"`
 }
 
+//MainCfg includes backend and frontend config
+type MainCfg struct {
+	Config   Cfg
+	NoZip    bool
+	LogLevel string
+	DataDir  string
+	HostURL  string
+}
+
 const (
 	//ListSize is the number of cards shown in list of blocks/processes/etc
 	ListSize = 10

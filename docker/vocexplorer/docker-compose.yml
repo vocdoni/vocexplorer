@@ -35,6 +35,9 @@ services:
       - "--vochainHost=http://localhost.localdomain:26657"
       - "--hostURL=http://0.0.0.0:8081"
       - "--dbPath=~/.vocexplorer"
+    env_file: env
+    volumes:
+      - "db:/app/db"
     restart: always
     logging:
       driver: json-file
