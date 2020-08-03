@@ -5,7 +5,7 @@ WORKDIR /src
 
 COPY . .
 
-RUN apk add --no-cache nodejs yarn
+RUN apk add --no-cache nodejs yarn build-base
 
 RUN cd frontend && \
     go generate && \
