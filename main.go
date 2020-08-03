@@ -26,9 +26,9 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Config.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
-	cfg.Config.TendermintHost = *flag.String("vochainHost", "http://0.0.0.0:26657", "gateway API host to connect to")
-	cfg.Config.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
+	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
+	cfg.Global.TendermintHost = *flag.String("tendermintHost", "http://0.0.0.0:26657", "gateway API host to connect to")
+	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
 	cfg.NoZip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
@@ -48,9 +48,9 @@ func newConfig() (*config.MainCfg, error) {
 	// Add viper config path (now we know it)
 	viper.AddConfigPath(cfg.DataDir)
 
-	viper.BindPFlag("gatewayHost", flag.Lookup("gatewayHost"))
-	viper.BindPFlag("vochainHost", flag.Lookup("vochainHost"))
-	viper.BindPFlag("refreshTime", flag.Lookup("refreshTime"))
+	viper.BindPFlag("global.gatewayHost", flag.Lookup("gatewayHost"))
+	viper.BindPFlag("global.tendermintHost", flag.Lookup("tendermintHost"))
+	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
@@ -91,6 +91,7 @@ func main() {
 		log.Error(err)
 	}
 	log.Init(cfg.LogLevel, "stdout")
+	log.Fatal(cfg.Global.TendermintHost)
 
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
@@ -100,7 +101,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go db.UpdateDB(d, &cfg.Config)
+	go db.UpdateDB(d, &cfg.Global)
 
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {
@@ -109,7 +110,7 @@ func main() {
 	log.Infof("Server on: %v\n", urlR)
 
 	r := mux.NewRouter()
-	router.RegisterRoutes(r, &cfg.Config, d)
+	router.RegisterRoutes(r, &cfg.Global, d)
 
 	if cfg.NoZip {
 		err = http.ListenAndServe(urlR.Host, r)

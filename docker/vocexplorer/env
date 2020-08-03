@@ -5,3 +5,15 @@ DVOTE_VOCHAINCONFIG_NOWAITSYNC=True
 DVOTE_API_LISTENHOST=0.0.0.0
 DVOTE_API_LISTENPORT=9090
 DVOTE_VOCHAINCONFIG_RPCLISTEN=0.0.0.0:26657
+
+VOCEXPLORER_LOGLEVEL=debug
+VOCEXPLORER_
+VOCEXPLORER_
+VOCEXPLORER_
+VOCEXPLORER_
+command:
+      - "--logLevel=debug"
+      - "--gatewayHost=ws://localhost.localdomain:9090/dvote"
+      - "--vochainHost=http://localhost.localdomain:26657"
+      - "--hostURL=http://0.0.0.0:8081"
+      - "--dbPath=~/.vocexplorer"

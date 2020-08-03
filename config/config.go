@@ -12,7 +12,7 @@ type Cfg struct {
 
 //MainCfg includes backend and frontend config
 type MainCfg struct {
-	Config   Cfg
+	Global   Cfg
 	NoZip    bool
 	LogLevel string
 	DataDir  string
