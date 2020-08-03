@@ -31,7 +31,7 @@ services:
       - "8081:8081"
     env_file: env
     volumes:
-      - "db:/app/db"
+      - "voc:/app/.vocexplorer"
     restart: always
     logging:
       driver: json-file
@@ -42,3 +42,4 @@ services:
 volumes:
   run: {}
   eth: {}
+  voc: {}
