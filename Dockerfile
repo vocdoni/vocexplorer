@@ -17,8 +17,15 @@ RUN go build -o=vocexplorer
 
 FROM alpine:3.12
 
-USER 405
+ENV DATA_PATH /data/vocexplorer
+RUN mkdir -p ${DATA_PATH} && \
+    adduser -D -h ${DATA_PATH} -G users vocexplorer && \
+    chown vocexplorer:users ${DATA_PATH}
+USER vocexplorer
+VOLUME /data/vocexplorer
+
 WORKDIR /app
+
 
 COPY --from=builder /src/static ./static 
 COPY --from=builder /src/vocexplorer .
