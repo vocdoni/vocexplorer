@@ -27,8 +27,8 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
-	cfg.Global.TendermintHost = *flag.String("tendermintHost", "http://0.0.0.0:26657", "gateway API host to connect to")
+	cfg.Global.GatewayHost = *flag.String("gatewayHost", "0.0.0.0:9090", "gateway API host to connect to")
+	cfg.Global.TendermintHost = *flag.String("tendermintHost", "0.0.0.0:26657", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
@@ -102,8 +102,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go db.UpdateDB(d, &cfg.Global)
+	go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
 
+	//Convert host url to localhost if using internal docker network
+	if strings.Contains(cfg.Global.GatewayHost, "dvotenode") {
+		sub := strings.Split(cfg.Global.GatewayHost, ":")
+		port := "9090"
+		if len(sub) < 1 {
+			port = sub[1]
+		}
+		cfg.Global.GatewayHost = "ws://localhost:" + port + "/dvote"
+	}
+
+	//Convert host url to localhost if using internal docker network
+	if strings.Contains(cfg.Global.TendermintHost, "dvotenode") {
+		sub := strings.Split(cfg.Global.TendermintHost, ":")
+		port := "26657"
+		if len(sub) < 1 {
+			port = sub[1]
+		}
+		cfg.Global.GatewayHost = "http://localhost:" + port
+	}
+
+	cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + "/dvote"
+	cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {
 		return

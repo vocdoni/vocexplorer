@@ -5,8 +5,7 @@ services:
     image: "vocdoni/go-dvote:latest"
     env_file: env
     volumes:
-      - "run:/app/run"
-      - "eth:/app/eth:ro"
+      - "dvotenode:/app/run"
     ports:
       - "9090:9090"
       - "9091:9091"
@@ -31,8 +30,10 @@ services:
       - "8081:8081"
     env_file: env
     volumes:
-      - "voc:/app/.vocexplorer"
+      - "vocexplorer:/data/vocexplorer"
     restart: always
+    depends_on:
+      - dvotenode
     logging:
       driver: json-file
       options:
@@ -40,6 +41,5 @@ services:
         max-file: "10"
 
 volumes:
-  run: {}
-  eth: {}
-  voc: {}
+  dvotenode: {}
+  vocexplorer: {}

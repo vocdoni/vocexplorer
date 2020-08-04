@@ -2,13 +2,17 @@ package db
 
 import (
 	"bytes"
+	"context"
+	"io"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/tendermint/go-amino"
 	"gitlab.com/vocdoni/go-dvote/log"
 
 	"time"
 
-	"github.com/tendermint/tendermint/rpc/client/http"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -24,17 +28,29 @@ func NewDB(path string) (*dvotedb.BadgerDB, error) {
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
-	log.Infof("Updating database")
-	// Init tendermint client
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	// Init Gateway client
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil || tClient == nil {
-		log.Fatal("Cannot connect to blockchain clients")
+func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
+	ping := pingGateway(gwHost)
+	if !ping {
+		log.Warn("Gateway Client is not running. Running as detached database")
+		return
 	}
+
+	// Init tendermint client
+	tClient, up := startTendermint(tmHost)
+	if !up {
+		log.Warn("Cannot connect to tendermint client. Running as detached database")
+		return
+	}
+
+	// Init Gateway client
+	// gwClient, cancel, up := startGateway(cfg)
+	// if !up {
+	// 	log.Warn("Cannot connect to gateway client. Running as detached database")
+	// 	return
+	// }
+
 	log.Debugf("Connected")
-	defer cancel()
+	// defer (*cancel)()
 
 	// Init amino encoder
 	var cdc = amino.NewCodec()
@@ -47,7 +63,7 @@ func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
 	}
 }
 
-func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
+func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	latestHeight := int64(0)
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
@@ -147,28 +163,60 @@ func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 	return keyList
 }
 
-// func list(d *dvotedb.BadgerDB, max int, from, prefix string) (list []string) {
-// 	iter := d.NewIterator().(*dvotedb.BadgerIterator)
-// 	if len(from) > 0 {
-// 		// height, err := strconv.Atoi(from)
-// 		// if err != nil {
-// 		// 	log.Error(err)
-// 		// }
-// 		// iter.Seek(append([]byte(prefix), []byte(height)...))
-// 		log.Debugf("Searching for key %s", prefix+from)
-// 		iter.Seek(append([]byte(prefix), []byte(from)...))
-// 	}
-// 	var keyList []string
-// 	for iter.Next() {
-// 		if max < 1 {
-// 			break
-// 		}
-// 		if strings.HasPrefix(string(iter.Key()), prefix) {
-// 			log.Debugf("Found key %s", string(iter.Key()))
-// 			keyList = append(keyList, string(iter.Key()))
-// 			max--
-// 		}
-// 	}
-// 	iter.Release()
-// 	return keyList
-// }
+func pingGateway(host string) bool {
+	pingClient := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	for i := 0; ; i++ {
+		if i > 10 {
+			return false
+		}
+		resp, err := pingClient.Get("http://" + host + "/ping")
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(time.Second)
+			continue
+		}
+		if string(body) != "pong" {
+			log.Warn("Gateway ping not yet available")
+		} else {
+			return true
+		}
+	}
+}
+
+func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, nil, false
+		}
+		gwClient, cancel := client.InitGateway(host)
+		if gwClient == nil {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return gwClient, &cancel, true
+		}
+	}
+}
+
+func startTendermint(host string) (*tmhttp.HTTP, bool) {
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, false
+		}
+		tmClient := rpc.StartClient("http://" + host)
+		if tmClient == nil {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return tmClient, true
+		}
+	}
+}
