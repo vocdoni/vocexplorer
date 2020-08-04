@@ -2,13 +2,16 @@ package db
 
 import (
 	"bytes"
+	"io"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/tendermint/go-amino"
 	"gitlab.com/vocdoni/go-dvote/log"
 
 	"time"
 
-	"github.com/tendermint/tendermint/rpc/client/http"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -25,8 +28,12 @@ func NewDB(path string) (*dvotedb.BadgerDB, error) {
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
 func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
-	log.Infof("Updating database")
+	if !pingGateway(cfg) {
+		log.Warn("Cannot connect to gateway client. Running as detached database")
+		return
+	}
 	// Init tendermint client
+	cfg.TendermintHost = "http://" + cfg.TendermintHost
 	tClient := rpc.StartClient(cfg.TendermintHost)
 	// Init Gateway client
 	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
@@ -47,7 +54,7 @@ func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
 	}
 }
 
-func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
+func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	latestHeight := int64(0)
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
@@ -147,28 +154,27 @@ func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 	return keyList
 }
 
-// func list(d *dvotedb.BadgerDB, max int, from, prefix string) (list []string) {
-// 	iter := d.NewIterator().(*dvotedb.BadgerIterator)
-// 	if len(from) > 0 {
-// 		// height, err := strconv.Atoi(from)
-// 		// if err != nil {
-// 		// 	log.Error(err)
-// 		// }
-// 		// iter.Seek(append([]byte(prefix), []byte(height)...))
-// 		log.Debugf("Searching for key %s", prefix+from)
-// 		iter.Seek(append([]byte(prefix), []byte(from)...))
-// 	}
-// 	var keyList []string
-// 	for iter.Next() {
-// 		if max < 1 {
-// 			break
-// 		}
-// 		if strings.HasPrefix(string(iter.Key()), prefix) {
-// 			log.Debugf("Found key %s", string(iter.Key()))
-// 			keyList = append(keyList, string(iter.Key()))
-// 			max--
-// 		}
-// 	}
-// 	iter.Release()
-// 	return keyList
-// }
+func pingGateway(cfg *config.Cfg) bool {
+	pingClient := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	for i := 0; ; i++ {
+		if i > 20 {
+			return false
+		}
+		resp, err := pingClient.Get("http://" + cfg.GatewayHost + "/ping")
+		if util.ErrPrint(err) {
+			continue
+		}
+		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+		if util.ErrPrint(err) {
+			continue
+		}
+		if string(body) != "pong" {
+			log.Warn("Gateway API not yet available")
+		} else {
+			cfg.GatewayHost = "ws://" + cfg.GatewayHost + "/dvote"
+			return true
+		}
+	}
+}
