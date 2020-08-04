@@ -13,9 +13,9 @@ func UpdateDashboardInfo(c *Client, vc *VochainInfo) {
 }
 
 // UpdateVocDashDashboardInfo calls gateway apis, updates info needed for processes page
-func UpdateVocDashDashboardInfo(c *Client, vc *VochainInfo) {
-	UpdateVochainProcessList(c, vc)
-	UpdateEntityList(c, vc)
+func UpdateVocDashDashboardInfo(c *Client, vc *VochainInfo, index int) {
+	UpdateVochainProcessList(c, vc, index)
+	UpdateEntityList(c, vc, index)
 }
 
 // UpdateGatewayInfo calls gateway api, updates vc
@@ -39,55 +39,29 @@ func UpdateBlockStatus(c *Client, vc *VochainInfo) {
 }
 
 // UpdateVochainProcessList calls gateway api, updates vs
-func UpdateVochainProcessList(c *Client, vc *VochainInfo) {
-	GetAllIDs(&vc.ProcessIDs, c, func(fromID string) ([]string, error) {
-		return c.GetFinalProcessList(fromID)
-	})
-
-	GetAllIDs(&vc.ProcessIDs, c, func(fromID string) ([]string, error) {
-		return c.GetLiveProcessList(fromID)
+func UpdateVochainProcessList(c *Client, vc *VochainInfo, index int) {
+	GetIDs(&vc.ProcessIDs, c, func() ([]string, error) {
+		finals, err := c.GetFinalProcessList(int64(index))
+		if err != nil {
+			return finals, err
+		}
+		lives, err := c.GetLiveProcessList(int64(index))
+		return append(finals, lives...), err
 	})
 }
 
 // UpdateEntityList calls gateway api, updates vs
-func UpdateEntityList(c *Client, vc *VochainInfo) {
-	GetAllIDs(&vc.EntityIDs, c, func(fromID string) ([]string, error) {
-		return c.GetScrutinizerEntities(fromID)
+func UpdateEntityList(c *Client, vc *VochainInfo, index int) {
+	GetIDs(&vc.EntityIDs, c, func() ([]string, error) {
+		return c.GetScrutinizerEntities(int64(index))
 	})
 }
 
-// GetAllIDs iteratively calls getList until all IDs have been collected and stored in IDList
-func GetAllIDs(IDList *[]string, c *Client, getList func(string) ([]string, error)) {
-	lastID := ""
-	if len(*IDList) > 0 {
-		lastID = (*IDList)[len(*IDList)-1]
-
-		/*THIS RETURN BREAKS THE UPDATING OF ENTITY AND PROCESS IDS.
-		 *statement is here because of bug(?) or confusion: fromID field seems not to be working for these calls.
-		 *Each call returns IDs from the beginning of the ID list, regardless of the fromID field.
-		 *This means 'lastID' does nothing, so list keeps updating with duplicate ids.
-		 */
-
-		return
-	}
-	for {
-		tempList, err := getList(lastID)
-		util.ErrPrint(err)
-		if len(tempList) <= 0 {
-			break
-		}
-		if tempList[len(tempList)-1] == lastID {
-			break
-		}
-		*IDList = append(*IDList, tempList...)
-		// Repeat if request was full, make sure never gets stuck if fromID is not working
-		if len(tempList) < 64 || tempList[len(tempList)-1] == lastID {
-			break
-		}
-		lastID = tempList[len(tempList)-1]
-		// fmt.Println("last ID " + lastID)
-
-	}
+// GetIDs gets ids
+func GetIDs(IDList *[]string, c *Client, getList func() ([]string, error)) {
+	var err error
+	*IDList, err = getList()
+	util.ErrPrint(err)
 }
 
 // UpdateProcessEnvelopeHeights updates envelope height map to include all current process IDs
@@ -202,7 +176,7 @@ func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
 }
 
 // UpdateProcessesDashboardInfo updates process info to include status and recent envelopes
-func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID string) {
+func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID string, index int) {
 	if process == nil {
 		process = new(FullProcessInfo)
 	}
@@ -212,18 +186,18 @@ func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID
 		process.Results = res
 		process.State = st
 	}
-	GetAllIDs(&process.Nullifiers, c, func(fromID string) ([]string, error) {
-		return c.GetEnvelopeList(processID, fromID)
+	GetIDs(&process.Nullifiers, c, func() ([]string, error) {
+		return c.GetEnvelopeList(processID, int64(index))
 	})
 }
 
 // UpdateEntitiesDashboardInfo updates entity info to include recent processes
-func UpdateEntitiesDashboardInfo(c *Client, entity *EntityInfo, entityID string) {
+func UpdateEntitiesDashboardInfo(c *Client, entity *EntityInfo, entityID string, index int) {
 	if entity == nil {
 		entity = new(EntityInfo)
 	}
-	GetAllIDs(&entity.ProcessIDs, c, func(fromID string) ([]string, error) {
-		return c.GetProcessList(entityID, fromID)
+	GetIDs(&entity.ProcessIDs, c, func() ([]string, error) {
+		return c.GetProcessList(entityID, int64(index))
 	})
 }
 

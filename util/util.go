@@ -2,16 +2,17 @@ package util
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.com/vocdoni/go-dvote/log"
 )
 
 // ErrPrint prints an error to stdout. If err is nil, return false. If err is not nil, return true
 func ErrPrint(err error) bool {
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Error(err)
 		return true
 	}
 	return false

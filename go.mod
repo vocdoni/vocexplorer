@@ -11,6 +11,9 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/nathanhack/vectyUI v0.0.0-20200328214448-958e9d362de4
 	github.com/satori/go.uuid v1.2.0
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.6.3
+	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.6
 	github.com/xeonx/timeago v1.0.0-rc4
 	gitlab.com/vocdoni/go-dvote v0.4.0

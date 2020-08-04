@@ -8,9 +8,21 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"nhooyr.io/websocket"
 )
+
+// InitGateway initializes a connection with the gateway
+func InitGateway(host string) (*Client, context.CancelFunc) {
+	// Init Gateway client
+	fmt.Println("connecting to " + host)
+	gwClient, cancel, err := New(host)
+	if util.ErrPrint(err) {
+		return nil, cancel
+	}
+	return gwClient, cancel
+}
 
 // New starts a connection with the given endpoint address. From unreleased go-dvote/client
 func New(addr string) (*Client, context.CancelFunc, error) {
@@ -57,11 +69,12 @@ func (c *Client) GetBlockStatus() (*[5]int32, int32, int64, bool, error) {
 }
 
 // GetFinalProcessList gets list of finished processes on the Vochain
-func (c *Client) GetFinalProcessList(fromID string) ([]string, error) {
+func (c *Client) GetFinalProcessList(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcListResults"
 	req.Timestamp = int32(time.Now().Unix())
-	req.FromID = fromID
+	req.From = from
+	req.ListSize = int64(config.ListSize)
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -74,11 +87,12 @@ func (c *Client) GetFinalProcessList(fromID string) ([]string, error) {
 }
 
 // GetLiveProcessList gets list of live processes on the Vochain
-func (c *Client) GetLiveProcessList(fromID string) ([]string, error) {
+func (c *Client) GetLiveProcessList(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcListLiveResults"
 	req.Timestamp = int32(time.Now().Unix())
-	req.FromID = fromID
+	req.From = from
+	req.ListSize = int64(config.ListSize)
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -91,11 +105,12 @@ func (c *Client) GetLiveProcessList(fromID string) ([]string, error) {
 }
 
 // GetScrutinizerEntities gets list of entities indexed by the scrutinizer on the Vochain
-func (c *Client) GetScrutinizerEntities(fromID string) ([]string, error) {
+func (c *Client) GetScrutinizerEntities(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getScrutinizerEntities"
 	req.Timestamp = int32(time.Now().Unix())
-	req.FromID = fromID
+	req.From = from
+	req.ListSize = int64(config.ListSize)
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -109,13 +124,14 @@ func (c *Client) GetScrutinizerEntities(fromID string) ([]string, error) {
 
 // EntityInfo requests
 
-// GetProcessList gets list of processes for a given entity, starting at fromID
-func (c *Client) GetProcessList(entityID, fromID string) ([]string, error) {
+// GetProcessList gets list of processes for a given entity, starting at from
+func (c *Client) GetProcessList(entityID string, from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcessList"
 	req.Timestamp = int32(time.Now().Unix())
 	req.EntityID = entityID
-	req.FromID = fromID
+	req.From = from
+	req.ListSize = int64(config.ListSize)
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -144,12 +160,13 @@ func (c *Client) GetEnvelopeHeight(processID string) (int64, error) {
 	return *resp.Height, nil
 }
 
-// GetEnvelopeList gets list of envelopes in a given process, starting at fromID
-func (c *Client) GetEnvelopeList(processID, fromID string) ([]string, error) {
+// GetEnvelopeList gets list of envelopes in a given process, starting at from
+func (c *Client) GetEnvelopeList(processID string, from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = processID
-	req.FromID = fromID
+	req.From = from
+	req.ListSize = int64(config.ListSize)
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err

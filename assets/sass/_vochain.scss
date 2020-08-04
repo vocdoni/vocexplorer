@@ -5,15 +5,20 @@
 }
 
 .block-card-heading {
-  display: flex;
-  align-content: space-between;
-
+  @extend .row;
   > div {
-    flex: 1;
+    @extend .col-12;
+    @extend .col-lg-6;
+    @extend .float-left;
+  }
+}
 
-    &:last-of-type {
-      text-align: right;
-    }
+.responsive-card-deck {
+  @extend .row;
+  .card-deck-col {
+    @extend .col-12;
+    @extend .col-md-6;
+    @extend .col-xl-3;
   }
 }
 
@@ -23,4 +28,25 @@
 
 .dd {
   @extend dd;
+}
+
+.jumbo-stats {
+  > div::before {
+    content: " ";
+    width: 3px;
+    background-color: $brand-color;
+    border-radius: 3px;
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: 0;
+  }
+  .stat-title {
+    font-size: $font-size-sm;
+  }
+
+  .stat-value {
+    font-size: $font-size-lg;
+  }
 }

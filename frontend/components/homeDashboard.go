@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"fmt"
-	"syscall/js"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -12,7 +11,9 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // DashboardView renders the dashboard landing page
@@ -30,19 +31,15 @@ type DashboardView struct {
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
-		return elem.Div(
-			vecty.Markup(vecty.Class("container")),
-			elem.Main(
-				vecty.Markup(vecty.Class("info-pane")),
-				&StatsView{
-					t:         dash.t,
-					vc:        dash.vc,
-					refreshCh: dash.refreshCh,
-				},
-			),
+		return elem.Main(
+			vecty.Markup(vecty.Class("home")),
+			&StatsView{
+				t:         dash.t,
+				vc:        dash.vc,
+				refreshCh: dash.refreshCh,
+			},
 			vecty.Markup(
 				event.BeforeUnload(func(i *vecty.Event) {
-					js.Global().Get("alert").Invoke("Closing page")
 					dash.gwClient.Close()
 				},
 				),
@@ -52,11 +49,11 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView) *DashboardView {
+func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
 	// Init tendermint client
-	tClient := rpc.StartClient()
+	tClient := rpc.StartClient(cfg.TendermintHost)
 	// Init Gateway client
-	gwClient, cancel := InitGateway()
+	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil || tClient == nil {
 		return DashboardView
 	}
@@ -70,17 +67,19 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
-	go updateAndRenderDashboard(DashboardView, cancel)
+	go updateAndRenderDashboard(DashboardView, cancel, cfg)
 	return DashboardView
 }
 
-func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
-	ticker := time.NewTicker(config.RefreshTime * time.Second)
+func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
+	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
 	vecty.Rerender(d)
 	for {
 		select {
@@ -92,21 +91,35 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc) {
 			return
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
-			loop:
-				for {
-					// If many indices waiting in buffer, scan to last one.
-					select {
-					case i = <-d.refreshCh:
-					default:
-						break loop
-					}
+		loop:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case i = <-d.refreshCh:
+				default:
+					break loop
 				}
+			}
 			d.blockIndex = i
-			rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
+			oldBlocks := d.t.TotalBlocks
+			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			if i < 1 {
+				oldBlocks = d.t.TotalBlocks
+			}
+			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
 			vecty.Rerender(d)
 		}
 	}
+}
+
+func updateHomeBlocks(d *DashboardView, index int) {
+	fmt.Println("Getting blocks from index " + util.IntToString(index))
+	d.t.BlockList = dbapi.GetBlockList(index)
 }

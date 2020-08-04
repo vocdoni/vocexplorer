@@ -3,6 +3,9 @@
 
 # Unignore all with extensions
 !**.*
+# Unignore Dockerfile
+!Dockerfile
+!env
 
 # Unignore all dirs
 !**/
@@ -14,3 +17,4 @@ wasm_exec.js
 node_modules
 css
 *.lock
+build.js
