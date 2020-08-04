@@ -18,9 +18,10 @@ import (
 // BlockList is the block list component
 type BlockList struct {
 	vecty.Core
-	t           *rpc.TendermintInfo
-	currentPage int
-	refreshCh   chan int
+	t             *rpc.TendermintInfo
+	currentPage   int
+	refreshCh     chan int
+	disableUpdate *bool
 }
 
 // Render renders the block list component
@@ -44,9 +45,11 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
+						*b.disableUpdate = false
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
+						*b.disableUpdate = true
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)

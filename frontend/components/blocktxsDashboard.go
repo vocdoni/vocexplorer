@@ -16,11 +16,12 @@ import (
 // BlockTxsDashboardView renders the dashboard landing page
 type BlockTxsDashboardView struct {
 	vecty.Core
-	t          *rpc.TendermintInfo
-	tClient    *http.HTTP
-	quitCh     chan struct{}
-	refreshCh  chan int
-	blockIndex int
+	t             *rpc.TendermintInfo
+	tClient       *http.HTTP
+	quitCh        chan struct{}
+	refreshCh     chan int
+	blockIndex    int
+	disableUpdate bool
 }
 
 // Render renders the BlockTxsDashboardView component
@@ -42,8 +43,9 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 			),
 			vecty.Markup(vecty.Class("home")),
 			&BlockList{
-				t:         dash.t,
-				refreshCh: dash.refreshCh,
+				t:             dash.t,
+				refreshCh:     dash.refreshCh,
+				disableUpdate: &dash.disableUpdate,
 			},
 		)
 	}
@@ -61,6 +63,7 @@ func initBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 	BlockTxsDashboardView.quitCh = make(chan struct{})
 	BlockTxsDashboardView.refreshCh = make(chan int, 50)
 	BlockTxsDashboardView.blockIndex = 0
+	BlockTxsDashboardView.disableUpdate = false
 	BeforeUnload(func() {
 		close(BlockTxsDashboardView.quitCh)
 	})
@@ -86,8 +89,9 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
 			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-			updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize+1, 1))
-
+			if !d.disableUpdate {
+				updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.ListSize+1, 1))
+			}
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
 		loop:
