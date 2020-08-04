@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"gitlab.com/vocdoni/go-dvote/log"
 )
@@ -30,21 +29,6 @@ func MsToString(ms int32) string {
 	seconds, ms := ms/1000, ms%1000
 	minutes, seconds := seconds/60, seconds%60
 	return fmt.Sprintf("%02d:%02d:%04d", minutes, seconds, ms)
-}
-
-//SToTime turns a seconds  inf32 into a readable datetime string
-func SToTime(seconds int32) string {
-	return time.Unix(int64(seconds), 0).String()
-}
-
-// GetAPIStatus returns true if the APIList contains the given target api
-func GetAPIStatus(target string, APIList []string) bool {
-	for _, api := range APIList {
-		if api == target {
-			return true
-		}
-	}
-	return false
 }
 
 // IntToString takes an int32, int64, or int, and returns a string
