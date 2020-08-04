@@ -6,6 +6,17 @@ Golang 1.14+
 
 ## Running
 
+### Docker
+
+Navigate to `vocexplorer/docker/vocexplorer`
+~~~
+docker-compose build
+docker-compose up
+~~~
+That's it!
+
+### Manual
+
 #### 1. Frontend
 
 On the commandline navigate into the directory `./frontend` and run `go generate`, that will create `main.wasm` file in `./static`.
@@ -26,9 +37,23 @@ You can watch both `.go` and `.scss` file changes by just using
 yarn gulp watch
 ~~~
 
-#### 3. Running
+#### 3. Dvotenode
 
-After steps 1 and 2, on the commandline navigate into the directory containing `main.go` and run `go run main.go`. Then in your favorite web browser navigate to localhost at the specified port.
+Clone the `go-dvote` [repository](https://gitlab.com/vocdoni/go-dvote).  
+Then run 
+~~~
+cd go-dvote
+go run cmd/dvotenode/dvotenode.go --w3Enabled=False --vochainNoWaitSync 
+~~~
+Make sure that the no-sync options are enabled.
+
+#### 4. Vocexplorer
+
+After steps 1, 2, and 3, navigate back into `vocexplorer` and run
+~~~ 
+go run main.go
+~~~ 
+Then in your favorite web browser navigate to localhost at the specified port.
 
 Options for `main.go`:
 - `--disableGzip`          use to disable gzip compression on web server
@@ -37,12 +62,5 @@ Options for `main.go`:
 - `--logLevel` `(string)`      log level <debug, info, warn, error> (default "error")
 - `--refreshTime` `(int)`      Number of seconds between each content refresh (default 5)
 - `--vochainHost` `(string)`   gateway API host to connect to (default "http://0.0.0.0:26657")
-
-#### 4. Running dvotenode
-
-The easiest way is to simply run the gatway binary:
-`cd go-dvote`
-`go run cmd/dvotenode/dvotenode.go --w3Enabled=False --vochainNoWaitSync`
-Make sure that the no-sync options are enabled.
 
 ----

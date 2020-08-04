@@ -83,7 +83,7 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Current Block Height: "+util.IntToString(t.ResultStatus.SyncInfo.LatestBlockHeight)),
 				),
-				vecty.If(int(t.ResultStatus.SyncInfo.LatestBlockHeight)-t.TotalBlocks > 200,
+				vecty.If(int(t.ResultStatus.SyncInfo.LatestBlockHeight)-t.TotalBlocks > 0,
 					elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 						vecty.Text("Still Syncing With Gateway... "+util.IntToString(t.TotalBlocks)+" Blocks Stored")),
 				),
