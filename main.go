@@ -112,6 +112,8 @@ func main() {
 			port = sub[1]
 		}
 		cfg.Global.GatewayHost = "ws://localhost:" + port + "/dvote"
+	} else {
+		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + "/dvote"
 	}
 
 	//Convert host url to localhost if using internal docker network
@@ -122,6 +124,8 @@ func main() {
 			port = sub[1]
 		}
 		cfg.Global.TendermintHost = "http://localhost:" + port
+	} else {
+		cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
 	}
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {
