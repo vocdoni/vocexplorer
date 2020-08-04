@@ -121,11 +121,8 @@ func main() {
 		if len(sub) < 1 {
 			port = sub[1]
 		}
-		cfg.Global.GatewayHost = "http://localhost:" + port
+		cfg.Global.TendermintHost = "http://localhost:" + port
 	}
-
-	cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + "/dvote"
-	cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {
 		return
