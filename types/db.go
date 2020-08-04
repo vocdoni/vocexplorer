@@ -3,7 +3,9 @@ package types
 import (
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 //StoreBlock stores the parts of a block relevant to our database
@@ -12,6 +14,13 @@ type StoreBlock struct {
 	Hash   tmbytes.HexBytes
 	Height int64
 	Time   time.Time
+}
+
+//StoreTx stores the parts of a tx relevant to our database
+type StoreTx struct {
+	Height   int64
+	Tx       tmtypes.Tx
+	TxResult abci.ResponseDeliverTx
 }
 
 //IsEmpty returns true if block is empty

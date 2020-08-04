@@ -36,6 +36,8 @@ const (
 	BlockPrefix = "02"
 	//BlockHashPrefix is the key prefix for blocks by hash
 	BlockHashPrefix = "03"
+	//TxHashPrefix is the key prefix for transactions by hash
+	TxHashPrefix = "04"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 )

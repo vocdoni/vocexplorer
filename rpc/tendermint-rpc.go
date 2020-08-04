@@ -3,7 +3,6 @@ package rpc
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -54,7 +53,6 @@ func initClient(host string) (*http.HTTP, error) {
 //UpdateTendermintInfo updates the tendermint info
 func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo, i int) {
 	t.GetHealth(c)
-	t.GetAllTxs(c)
 	t.GetGenesis(c)
 	// UpdateBlockList(c, t, i)
 }
@@ -64,18 +62,6 @@ func (t *TendermintInfo) GetHealth(c *http.HTTP) {
 	status, err := c.Status()
 	if !util.ErrPrint(err) {
 		t.ResultStatus = status
-	}
-}
-
-// GetAllTxs gets all txs
-func (t *TendermintInfo) GetAllTxs(c *http.HTTP) {
-	fromHeight := t.TxCount
-	query, err := query.New("tx.height>=" + util.IntToString(fromHeight))
-	util.ErrPrint(err)
-	txs, err := c.TxSearch(query.String(), false, 1, 100, "asc")
-	if !util.ErrPrint(err) {
-		t.TxCount += txs.TotalCount
-		t.TxList = append(t.TxList, txs.Txs...)
 	}
 }
 
@@ -94,4 +80,13 @@ func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
 		return nil
 	}
 	return block
+}
+
+// GetTransaction gets a transaction by hash
+func GetTransaction(c *http.HTTP, hash []byte) *coretypes.ResultTx {
+	res, err := c.Tx(hash, false)
+	if util.ErrPrint(err) {
+		return nil
+	}
+	return res
 }

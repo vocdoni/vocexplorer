@@ -57,8 +57,8 @@ func ListHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// ValHandler writes the value of the matched key
-func ValHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// HeightHandler writes the int64 value corresponding to given key
+func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		keys, ok := r.URL.Query()["key"]
 		if !ok || len(keys[0]) < 1 {
@@ -78,6 +78,33 @@ func ValHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Reques
 		}
 
 		msg, err := json.Marshal(height)
+		if err != nil {
+			log.Error(err)
+		}
+		fmt.Fprintf(w, string(msg))
+		log.Debugf("Sent %d bytes", len(msg))
+	}
+}
+
+// TxHandler writes the tx corresponding to given key
+func TxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		keys, ok := r.URL.Query()["key"]
+		if !ok || len(keys[0]) < 1 {
+			log.Errorf("Url Param 'key' is missing")
+			return
+		}
+		val, err := db.Get([]byte(keys[0]))
+		if err != nil {
+			log.Error(err)
+		}
+		var tx types.StoreTx
+		err = cdc.UnmarshalBinaryLengthPrefixed(val, &tx)
+		if err != nil {
+			log.Error(err)
+		}
+
+		msg, err := json.Marshal(tx)
 		if err != nil {
 			log.Error(err)
 		}

@@ -2,6 +2,7 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -66,8 +67,14 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	header, err := json.MarshalIndent(block.Header, "", "    ")
 	util.ErrPrint(err)
-	data, err := json.MarshalIndent(block.Data, "", "    ")
-	util.ErrPrint(err)
+	data := "Transactions: [\n"
+	for _, tx := range block.Data.Txs {
+		data += fmt.Sprintf("    Hash: %X (%d bytes) Contents: %s, \n", tx.Hash(), len(tx), tx.String())
+	}
+	if data == "Transactions: [\n" {
+		data = "No transactions"
+	}
+	data += "]"
 	evidence, err := json.MarshalIndent(block.Evidence, "", "    ")
 	util.ErrPrint(err)
 	commit, err := json.MarshalIndent(block.LastCommit, "", "    ")

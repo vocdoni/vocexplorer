@@ -5,13 +5,19 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/tendermint/go-amino"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
+	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
 // RegisterRoutes takes a mux and registers all the routes callbacks within this package
 func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
+	// Init amino encoder
+	var cdc = amino.NewCodec()
+	cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
+	cdc.RegisterConcrete(types.StoreTx{}, "storeTx", nil)
 
 	// Page Routes
 	m.HandleFunc("/", indexHandler)
@@ -24,7 +30,8 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	// API Routes
 	m.HandleFunc("/config", configHandler(cfg))
 	m.HandleFunc("/db/list/", db.ListHandler(d))
-	m.HandleFunc("/db/val/", db.ValHandler(d))
+	m.HandleFunc("/db/height/", db.HeightHandler(d))
+	m.HandleFunc("/db/tx/", db.TxHandler(d, cdc))
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }

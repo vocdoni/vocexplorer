@@ -55,6 +55,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 	// Init amino encoder
 	var cdc = amino.NewCodec()
 	cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
+	cdc.RegisterConcrete(types.StoreTx{}, "storeTx", nil)
 	for {
 		updateBlockList(d, tClient, cdc)
 		updateEntityList(d)
@@ -109,9 +110,27 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		block.Time = res.Block.Header.Time
 		// err = enc.Encode(block)
 
+		numTxs := -1
+		for i, tx := range res.Block.Data.Txs {
+			txRes := rpc.GetTransaction(c, tx.Hash())
+			txKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
+			txStore := types.StoreTx{
+				Height:   txRes.Height,
+				Tx:       txRes.Tx,
+				TxResult: txRes.TxResult,
+			}
+			txVal, err := cdc.MarshalBinaryLengthPrefixed(txStore)
+			if err != nil {
+				log.Error(err)
+			}
+			batch.Put(txKey, txVal)
+			numTxs = i
+		}
+		log.Debugf("%d transactions logged", numTxs+1)
+
 		value, err := cdc.MarshalBinaryLengthPrefixed(block)
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
 		}
 
 		key := append([]byte(config.BlockPrefix), []byte(util.IntToString(block.Height))...)

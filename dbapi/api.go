@@ -29,7 +29,7 @@ func GetBlockList(i int) [config.ListSize]types.StoreBlock {
 
 //GetBlockHeight returns the latest block height stored by the database
 func GetBlockHeight() int64 {
-	resp, err := http.Get("db/val/?key=" + config.LatestBlockHeightKey)
+	resp, err := http.Get("db/height/?key=" + config.LatestBlockHeightKey)
 	if util.ErrPrint(err) {
 		return 0
 	}
