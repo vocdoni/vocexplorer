@@ -5,6 +5,7 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/prop"
 )
 
 // RenderList renders a set of list elements from a slice of strings
@@ -36,4 +37,49 @@ func OnLoad(close func()) {
 		return nil
 	})
 	js.Global().Call("addEventListener", "load", loadFunc)
+}
+
+// <p>
+//
+//   <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+//     Button with data-target
+//   </button>
+// </p>
+// <div class="collapse" id="collapseExample">
+//   <div class="card card-body">
+//     Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+//   </div>
+// </div>
+
+func renderCollapsible(head, body, accordionName, num string) vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("card", "z-depth-0", "bordered")),
+		elem.Paragraph(
+			elem.Button(
+				vecty.Markup(
+					vecty.Class("btn", "btn-link"),
+					prop.Type("button"),
+					vecty.Attribute("data-toggle", "collapse"),
+					vecty.Attribute("data-target", "#collapse"+accordionName+num),
+					vecty.Attribute("aria-expanded", "false"),
+					vecty.Attribute("aria-controls", "collapse"+accordionName+num),
+				),
+				elem.Heading5(
+					vecty.Text(head),
+				),
+			),
+			elem.Div(
+				vecty.Markup(
+					vecty.Class("collapse"),
+					prop.ID("collapse"+accordionName+num),
+				),
+				elem.Div(
+					vecty.Markup(
+						vecty.Class("card", "card-body"),
+					),
+					elem.Preformatted(vecty.Text(body)),
+				),
+			),
+		),
+	)
 }

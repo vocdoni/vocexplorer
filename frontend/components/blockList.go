@@ -93,7 +93,13 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				vecty.Text(util.IntToString(block.Height)),
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Class("nav-link"),
+						vecty.Attribute("href", "/blocks/"+util.IntToString(block.Height)),
+					),
+					vecty.Text(util.IntToString(block.Height)),
+				),
 			),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-body")),

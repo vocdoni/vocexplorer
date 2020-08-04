@@ -12,11 +12,11 @@ type Cfg struct {
 
 //MainCfg includes backend and frontend config
 type MainCfg struct {
-	Global   Cfg
-	NoZip    bool
-	LogLevel string
-	DataDir  string
-	HostURL  string
+	Global      Cfg
+	DisableGzip bool
+	LogLevel    string
+	DataDir     string
+	HostURL     string
 }
 
 const (
@@ -24,6 +24,10 @@ const (
 	ListSize = 10
 	//HomeWidgetBlocksListSize is the number of blocks shown on the homepage
 	HomeWidgetBlocksListSize = 4
+	//NumBlockUpdates is the number of blocks updated per db batch
+	NumBlockUpdates = 1
+	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
+	DBWaitTime = 2
 	//ProcessIDPrefix is the key prefix for process id's
 	ProcessIDPrefix = "00"
 	//EntityIDPrefix is the key prefix for entity id's

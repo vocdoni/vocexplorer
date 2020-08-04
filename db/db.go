@@ -43,7 +43,7 @@ func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
 		updateBlockList(d, tClient, cdc)
 		updateEntityList(d)
 		updateProcessList(d)
-		time.Sleep(2 * time.Second)
+		time.Sleep(config.DBWaitTime * time.Second)
 	}
 }
 
@@ -70,7 +70,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *http.HTTP, cdc *amino.Codec) {
 	blockHeight := status.SyncInfo.LatestBlockHeight
 	batch := d.NewBatch()
 	errs := 0
-	for i := 0; i < 50 && latestHeight < blockHeight; i++ {
+	for i := 0; i < config.NumBlockUpdates && latestHeight < blockHeight; i++ {
 		// encBuf := new(bytes.Buffer)
 		// enc := gob.NewEncoder(encBuf)
 		latestHeight++

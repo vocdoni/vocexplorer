@@ -30,7 +30,7 @@ func newConfig() (*config.MainCfg, error) {
 	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
 	cfg.Global.TendermintHost = *flag.String("tendermintHost", "http://0.0.0.0:26657", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
-	cfg.NoZip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
+	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
 	flag.Parse()
@@ -113,7 +113,7 @@ func main() {
 	r := mux.NewRouter()
 	router.RegisterRoutes(r, &cfg.Global, d)
 
-	if cfg.NoZip {
+	if cfg.DisableGzip {
 		err = http.ListenAndServe(urlR.Host, r)
 		util.ErrFatal(err)
 	} else {
