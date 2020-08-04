@@ -66,7 +66,8 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	header, err := json.MarshalIndent(block.Header, "", "    ")
 	util.ErrPrint(err)
-	data := block.Data.StringIndented("    ")
+	data, err := json.MarshalIndent(block.Data, "", "    ")
+	util.ErrPrint(err)
 	evidence, err := json.MarshalIndent(block.Evidence, "", "    ")
 	util.ErrPrint(err)
 	commit, err := json.MarshalIndent(block.LastCommit, "", "    ")
