@@ -104,6 +104,28 @@ func main() {
 	}
 	go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
 
+	//Convert host url to localhost if using internal docker network
+	if strings.Contains(cfg.Global.GatewayHost, "dvotenode") {
+		sub := strings.Split(cfg.Global.GatewayHost, ":")
+		port := "9090"
+		if len(sub) < 1 {
+			port = sub[1]
+		}
+		cfg.Global.GatewayHost = "ws://localhost:" + port + "/dvote"
+	}
+
+	//Convert host url to localhost if using internal docker network
+	if strings.Contains(cfg.Global.TendermintHost, "dvotenode") {
+		sub := strings.Split(cfg.Global.TendermintHost, ":")
+		port := "26657"
+		if len(sub) < 1 {
+			port = sub[1]
+		}
+		cfg.Global.GatewayHost = "http://localhost:" + port
+	}
+
+	cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + "/dvote"
+	cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {
 		return
