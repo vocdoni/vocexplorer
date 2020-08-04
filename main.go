@@ -102,7 +102,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go db.UpdateDB(d, &cfg.Global)
+	go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
 
 	urlR, err := url.Parse(cfg.HostURL)
 	if util.ErrPrint(err) {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -27,21 +28,29 @@ func NewDB(path string) (*dvotedb.BadgerDB, error) {
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, cfg *config.Cfg) {
-	if !pingGateway(cfg) {
-		log.Warn("Cannot connect to gateway client. Running as detached database")
+func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
+	ping := pingGateway(gwHost)
+	if !ping {
+		log.Warn("Gateway Client is not running. Running as detached database")
 		return
 	}
+
 	// Init tendermint client
-	cfg.TendermintHost = "http://" + cfg.TendermintHost
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	// Init Gateway client
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil || tClient == nil {
-		log.Fatal("Cannot connect to blockchain clients")
+	tClient, up := startTendermint(tmHost)
+	if !up {
+		log.Warn("Cannot connect to tendermint client. Running as detached database")
+		return
 	}
+
+	// Init Gateway client
+	// gwClient, cancel, up := startGateway(cfg)
+	// if !up {
+	// 	log.Warn("Cannot connect to gateway client. Running as detached database")
+	// 	return
+	// }
+
 	log.Debugf("Connected")
-	defer cancel()
+	// defer (*cancel)()
 
 	// Init amino encoder
 	var cdc = amino.NewCodec()
@@ -154,27 +163,60 @@ func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 	return keyList
 }
 
-func pingGateway(cfg *config.Cfg) bool {
+func pingGateway(host string) bool {
 	pingClient := http.Client{
 		Timeout: 5 * time.Second,
 	}
 	for i := 0; ; i++ {
-		if i > 20 {
+		if i > 10 {
 			return false
 		}
-		resp, err := pingClient.Get("http://" + cfg.GatewayHost + "/ping")
-		if util.ErrPrint(err) {
+		resp, err := pingClient.Get("http://" + host + "/ping")
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		}
 		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(time.Second)
 			continue
 		}
 		if string(body) != "pong" {
-			log.Warn("Gateway API not yet available")
+			log.Warn("Gateway ping not yet available")
 		} else {
-			cfg.GatewayHost = "ws://" + cfg.GatewayHost + "/dvote"
 			return true
+		}
+	}
+}
+
+func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, nil, false
+		}
+		gwClient, cancel := client.InitGateway(host)
+		if gwClient == nil {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return gwClient, &cancel, true
+		}
+	}
+}
+
+func startTendermint(host string) (*tmhttp.HTTP, bool) {
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, false
+		}
+		tmClient := rpc.StartClient("http://" + host)
+		if tmClient == nil {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return tmClient, true
 		}
 	}
 }
