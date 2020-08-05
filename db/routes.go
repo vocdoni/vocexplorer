@@ -14,7 +14,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// HeightHandler writes the int64 value corresponding to given key
+// HeightHandler writes the int64 height value corresponding to given key
 func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		keys, ok := r.URL.Query()["key"]
@@ -43,6 +43,28 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 		}
 		fmt.Fprintf(w, string(msg))
 		log.Debugf("Sent %d bytes", len(msg))
+	}
+}
+
+// HashHandler writes the hash value corresponding to the given key
+func HashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		keys, ok := r.URL.Query()["key"]
+		if !ok || len(keys[0]) < 1 {
+			log.Errorf("Url Param 'key' is missing")
+			fmt.Fprintf(w, "err")
+			return
+			// http.Error(w, "Url Param 'key' missing", 400)
+		}
+		hash, err := db.Get([]byte(keys[0]))
+		if err != nil {
+			log.Error(err)
+			fmt.Fprintf(w, "err")
+			return
+			// http.Error(w, "Key not found", 404)
+		}
+		fmt.Fprintf(w, string(hash))
+		log.Debugf("Sent %d bytes", len(hash))
 	}
 }
 

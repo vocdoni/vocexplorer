@@ -95,6 +95,8 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 func renderTx(tx types.SendTx) vecty.ComponentOrHTML {
 	body, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
 	util.ErrPrint(err)
+	// blockHash := dbapi.GetBlockHash(tx.Height)
+	blockHash := "df"
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -114,7 +116,7 @@ func renderTx(tx types.SendTx) vecty.ComponentOrHTML {
 					vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
 					elem.Anchor(
 						vecty.Markup(
-							vecty.Attribute("href", "/blocks/"+string(tx.Hash)),
+							vecty.Attribute("href", "/blocks/?key="+blockHash),
 						),
 						vecty.Text(util.IntToString(tx.Store.Height)),
 					),
