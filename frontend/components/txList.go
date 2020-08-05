@@ -1,22 +1,23 @@
 package components
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
+	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// BlockList is the block list component
-type BlockList struct {
+// TxList is the tx list component
+type TxList struct {
 	vecty.Core
 	t             *rpc.TendermintInfo
 	currentPage   int
@@ -24,19 +25,19 @@ type BlockList struct {
 	disableUpdate *bool
 }
 
-// Render renders the block list component
-func (b *BlockList) Render() vecty.ComponentOrHTML {
+// Render renders the tx list component
+func (b *TxList) Render() vecty.ComponentOrHTML {
 	if b.t != nil && b.t.ResultStatus != nil {
 		p := &Pagination{
-			TotalPages:      int(b.t.TotalBlocks) / config.ListSize,
-			TotalItems:      &b.t.TotalBlocks,
+			TotalPages:      int(b.t.TotalTxs) / config.ListSize,
+			TotalItems:      &b.t.TotalTxs,
 			CurrentPage:     &b.currentPage,
 			RefreshCh:       b.refreshCh,
 			ListSize:        config.ListSize,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderBlocks(p, b.t, index)
+			return renderTxs(p, b.t, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -54,44 +55,46 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 					}
 					vecty.Rerender(self)
 				}),
-				prop.Placeholder("search blocks"),
+				prop.Placeholder("search transactions"),
 			))
 		}
 
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-blocks")),
 			elem.Heading3(
-				vecty.Text("Blocks"),
+				vecty.Text("Txs"),
 			),
 			p,
 		)
 	}
-	return elem.Div(vecty.Text("Waiting for blockchain info..."))
+	return elem.Div(vecty.Text("Waiting for txchain info..."))
 }
 
-func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
-	var blockList []vecty.MarkupOrChild
+func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
+	var txList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
-		if t.BlockList[i].IsEmpty() {
+	for i := p.ListSize - 1; i >= 0; i-- {
+		if t.TxList[i].IsEmpty() {
 			empty--
 		}
-		block := t.BlockList[i]
-		// for i, block := range t.BlockList {
-		blockList = append(blockList, renderBlock(block))
+		tx := t.TxList[i]
+		// for i, tx := range t.TxList {
+		txList = append(txList, renderTx(tx))
 	}
 	if empty == 0 {
-		fmt.Println("No blocks available")
-		return elem.Div(vecty.Text("Loading Blocks..."))
+		fmt.Println("No txs available")
+		return elem.Div(vecty.Text("Loading Txs..."))
 	}
-	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))
+	txList = append(txList, vecty.Markup(vecty.Class("responsive-card-deck")))
 	return elem.Div(
-		blockList...,
+		txList...,
 	)
 }
 
-func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
+func renderTx(tx types.SendTx) vecty.ComponentOrHTML {
+	body, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
+	util.ErrPrint(err)
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -99,20 +102,21 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/blocks/"+util.IntToString(block.Height)),
+						vecty.Attribute("href", "/txs/"+string(tx.Hash)),
 					),
-					vecty.Text(util.IntToString(block.Height)),
+					vecty.Text(util.IntToString(tx.Height)),
 				),
 			),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-body")),
 				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Div(
-						vecty.Text(util.IntToString(block.NumTxs)+" transactions"),
-					),
-					elem.Div(
-						vecty.Text(timeago.English.Format(block.Time)),
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/blocks/"+string(tx.Hash)),
+						),
+						vecty.Text(util.IntToString(tx.Store.Height)),
 					),
 				),
 				elem.Div(
@@ -122,7 +126,13 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(block.Hash.String()),
+						vecty.Text(tx.Hash.String()),
+					),
+				),
+				vecty.If(string(body) != "{}",
+					elem.Div(
+						vecty.Text("Tx contents: "),
+						elem.Preformatted(vecty.Text(string(body))),
 					),
 				),
 			),

@@ -13,7 +13,7 @@ import (
 
 //GetBlockList returns a list of blocks from the database
 func GetBlockList(i int) [config.ListSize]types.StoreBlock {
-	resp, err := http.Get("/db/listblocks/?prefix=" + config.BlockPrefix + "&from=" + util.IntToString(i))
+	resp, err := http.Get("/db/listblocks/?from=" + util.IntToString(i))
 	if util.ErrPrint(err) {
 		return [config.ListSize]types.StoreBlock{}
 	}
@@ -30,6 +30,38 @@ func GetBlockList(i int) [config.ListSize]types.StoreBlock {
 //GetBlockHeight returns the latest block height stored by the database
 func GetBlockHeight() int64 {
 	resp, err := http.Get("db/height/?key=" + config.LatestBlockHeightKey)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height int64
+	err = json.Unmarshal(body, &height)
+	util.ErrPrint(err)
+	return height
+}
+
+//GetTxList returns a list of transactions from the database
+func GetTxList(from int) [config.ListSize]types.SendTx {
+	resp, err := http.Get("/db/listtxs/?from=" + util.IntToString(from))
+	if util.ErrPrint(err) {
+		return [config.ListSize]types.SendTx{}
+	}
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return [config.ListSize]types.SendTx{}
+	}
+	var txList [config.ListSize]types.SendTx
+	err = json.Unmarshal(body, &txList)
+	util.ErrPrint(err)
+	return txList
+}
+
+//GetTxHeight returns the latest tx height stored by the database
+func GetTxHeight() int64 {
+	resp, err := http.Get("db/height/?key=" + config.LatestTxHeightKey)
 	if util.ErrPrint(err) {
 		return 0
 	}

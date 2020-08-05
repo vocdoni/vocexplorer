@@ -14,18 +14,16 @@ import (
 
 // TendermintInfo holds tendermint api results
 type TendermintInfo struct {
-	ResultStatus *coretypes.ResultStatus
-	Genesis      *tmtypes.GenesisDoc
-	BlockList    [config.ListSize]types.StoreBlock
-	// BlockList        [config.ListSize]coretypes.ResultBlock
-	// BlockListResults [config.ListSize]coretypes.ResultBlockResults
-	TxCount       int
-	TxList        []*coretypes.ResultTx
+	ResultStatus  *coretypes.ResultStatus
+	Genesis       *tmtypes.GenesisDoc
+	BlockList     [config.ListSize]types.StoreBlock
+	TxList        [config.ListSize]types.SendTx
 	ChainID       int
 	AppVersion    int
 	MaxBlockSize  int
 	NumValidators int
 	TotalBlocks   int
+	TotalTxs      int
 }
 
 // StartClient initializes an http tendermint api client on websockets
@@ -51,10 +49,9 @@ func initClient(host string) (*http.HTTP, error) {
 }
 
 //UpdateTendermintInfo updates the tendermint info
-func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo, i int) {
+func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo) {
 	t.GetHealth(c)
 	t.GetGenesis(c)
-	// UpdateBlockList(c, t, i)
 }
 
 // GetHealth calls the tendermint Health api

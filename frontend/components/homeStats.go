@@ -88,7 +88,7 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 						vecty.Text("Still Syncing With Gateway... "+util.IntToString(t.TotalBlocks)+" Blocks Stored")),
 				),
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-					vecty.Text("Total Txs: "+util.IntToString(t.TxCount)),
+					vecty.Text("Total Txs: "+util.IntToString(t.TotalTxs)),
 				),
 			),
 			elem.Div(

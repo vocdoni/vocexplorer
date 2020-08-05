@@ -14,47 +14,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ListBlocksHandler writes a list of blocks corresponding to keys which match {prefix}
-func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		prefs, ok := r.URL.Query()["prefix"]
-		if !ok || len(prefs[0]) < 1 {
-			log.Errorf("Url Param 'prefix' is missing")
-			return
-		}
-		froms, ok := r.URL.Query()["from"]
-		if !ok || len(froms[0]) < 1 {
-			log.Errorf("Url Param 'from' is missing")
-			return
-		}
-		from, err := strconv.Atoi(froms[0])
-		if err != nil {
-			log.Error(err)
-		}
-		keys := listKeysByHeight(db, config.ListSize, from, prefs[0])
-		log.Debugf("Found %d keys", len(keys))
-
-		var blocks [config.ListSize]types.StoreBlock
-		for i, key := range keys {
-			val, err := db.Get([]byte(key))
-			if err != nil {
-				log.Error(err)
-			}
-			err = cdc.UnmarshalBinaryLengthPrefixed(val, &blocks[i])
-			if err != nil {
-				log.Error(err)
-			}
-		}
-
-		msg, err := json.Marshal(blocks)
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent %d bytes", len(msg))
-	}
-}
-
 // HeightHandler writes the int64 value corresponding to given key
 func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +34,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			log.Error(err)
 		}
 		if num <= 1 {
-			log.Debug("Could not get block height")
+			log.Debug("Could not get height")
 		}
 
 		msg, err := json.Marshal(height)
@@ -87,44 +46,69 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// ListBlocksHandler writes a list of blocks by height
+func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", 400)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+		hashes := listHashesByHeight(db, config.ListSize, from, config.BlockHeightPrefix)
+		if len(hashes) == 0 {
+			http.Error(w, "No blocks available", 404)
+			return
+		}
+		var blocks [config.ListSize]types.StoreBlock
+		for i, hash := range hashes {
+			raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+			util.ErrPrint(err)
+
+			err = cdc.UnmarshalBinaryLengthPrefixed(raw, &blocks[i])
+			util.ErrPrint(err)
+		}
+
+		msg, err := json.Marshal(blocks)
+		if err != nil {
+			log.Error(err)
+		}
+		fmt.Fprintf(w, string(msg))
+		log.Debugf("Sent %d blocks", len(blocks))
+	}
+}
+
 // ListTxsHandler writes the tx corresponding to given key
 func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		heights, ok := r.URL.Query()["height"]
-		if !ok || len(heights[0]) < 1 {
-			log.Errorf("Url Param 'height' is missing")
-			http.Error(w, "Url Param 'height' missing", 400)
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", 400)
 			return
 		}
-		indexes, ok := r.URL.Query()["index"]
-		if !ok || len(indexes[0]) < 1 {
-			log.Errorf("Url Param 'index' is missing")
-			http.Error(w, "Url Param 'index' missing", 400)
-			return
-		}
-		height, err := strconv.Atoi(heights[0])
+		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-		index, err := strconv.Atoi(indexes[0])
-		util.ErrPrint(err)
-		hashes := listTxKeys(db, config.ListSize, height, index)
+		hashes := listHashesByHeight(db, config.ListSize, from, config.TxHeightPrefix)
 		if len(hashes) == 0 {
 			http.Error(w, "No txs available", 404)
 			return
 		}
 		var txs []types.SendTx
-		for _, hash := range hashes {
+		for i, hash := range hashes {
 			raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
-			if err != nil {
-				log.Error(err)
-			}
+			util.ErrPrint(err)
+
 			var tx types.StoreTx
 			err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
-			if err != nil {
-				log.Error(err)
-			}
+			util.ErrPrint(err)
+
 			send := types.SendTx{
-				Hash:  hash,
-				Store: tx,
+				Hash:   hash,
+				Height: from - i,
+				Store:  tx,
 			}
 			txs = append(txs, send)
 		}
@@ -134,6 +118,6 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 			log.Error(err)
 		}
 		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent %d bytes", len(msg))
+		log.Debugf("Sent %d txs", len(txs))
 	}
 }

@@ -26,13 +26,22 @@ type StoreTx struct {
 
 //SendTx stores the parts of a tx relevant to our database
 type SendTx struct {
-	Hash  tmbytes.HexBytes
-	Store StoreTx
+	Hash   tmbytes.HexBytes
+	Height int
+	Store  StoreTx
 }
 
 //IsEmpty returns true if block is empty
 func (s StoreBlock) IsEmpty() bool {
 	if len(s.Hash) == 0 && s.Height == 0 && s.NumTxs == 0 {
+		return true
+	}
+	return false
+}
+
+//IsEmpty returns true if tx is empty
+func (s SendTx) IsEmpty() bool {
+	if len(s.Hash) == 0 && s.Height == 0 && s.Store.Height == 0 && s.Store.Index == 0 {
 		return true
 	}
 	return false

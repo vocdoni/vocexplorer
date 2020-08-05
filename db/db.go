@@ -3,7 +3,6 @@ package db
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -111,10 +110,27 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		block.Time = res.Block.Header.Time
 		// err = enc.Encode(block)
 
-		numTxs := -1
+		currentTxs := int64(0)
+		numTxs := int64(0)
+		has, err := d.Has([]byte(config.LatestTxHeightKey))
+		if err != nil {
+			log.Error(err)
+		}
+		if has {
+			val, err := d.Get([]byte(config.LatestTxHeightKey))
+			util.ErrPrint(err)
+			num := 0
+			currentTxs, num, err = amino.DecodeInt64(val)
+			util.ErrPrint(err)
+			if num <= 1 {
+				log.Debug("Could not get height")
+			}
+		}
 		for i, tx := range res.Block.Data.Txs {
+			numTxs = int64(i) + 1
 			txRes := rpc.GetTransaction(c, tx.Hash())
-			txKey := []byte(fmt.Sprintf("%s%X", config.TxHashPrefix, tx.Hash()))
+
+			txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 			txStore := types.StoreTx{
 				Height:   txRes.Height,
 				Tx:       txRes.Tx,
@@ -125,25 +141,28 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 			if err != nil {
 				log.Error(err)
 			}
-			batch.Put(txKey, txVal)
-			heightKey := []byte(config.TxHeightPrefix + util.IntToString(txRes.Height) + ":" + util.IntToString(txRes.Index))
-			batch.Put(heightKey, []byte(fmt.Sprintf("%X", tx.Hash())))
-			numTxs = i
+			batch.Put(txHashKey, txVal)
+			txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(currentTxs+numTxs))
+			batch.Put(txHeightKey, tx.Hash())
 		}
-		log.Debugf("%d transactions logged", numTxs+1)
+		if numTxs > 0 {
+			var buf bytes.Buffer
+			err = amino.EncodeInt64(&buf, currentTxs+numTxs)
+			batch.Put([]byte(config.LatestTxHeightKey), buf.Bytes())
+			log.Debugf("%d transactions logged", numTxs+1)
+		}
 
-		value, err := cdc.MarshalBinaryLengthPrefixed(block)
+		bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
 		if err != nil {
 			log.Error(err)
 		}
 
-		key := append([]byte(config.BlockPrefix), []byte(util.IntToString(block.Height))...)
-		// value := encBuf.Bytes()
-		batch.Put(key, value)
+		blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.Height))...)
+		blockHashKey := append([]byte(config.BlockHashPrefix), block.Hash...)
+		hashValue := block.Hash
 
-		key = append([]byte(config.BlockHashPrefix), block.Hash...)
-		value = []byte(util.IntToString(block.Height))
-		batch.Put(key, value)
+		batch.Put(blockHashKey, bodyValue)
+		batch.Put(blockHeightKey, hashValue)
 
 	}
 	log.Debugf("Setting block %d ", latestHeight)
@@ -186,30 +205,24 @@ func listKeysByHeight(d *dvotedb.BadgerDB, max, from int, prefix string) (list [
 	return keyList
 }
 
-// listTxKeys returns a list of tx hashes
-func listTxKeys(d *dvotedb.BadgerDB, max, height, index int) [][]byte {
+// listHashesByHeight returns a list of hashes given integer keys
+func listHashesByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][]byte {
 	if max > 64 {
 		max = 64
 	}
 	var hashList [][]byte
-	for ; height > 0; height-- {
-		for ; ; index++ {
-			if max < 1 {
-				return hashList
-			}
-			key := []byte(config.TxHeightPrefix + util.IntToString(height) + ":" + util.IntToString(index))
-			has, err := d.Has(key)
-			if !has || util.ErrPrint(err) {
-				index = 0
-				break
-			}
-			val, err := d.Get(key)
-			if err != nil {
-				log.Error(err)
-			}
-			max--
-			hashList = append(hashList, val)
+	for ; max > 0; max-- {
+		key := []byte(prefix + util.IntToString(height))
+		has, err := d.Has(key)
+		if !has || util.ErrPrint(err) {
+			break
 		}
+		val, err := d.Get(key)
+		if err != nil {
+			log.Error(err)
+		}
+		hashList = append(hashList, val)
+		height--
 	}
 	log.Debugf("Found %d hashes", len(hashList))
 	return hashList

@@ -76,10 +76,10 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	// Wait for data structs to load
 	for d == nil || d.vc == nil {
 	}
-	rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
+	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
-	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 	vecty.Rerender(d)
 	for {
 		select {
@@ -90,9 +90,9 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t, d.blockIndex)
+			rpc.UpdateTendermintInfo(d.tClient, d.t)
 			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
+			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
@@ -112,8 +112,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			if i < 1 {
 				oldBlocks = d.t.TotalBlocks
 			}
-			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex-config.HomeWidgetBlocksListSize+1, 1))
-			// rpc.UpdateBlockList(d.tClient, d.t, d.blockIndex)
+			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 			vecty.Rerender(d)
 		}
 	}
@@ -121,5 +120,10 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 
 func updateHomeBlocks(d *DashboardView, index int) {
 	fmt.Println("Getting blocks from index " + util.IntToString(index))
-	d.t.BlockList = dbapi.GetBlockList(index)
+	list := dbapi.GetBlockList(index)
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
+	d.t.BlockList = list
 }

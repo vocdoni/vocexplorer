@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/dustin/go-humanize v1.0.0
 	github.com/go-kit/kit v0.10.1-0.20200710014002-02c7c016dd45 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20190812055157-5d271430af9f
 	github.com/gopherjs/vecty v0.0.0-20200328200803-52636d1f7aba
