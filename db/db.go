@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -113,7 +114,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		numTxs := -1
 		for i, tx := range res.Block.Data.Txs {
 			txRes := rpc.GetTransaction(c, tx.Hash())
-			txKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
+			txKey := []byte(fmt.Sprintf("%s%X", config.TxHashPrefix, tx.Hash()))
 			txStore := types.StoreTx{
 				Height:   txRes.Height,
 				Tx:       txRes.Tx,

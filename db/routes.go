@@ -63,11 +63,14 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 		keys, ok := r.URL.Query()["key"]
 		if !ok || len(keys[0]) < 1 {
 			log.Errorf("Url Param 'key' is missing")
+			http.Error(w, "Url Param 'key' missing", 400)
 			return
 		}
 		val, err := db.Get([]byte(keys[0]))
 		if err != nil {
 			log.Error(err)
+			http.Error(w, "Key not found", 404)
+			return
 		}
 		height, num, err := amino.DecodeInt64(val)
 		if err != nil {
@@ -92,11 +95,14 @@ func TxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWrite
 		keys, ok := r.URL.Query()["key"]
 		if !ok || len(keys[0]) < 1 {
 			log.Errorf("Url Param 'key' is missing")
+			http.Error(w, "Url Param 'key' missing", 400)
 			return
 		}
 		val, err := db.Get([]byte(keys[0]))
 		if err != nil {
 			log.Error(err)
+			http.Error(w, "Key not found", 404)
+			return
 		}
 		var tx types.StoreTx
 		err = cdc.UnmarshalBinaryLengthPrefixed(val, &tx)
