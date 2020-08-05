@@ -13,7 +13,7 @@ import (
 
 //GetBlockList returns a list of blocks from the database
 func GetBlockList(i int) [config.ListSize]types.StoreBlock {
-	resp, err := http.Get("/db/list/?prefix=" + config.BlockPrefix + "&from=" + util.IntToString(i))
+	resp, err := http.Get("/db/listblocks/?prefix=" + config.BlockPrefix + "&from=" + util.IntToString(i))
 	if util.ErrPrint(err) {
 		return [config.ListSize]types.StoreBlock{}
 	}

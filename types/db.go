@@ -21,6 +21,13 @@ type StoreTx struct {
 	Height   int64
 	Tx       tmtypes.Tx
 	TxResult abci.ResponseDeliverTx
+	Index    uint32
+}
+
+//SendTx stores the parts of a tx relevant to our database
+type SendTx struct {
+	Hash  tmbytes.HexBytes
+	Store StoreTx
 }
 
 //IsEmpty returns true if block is empty

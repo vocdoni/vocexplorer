@@ -11,10 +11,11 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ListHandler writes a list of values corresponding to keys which match {prefix}
-func ListHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// ListBlocksHandler writes a list of blocks corresponding to keys which match {prefix}
+func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prefs, ok := r.URL.Query()["prefix"]
 		if !ok || len(prefs[0]) < 1 {
@@ -30,11 +31,8 @@ func ListHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			log.Error(err)
 		}
-		keys := list(db, config.ListSize, from, prefs[0])
+		keys := listKeysByHeight(db, config.ListSize, from, prefs[0])
 		log.Debugf("Found %d keys", len(keys))
-
-		var cdc = amino.NewCodec()
-		cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
 
 		var blocks [config.ListSize]types.StoreBlock
 		for i, key := range keys {
@@ -89,28 +87,49 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// TxHandler writes the tx corresponding to given key
-func TxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+// ListTxsHandler writes the tx corresponding to given key
+func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		keys, ok := r.URL.Query()["key"]
-		if !ok || len(keys[0]) < 1 {
-			log.Errorf("Url Param 'key' is missing")
-			http.Error(w, "Url Param 'key' missing", 400)
+		heights, ok := r.URL.Query()["height"]
+		if !ok || len(heights[0]) < 1 {
+			log.Errorf("Url Param 'height' is missing")
+			http.Error(w, "Url Param 'height' missing", 400)
 			return
 		}
-		val, err := db.Get([]byte(keys[0]))
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Key not found", 404)
+		indexes, ok := r.URL.Query()["index"]
+		if !ok || len(indexes[0]) < 1 {
+			log.Errorf("Url Param 'index' is missing")
+			http.Error(w, "Url Param 'index' missing", 400)
 			return
 		}
-		var tx types.StoreTx
-		err = cdc.UnmarshalBinaryLengthPrefixed(val, &tx)
-		if err != nil {
-			log.Error(err)
+		height, err := strconv.Atoi(heights[0])
+		util.ErrPrint(err)
+		index, err := strconv.Atoi(indexes[0])
+		util.ErrPrint(err)
+		hashes := listTxKeys(db, config.ListSize, height, index)
+		if len(hashes) == 0 {
+			http.Error(w, "No txs available", 404)
+			return
+		}
+		var txs []types.SendTx
+		for _, hash := range hashes {
+			raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
+			if err != nil {
+				log.Error(err)
+			}
+			var tx types.StoreTx
+			err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+			if err != nil {
+				log.Error(err)
+			}
+			send := types.SendTx{
+				Hash:  hash,
+				Store: tx,
+			}
+			txs = append(txs, send)
 		}
 
-		msg, err := json.Marshal(tx)
+		msg, err := json.Marshal(txs)
 		if err != nil {
 			log.Error(err)
 		}

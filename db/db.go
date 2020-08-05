@@ -119,12 +119,15 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 				Height:   txRes.Height,
 				Tx:       txRes.Tx,
 				TxResult: txRes.TxResult,
+				Index:    txRes.Index,
 			}
 			txVal, err := cdc.MarshalBinaryLengthPrefixed(txStore)
 			if err != nil {
 				log.Error(err)
 			}
 			batch.Put(txKey, txVal)
+			heightKey := []byte(config.TxHeightPrefix + util.IntToString(txRes.Height) + ":" + util.IntToString(txRes.Index))
+			batch.Put(heightKey, []byte(fmt.Sprintf("%X", tx.Hash())))
 			numTxs = i
 		}
 		log.Debugf("%d transactions logged", numTxs+1)
@@ -161,8 +164,8 @@ func updateProcessList(d *dvotedb.BadgerDB) {
 
 }
 
-// List returns a list of keys matching a given prefix
-func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
+// listKeysByHeight returns a list of hashes matching a given prefix, where key is an integer
+func listKeysByHeight(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 	if max > 64 {
 		max = 64
 	}
@@ -181,6 +184,35 @@ func list(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
 		from++
 	}
 	return keyList
+}
+
+// listTxKeys returns a list of tx hashes
+func listTxKeys(d *dvotedb.BadgerDB, max, height, index int) [][]byte {
+	if max > 64 {
+		max = 64
+	}
+	var hashList [][]byte
+	for ; height > 0; height-- {
+		for ; ; index++ {
+			if max < 1 {
+				return hashList
+			}
+			key := []byte(config.TxHeightPrefix + util.IntToString(height) + ":" + util.IntToString(index))
+			has, err := d.Has(key)
+			if !has || util.ErrPrint(err) {
+				index = 0
+				break
+			}
+			val, err := d.Get(key)
+			if err != nil {
+				log.Error(err)
+			}
+			max--
+			hashList = append(hashList, val)
+		}
+	}
+	log.Debugf("Found %d hashes", len(hashList))
+	return hashList
 }
 
 func pingGateway(host string) bool {
