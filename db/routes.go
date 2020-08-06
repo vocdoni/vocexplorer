@@ -46,27 +46,31 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// HashHandler writes the hash value corresponding to the given key
-func HashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		keys, ok := r.URL.Query()["key"]
-		if !ok || len(keys[0]) < 1 {
-			log.Errorf("Url Param 'key' is missing")
-			fmt.Fprintf(w, "err")
-			return
-			// http.Error(w, "Url Param 'key' missing", 400)
-		}
-		hash, err := db.Get([]byte(keys[0]))
-		if err != nil {
-			log.Error(err)
-			fmt.Fprintf(w, "err")
-			return
-			// http.Error(w, "Key not found", 404)
-		}
-		fmt.Fprintf(w, string(hash))
-		log.Debugf("Sent %d bytes", len(hash))
-	}
-}
+// // HashHandler writes the hash value corresponding to the given key
+// func HashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		w.Header().Set("Content-Type", "text/plain")
+// 		// w.Header().Set("Content-Length", util.IntToString(len("Key not found")))
+// 		keys, ok := r.URL.Query()["key"]
+// 		if !ok || len(keys[0]) < 1 {
+// 			log.Errorf("Url Param 'key' is missing")
+// 			fmt.Fprintf(w, "Key not found")
+// 			// http.Error(w, "Url Param 'key' missing", 400)
+// 			return
+// 		}
+// 		hash, err := db.Get([]byte(keys[0]))
+// 		if err != nil {
+// 			log.Error(err)
+// 			fmt.Fprintf(w, "Key not found")
+// 			// http.Error(w, "Key not found", 400)
+// 			return
+// 		}
+// 		w.Header().Set("Content-Length", util.IntToString(len(tmbytes.HexBytes(hash).String())))
+// 		log.Infof("Hash: %s", tmbytes.HexBytes(hash).String())
+// 		fmt.Fprintf(w, tmbytes.HexBytes(hash).String())
+// 		log.Debugf("Sent %d bytes", len(hash))
+// 	}
+// }
 
 // ListBlocksHandler writes a list of blocks by height
 func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {

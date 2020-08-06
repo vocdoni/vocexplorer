@@ -17,6 +17,7 @@ type MainCfg struct {
 	LogLevel    string
 	DataDir     string
 	HostURL     string
+	Detached    bool
 }
 
 const (

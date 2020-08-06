@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -33,6 +34,7 @@ func newConfig() (*config.MainCfg, error) {
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
+	cfg.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	flag.Parse()
 
 	// setting up viper
@@ -56,6 +58,7 @@ func newConfig() (*config.MainCfg, error) {
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
+	viper.BindPFlag("detached", flag.Lookup("detached"))
 
 	var cfgError error
 	_, err = os.Stat(cfg.DataDir + "/vocexplorer.yml")
@@ -102,7 +105,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
+	if !cfg.Detached {
+		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
+	}
 
 	//Convert host url to localhost if using internal docker network
 	if strings.Contains(cfg.Global.GatewayHost, "dvotenode") {
@@ -136,12 +141,21 @@ func main() {
 	r := mux.NewRouter()
 	router.RegisterRoutes(r, &cfg.Global, d)
 
+	s := &http.Server{
+		Addr:           urlR.Host,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
 	if cfg.DisableGzip {
-		err = http.ListenAndServe(urlR.Host, r)
+		s.Handler = r
+		err = s.ListenAndServe()
 		util.ErrFatal(err)
 	} else {
 		h := gziphandler.GzipHandler(r)
-		err = http.ListenAndServe(urlR.Host, h)
+		s.Handler = h
+		err = s.ListenAndServe()
 		util.ErrFatal(err)
 	}
 

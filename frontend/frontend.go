@@ -18,7 +18,9 @@ import (
 func main() {
 	var cfg *config.Cfg
 	resp, err := http.Get("/config")
+	util.ErrPrint(err)
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	resp.Body.Close()
 	if !util.ErrPrint(err) {
 		err = json.Unmarshal(body, &cfg)
 		util.ErrPrint(err)
