@@ -37,9 +37,9 @@ func renderTxHeader(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Height))),
+						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Store.TxHeight))),
 					),
-					vecty.Text("Transaction "+util.IntToString(tx.Height)),
+					vecty.Text("Transaction "+util.IntToString(tx.Store.TxHeight)),
 				),
 			),
 			elem.Div(
@@ -101,7 +101,7 @@ func renderTxContents(tx *types.SendTx) vecty.ComponentOrHTML {
 	accordionName := "accordionTx"
 	return elem.Div(
 		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Transaction Contents", string(txContents), accordionName, "One"),
-		renderCollapsible("Transaction Results", string(result), accordionName, "Two"),
+		renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
+		renderCollapsible("Transaction Results", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
 	)
 }

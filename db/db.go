@@ -133,6 +133,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 			txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 			txStore := types.StoreTx{
 				Height:   txRes.Height,
+				TxHeight: currentTxs + numTxs,
 				Tx:       txRes.Tx,
 				TxResult: txRes.TxResult,
 				Index:    txRes.Index,
@@ -142,7 +143,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 				log.Error(err)
 			}
 			batch.Put(txHashKey, txVal)
-			txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(currentTxs+numTxs))
+			txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
 			batch.Put(txHeightKey, tx.Hash())
 		}
 		if numTxs > 0 {

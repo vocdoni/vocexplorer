@@ -11,6 +11,7 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/xeonx/timeago"
+	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -67,14 +68,32 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	header, err := json.MarshalIndent(block.Header, "", "    ")
 	util.ErrPrint(err)
-	data := "Transactions: [\n"
+	var rawTx dvotetypes.Tx
+	numTx := 0
+	data := []vecty.MarkupOrChild{vecty.Text("Transactions: [\n")}
 	for _, tx := range block.Data.Txs {
-		data += fmt.Sprintf("    Hash: %X (%d bytes) Contents: %s, \n", tx.Hash(), len(tx), tx.String())
+		numTx++
+		err = json.Unmarshal(tx, &rawTx)
+		util.ErrPrint(err)
+		data = append(
+			data,
+			elem.Div(
+				vecty.Text("    Hash: "),
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash())),
+					),
+					vecty.Text(fmt.Sprintf("%X", tx.Hash())),
+				),
+				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
+			),
+		)
 	}
-	if data == "Transactions: [\n" {
-		data = "No transactions"
+	data = append(data, vecty.Text("]"))
+	if numTx == 0 {
+		data = []vecty.MarkupOrChild{vecty.Text("No transactions")}
 	}
-	data += "]"
+	transactions := elem.Preformatted(data...)
 	evidence, err := json.MarshalIndent(block.Evidence, "", "    ")
 	util.ErrPrint(err)
 	commit, err := json.MarshalIndent(block.LastCommit, "", "    ")
@@ -82,9 +101,9 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	accordionName := "accordionBlock"
 	return elem.Div(
 		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Block Header", string(header), accordionName, "One"),
-		renderCollapsible("Data", string(data), accordionName, "Two"),
-		renderCollapsible("Evidence", string(evidence), accordionName, "Three"),
-		renderCollapsible("Last Commit", string(commit), accordionName, "Four"),
+		renderCollapsible("Block Header", accordionName, "One", elem.Preformatted(vecty.Text(string(header)))),
+		renderCollapsible("Data", accordionName, "Two", transactions),
+		renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(vecty.Text(string(evidence)))),
+		renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(vecty.Text(string(commit)))),
 	)
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -123,7 +124,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 			return
 		}
 		var txs []types.SendTx
-		for i, hash := range hashes {
+		for _, hash := range hashes {
 			raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 			util.ErrPrint(err)
 
@@ -132,9 +133,8 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 			util.ErrPrint(err)
 
 			send := types.SendTx{
-				Hash:   hash,
-				Height: from - i,
-				Store:  tx,
+				Hash:  hash,
+				Store: tx,
 			}
 			txs = append(txs, send)
 		}
@@ -173,9 +173,8 @@ func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWr
 		util.ErrPrint(err)
 
 		send := types.SendTx{
-			Hash:   hash,
-			Height: height,
-			Store:  tx,
+			Hash:  hash,
+			Store: tx,
 		}
 
 		msg, err := json.Marshal(send)
@@ -184,5 +183,49 @@ func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWr
 		}
 		fmt.Fprintf(w, string(msg))
 		log.Debugf("Sent tx %d", height)
+	}
+}
+
+// GetTxByHashHandler redirects to the tx corresponding to given height key
+func GetTxByHashHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["hash"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+		id := ids[0]
+		hash, err := hex.DecodeString(id)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+		key := append([]byte(config.TxHashPrefix), hash...)
+		has, err := db.Has(key)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+		if !has {
+			log.Errorf("Tx hash key not found")
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+		raw, err := db.Get(key)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+
+		var tx types.StoreTx
+		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			return
+		}
+
+		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), 301)
 	}
 }

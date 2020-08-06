@@ -39,7 +39,7 @@ func OnLoad(close func()) {
 	js.Global().Call("addEventListener", "load", loadFunc)
 }
 
-func renderCollapsible(head, body, accordionName, num string) vecty.ComponentOrHTML {
+func renderCollapsible(head, accordionName, num string, body vecty.ComponentOrHTML) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("card", "z-depth-0", "bordered")),
 		elem.Paragraph(
@@ -65,7 +65,7 @@ func renderCollapsible(head, body, accordionName, num string) vecty.ComponentOrH
 					vecty.Markup(
 						vecty.Class("card", "card-body"),
 					),
-					elem.Preformatted(vecty.Text(body)),
+					body,
 				),
 			),
 		),

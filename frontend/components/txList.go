@@ -10,6 +10,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
+	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -93,9 +94,11 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 }
 
 func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
-	body, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
+	results, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
 	util.ErrPrint(err)
-	// blockHash := dbapi.GetBlockHash(int(tx.Store.Height))
+	var rawTx dvotetypes.Tx
+	err = json.Unmarshal(tx.Store.Tx, &rawTx)
+	util.ErrPrint(err)
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -103,9 +106,9 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Height))),
+						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Store.TxHeight))),
 					),
-					vecty.Text(util.IntToString(tx.Height)),
+					vecty.Text(util.IntToString(tx.Store.TxHeight)),
 				),
 			),
 			elem.Div(
@@ -130,10 +133,14 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 						vecty.Text(tx.Hash.String()),
 					),
 				),
-				vecty.If(string(body) != "{}",
+				vecty.If(rawTx.Type != "",
 					elem.Div(
-						vecty.Text("Tx contents: "),
-						elem.Preformatted(vecty.Text(string(body))),
+						vecty.Text("Type: "+rawTx.Type),
+					)),
+				vecty.If(string(results) != "{}",
+					elem.Div(
+						vecty.Text("Results: "),
+						elem.Preformatted(vecty.Text(string(results))),
 					),
 				),
 			),
