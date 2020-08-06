@@ -26,6 +26,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/entities/{id}", indexHandler)
 	m.HandleFunc("/blocktxs", indexHandler)
 	m.HandleFunc("/blocks/{id}", indexHandler)
+	m.HandleFunc("/txs/{id}", indexHandler)
 
 	// API Routes
 	m.HandleFunc("/config", configHandler(cfg))
@@ -33,6 +34,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/db/height/", db.HeightHandler(d))
 	// m.HandleFunc("/db/hash/", db.HashHandler(d))
 	m.HandleFunc("/db/listtxs/", db.ListTxsHandler(d, cdc))
+	m.HandleFunc("/db/tx/", db.GetTxHandler(d, cdc))
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }

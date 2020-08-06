@@ -107,6 +107,8 @@ func main() {
 	}
 	if !cfg.Detached {
 		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
+	} else {
+		log.Infof("Running in detached mode")
 	}
 
 	//Convert host url to localhost if using internal docker network

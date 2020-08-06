@@ -106,7 +106,7 @@ func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Respo
 	}
 }
 
-// ListTxsHandler writes the tx corresponding to given key
+// ListTxsHandler writes a list of txs starting with the given height key
 func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
@@ -145,5 +145,44 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 		}
 		fmt.Fprintf(w, string(msg))
 		log.Debugf("Sent %d txs", len(txs))
+	}
+}
+
+// GetTxHandler writes the tx corresponding to given height key
+func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["id"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			return
+		}
+		id := ids[0]
+		key := []byte(config.TxHeightPrefix + id)
+		hash, err := db.Get(key)
+		if err != nil {
+			log.Error(err)
+		}
+		raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
+		util.ErrPrint(err)
+
+		var tx types.StoreTx
+		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+		util.ErrPrint(err)
+		height, err := strconv.Atoi(id)
+		util.ErrPrint(err)
+
+		send := types.SendTx{
+			Hash:   hash,
+			Height: height,
+			Store:  tx,
+		}
+
+		msg, err := json.Marshal(send)
+		if err != nil {
+			log.Error(err)
+		}
+		fmt.Fprintf(w, string(msg))
+		log.Debugf("Sent tx %d", height)
 	}
 }

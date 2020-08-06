@@ -105,6 +105,30 @@ func GetTxList(from int) [config.ListSize]types.SendTx {
 	return txList
 }
 
+//GetTx returns a transaction from the database
+func GetTx(height int64) *types.SendTx {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/tx/?id=" + util.IntToString(height))
+	if util.ErrPrint(err) {
+		return &types.SendTx{}
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return &types.SendTx{}
+	}
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return &types.SendTx{}
+	}
+	var tx types.SendTx
+	err = json.Unmarshal(body, &tx)
+	util.ErrPrint(err)
+	return &tx
+}
+
 //GetTxHeight returns the latest tx height stored by the database
 func GetTxHeight() int64 {
 	c := &http.Client{

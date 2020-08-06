@@ -80,7 +80,7 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 		}
 		tx := t.TxList[i]
 		// for i, tx := range t.TxList {
-		txList = append(txList, renderTx(tx))
+		txList = append(txList, renderTx(&tx))
 	}
 	if empty == 0 {
 		fmt.Println("No txs available")
@@ -92,7 +92,7 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 	)
 }
 
-func renderTx(tx types.SendTx) vecty.ComponentOrHTML {
+func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 	body, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
 	util.ErrPrint(err)
 	// blockHash := dbapi.GetBlockHash(int(tx.Store.Height))
@@ -103,7 +103,7 @@ func renderTx(tx types.SendTx) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/txs/"+string(tx.Hash)),
+						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Height))),
 					),
 					vecty.Text(util.IntToString(tx.Height)),
 				),
