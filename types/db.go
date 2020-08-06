@@ -10,25 +10,25 @@ import (
 
 //StoreBlock stores the parts of a block relevant to our database
 type StoreBlock struct {
-	NumTxs int
-	Hash   tmbytes.HexBytes
-	Height int64
-	Time   time.Time
+	NumTxs int              `json:",omitempty"`
+	Hash   tmbytes.HexBytes `json:",omitempty"`
+	Height int64            `json:",omitempty"`
+	Time   time.Time        `json:",omitempty"`
 }
 
 //StoreTx stores the parts of a tx relevant to our database
 type StoreTx struct {
-	Height   int64
-	TxHeight int64
-	Tx       tmtypes.Tx
-	TxResult abci.ResponseDeliverTx
-	Index    uint32
+	Height   int64                  `json:",omitempty"`
+	TxHeight int64                  `json:",omitempty"`
+	Tx       tmtypes.Tx             `json:",omitempty"`
+	TxResult abci.ResponseDeliverTx `json:",omitempty"`
+	Index    uint32                 `json:",omitempty"`
 }
 
 //SendTx stores the parts of a tx relevant to our database
 type SendTx struct {
-	Hash  tmbytes.HexBytes
-	Store StoreTx
+	Hash  tmbytes.HexBytes `json:",omitempty"`
+	Store StoreTx          `json:",omitempty"`
 }
 
 //IsEmpty returns true if block is empty

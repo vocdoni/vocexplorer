@@ -24,13 +24,57 @@ type TxContents struct {
 // Render renders the TxContents component
 func (contents *TxContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		renderTxHeader(contents.Tx, contents.Time),
-		renderTxContents(contents.Tx),
+		tenderFullTx(contents.Tx, contents.Time),
 	)
 }
 
-func renderTxHeader(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
+func tenderFullTx(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
+	result, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
+	util.ErrPrint(err)
+	var rawTx dvotetypes.Tx
+	err = json.Unmarshal(tx.Store.Tx, &rawTx)
+	util.ErrPrint(err)
+	var txContents []byte
+	var processID string
+	var nullifier string
+	var entityID string
+
+	switch rawTx.Type {
+	case "vote":
+		var typedTx dvotetypes.VoteTx
+		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		util.ErrPrint(err)
+		processID = typedTx.ProcessID
+		nullifier = typedTx.Nullifier
+	case "newProcess":
+		var typedTx dvotetypes.NewProcessTx
+		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		util.ErrPrint(err)
+		processID = typedTx.ProcessID
+		entityID = typedTx.EntityID
+	case "cancelProcess":
+		var typedTx dvotetypes.CancelProcessTx
+		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		util.ErrPrint(err)
+		processID = typedTx.ProcessID
+	case "admin", "addValidator", "removeValidator", "addOracle", "removeOracle", "addProcessKeys", "revealProcessKeys":
+		var typedTx dvotetypes.AdminTx
+		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		util.ErrPrint(err)
+		processID = typedTx.ProcessID
+	}
+
+	util.StripHexString(&entityID)
+	util.StripHexString(&processID)
+	util.StripHexString(&nullifier)
+
+	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
+	accordionName := "accordionTx"
+	return elem.Div(elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
@@ -67,41 +111,59 @@ func renderTxHeader(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
 						vecty.Text(timeago.English.Format(tm)),
 					),
 				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Transaction Type"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(rawTx.Type),
+					),
+				),
+				vecty.If(
+					entityID != "",
+					elem.Div(
+						vecty.Text("Belongs to entity "),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/entities/"+entityID),
+							),
+							vecty.Text(entityID),
+						),
+					),
+				),
+				vecty.If(
+					processID != "",
+					elem.Div(
+						vecty.Text("Belongs to process "),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/processes/"+processID),
+							),
+							vecty.Text(processID),
+						),
+					),
+				),
+				vecty.If(
+					nullifier != "",
+					elem.Div(
+						vecty.Text("Belongs to envelope "),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/envelopes/"+nullifier),
+							),
+							vecty.Text(nullifier),
+						),
+					),
+				),
 			),
 		),
-	)
-}
-
-func renderTxContents(tx *types.SendTx) vecty.ComponentOrHTML {
-	result, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
-	util.ErrPrint(err)
-	var rawTx dvotetypes.Tx
-	err = json.Unmarshal(tx.Store.Tx, &rawTx)
-	util.ErrPrint(err)
-	var txContents []byte
-	switch rawTx.Type {
-	case "newProcess":
-		var newProcess dvotetypes.NewProcessTx
-		err = json.Unmarshal(tx.Store.Tx, &newProcess)
-		txContents, err = json.MarshalIndent(newProcess, "", "    ")
-		util.ErrPrint(err)
-	case "cancelProcess":
-		var cancelProcess dvotetypes.CancelProcessTx
-		err = json.Unmarshal(tx.Store.Tx, &cancelProcess)
-		txContents, err = json.MarshalIndent(cancelProcess, "", "    ")
-		util.ErrPrint(err)
-	case "admin":
-		var admin dvotetypes.AdminTx
-		err = json.Unmarshal(tx.Store.Tx, &admin)
-		txContents, err = json.MarshalIndent(admin, "", "    ")
-		util.ErrPrint(err)
-	}
-
-	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
-	accordionName := "accordionTx"
-	return elem.Div(
-		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
-		renderCollapsible("Transaction Results", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
+	),
+		elem.Div(
+			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
+			renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
+			renderCollapsible("Transaction Results", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
+		),
 	)
 }

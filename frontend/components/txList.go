@@ -94,10 +94,8 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 }
 
 func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
-	results, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
-	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
-	err = json.Unmarshal(tx.Store.Tx, &rawTx)
+	err := json.Unmarshal(tx.Store.Tx, &rawTx)
 	util.ErrPrint(err)
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
@@ -137,12 +135,6 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Text("Type: "+rawTx.Type),
 					)),
-				vecty.If(string(results) != "{}",
-					elem.Div(
-						vecty.Text("Results: "),
-						elem.Preformatted(vecty.Text(string(results))),
-					),
-				),
 			),
 		),
 	)
