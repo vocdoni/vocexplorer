@@ -8,7 +8,6 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -24,10 +23,8 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
 	tx := dbapi.GetTx(height)
-	// Init tendermint client
-	c := rpc.StartClient(home.cfg.TendermintHost)
 	// Get block which houses tx
-	block := rpc.GetBlock(c, tx.Store.Height)
+	block := dbapi.GetBlock(tx.Store.Height)
 	if tx == nil {
 		log.Errorf("Tx unavailable")
 		return elem.Div(
@@ -38,8 +35,9 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	return elem.Div(
 		&Header{},
 		&TxContents{
-			Tx:   tx,
-			Time: block.Block.Header.Time,
+			Tx:       tx,
+			Time:     block.Time,
+			HasBlock: !block.IsEmpty(),
 		},
 	)
 }

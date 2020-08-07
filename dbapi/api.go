@@ -33,6 +33,26 @@ func GetBlockList(i int) [config.ListSize]types.StoreBlock {
 	return blockList
 }
 
+//GetBlock returns a single block from the database
+func GetBlock(i int64) types.StoreBlock {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/block/?id=" + util.IntToString(i))
+	if util.ErrPrint(err) {
+		return types.StoreBlock{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return types.StoreBlock{}
+	}
+	var block types.StoreBlock
+	err = json.Unmarshal(body, &block)
+	util.ErrPrint(err)
+	return block
+}
+
 // //GetBlockHash returns the hash of the block with the given height
 // func GetBlockHash(i int) string {
 // 	// resp, err := http.Get("/db/hash/?key=" + config.BlockHeightPrefix + util.IntToString(i))

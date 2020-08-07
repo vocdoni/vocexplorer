@@ -107,6 +107,38 @@ func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Respo
 	}
 }
 
+// GetBlockHandler writes a list of blocks by height
+func GetBlockHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["id"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			return
+		}
+		id := ids[0]
+
+		key := []byte(config.BlockHeightPrefix + id)
+		hash, err := db.Get(key)
+		if err != nil {
+			log.Error(err)
+		}
+		raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+		util.ErrPrint(err)
+
+		var block types.StoreBlock
+		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &block)
+		util.ErrPrint(err)
+
+		msg, err := json.Marshal(block)
+		if err != nil {
+			log.Error(err)
+		}
+		fmt.Fprintf(w, string(msg))
+		log.Debugf("Sent block %d", block.Height)
+	}
+}
+
 // ListTxsHandler writes a list of txs starting with the given height key
 func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
