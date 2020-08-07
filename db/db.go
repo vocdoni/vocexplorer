@@ -171,7 +171,6 @@ func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, 
 		batch.Put(txHashKey, txVal)
 		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
 		batch.Put(txHeightKey, tx.Hash())
-		log.Debugf("Log tx %d", txStore.TxHeight)
 	}
 	if numTxs > 0 {
 		var buf bytes.Buffer
