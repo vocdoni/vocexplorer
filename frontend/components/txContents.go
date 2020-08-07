@@ -17,18 +17,19 @@ import (
 // TxContents renders tx contents
 type TxContents struct {
 	vecty.Core
-	Tx   *types.SendTx
-	Time time.Time
+	Tx       *types.SendTx
+	Time     time.Time
+	HasBlock bool
 }
 
 // Render renders the TxContents component
 func (contents *TxContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		tenderFullTx(contents.Tx, contents.Time),
+		tenderFullTx(contents.Tx, contents.Time, contents.HasBlock),
 	)
 }
 
-func tenderFullTx(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
+func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
 	result, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
 	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
@@ -91,11 +92,18 @@ func tenderFullTx(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("dt")),
 					vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
+					vecty.If(
+						hasBlock,
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
+							),
+							vecty.Text(util.IntToString(tx.Store.Height)),
 						),
-						vecty.Text(util.IntToString(tx.Store.Height)),
+					),
+					vecty.If(
+						!hasBlock,
+						vecty.Text(util.IntToString(tx.Store.Height)+" (block not yet available)"),
 					),
 				),
 				elem.Div(
@@ -107,8 +115,11 @@ func tenderFullTx(tx *types.SendTx, tm time.Time) vecty.ComponentOrHTML {
 						vecty.Markup(vecty.Class("dd")),
 						vecty.Text(tx.Hash.String()),
 					),
-					elem.Div(
-						vecty.Text(timeago.English.Format(tm)),
+					vecty.If(
+						tm.IsZero(),
+						elem.Div(
+							vecty.Text(timeago.English.Format(tm)),
+						),
 					),
 				),
 				elem.Div(
