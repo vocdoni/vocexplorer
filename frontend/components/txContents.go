@@ -1,6 +1,7 @@
 package components
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"time"
 
@@ -44,6 +45,23 @@ func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	case "vote":
 		var typedTx dvotetypes.VoteTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+
+		// Decode vote package if vote is unencrypted
+		if len(typedTx.EncryptionKeyIndexes) == 0 {
+			var vote dvotetypes.VotePackage
+			rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
+			if util.ErrPrint(err) {
+				txContents, err = json.MarshalIndent(typedTx, "", "    ")
+				break
+			}
+			err = json.Unmarshal(rawVote, &vote)
+			if util.ErrPrint(err) {
+				txContents, err = json.MarshalIndent(typedTx, "", "    ")
+				break
+			}
+			voteIndent, err := json.MarshalIndent(vote, "", "    ")
+			typedTx.VotePackage = string(voteIndent)
+		}
 		txContents, err = json.MarshalIndent(typedTx, "", "    ")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
@@ -116,7 +134,7 @@ func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 						vecty.Text(tx.Hash.String()),
 					),
 					vecty.If(
-						tm.IsZero(),
+						!tm.IsZero(),
 						elem.Div(
 							vecty.Text(timeago.English.Format(tm)),
 						),
@@ -174,7 +192,7 @@ func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		elem.Div(
 			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
 			renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
-			renderCollapsible("Transaction Results", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
+			renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
 		),
 	)
 }
