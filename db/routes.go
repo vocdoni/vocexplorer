@@ -186,8 +186,8 @@ func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWr
 	}
 }
 
-// GetTxByHashHandler redirects to the tx corresponding to given height key
-func GetTxByHashHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+// TxHashRedirectHandler redirects to the tx corresponding to given height key
+func TxHashRedirectHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["hash"]
 		if !ok || len(ids[0]) < 1 {

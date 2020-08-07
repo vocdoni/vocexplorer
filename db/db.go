@@ -81,6 +81,21 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 			log.Error(err)
 		}
 	}
+	latestTxHeight := int64(0)
+	has, err = d.Has([]byte(config.LatestTxHeightKey))
+	if err != nil {
+		log.Error(err)
+	}
+	if has {
+		val, err := d.Get([]byte(config.LatestTxHeightKey))
+		util.ErrPrint(err)
+		num := 0
+		latestTxHeight, num, err = amino.DecodeInt64(val)
+		util.ErrPrint(err)
+		if num <= 1 {
+			log.Debug("Could not get height")
+		}
+	}
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
@@ -110,7 +125,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		block.Height = res.Block.Header.Height
 		block.Time = res.Block.Header.Time
 
-		updateTxs(res.Block, d, cdc, c, batch)
+		updateTxs(&latestTxHeight, res.Block, d, cdc, c, batch)
 
 		bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
 		if err != nil {
@@ -135,23 +150,8 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	batch.Write()
 }
 
-func updateTxs(block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch) {
-	currentTxs := int64(0)
+func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch) {
 	numTxs := int64(0)
-	has, err := d.Has([]byte(config.LatestTxHeightKey))
-	if err != nil {
-		log.Error(err)
-	}
-	if has {
-		val, err := d.Get([]byte(config.LatestTxHeightKey))
-		util.ErrPrint(err)
-		num := 0
-		currentTxs, num, err = amino.DecodeInt64(val)
-		util.ErrPrint(err)
-		if num <= 1 {
-			log.Debug("Could not get height")
-		}
-	}
 	for i, tx := range block.Txs {
 		numTxs = int64(i) + 1
 		txRes := rpc.GetTransaction(c, tx.Hash())
@@ -159,7 +159,7 @@ func updateTxs(block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *t
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 		txStore := types.StoreTx{
 			Height:   txRes.Height,
-			TxHeight: currentTxs + numTxs,
+			TxHeight: *startTxHeight + numTxs,
 			Tx:       txRes.Tx,
 			TxResult: txRes.TxResult,
 			Index:    txRes.Index,
@@ -171,11 +171,14 @@ func updateTxs(block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *t
 		batch.Put(txHashKey, txVal)
 		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
 		batch.Put(txHeightKey, tx.Hash())
+		log.Debugf("Log tx %d", txStore.TxHeight)
 	}
 	if numTxs > 0 {
 		var buf bytes.Buffer
-		err = amino.EncodeInt64(&buf, currentTxs+numTxs)
+		err := amino.EncodeInt64(&buf, *startTxHeight+numTxs)
+		util.ErrPrint(err)
 		batch.Put([]byte(config.LatestTxHeightKey), buf.Bytes())
+		*startTxHeight += numTxs
 		log.Debugf("%d transactions logged at block %d", numTxs+1, block.Height)
 	}
 }
