@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -60,7 +61,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 		updateBlockList(d, tClient, cdc)
 		updateEntityList(d)
 		updateProcessList(d)
-		time.Sleep(config.DBWaitTime * time.Second)
+		time.Sleep(config.DBWaitTime * time.Millisecond)
 	}
 }
 
@@ -108,50 +109,8 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		block.Hash = res.BlockID.Hash
 		block.Height = res.Block.Header.Height
 		block.Time = res.Block.Header.Time
-		// err = enc.Encode(block)
 
-		currentTxs := int64(0)
-		numTxs := int64(0)
-		has, err := d.Has([]byte(config.LatestTxHeightKey))
-		if err != nil {
-			log.Error(err)
-		}
-		if has {
-			val, err := d.Get([]byte(config.LatestTxHeightKey))
-			util.ErrPrint(err)
-			num := 0
-			currentTxs, num, err = amino.DecodeInt64(val)
-			util.ErrPrint(err)
-			if num <= 1 {
-				log.Debug("Could not get height")
-			}
-		}
-		for i, tx := range res.Block.Data.Txs {
-			numTxs = int64(i) + 1
-			txRes := rpc.GetTransaction(c, tx.Hash())
-
-			txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
-			txStore := types.StoreTx{
-				Height:   txRes.Height,
-				TxHeight: currentTxs + numTxs,
-				Tx:       txRes.Tx,
-				TxResult: txRes.TxResult,
-				Index:    txRes.Index,
-			}
-			txVal, err := cdc.MarshalBinaryLengthPrefixed(txStore)
-			if err != nil {
-				log.Error(err)
-			}
-			batch.Put(txHashKey, txVal)
-			txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
-			batch.Put(txHeightKey, tx.Hash())
-		}
-		if numTxs > 0 {
-			var buf bytes.Buffer
-			err = amino.EncodeInt64(&buf, currentTxs+numTxs)
-			batch.Put([]byte(config.LatestTxHeightKey), buf.Bytes())
-			log.Debugf("%d transactions logged", numTxs+1)
-		}
+		updateTxs(res.Block, d, cdc, c, batch)
 
 		bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
 		if err != nil {
@@ -174,6 +133,51 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	}
 	batch.Put([]byte(config.LatestBlockHeightKey), buf.Bytes())
 	batch.Write()
+}
+
+func updateTxs(block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch) {
+	currentTxs := int64(0)
+	numTxs := int64(0)
+	has, err := d.Has([]byte(config.LatestTxHeightKey))
+	if err != nil {
+		log.Error(err)
+	}
+	if has {
+		val, err := d.Get([]byte(config.LatestTxHeightKey))
+		util.ErrPrint(err)
+		num := 0
+		currentTxs, num, err = amino.DecodeInt64(val)
+		util.ErrPrint(err)
+		if num <= 1 {
+			log.Debug("Could not get height")
+		}
+	}
+	for i, tx := range block.Txs {
+		numTxs = int64(i) + 1
+		txRes := rpc.GetTransaction(c, tx.Hash())
+
+		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
+		txStore := types.StoreTx{
+			Height:   txRes.Height,
+			TxHeight: currentTxs + numTxs,
+			Tx:       txRes.Tx,
+			TxResult: txRes.TxResult,
+			Index:    txRes.Index,
+		}
+		txVal, err := cdc.MarshalBinaryLengthPrefixed(txStore)
+		if err != nil {
+			log.Error(err)
+		}
+		batch.Put(txHashKey, txVal)
+		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
+		batch.Put(txHeightKey, tx.Hash())
+	}
+	if numTxs > 0 {
+		var buf bytes.Buffer
+		err = amino.EncodeInt64(&buf, currentTxs+numTxs)
+		batch.Put([]byte(config.LatestTxHeightKey), buf.Bytes())
+		log.Debugf("%d transactions logged at block %d", numTxs+1, block.Height)
+	}
 }
 
 func updateEntityList(d *dvotedb.BadgerDB) {
