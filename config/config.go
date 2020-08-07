@@ -26,7 +26,7 @@ const (
 	//HomeWidgetBlocksListSize is the number of blocks shown on the homepage
 	HomeWidgetBlocksListSize = 4
 	//NumBlockUpdates is the number of blocks updated per db batch
-	NumBlockUpdates = 200
+	NumBlockUpdates = 100
 	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
 	DBWaitTime = 0
 	//ProcessIDPrefix is the key prefix for process id's

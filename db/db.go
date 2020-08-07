@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"gitlab.com/vocdoni/go-dvote/log"
 
 	"time"
@@ -35,7 +35,6 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 		log.Warn("Gateway Client is not running. Running as detached database")
 		return
 	}
-
 	// Init tendermint client
 	tClient, up := startTendermint(tmHost)
 	if !up {
@@ -66,7 +65,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 }
 
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
-	latestHeight := int64(0)
+	latestBlockHeight := int64(0)
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
 		log.Error(err)
@@ -76,7 +75,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		if err != nil {
 			log.Error(err)
 		}
-		latestHeight, _, err = amino.DecodeInt64(val)
+		latestBlockHeight, _, err = amino.DecodeInt64(val)
 		if err != nil {
 			log.Error(err)
 		}
@@ -102,47 +101,24 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	}
 	blockHeight := status.SyncInfo.LatestBlockHeight
 	batch := d.NewBatch()
-	errs := 0
-	for i := 0; i < config.NumBlockUpdates && latestHeight < blockHeight; i++ {
-		// encBuf := new(bytes.Buffer)
-		// enc := gob.NewEncoder(encBuf)
-		latestHeight++
-		res, err := c.Block(&latestHeight)
-		if err != nil {
-			if errs > 2 {
-				log.Fatal("Blockchain RPC Disconnected")
-				return
-			}
-			errs++
-			log.Error(err)
-			i--
-			continue
-		}
-		errs = 0
-		var block types.StoreBlock
-		block.NumTxs = len(res.Block.Data.Txs)
-		block.Hash = res.BlockID.Hash
-		block.Height = res.Block.Header.Height
-		block.Time = res.Block.Header.Time
 
-		updateTxs(&latestTxHeight, res.Block, d, cdc, c, batch)
-
-		bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
-		if err != nil {
-			log.Error(err)
-		}
-
-		blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.Height))...)
-		blockHashKey := append([]byte(config.BlockHashPrefix), block.Hash...)
-		hashValue := block.Hash
-
-		batch.Put(blockHashKey, bodyValue)
-		batch.Put(blockHeightKey, hashValue)
-
+	i := int64(0)
+	complete := make(chan struct{}, config.NumBlockUpdates)
+	for ; i < config.NumBlockUpdates && i+latestBlockHeight < blockHeight; i++ {
+		go fetchBlock(i+latestBlockHeight, &latestTxHeight, &batch, c, cdc, complete)
 	}
-	log.Debugf("Setting block %d ", latestHeight)
+	num := 0
+	// Sync: wait here for all goroutines to complete
+	for range complete {
+		if num >= config.NumBlockUpdates-1 {
+			break
+		}
+		num++
+	}
+
+	log.Debugf("Setting block %d ", latestBlockHeight+i)
 	var buf bytes.Buffer
-	err = amino.EncodeInt64(&buf, latestHeight)
+	err = amino.EncodeInt64(&buf, latestBlockHeight+i)
 	if err != nil {
 		log.Error(err)
 	}
@@ -181,6 +157,48 @@ func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, 
 		*startTxHeight += numTxs
 		log.Debugf("%d transactions logged at block %d", numTxs+1, block.Height)
 	}
+}
+
+func fetchBlock(height int64, latestTxHeight *int64, batch *dvotedb.Batch, c *tmhttp.HTTP, cdc *amino.Codec, complete chan<- struct{}) {
+	// Signal
+	defer func() {
+		complete <- struct{}{}
+	}()
+	// Thread-safe api request
+	res, err := c.Block(&height)
+	// If error is returned, try the request twice more, then fatal.
+	if err != nil {
+		for errs := 0; ; errs++ {
+			if errs > 1 {
+				log.Fatal("Blockchain RPC Disconnected")
+				return
+			}
+			res, err = c.Block(&height)
+			if err == nil {
+				break
+			}
+		}
+	}
+	var block types.StoreBlock
+	block.NumTxs = len(res.Block.Data.Txs)
+	block.Hash = res.BlockID.Hash
+	block.Height = res.Block.Header.Height
+	block.Time = res.Block.Header.Time
+
+	// updateTxs(&latestTxHeight, res.Block, d, cdc, c, batch)
+
+	bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
+	if err != nil {
+		log.Error(err)
+	}
+
+	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.Height))...)
+	blockHashKey := append([]byte(config.BlockHashPrefix), block.Hash...)
+	hashValue := block.Hash
+
+	// Thread-safe batch operations
+	(*batch).Put(blockHashKey, bodyValue)
+	(*batch).Put(blockHeightKey, hashValue)
 }
 
 func updateEntityList(d *dvotedb.BadgerDB) {
@@ -286,7 +304,7 @@ func startTendermint(host string) (*tmhttp.HTTP, bool) {
 		}
 		tmClient := rpc.StartClient("http://" + host)
 		if tmClient == nil {
-			time.Sleep(5 * time.Second)
+			time.Sleep(1 * time.Second)
 			continue
 		} else {
 			return tmClient, true
