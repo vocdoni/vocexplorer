@@ -78,7 +78,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
-	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
+	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 	vecty.Rerender(d)
 	for {

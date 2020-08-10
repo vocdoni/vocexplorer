@@ -100,6 +100,17 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		log.Error(err)
 	}
 	blockHeight := status.SyncInfo.LatestBlockHeight
+
+	// Wait for new blocks to be available
+	for blockHeight-latestBlockHeight < 1 {
+		time.Sleep(500 * time.Millisecond)
+		status, err := c.Status()
+		if err != nil {
+			log.Error(err)
+		}
+		blockHeight = status.SyncInfo.LatestBlockHeight
+	}
+
 	batch := d.NewBatch()
 
 	i := int64(0)
@@ -107,23 +118,26 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	for ; i < config.NumBlockUpdates && i+latestBlockHeight < blockHeight; i++ {
 		go fetchBlock(i+latestBlockHeight, &latestTxHeight, &batch, c, cdc, complete)
 	}
+	log.Debugf("Starting %d goroutines", i)
+
 	num := 0
 	// Sync: wait here for all goroutines to complete
-	for range complete {
-		if num >= config.NumBlockUpdates-1 {
-			break
+	if i > 0 {
+		for range complete {
+			if num >= config.NumBlockUpdates-1 || int64(num) >= blockHeight-latestBlockHeight-1 {
+				break
+			}
+			num++
 		}
-		num++
+		log.Debugf("Setting block %d ", latestBlockHeight+i)
+		var buf bytes.Buffer
+		err = amino.EncodeInt64(&buf, latestBlockHeight+i)
+		if err != nil {
+			log.Error(err)
+		}
+		batch.Put([]byte(config.LatestBlockHeightKey), buf.Bytes())
+		batch.Write()
 	}
-
-	log.Debugf("Setting block %d ", latestBlockHeight+i)
-	var buf bytes.Buffer
-	err = amino.EncodeInt64(&buf, latestBlockHeight+i)
-	if err != nil {
-		log.Error(err)
-	}
-	batch.Put([]byte(config.LatestBlockHeightKey), buf.Bytes())
-	batch.Write()
 }
 
 func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch) {
@@ -250,7 +264,6 @@ func listHashesByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][
 		hashList = append(hashList, val)
 		height--
 	}
-	log.Debugf("Found %d hashes", len(hashList))
 	return hashList
 }
 

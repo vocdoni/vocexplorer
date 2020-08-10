@@ -43,7 +43,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			log.Error(err)
 		}
 		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent %d bytes", len(msg))
+		log.Debugf("Sent height")
 	}
 }
 
