@@ -152,7 +152,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 		util.ErrPrint(err)
 		hashes := listHashesByHeight(db, config.ListSize, from, config.TxHeightPrefix)
 		if len(hashes) == 0 {
-			log.Error("No txs available at height %d", from)
+			log.Errorf("No txs available at height %d", from)
 			http.Error(w, "No txs available", 404)
 			return
 		}
