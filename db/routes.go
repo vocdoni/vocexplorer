@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -30,15 +29,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			http.Error(w, "Key not found", 404)
 			return
 		}
-		height := &types.Height{}
-		err = proto.Unmarshal(val, height)
-		util.ErrPrint(err)
-
-		msg, err := json.Marshal(height.GetHeight)
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Fprintf(w, string(msg))
+		w.Write(val)
 		log.Debugf("Sent height")
 	}
 }
@@ -85,18 +76,15 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 			http.Error(w, "No blocks available", 404)
 			return
 		}
-		var blocks [config.ListSize]*types.StoreBlock
+		var rawBlocks [config.ListSize][]byte
 		for i, hash := range hashes {
-			raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-			util.ErrPrint(err)
-			err = proto.Unmarshal(raw, blocks[i])
+			rawBlocks[i], err = db.Get(append([]byte(config.BlockHashPrefix), hash...))
 			util.ErrPrint(err)
 		}
 
-		msg, err := json.Marshal(blocks)
-		util.ErrPrint(err)
-		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent %d blocks", len(blocks))
+		msg, err := json.Marshal(rawBlocks)
+		w.Write(msg)
+		log.Debugf("Sent %d blocks", len(rawBlocks))
 	}
 }
 
@@ -119,16 +107,12 @@ func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.R
 		raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
 		util.ErrPrint(err)
 
-		var block types.StoreBlock
-		err = proto.Unmarshal(raw, &block)
-		util.ErrPrint(err)
+		// var block types.StoreBlock
+		// err = proto.Unmarshal(raw, &block)
+		// util.ErrPrint(err)
 
-		msg, err := json.Marshal(block)
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent block %d", block.GetHeight)
+		w.Write(raw)
+		log.Debugf("Sent block %s", id)
 	}
 }
 
@@ -149,7 +133,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			http.Error(w, "No txs available", 404)
 			return
 		}
-		var txs []types.SendTx
+		var rawTxs [][]byte
 		for _, hash := range hashes {
 			raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 			util.ErrPrint(err)
@@ -162,15 +146,15 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 				Hash:  hash,
 				Store: &tx,
 			}
-			txs = append(txs, send)
+			rawTx, err := proto.Marshal(&send)
+			util.ErrPrint(err)
+			rawTxs = append(rawTxs, rawTx)
 		}
 
-		msg, err := json.Marshal(txs)
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent %d txs", len(txs))
+		msg, err := json.Marshal(rawTxs)
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Sent %d txs", len(rawTxs))
 	}
 }
 
@@ -203,11 +187,9 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 			Store: &tx,
 		}
 
-		msg, err := json.Marshal(send)
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Fprintf(w, string(msg))
+		rawTx, err := proto.Marshal(&send)
+		util.ErrPrint(err)
+		w.Write(rawTx)
 		log.Debugf("Sent tx %d", height)
 	}
 }

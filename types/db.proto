@@ -23,3 +23,8 @@ message StoreTx {
     // Could not figure out how to import types directly from tendermint. For now this field is json-encoded bytes.
     bytes TxResult = 5;
 }
+
+message SendTx {
+    bytes Hash = 1;
+    StoreTx Store = 2;
+}
