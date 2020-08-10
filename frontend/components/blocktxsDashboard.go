@@ -36,9 +36,9 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Current Block Height: "+util.IntToString(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)),
 				),
-				vecty.If(int(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)-dash.t.TotalBlocks > 0,
+				vecty.If(int(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)-dash.t.TotalBlocks > 1,
 					elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-						vecty.Text("Still Syncing With Gateway... "+util.IntToString(dash.t.TotalBlocks)+" Blocks Stored")),
+						vecty.Text("Still Syncing With Gateway... "+util.IntToString(dash.t.TotalBlocks+1)+" Blocks Stored")),
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("card-col-3")),
@@ -89,8 +89,8 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 	for d == nil || d.t == nil {
 	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
-	d.t.TotalTxs = int(dbapi.GetTxHeight())
+	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
 	updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
 	updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
 	vecty.Rerender(d)

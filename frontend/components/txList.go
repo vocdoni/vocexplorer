@@ -80,8 +80,9 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 			empty--
 		}
 		tx := t.TxList[i]
-		// for i, tx := range t.TxList {
-		txList = append(txList, renderTx(&tx))
+		if !tx.IsEmpty() {
+			txList = append(txList, renderTx(&tx))
+		}
 	}
 	if empty == 0 {
 		fmt.Println("No txs available")

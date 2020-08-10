@@ -2,11 +2,13 @@ package rpc
 
 import (
 	"fmt"
+	gohttp "net/http"
+	"time"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
-
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -37,7 +39,16 @@ func StartClient(host string) *http.HTTP {
 }
 
 func initClient(host string) (*http.HTTP, error) {
-	c, err := http.NewWithTimeout(host, "/websocket", 2)
+	// Increase max idle connections. This fixes issue with too many concurrent requests, as described here: https://github.com/golang/go/issues/16012
+	// http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 5
+	httpClient, err := jsonrpcclient.DefaultHTTPClient(host)
+	if err != nil {
+		return nil, err
+	}
+	httpClient.Timeout = 2 * time.Second
+	httpClient.Transport.(*gohttp.Transport).MaxIdleConnsPerHost = 10000
+	c, err := http.NewWithClient(host, "/websocket", httpClient)
+	// c, err := http.NewWithTimeout(host, "/websocket", 2)
 	if err != nil {
 		return nil, err
 	}
