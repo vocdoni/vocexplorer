@@ -12,12 +12,12 @@ type Cfg struct {
 
 //MainCfg includes backend and frontend config
 type MainCfg struct {
-	Global      Cfg
-	DisableGzip bool
-	LogLevel    string
 	DataDir     string
-	HostURL     string
 	Detached    bool
+	DisableGzip bool
+	Global      Cfg
+	HostURL     string
+	LogLevel    string
 }
 
 const (

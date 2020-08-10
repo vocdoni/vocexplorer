@@ -18,9 +18,9 @@ import (
 // TxContents renders tx contents
 type TxContents struct {
 	vecty.Core
-	Tx       *types.SendTx
-	Time     time.Time
 	HasBlock bool
+	Time     time.Time
+	Tx       *types.SendTx
 }
 
 // Render renders the TxContents component

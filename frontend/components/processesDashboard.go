@@ -15,9 +15,9 @@ import (
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
-	processID string
-	process   *client.FullProcessInfo
 	gwClient  *client.Client
+	process   *client.FullProcessInfo
+	processID string
 	quitCh    chan struct{}
 }
 

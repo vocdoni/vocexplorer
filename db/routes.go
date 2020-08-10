@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/tendermint/go-amino"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 // HeightHandler writes the int64 height value corresponding to given key
@@ -30,15 +30,11 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			http.Error(w, "Key not found", 404)
 			return
 		}
-		height, num, err := amino.DecodeInt64(val)
-		if err != nil {
-			log.Error(err)
-		}
-		if num <= 1 {
-			log.Debug("Could not get height")
-		}
+		height := &types.Height{}
+		err = proto.Unmarshal(val, height)
+		util.ErrPrint(err)
 
-		msg, err := json.Marshal(height)
+		msg, err := json.Marshal(height.GetHeight)
 		if err != nil {
 			log.Error(err)
 		}
@@ -74,7 +70,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 // }
 
 // ListBlocksHandler writes a list of blocks by height
-func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
 		if !ok || len(froms[0]) < 1 {
@@ -89,26 +85,23 @@ func ListBlocksHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Respo
 			http.Error(w, "No blocks available", 404)
 			return
 		}
-		var blocks [config.ListSize]types.StoreBlock
+		var blocks [config.ListSize]*types.StoreBlock
 		for i, hash := range hashes {
 			raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
 			util.ErrPrint(err)
-
-			err = cdc.UnmarshalBinaryLengthPrefixed(raw, &blocks[i])
+			err = proto.Unmarshal(raw, blocks[i])
 			util.ErrPrint(err)
 		}
 
 		msg, err := json.Marshal(blocks)
-		if err != nil {
-			log.Error(err)
-		}
+		util.ErrPrint(err)
 		fmt.Fprintf(w, string(msg))
 		log.Debugf("Sent %d blocks", len(blocks))
 	}
 }
 
 // GetBlockHandler writes a list of blocks by height
-func GetBlockHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["id"]
 		if !ok || len(ids[0]) < 1 {
@@ -127,7 +120,7 @@ func GetBlockHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Respons
 		util.ErrPrint(err)
 
 		var block types.StoreBlock
-		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &block)
+		err = proto.Unmarshal(raw, &block)
 		util.ErrPrint(err)
 
 		msg, err := json.Marshal(block)
@@ -135,12 +128,12 @@ func GetBlockHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Respons
 			log.Error(err)
 		}
 		fmt.Fprintf(w, string(msg))
-		log.Debugf("Sent block %d", block.Height)
+		log.Debugf("Sent block %d", block.GetHeight)
 	}
 }
 
 // ListTxsHandler writes a list of txs starting with the given height key
-func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
 		if !ok || len(froms[0]) < 1 {
@@ -162,12 +155,12 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 			util.ErrPrint(err)
 
 			var tx types.StoreTx
-			err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+			err = proto.Unmarshal(raw, &tx)
 			util.ErrPrint(err)
 
 			send := types.SendTx{
 				Hash:  hash,
-				Store: tx,
+				Store: &tx,
 			}
 			txs = append(txs, send)
 		}
@@ -182,7 +175,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.Response
 }
 
 // GetTxHandler writes the tx corresponding to given height key
-func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["id"]
 		if !ok || len(ids[0]) < 1 {
@@ -200,14 +193,14 @@ func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWr
 		util.ErrPrint(err)
 
 		var tx types.StoreTx
-		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+		err = proto.Unmarshal(raw, &tx)
 		util.ErrPrint(err)
 		height, err := strconv.Atoi(id)
 		util.ErrPrint(err)
 
 		send := types.SendTx{
 			Hash:  hash,
-			Store: tx,
+			Store: &tx,
 		}
 
 		msg, err := json.Marshal(send)
@@ -220,7 +213,7 @@ func GetTxHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWr
 }
 
 // TxHashRedirectHandler redirects to the tx corresponding to given height key
-func TxHashRedirectHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.ResponseWriter, r *http.Request) {
+func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["hash"]
 		if !ok || len(ids[0]) < 1 {
@@ -253,7 +246,7 @@ func TxHashRedirectHandler(db *dvotedb.BadgerDB, cdc *amino.Codec) func(w http.R
 		}
 
 		var tx types.StoreTx
-		err = cdc.UnmarshalBinaryLengthPrefixed(raw, &tx)
+		err = proto.Unmarshal(raw, &tx)
 		if util.ErrPrint(err) {
 			http.Redirect(w, r, r.Header.Get("Referer"), 302)
 			return

@@ -14,10 +14,10 @@ import (
 // VocDashDashboardView renders the processes dashboard page
 type VocDashDashboardView struct {
 	vecty.Core
-	vc        *client.VochainInfo
 	gwClient  *client.Client
 	quitCh    chan struct{}
 	refreshCh chan bool
+	vc        *client.VochainInfo
 }
 
 // Render renders the VocDashDashboardView component

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package types;
+
+import "google/protobuf/timestamp.proto";
+option go_package = "/types";
+
+message Height {
+    int64 Height = 1;
+}
+
+message StoreBlock {
+    bytes Hash = 1;
+    int64 Height = 2;
+    int64 NumTxs = 3;
+    google.protobuf.Timestamp Time = 4;
+}
+
+message StoreTx {
+    int64 Height = 1;
+    uint32 Index = 2;
+    bytes Tx = 3;
+    int64 TxHeight = 4;
+    // Could not figure out how to import types directly from tendermint. For now this field is json-encoded bytes.
+    bytes TxResult = 5;
+}

@@ -17,15 +17,15 @@ import (
 // BlockTxsDashboardView renders the dashboard landing page
 type BlockTxsDashboardView struct {
 	vecty.Core
-	t                   *rpc.TendermintInfo
-	tClient             *http.HTTP
-	quitCh              chan struct{}
-	blockRefresh        chan int
-	txRefresh           chan int
 	blockIndex          int
-	txIndex             int
+	blockRefresh        chan int
 	disableBlocksUpdate bool
 	disableTxsUpdate    bool
+	quitCh              chan struct{}
+	t                   *rpc.TendermintInfo
+	tClient             *http.HTTP
+	txIndex             int
+	txRefresh           chan int
 }
 
 // Render renders the BlockTxsDashboardView component

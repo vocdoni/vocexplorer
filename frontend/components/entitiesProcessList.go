@@ -17,8 +17,8 @@ import (
 type ProcessListView struct {
 	vecty.Core
 	entity         *client.EntityInfo
-	processesIndex int
 	numProcesses   int
+	processesIndex int
 	refreshCh      chan bool
 }
 

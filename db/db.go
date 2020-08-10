@@ -1,14 +1,15 @@
 package db
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/golang/protobuf/ptypes"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"google.golang.org/protobuf/proto"
 
 	"time"
 
@@ -53,19 +54,15 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 	log.Debugf("Connected")
 	// defer (*cancel)()
 
-	// Init amino encoder
-	var cdc = amino.NewCodec()
-	cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
-	cdc.RegisterConcrete(types.StoreTx{}, "storeTx", nil)
 	for {
-		updateBlockList(d, tClient, cdc)
+		updateBlockList(d, tClient)
 		updateEntityList(d)
 		updateProcessList(d)
 		time.Sleep(config.DBWaitTime * time.Millisecond)
 	}
 }
 
-func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
+func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	latestBlockHeight := int64(1)
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
@@ -73,13 +70,10 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	}
 	if has {
 		val, err := d.Get([]byte(config.LatestBlockHeightKey))
-		if err != nil {
-			log.Error(err)
-		}
-		latestBlockHeight, _, err = amino.DecodeInt64(val)
-		if err != nil {
-			log.Error(err)
-		}
+		util.ErrPrint(err)
+		latestBlockHeight := &types.Height{}
+		err = proto.Unmarshal(val, latestBlockHeight)
+		util.ErrPrint(err)
 	}
 	latestTxHeight := int64(1)
 	has, err = d.Has([]byte(config.LatestTxHeightKey))
@@ -90,7 +84,8 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		val, err := d.Get([]byte(config.LatestTxHeightKey))
 		util.ErrPrint(err)
 		num := 0
-		latestTxHeight, num, err = amino.DecodeInt64(val)
+		latestTxHeight := &types.Height{}
+		err = proto.Unmarshal(val, latestTxHeight)
 		util.ErrPrint(err)
 		if num <= 1 {
 			log.Debug("Could not get height")
@@ -120,7 +115,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight, &batch, c, cdc, complete, &txsList[i])
+		go fetchBlock(i+latestBlockHeight, &batch, c, complete, &txsList[i])
 	}
 	num := 0
 	if i > 0 {
@@ -136,7 +131,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 		//TODO: don't create a goroutine for empty tx lists
 		complete = make(chan struct{}, len(txsList))
 		for _, txs := range txsList {
-			go updateTxs(latestTxHeight, txs, cdc, c, batch, complete)
+			go updateTxs(latestTxHeight, txs, c, batch, complete)
 			latestTxHeight += int64(len(txs))
 		}
 
@@ -148,20 +143,21 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 			}
 			num++
 		}
-		var txbuf bytes.Buffer
-		err := amino.EncodeInt64(&txbuf, latestTxHeight)
+		blockHeight := types.Height{Height: latestBlockHeight + i}
+		txHeight := types.Height{Height: latestTxHeight}
+		encBlockHeight, err := proto.Marshal(&blockHeight)
 		util.ErrPrint(err)
-		var blockbuf bytes.Buffer
-		err = amino.EncodeInt64(&blockbuf, latestBlockHeight+i)
+		encTxHeight, err := proto.Marshal(&txHeight)
 		util.ErrPrint(err)
-		batch.Put([]byte(config.LatestTxHeightKey), txbuf.Bytes())
-		batch.Put([]byte(config.LatestBlockHeightKey), blockbuf.Bytes())
+
+		batch.Put([]byte(config.LatestTxHeightKey), encBlockHeight)
+		batch.Put([]byte(config.LatestBlockHeightKey), encTxHeight)
 		batch.Write()
 	}
 
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
 	numTxs := int64(0)
 	var height int64
 	for i, tx := range txs {
@@ -169,17 +165,19 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, cdc *amino.Codec, c *tmhttp
 		txRes := rpc.GetTransaction(c, tx.Hash())
 
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
+		// Marshal TxResult to bytes for protobuf encoding
+		result, err := json.Marshal(txRes.TxResult)
+		util.ErrPrint(err)
 		txStore := types.StoreTx{
 			Height:   txRes.Height,
 			TxHeight: startTxHeight,
 			Tx:       txRes.Tx,
-			TxResult: txRes.TxResult,
+			TxResult: result,
 			Index:    txRes.Index,
 		}
-		txVal, err := cdc.MarshalBinaryLengthPrefixed(txStore)
-		if err != nil {
-			log.Error(err)
-		}
+		txVal, err := proto.Marshal(&txStore)
+		util.ErrPrint(err)
+		util.ErrPrint(err)
 		batch.Put(txHashKey, txVal)
 		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
 		batch.Put(txHeightKey, tx.Hash())
@@ -194,7 +192,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, cdc *amino.Codec, c *tmhttp
 	complete <- struct{}{}
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, cdc *amino.Codec, complete chan<- struct{}, txs *tmtypes.Txs) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete chan<- struct{}, txs *tmtypes.Txs) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
@@ -216,14 +214,16 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, cdc *amino.C
 		}
 	}
 	var block types.StoreBlock
-	block.NumTxs = len(res.Block.Data.Txs)
+	block.NumTxs = int64(len(res.Block.Data.Txs))
 	block.Hash = res.BlockID.Hash
 	block.Height = res.Block.Header.Height
-	block.Time = res.Block.Header.Time
+	tm, err := ptypes.TimestampProto(res.Block.Header.Time)
+	util.ErrPrint(err)
+	block.Time = tm
 
 	*txs = res.Block.Data.Txs
 
-	bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
+	bodyValue, err := proto.Marshal(&block)
 	if err != nil {
 		log.Error(err)
 	}

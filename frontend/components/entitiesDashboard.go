@@ -14,8 +14,8 @@ import (
 // EntitiesDashboardView renders the entities dashboard page
 type EntitiesDashboardView struct {
 	vecty.Core
-	entityID  string
 	entity    *client.EntityInfo
+	entityID  string
 	gwClient  *client.Client
 	quitCh    chan struct{}
 	refreshCh chan bool

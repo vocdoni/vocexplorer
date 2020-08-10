@@ -13,14 +13,14 @@ import (
 // Pagination holds pages of information (blocks, processes, etc)
 type Pagination struct {
 	vecty.Core
-	TotalPages      int
-	TotalItems      *int
 	CurrentPage     *int
 	ListSize        int
 	RefreshCh       chan int
+	RenderFunc      func(int) vecty.ComponentOrHTML
 	RenderSearchBar bool
 	SearchBar       func(*Pagination) vecty.ComponentOrHTML
-	RenderFunc      func(int) vecty.ComponentOrHTML
+	TotalItems      *int
+	TotalPages      int
 }
 
 // Render renders the pagination component

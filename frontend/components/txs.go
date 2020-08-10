@@ -3,11 +3,13 @@ package components
 import (
 	"strconv"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -32,12 +34,14 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}
+	tm, err := ptypes.Timestamp(block.GetTime())
+	util.ErrPrint(err)
 	return elem.Div(
 		&Header{},
 		&TxContents{
 			Tx:       tx,
-			Time:     block.Time,
-			HasBlock: !block.IsEmpty(),
+			Time:     tm,
+			HasBlock: !types.BlockIsEmpty(&block),
 		},
 	)
 }

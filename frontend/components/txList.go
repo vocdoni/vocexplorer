@@ -20,10 +20,10 @@ import (
 // TxList is the tx list component
 type TxList struct {
 	vecty.Core
-	t             *rpc.TendermintInfo
 	currentPage   int
-	refreshCh     chan int
 	disableUpdate *bool
+	refreshCh     chan int
+	t             *rpc.TendermintInfo
 }
 
 // Render renders the tx list component
