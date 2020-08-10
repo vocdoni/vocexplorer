@@ -65,7 +65,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 }
 
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
-	latestBlockHeight := int64(0)
+	latestBlockHeight := int64(1)
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
 		log.Error(err)
@@ -114,42 +114,63 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 	batch := d.NewBatch()
 
 	i := int64(0)
+	numNewBlocks := util.Min(config.NumBlockUpdates, int(blockHeight-latestBlockHeight))
+	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
+	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
-	for ; i < config.NumBlockUpdates && i+latestBlockHeight < blockHeight; i++ {
-		go fetchBlock(i+latestBlockHeight, &latestTxHeight, &batch, c, cdc, complete)
+	for ; int(i) < numNewBlocks; i++ {
+		go fetchBlock(i+latestBlockHeight, &batch, c, cdc, complete, &txsList[i])
 	}
-	log.Debugf("Starting %d goroutines", i)
-
 	num := 0
-	// Sync: wait here for all goroutines to complete
 	if i > 0 {
+		// Sync: wait here for all goroutines to complete
 		for range complete {
-			if num >= config.NumBlockUpdates-1 || int64(num) >= blockHeight-latestBlockHeight-1 {
+			if num >= numNewBlocks-1 {
 				break
 			}
 			num++
 		}
 		log.Debugf("Setting block %d ", latestBlockHeight+i)
-		var buf bytes.Buffer
-		err = amino.EncodeInt64(&buf, latestBlockHeight+i)
-		if err != nil {
-			log.Error(err)
+
+		//TODO: don't create a goroutine for empty tx lists
+		complete = make(chan struct{}, len(txsList))
+		for _, txs := range txsList {
+			go updateTxs(latestTxHeight, txs, cdc, c, batch, complete)
+			latestTxHeight += int64(len(txs))
 		}
-		batch.Put([]byte(config.LatestBlockHeightKey), buf.Bytes())
+
+		// Sync: wait here for all goroutines to complete
+		num = 0
+		for range complete {
+			if num >= len(txsList)-1 {
+				break
+			}
+			num++
+		}
+		var txbuf bytes.Buffer
+		err := amino.EncodeInt64(&txbuf, latestTxHeight)
+		util.ErrPrint(err)
+		var blockbuf bytes.Buffer
+		err = amino.EncodeInt64(&blockbuf, latestBlockHeight+i)
+		util.ErrPrint(err)
+		batch.Put([]byte(config.LatestTxHeightKey), txbuf.Bytes())
+		batch.Put([]byte(config.LatestBlockHeightKey), blockbuf.Bytes())
 		batch.Write()
 	}
+
 }
 
-func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, cdc *amino.Codec, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
 	numTxs := int64(0)
-	for i, tx := range block.Txs {
+	var height int64
+	for i, tx := range txs {
 		numTxs = int64(i) + 1
 		txRes := rpc.GetTransaction(c, tx.Hash())
 
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 		txStore := types.StoreTx{
 			Height:   txRes.Height,
-			TxHeight: *startTxHeight + numTxs,
+			TxHeight: startTxHeight + numTxs,
 			Tx:       txRes.Tx,
 			TxResult: txRes.TxResult,
 			Index:    txRes.Index,
@@ -161,19 +182,18 @@ func updateTxs(startTxHeight *int64, block *tmtypes.Block, d *dvotedb.BadgerDB, 
 		batch.Put(txHashKey, txVal)
 		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
 		batch.Put(txHeightKey, tx.Hash())
-		log.Debugf("Log tx %d", txStore.TxHeight)
+		if i == 0 {
+			height = txRes.Height
+		}
+		startTxHeight++
 	}
 	if numTxs > 0 {
-		var buf bytes.Buffer
-		err := amino.EncodeInt64(&buf, *startTxHeight+numTxs)
-		util.ErrPrint(err)
-		batch.Put([]byte(config.LatestTxHeightKey), buf.Bytes())
-		*startTxHeight += numTxs
-		log.Debugf("%d transactions logged at block %d", numTxs+1, block.Height)
+		log.Debugf("%d transactions logged at block %d, height %d", numTxs+1, height, startTxHeight)
 	}
+	complete <- struct{}{}
 }
 
-func fetchBlock(height int64, latestTxHeight *int64, batch *dvotedb.Batch, c *tmhttp.HTTP, cdc *amino.Codec, complete chan<- struct{}) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, cdc *amino.Codec, complete chan<- struct{}, txs *tmtypes.Txs) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
@@ -182,6 +202,7 @@ func fetchBlock(height int64, latestTxHeight *int64, batch *dvotedb.Batch, c *tm
 	res, err := c.Block(&height)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
+		log.Error(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {
 				log.Fatal("Blockchain RPC Disconnected")
@@ -199,7 +220,7 @@ func fetchBlock(height int64, latestTxHeight *int64, batch *dvotedb.Batch, c *tm
 	block.Height = res.Block.Header.Height
 	block.Time = res.Block.Header.Time
 
-	// updateTxs(&latestTxHeight, res.Block, d, cdc, c, batch)
+	*txs = res.Block.Data.Txs
 
 	bodyValue, err := cdc.MarshalBinaryLengthPrefixed(block)
 	if err != nil {
