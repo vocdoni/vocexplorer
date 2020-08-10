@@ -89,8 +89,8 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 	for d == nil || d.t == nil {
 	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	d.t.TotalBlocks = int(dbapi.GetBlockHeight())
-	d.t.TotalTxs = int(dbapi.GetTxHeight())
+	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
 	updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
 	updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
 	vecty.Rerender(d)

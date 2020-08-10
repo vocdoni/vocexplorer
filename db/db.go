@@ -30,6 +30,8 @@ func NewDB(path string) (*dvotedb.BadgerDB, error) {
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
 func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
+	// Increase max idle connections. This fixes issue with too many concurrent requests, as described here: https://github.com/golang/go/issues/16012
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 5
 	ping := pingGateway(gwHost)
 	if !ping {
 		log.Warn("Gateway Client is not running. Running as detached database")
@@ -80,7 +82,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP, cdc *amino.Codec) {
 			log.Error(err)
 		}
 	}
-	latestTxHeight := int64(0)
+	latestTxHeight := int64(1)
 	has, err = d.Has([]byte(config.LatestTxHeightKey))
 	if err != nil {
 		log.Error(err)
@@ -164,7 +166,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, cdc *amino.Codec, c *tmhttp
 	numTxs := int64(0)
 	var height int64
 	for i, tx := range txs {
-		numTxs = int64(i) + 1
+		numTxs = int64(i)
 		txRes := rpc.GetTransaction(c, tx.Hash())
 
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
