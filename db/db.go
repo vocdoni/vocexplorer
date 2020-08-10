@@ -166,10 +166,10 @@ func fetchBlock(height int64, latestTxHeight *int64, batch *dvotedb.Batch, c *tm
 	}()
 	// Thread-safe api request
 	res, err := c.Block(&height)
-	// If error is returned, try the request twice more, then fatal.
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		for errs := 0; ; errs++ {
-			if errs > 1 {
+			if errs > 10 {
 				log.Fatal("Blockchain RPC Disconnected")
 				return
 			}
