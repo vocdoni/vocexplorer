@@ -77,9 +77,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	}
 	latestTxHeight := int64(1)
 	has, err = d.Has([]byte(config.LatestTxHeightKey))
-	if err != nil {
-		log.Error(err)
-	}
+	util.ErrPrint(err)
 	if has {
 		val, err := d.Get([]byte(config.LatestTxHeightKey))
 		util.ErrPrint(err)
@@ -88,7 +86,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		err = proto.Unmarshal(val, latestTxHeight)
 		util.ErrPrint(err)
 		if num <= 1 {
-			log.Debug("Could not get height")
+			log.Error("Could not get height")
 		}
 	}
 	status, err := c.Status()

@@ -11,71 +11,53 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 //GetBlockList returns a list of blocks from the database
-func GetBlockList(i int) [config.ListSize]types.StoreBlock {
+func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get("/db/listblocks/?from=" + util.IntToString(i))
 	if util.ErrPrint(err) {
-		return [config.ListSize]types.StoreBlock{}
+		return [config.ListSize]*types.StoreBlock{}
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
 	if util.ErrPrint(err) {
-		return [config.ListSize]types.StoreBlock{}
+		return [config.ListSize]*types.StoreBlock{}
 	}
-	var blockList [config.ListSize]types.StoreBlock
-	err = json.Unmarshal(body, &blockList)
+	var rawBlockList [config.ListSize][]byte
+	err = json.Unmarshal(body, &rawBlockList)
 	util.ErrPrint(err)
+	var blockList [config.ListSize]*types.StoreBlock
+	for i, rawTx := range rawBlockList {
+		err = proto.Unmarshal(rawTx, blockList[i])
+		util.ErrPrint(err)
+	}
 	return blockList
 }
 
 //GetBlock returns a single block from the database
-func GetBlock(i int64) types.StoreBlock {
+func GetBlock(i int64) *types.StoreBlock {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get("/db/block/?id=" + util.IntToString(i))
 	if util.ErrPrint(err) {
-		return types.StoreBlock{}
+		return &types.StoreBlock{}
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
 	if util.ErrPrint(err) {
-		return types.StoreBlock{}
+		return &types.StoreBlock{}
 	}
-	var block types.StoreBlock
-	err = json.Unmarshal(body, &block)
+	var block *types.StoreBlock
+	err = proto.Unmarshal(body, block)
 	util.ErrPrint(err)
 	return block
 }
-
-// //GetBlockHash returns the hash of the block with the given height
-// func GetBlockHash(i int) string {
-// 	// resp, err := http.Get("/db/hash/?key=" + config.BlockHeightPrefix + util.IntToString(i))
-// 	c := &http.Client{
-// 		Timeout: 10 * time.Second,
-// 	}
-// 	resp, err := c.Get("/db/hash/?key=0220")
-// 	if util.ErrPrint(err) {
-// 		return ""
-// 	}
-// 	defer resp.Body.Close()
-// 	if resp.StatusCode != 200 {
-// 		log.Errorf("Request not valid")
-// 		return ""
-// 	}
-// 	hash, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-// 	if util.ErrPrint(err) {
-// 		return ""
-// 	}
-// 	fmt.Println("Got hash")
-
-// 	return string(hash)
-// }
 
 //GetBlockHeight returns the latest block height stored by the database
 func GetBlockHeight() int64 {
@@ -95,33 +77,38 @@ func GetBlockHeight() int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	var height int64
-	err = json.Unmarshal(body, &height)
+	var height types.Height
+	err = proto.Unmarshal(body, &height)
 	util.ErrPrint(err)
-	return height
+	return height.GetHeight()
 }
 
 //GetTxList returns a list of transactions from the database
-func GetTxList(from int) [config.ListSize]types.SendTx {
+func GetTxList(from int) [config.ListSize]*types.SendTx {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get("/db/listtxs/?from=" + util.IntToString(from))
 	if util.ErrPrint(err) {
-		return [config.ListSize]types.SendTx{}
+		return [config.ListSize]*types.SendTx{}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		log.Errorf("Request not valid")
-		return [config.ListSize]types.SendTx{}
+		return [config.ListSize]*types.SendTx{}
 	}
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
 	if util.ErrPrint(err) {
-		return [config.ListSize]types.SendTx{}
+		return [config.ListSize]*types.SendTx{}
 	}
-	var txList [config.ListSize]types.SendTx
-	err = json.Unmarshal(body, &txList)
+	var rawTxList [config.ListSize][]byte
+	err = json.Unmarshal(body, &rawTxList)
 	util.ErrPrint(err)
+	var txList [config.ListSize]*types.SendTx
+	for i, rawTx := range rawTxList {
+		err = proto.Unmarshal(rawTx, txList[i])
+		util.ErrPrint(err)
+	}
 	return txList
 }
 
@@ -143,10 +130,10 @@ func GetTx(height int64) *types.SendTx {
 	if util.ErrPrint(err) {
 		return &types.SendTx{}
 	}
-	var tx types.SendTx
-	err = json.Unmarshal(body, &tx)
+	var tx *types.SendTx
+	err = proto.Unmarshal(body, tx)
 	util.ErrPrint(err)
-	return &tx
+	return tx
 }
 
 //GetTxHeight returns the latest tx height stored by the database
@@ -167,8 +154,8 @@ func GetTxHeight() int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	var height int64
-	err = json.Unmarshal(body, &height)
+	var height types.Height
+	err = proto.Unmarshal(body, &height)
 	util.ErrPrint(err)
-	return height
+	return height.GetHeight()
 }

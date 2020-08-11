@@ -107,10 +107,6 @@ func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.R
 		raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
 		util.ErrPrint(err)
 
-		// var block types.StoreBlock
-		// err = proto.Unmarshal(raw, &block)
-		// util.ErrPrint(err)
-
 		w.Write(raw)
 		log.Debugf("Sent block %s", id)
 	}
