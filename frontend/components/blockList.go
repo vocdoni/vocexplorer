@@ -1,10 +1,8 @@
 package components
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -132,7 +130,7 @@ func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetHash()))),
+						vecty.Text(util.HexToString(block.GetHash())),
 					),
 				),
 				elem.Div(
@@ -142,7 +140,7 @@ func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetProposer()))),
+						vecty.Text(util.HexToString(block.GetProposer())),
 					),
 				),
 			),
