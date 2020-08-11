@@ -94,8 +94,13 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 		data = []vecty.MarkupOrChild{vecty.Text("No transactions")}
 	}
 	transactions := elem.Preformatted(data...)
-	evidence, err := json.MarshalIndent(block.Evidence, "", "    ")
-	util.ErrPrint(err)
+	var evidence []byte
+	if len(block.Evidence.Evidence) > 0 {
+		evidence, err = json.MarshalIndent(block.Evidence, "", "    ")
+		util.ErrPrint(err)
+	} else {
+		evidence = []byte("No evidence")
+	}
 	commit, err := json.MarshalIndent(block.LastCommit, "", "    ")
 	util.ErrPrint(err)
 	accordionName := "accordionBlock"

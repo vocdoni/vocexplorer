@@ -56,10 +56,10 @@ func GetBlock(i int64) *types.StoreBlock {
 	if util.ErrPrint(err) {
 		return &types.StoreBlock{}
 	}
-	var block *types.StoreBlock
-	err = proto.Unmarshal(body, block)
+	var block types.StoreBlock
+	err = proto.Unmarshal(body, &block)
 	util.ErrPrint(err)
-	return block
+	return &block
 }
 
 //GetBlockHeight returns the latest block height stored by the database
@@ -139,12 +139,12 @@ func GetTx(height int64) *types.SendTx {
 	if util.ErrPrint(err) {
 		return &types.SendTx{}
 	}
-	var tx *types.SendTx
+	var tx types.SendTx
 	if len(body) > 0 {
-		err = proto.Unmarshal(body, tx)
+		err = proto.Unmarshal(body, &tx)
 		util.ErrPrint(err)
 	}
-	return tx
+	return &tx
 }
 
 //GetTxHeight returns the latest tx height stored by the database
