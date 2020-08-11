@@ -29,6 +29,7 @@ func newConfig() (*config.MainCfg, error) {
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
 	cfg.Global.GatewayHost = *flag.String("gatewayHost", "0.0.0.0:9090", "gateway API host to connect to")
+	cfg.Global.GatewaySocket = *flag.String("gatewaySocket", "/dvote", "gateway API host socket to connect to")
 	cfg.Global.TendermintHost = *flag.String("tendermintHost", "0.0.0.0:26657", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
@@ -53,6 +54,7 @@ func newConfig() (*config.MainCfg, error) {
 	viper.AddConfigPath(cfg.DataDir)
 
 	viper.BindPFlag("global.gatewayHost", flag.Lookup("gatewayHost"))
+	viper.BindPFlag("global.gatewaySocket", flag.Lookup("gatewaySocket"))
 	viper.BindPFlag("global.tendermintHost", flag.Lookup("tendermintHost"))
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
@@ -101,7 +103,16 @@ func main() {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
 	}
 
-	d, err := db.NewDB(cfg.DataDir)
+	// Get ChainID for db directory
+	tmClient, ok := db.StartTendermint(cfg.Global.TendermintHost)
+	if !ok {
+		log.Fatal("Cannot connect to tendermint client")
+	}
+	gen, err := tmClient.Genesis()
+	util.ErrPrint(err)
+	chainID := gen.Genesis.ChainID
+
+	d, err := db.NewDB(cfg.DataDir, chainID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,9 +129,9 @@ func main() {
 		if len(sub) < 1 {
 			port = sub[1]
 		}
-		cfg.Global.GatewayHost = "ws://localhost:" + port + "/dvote"
+		cfg.Global.GatewayHost = "ws://localhost:" + port + cfg.Global.GatewaySocket
 	} else {
-		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + "/dvote"
+		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + cfg.Global.GatewaySocket
 	}
 
 	//Convert host url to localhost if using internal docker network

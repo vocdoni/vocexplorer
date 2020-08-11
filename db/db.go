@@ -24,9 +24,9 @@ import (
 )
 
 // NewDB initializes a badger database at the given path
-func NewDB(path string) (*dvotedb.BadgerDB, error) {
-	log.Infof("Initializing database")
-	return dvotedb.NewBadgerDB(path)
+func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
+	log.Infof("Initializing database at " + path + "/" + chainID)
+	return dvotedb.NewBadgerDB(path + "/" + chainID)
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
@@ -38,20 +38,13 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 		return
 	}
 	// Init tendermint client
-	tClient, up := startTendermint(tmHost)
+	tClient, up := StartTendermint(tmHost)
 	if !up {
 		log.Warn("Cannot connect to tendermint client. Running as detached database")
 		return
 	}
 
-	// Init Gateway client
-	// gwClient, cancel, up := startGateway(cfg)
-	// if !up {
-	// 	log.Warn("Cannot connect to gateway client. Running as detached database")
-	// 	return
-	// }
-
-	log.Debugf("Connected")
+	log.Debugf("Connected to " + tmHost)
 	// defer (*cancel)()
 
 	for {
@@ -325,7 +318,7 @@ func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
 	}
 }
 
-func startTendermint(host string) (*tmhttp.HTTP, bool) {
+func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 	for i := 0; ; i++ {
 		if i > 20 {
 			return nil, false
