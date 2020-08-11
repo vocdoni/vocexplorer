@@ -172,3 +172,24 @@ func GetTxHeight() int64 {
 	}
 	return height.GetHeight()
 }
+
+//TODO: make this c.get call actually return a validator
+//GetValidator returns a single validator from the database
+func GetValidator(address string) *types.Validator {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/validator/?id=" + address)
+	if util.ErrPrint(err) {
+		return &types.Validator{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return &types.Validator{}
+	}
+	var validator types.Validator
+	err = proto.Unmarshal(body, &validator)
+	util.ErrPrint(err)
+	return &validator
+}
