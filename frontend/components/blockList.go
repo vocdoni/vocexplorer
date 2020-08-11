@@ -140,7 +140,12 @@ func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(block.GetProposer())),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/validators/"+util.HexToString(block.GetProposer())),
+							),
+							vecty.Text(util.HexToString(block.GetProposer())),
+						),
 					),
 				),
 			),

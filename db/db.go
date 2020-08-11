@@ -181,6 +181,7 @@ func fetchValidators(height int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 		}
 		page++
 	}
+	// Cast each validator as storage struct, marshal, write to batch
 	for i, validator := range resultValidators.Validators {
 		var storeValidator types.Validator
 		storeValidator.Address = validator.Address

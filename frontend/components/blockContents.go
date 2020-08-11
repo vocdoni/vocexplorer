@@ -66,8 +66,12 @@ func renderBlockHeader(numTxs int, hash, proposer tmbytes.HexBytes, height int64
 						vecty.Text("Proposer Address"),
 					),
 					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(proposer.String()),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/validators/"+proposer.String()),
+							),
+							vecty.Text(proposer.String()),
+						),
 					),
 				),
 			),
