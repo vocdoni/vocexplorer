@@ -43,8 +43,14 @@ const (
 	TxHeightPrefix = "04"
 	//TxHashPrefix is the key prefix for transactions by hash
 	TxHashPrefix = "05"
+	//ValidatorPrefix is the key prefix for validators by address
+	ValidatorPrefix = "06"
+	//ValHeightPrefix is the key prefix for validators by height
+	ValHeightPrefix = "07"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored
 	LatestTxHeightKey = "LatestTxHeight"
+	//LatestValidatorHeightKey is the key for the value of the latest validator height stored
+	LatestValidatorHeightKey = "LatestValHeight"
 )

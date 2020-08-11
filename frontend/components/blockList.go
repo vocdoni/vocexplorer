@@ -135,6 +135,16 @@ func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
 						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetHash()))),
 					),
 				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Proposer"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetProposer()))),
+					),
+				),
 			),
 		),
 	)
