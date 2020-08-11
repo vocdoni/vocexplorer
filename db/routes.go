@@ -102,7 +102,6 @@ func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.R
 			return
 		}
 		id := ids[0]
-
 		key := []byte(config.BlockHeightPrefix + id)
 		hash, err := db.Get(key)
 		if err != nil {

@@ -215,7 +215,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	}
 
 	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
-	blockHashKey := append([]byte(config.BlockHashPrefix), block.Hash...)
+	blockHashKey := append([]byte(config.BlockHashPrefix), block.GetHash()...)
 	hashValue := block.Hash
 
 	// Thread-safe batch operations

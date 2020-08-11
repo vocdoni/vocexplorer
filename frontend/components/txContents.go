@@ -11,6 +11,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/xeonx/timeago"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -28,12 +29,14 @@ type TxContents struct {
 // Render renders the TxContents component
 func (contents *TxContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		tenderFullTx(contents.Tx, contents.Time, contents.HasBlock),
+		renderFullTx(contents.Tx, contents.Time, contents.HasBlock),
 	)
 }
 
-func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
-	result, err := json.MarshalIndent(tx.Store.TxResult, "", "    ")
+func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
+	var txResult coretypes.ResultTx
+	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
+	result, err := json.MarshalIndent(txResult, "", "    ")
 	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
 	err = json.Unmarshal(tx.Store.Tx, &rawTx)
