@@ -17,7 +17,7 @@ import (
 // TendermintInfo holds tendermint api results
 type TendermintInfo struct {
 	AppVersion    int
-	BlockList     [config.ListSize]types.StoreBlock
+	BlockList     [config.ListSize]*types.StoreBlock
 	ChainID       int
 	Genesis       *tmtypes.GenesisDoc
 	MaxBlockSize  int
@@ -25,7 +25,7 @@ type TendermintInfo struct {
 	ResultStatus  *coretypes.ResultStatus
 	TotalBlocks   int
 	TotalTxs      int
-	TxList        [config.ListSize]types.SendTx
+	TxList        [config.ListSize]*types.SendTx
 }
 
 // StartClient initializes an http tendermint api client on websockets

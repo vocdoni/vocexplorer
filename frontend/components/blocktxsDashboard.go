@@ -38,7 +38,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 				),
 				vecty.If(int(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)-dash.t.TotalBlocks > 1,
 					elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-						vecty.Text("Still Syncing With Gateway... "+util.IntToString(dash.t.TotalBlocks+1)+" Blocks Stored")),
+						vecty.Text("Still Syncing With Gateway... "+util.IntToString(dash.t.TotalBlocks)+" Blocks Stored")),
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("card-col-3")),

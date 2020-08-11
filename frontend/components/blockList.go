@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
@@ -77,7 +78,7 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 
 	empty := p.ListSize
 	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
-		if types.BlockIsEmpty(&t.BlockList[i]) {
+		if types.BlockIsEmpty(t.BlockList[i]) {
 			empty--
 		}
 		block := t.BlockList[i]
@@ -94,9 +95,13 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 	)
 }
 
-func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
-	tm, err := ptypes.Timestamp(block.GetTime())
-	util.ErrPrint(err)
+func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
+	var tm time.Time
+	var err error
+	if block.GetTime() != nil {
+		tm, err = ptypes.Timestamp(block.GetTime())
+		util.ErrPrint(err)
+	}
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -104,9 +109,9 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/blocks/"+util.IntToString(block.Height)),
+						vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 					),
-					vecty.Text(util.IntToString(block.Height)),
+					vecty.Text(util.IntToString(block.GetHeight())),
 				),
 			),
 			elem.Div(
@@ -114,7 +119,7 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(util.IntToString(block.NumTxs)+" transactions"),
+						vecty.Text(util.IntToString(block.GetNumTxs())+" transactions"),
 					),
 					elem.Div(
 						vecty.Text(timeago.English.Format(tm)),

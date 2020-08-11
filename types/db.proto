@@ -28,3 +28,7 @@ message SendTx {
     bytes Hash = 1;
     StoreTx Store = 2;
 }
+
+message ItemList {
+    repeated bytes items = 1;
+}

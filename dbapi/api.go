@@ -1,7 +1,6 @@
 package dbapi
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -28,13 +27,17 @@ func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
 	if util.ErrPrint(err) {
 		return [config.ListSize]*types.StoreBlock{}
 	}
-	var rawBlockList [config.ListSize][]byte
-	err = json.Unmarshal(body, &rawBlockList)
+	var rawBlockList types.ItemList
+	err = proto.Unmarshal(body, &rawBlockList)
 	util.ErrPrint(err)
 	var blockList [config.ListSize]*types.StoreBlock
-	for i, rawTx := range rawBlockList {
-		err = proto.Unmarshal(rawTx, blockList[i])
-		util.ErrPrint(err)
+	for i, rawBlock := range rawBlockList.GetItems() {
+		if len(rawBlock) > 0 {
+			var block types.StoreBlock
+			err = proto.Unmarshal(rawBlock, &block)
+			blockList[i] = &block
+			util.ErrPrint(err)
+		}
 	}
 	return blockList
 }
@@ -78,8 +81,10 @@ func GetBlockHeight() int64 {
 		return 0
 	}
 	var height types.Height
-	err = proto.Unmarshal(body, &height)
-	util.ErrPrint(err)
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
 	return height.GetHeight()
 }
 
@@ -101,13 +106,17 @@ func GetTxList(from int) [config.ListSize]*types.SendTx {
 	if util.ErrPrint(err) {
 		return [config.ListSize]*types.SendTx{}
 	}
-	var rawTxList [config.ListSize][]byte
-	err = json.Unmarshal(body, &rawTxList)
+	var rawTxList types.ItemList
+	err = proto.Unmarshal(body, &rawTxList)
 	util.ErrPrint(err)
 	var txList [config.ListSize]*types.SendTx
-	for i, rawTx := range rawTxList {
-		err = proto.Unmarshal(rawTx, txList[i])
-		util.ErrPrint(err)
+	for i, rawTx := range rawTxList.GetItems() {
+		if len(rawTx) > 0 {
+			var tx types.SendTx
+			err = proto.Unmarshal(rawTx, &tx)
+			util.ErrPrint(err)
+			txList[i] = &tx
+		}
 	}
 	return txList
 }
@@ -131,8 +140,10 @@ func GetTx(height int64) *types.SendTx {
 		return &types.SendTx{}
 	}
 	var tx *types.SendTx
-	err = proto.Unmarshal(body, tx)
-	util.ErrPrint(err)
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, tx)
+		util.ErrPrint(err)
+	}
 	return tx
 }
 
@@ -155,7 +166,9 @@ func GetTxHeight() int64 {
 		return 0
 	}
 	var height types.Height
-	err = proto.Unmarshal(body, &height)
-	util.ErrPrint(err)
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
 	return height.GetHeight()
 }

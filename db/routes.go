@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -29,8 +28,12 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			http.Error(w, "Key not found", 404)
 			return
 		}
+
+		var height types.Height
+		err = proto.Unmarshal(val, &height)
+		log.Debug("Sent height " + util.IntToString(height.GetHeight()) + " for key " + keys[0])
+
 		w.Write(val)
-		log.Debugf("Sent height")
 	}
 }
 
@@ -76,15 +79,16 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 			http.Error(w, "No blocks available", 404)
 			return
 		}
-		var rawBlocks [config.ListSize][]byte
-		for i, hash := range hashes {
-			rawBlocks[i], err = db.Get(append([]byte(config.BlockHashPrefix), hash...))
+		var rawBlocks types.ItemList
+		for _, hash := range hashes {
+			rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+			rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
 			util.ErrPrint(err)
 		}
 
-		msg, err := json.Marshal(rawBlocks)
+		msg, err := proto.Marshal(&rawBlocks)
 		w.Write(msg)
-		log.Debugf("Sent %d blocks", len(rawBlocks))
+		log.Debugf("Sent %d blocks", len(rawBlocks.GetItems()))
 	}
 }
 
@@ -129,28 +133,25 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			http.Error(w, "No txs available", 404)
 			return
 		}
-		var rawTxs [][]byte
+		var rawTxs types.ItemList
 		for _, hash := range hashes {
-			raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
+			rawTx, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 			util.ErrPrint(err)
-
 			var tx types.StoreTx
-			err = proto.Unmarshal(raw, &tx)
+			err = proto.Unmarshal(rawTx, &tx)
 			util.ErrPrint(err)
-
 			send := types.SendTx{
 				Hash:  hash,
 				Store: &tx,
 			}
-			rawTx, err := proto.Marshal(&send)
+			rawSend, err := proto.Marshal(&send)
 			util.ErrPrint(err)
-			rawTxs = append(rawTxs, rawTx)
+			rawTxs.Items = append(rawTxs.GetItems(), rawSend)
+			util.ErrPrint(err)
 		}
-
-		msg, err := json.Marshal(rawTxs)
-		util.ErrPrint(err)
+		msg, err := proto.Marshal(&rawTxs)
 		w.Write(msg)
-		log.Debugf("Sent %d txs", len(rawTxs))
+		log.Debugf("Sent %d txs", len(rawTxs.GetItems()))
 	}
 }
 

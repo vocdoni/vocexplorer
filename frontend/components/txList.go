@@ -1,9 +1,11 @@
 package components
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
@@ -76,12 +78,11 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 
 	empty := p.ListSize
 	for i := p.ListSize - 1; i >= 0; i-- {
-		if t.TxList[i].IsEmpty() {
+		if types.TxIsEmpty(t.TxList[i]) {
 			empty--
-		}
-		tx := t.TxList[i]
-		if !tx.IsEmpty() {
-			txList = append(txList, renderTx(&tx))
+		} else {
+			tx := t.TxList[i]
+			txList = append(txList, renderTx(tx))
 		}
 	}
 	if empty == 0 {
@@ -129,7 +130,7 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(tx.Hash.String()),
+						vecty.Text(strings.ToUpper(hex.EncodeToString(tx.GetHash()))),
 					),
 				),
 				vecty.If(rawTx.Type != "",

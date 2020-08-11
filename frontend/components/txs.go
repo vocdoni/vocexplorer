@@ -41,7 +41,7 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 		&TxContents{
 			Tx:       tx,
 			Time:     tm,
-			HasBlock: !types.BlockIsEmpty(&block),
+			HasBlock: !types.BlockIsEmpty(block),
 		},
 	)
 }

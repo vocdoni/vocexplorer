@@ -63,7 +63,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 }
 
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
-	latestBlockHeight := int64(1)
+	latestBlockHeight := &types.Height{Height: 1}
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
 		log.Error(err)
@@ -71,23 +71,18 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	if has {
 		val, err := d.Get([]byte(config.LatestBlockHeightKey))
 		util.ErrPrint(err)
-		latestBlockHeight := &types.Height{}
 		err = proto.Unmarshal(val, latestBlockHeight)
 		util.ErrPrint(err)
 	}
-	latestTxHeight := int64(1)
+
+	latestTxHeight := &types.Height{Height: 1}
 	has, err = d.Has([]byte(config.LatestTxHeightKey))
 	util.ErrPrint(err)
 	if has {
 		val, err := d.Get([]byte(config.LatestTxHeightKey))
 		util.ErrPrint(err)
-		num := 0
-		latestTxHeight := &types.Height{}
 		err = proto.Unmarshal(val, latestTxHeight)
 		util.ErrPrint(err)
-		if num <= 1 {
-			log.Error("Could not get height")
-		}
 	}
 	status, err := c.Status()
 	if err != nil {
@@ -96,7 +91,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	blockHeight := status.SyncInfo.LatestBlockHeight
 
 	// Wait for new blocks to be available
-	for blockHeight-latestBlockHeight < 1 {
+	for blockHeight-latestBlockHeight.GetHeight() < 1 {
 		time.Sleep(500 * time.Millisecond)
 		status, err := c.Status()
 		if err != nil {
@@ -108,12 +103,12 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	batch := d.NewBatch()
 
 	i := int64(0)
-	numNewBlocks := util.Min(config.NumBlockUpdates, int(blockHeight-latestBlockHeight))
+	numNewBlocks := util.Min(config.NumBlockUpdates, int(blockHeight-latestBlockHeight.GetHeight()))
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
 	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight, &batch, c, complete, &txsList[i])
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, &txsList[i])
 	}
 	num := 0
 	if i > 0 {
@@ -124,13 +119,13 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 			}
 			num++
 		}
-		log.Debugf("Setting block %d ", latestBlockHeight+i)
+		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
 		//TODO: don't create a goroutine for empty tx lists
 		complete = make(chan struct{}, len(txsList))
 		for _, txs := range txsList {
-			go updateTxs(latestTxHeight, txs, c, batch, complete)
-			latestTxHeight += int64(len(txs))
+			go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete)
+			latestTxHeight.Height += int64(len(txs))
 		}
 
 		// Sync: wait here for all goroutines to complete
@@ -141,15 +136,15 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 			}
 			num++
 		}
-		blockHeight := types.Height{Height: latestBlockHeight + i}
-		txHeight := types.Height{Height: latestTxHeight}
+		blockHeight := types.Height{Height: latestBlockHeight.GetHeight() + i}
+		txHeight := types.Height{Height: latestTxHeight.GetHeight()}
 		encBlockHeight, err := proto.Marshal(&blockHeight)
 		util.ErrPrint(err)
 		encTxHeight, err := proto.Marshal(&txHeight)
 		util.ErrPrint(err)
 
-		batch.Put([]byte(config.LatestTxHeightKey), encBlockHeight)
-		batch.Put([]byte(config.LatestBlockHeightKey), encTxHeight)
+		batch.Put([]byte(config.LatestTxHeightKey), encTxHeight)
+		batch.Put([]byte(config.LatestBlockHeightKey), encBlockHeight)
 		batch.Write()
 	}
 
@@ -177,7 +172,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 		util.ErrPrint(err)
 		util.ErrPrint(err)
 		batch.Put(txHashKey, txVal)
-		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.TxHeight))
+		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.GetTxHeight()))
 		batch.Put(txHeightKey, tx.Hash())
 		if i == 0 {
 			height = txRes.Height
@@ -226,7 +221,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 		log.Error(err)
 	}
 
-	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.Height))...)
+	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
 	blockHashKey := append([]byte(config.BlockHashPrefix), block.Hash...)
 	hashValue := block.Hash
 
