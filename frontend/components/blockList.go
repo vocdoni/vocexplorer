@@ -1,9 +1,13 @@
 package components
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
@@ -18,10 +22,10 @@ import (
 // BlockList is the block list component
 type BlockList struct {
 	vecty.Core
-	t             *rpc.TendermintInfo
 	currentPage   int
-	refreshCh     chan int
 	disableUpdate *bool
+	refreshCh     chan int
+	t             *rpc.TendermintInfo
 }
 
 // Render renders the block list component
@@ -74,7 +78,7 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 
 	empty := p.ListSize
 	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
-		if t.BlockList[i].IsEmpty() {
+		if types.BlockIsEmpty(t.BlockList[i]) {
 			empty--
 		}
 		block := t.BlockList[i]
@@ -91,7 +95,13 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 	)
 }
 
-func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
+func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
+	var tm time.Time
+	var err error
+	if block.GetTime() != nil {
+		tm, err = ptypes.Timestamp(block.GetTime())
+		util.ErrPrint(err)
+	}
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -99,9 +109,9 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/blocks/"+util.IntToString(block.Height)),
+						vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 					),
-					vecty.Text(util.IntToString(block.Height)),
+					vecty.Text(util.IntToString(block.GetHeight())),
 				),
 			),
 			elem.Div(
@@ -109,10 +119,10 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(util.IntToString(block.NumTxs)+" transactions"),
+						vecty.Text(util.IntToString(block.GetNumTxs())+" transactions"),
 					),
 					elem.Div(
-						vecty.Text(timeago.English.Format(block.Time)),
+						vecty.Text(timeago.English.Format(tm)),
 					),
 				),
 				elem.Div(
@@ -122,7 +132,7 @@ func renderBlock(block types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(block.Hash.String()),
+						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetHash()))),
 					),
 				),
 			),

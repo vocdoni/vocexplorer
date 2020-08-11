@@ -2,7 +2,9 @@ package components
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"strings"
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
@@ -18,9 +20,9 @@ import (
 // TxContents renders tx contents
 type TxContents struct {
 	vecty.Core
-	Tx       *types.SendTx
-	Time     time.Time
 	HasBlock bool
+	Time     time.Time
+	Tx       *types.SendTx
 }
 
 // Render renders the TxContents component
@@ -131,7 +133,7 @@ func tenderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(tx.Hash.String()),
+						vecty.Text(strings.ToUpper(hex.EncodeToString(tx.GetHash()))),
 					),
 					vecty.If(
 						!tm.IsZero(),

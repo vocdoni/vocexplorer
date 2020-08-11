@@ -19,13 +19,13 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	t          *rpc.TendermintInfo
-	vc         *client.VochainInfo
+	blockIndex int
 	gwClient   *client.Client
-	tClient    *http.HTTP
 	quitCh     chan struct{}
 	refreshCh  chan int
-	blockIndex int
+	t          *rpc.TendermintInfo
+	tClient    *http.HTTP
+	vc         *client.VochainInfo
 }
 
 // Render renders the DashboardView component

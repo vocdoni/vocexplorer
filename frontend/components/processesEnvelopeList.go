@@ -15,10 +15,10 @@ import (
 // EnvelopeListView renders the envelope list pane
 type EnvelopeListView struct {
 	vecty.Core
-	process        *client.FullProcessInfo
 	envelopeIDs    []string
 	envelopesIndex int
 	numEnvelopes   int
+	process        *client.FullProcessInfo
 }
 
 // Render renders the EnvelopeListView component

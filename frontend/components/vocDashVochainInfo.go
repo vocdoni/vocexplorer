@@ -16,12 +16,12 @@ import (
 // VochainInfoView renders the vochainInfo pane
 type VochainInfoView struct {
 	vecty.Core
-	vc             *client.VochainInfo
-	processesIndex int
-	numProcesses   int
 	entitiesIndex  int
 	numEntities    int
+	numProcesses   int
+	processesIndex int
 	refreshCh      chan bool
+	vc             *client.VochainInfo
 }
 
 // Render renders the VochainInfoView component

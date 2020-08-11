@@ -9,8 +9,8 @@ import (
 
 type Jumbotron struct {
 	vecty.Core
-	vc *client.VochainInfo
 	t  *rpc.TendermintInfo
+	vc *client.VochainInfo
 }
 
 func JumboStatTitle(t string) vecty.ComponentOrHTML {

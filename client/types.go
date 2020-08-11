@@ -16,14 +16,14 @@ type Client struct {
 
 // RequestMessage holds a decoded request but does not decode the body. from go-dvote
 type RequestMessage struct {
+	ID          string          `json:"id"`
 	MetaRequest json.RawMessage `json:"request"`
-
-	ID        string `json:"id"`
-	Signature string `json:"signature"`
+	Signature   string          `json:"signature"`
 }
 
 // MetaRequest holds a gateway api request, from go-dvote/types
 type MetaRequest struct {
+	// Payload    *VoteTx  `json:"payload,omitempty"`
 	CensusID   string   `json:"censusId,omitempty"`
 	CensusURI  string   `json:"censusUri,omitempty"`
 	ClaimData  string   `json:"claimData,omitempty"`
@@ -37,16 +37,15 @@ type MetaRequest struct {
 	Method     string   `json:"method"`
 	Name       string   `json:"name,omitempty"`
 	Nullifier  string   `json:"nullifier,omitempty"`
-	// Payload    *VoteTx  `json:"payload,omitempty"`
-	ProcessID string   `json:"processId,omitempty"`
-	ProofData string   `json:"proofData,omitempty"`
-	PubKeys   []string `json:"pubKeys,omitempty"`
-	RawTx     string   `json:"rawTx,omitempty"`
-	RootHash  string   `json:"rootHash,omitempty"`
-	Signature string   `json:"signature,omitempty"`
-	Timestamp int32    `json:"timestamp"`
-	Type      string   `json:"type,omitempty"`
-	URI       string   `json:"uri,omitempty"`
+	ProcessID  string   `json:"processId,omitempty"`
+	ProofData  string   `json:"proofData,omitempty"`
+	PubKeys    []string `json:"pubKeys,omitempty"`
+	RawTx      string   `json:"rawTx,omitempty"`
+	RootHash   string   `json:"rootHash,omitempty"`
+	Signature  string   `json:"signature,omitempty"`
+	Timestamp  int32    `json:"timestamp"`
+	Type       string   `json:"type,omitempty"`
+	URI        string   `json:"uri,omitempty"`
 }
 
 // ResponseMessage wraps an api response, from go-dvote/types
@@ -99,27 +98,27 @@ type VochainInfo struct {
 	APIList           []string
 	BlockTime         *[5]int32
 	BlockTimeStamp    int32
+	Entities          []EntityInfo
+	EntityIDs         []string
+	EntitySearchIDs   []string
+	EnvelopeHeights   map[string]int64
+	Envelopes         []EnvelopeInfo
 	Health            int32
 	Height            int64
 	Ok                bool
 	ProcessIDs        []string
-	Entities          []EntityInfo
-	EntityIDs         []string
-	Envelopes         []EnvelopeInfo
-	Timestamp         int32
-	Processes         []ProcessInfo
-	EntitySearchIDs   []string
 	ProcessSearchIDs  []string
 	ProcessSearchList map[string]ProcessInfo
-	EnvelopeHeights   map[string]int64
+	Processes         []ProcessInfo
+	Timestamp         int32
 }
 
 // EntityInfo holds info about one vochain entity
 type EntityInfo struct {
-	ProcessIDs       []string
-	ProcessSearchIDs []string
-	ProcessList      map[string]ProcessInfo
 	EnvelopeHeights  map[string]int64
+	ProcessIDs       []string
+	ProcessList      map[string]ProcessInfo
+	ProcessSearchIDs []string
 }
 
 // EnvelopeInfo holds info about one vochain envelope
@@ -132,15 +131,15 @@ type EnvelopeInfo struct {
 
 // ProcessInfo holds info about one vochain process
 type ProcessInfo struct {
-	State       string
 	ProcessType string
+	State       string
 }
 
 // FullProcessInfo holds info about one vochain process, including votes and results
 
 type FullProcessInfo struct {
 	Nullifiers  []string
+	ProcessType string
 	Results     [][]uint32
 	State       string
-	ProcessType string
 }
