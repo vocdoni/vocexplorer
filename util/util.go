@@ -31,6 +31,12 @@ func MsToString(ms int32) string {
 	return fmt.Sprintf("%02d:%02d:%04d", minutes, seconds, ms)
 }
 
+func MsToSecondsString(ms int32) string {
+	seconds := ms / 1000
+	seconds = seconds % 60
+	return fmt.Sprintf("%02d", seconds)
+}
+
 // IntToString takes an int32, int64, or int, and returns a string
 func IntToString(val interface{}) string {
 	if i, ok := val.(int); ok {
