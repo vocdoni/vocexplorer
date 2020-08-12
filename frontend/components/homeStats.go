@@ -3,6 +3,7 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
@@ -16,12 +17,18 @@ type StatsView struct {
 	vc          *client.VochainInfo
 	currentPage int
 	refreshCh   chan int
+	gwClient    *client.Client
 }
 
 // Render renders the StatsView component
 func (b *StatsView) Render() vecty.ComponentOrHTML {
 	if b.t != nil && b.vc != nil {
 		return elem.Section(
+			vecty.Markup(
+				event.BeforeUnload(func(i *vecty.Event) {
+					b.gwClient.Close()
+				}),
+			),
 			&Jumbotron{
 				vc: b.vc,
 				t:  b.t,

@@ -31,7 +31,7 @@ type BlockTxsDashboardView struct {
 // Render renders the BlockTxsDashboardView component
 func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.tClient != nil && dash.t != nil && dash.t.ResultStatus != nil {
-		return elem.Main(
+		return vecty.List(vecty.List{
 			elem.Div(
 				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
 					vecty.Text("Current Block Height: "+util.IntToString(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)),
@@ -45,7 +45,6 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 					vecty.Text("Total Txs: "+util.IntToString(dash.t.TotalTxs)),
 				),
 			),
-			vecty.Markup(vecty.Class("home")),
 			&BlockList{
 				t:             dash.t,
 				refreshCh:     dash.blockRefresh,
@@ -56,7 +55,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 				refreshCh:     dash.txRefresh,
 				disableUpdate: &dash.disableTxsUpdate,
 			},
-		)
+		})
 	}
 	return vecty.Text("Connecting to blockchain clients")
 }
