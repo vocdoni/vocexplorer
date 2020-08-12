@@ -2,7 +2,6 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
@@ -20,8 +19,5 @@ func (home *HomeView) Render() vecty.ComponentOrHTML {
 	var t rpc.TendermintInfo
 	var vc client.VochainInfo
 	var dash components.DashboardView
-	return elem.Div(
-		&components.Header{},
-		components.InitDashboardView(&t, &vc, &dash, home.Cfg),
-	)
+	return components.InitDashboardView(&t, &vc, &dash, home.Cfg)
 }

@@ -37,12 +37,9 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	}
 	tm, err := ptypes.Timestamp(block.GetTime())
 	util.ErrPrint(err)
-	return elem.Div(
-		&components.Header{},
-		&components.TxContents{
-			Tx:       tx,
-			Time:     tm,
-			HasBlock: !types.BlockIsEmpty(block),
-		},
-	)
+	return &components.TxContents{
+		Tx:       tx,
+		Time:     tm,
+		HasBlock: !types.BlockIsEmpty(block),
+	}
 }

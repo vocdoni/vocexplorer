@@ -27,6 +27,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/blocktxs", indexHandler)
 	m.HandleFunc("/blocks/{id}", indexHandler)
 	m.HandleFunc("/txs/{id}", indexHandler)
+	m.HandleFunc("/stats", indexHandler)
 
 	// API Routes
 	m.HandleFunc("/config", configHandler(cfg))

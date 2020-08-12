@@ -33,11 +33,8 @@ func (home *BlocksView) Render() vecty.ComponentOrHTML {
 			elem.Main(vecty.Text("Block not available")),
 		)
 	}
-	return elem.Div(
-		&components.Header{},
-		&components.BlockContents{
-			Block: block.Block,
-			Hash:  block.BlockID.Hash,
-		},
-	)
+	return &components.BlockContents{
+		Block: block.Block,
+		Hash:  block.BlockID.Hash,
+	}
 }

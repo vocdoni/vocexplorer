@@ -2,7 +2,6 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
@@ -18,10 +17,5 @@ type VocDashView struct {
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	var vc client.VochainInfo
 	var dash components.VocDashDashboardView
-	return elem.Div(
-		&components.Header{},
-		elem.Main(
-			components.InitVocDashDashboardView(&vc, &dash, home.Cfg),
-		),
-	)
+	return components.InitVocDashDashboardView(&vc, &dash, home.Cfg)
 }

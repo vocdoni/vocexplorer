@@ -79,6 +79,15 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 							vecty.Text("Blocks & Transactions"),
 						),
 					),
+					elem.ListItem(
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Class("nav-link"),
+								vecty.Attribute("href", "/stats"),
+							),
+							vecty.Text("Stats"),
+						),
+					),
 				),
 			),
 		),

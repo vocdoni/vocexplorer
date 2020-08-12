@@ -2,7 +2,6 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
@@ -18,8 +17,5 @@ type BlockTxsView struct {
 func (bv *BlockTxsView) Render() vecty.ComponentOrHTML {
 	var t rpc.TendermintInfo
 	var dash components.BlockTxsDashboardView
-	return elem.Div(
-		&components.Header{},
-		components.InitBlockTxsDashboardView(&t, &dash, bv.Cfg),
-	)
+	return components.InitBlockTxsDashboardView(&t, &dash, bv.Cfg)
 }

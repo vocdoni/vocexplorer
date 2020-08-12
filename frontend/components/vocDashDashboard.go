@@ -36,7 +36,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-// InitVocDashDashboardView returns the required components for the vocdash page
+// InitVocDashDashboardView initializes the vocdash page
 func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
 	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
