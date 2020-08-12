@@ -60,8 +60,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 
 	return elem.Div(
 		vecty.Markup(vecty.Class("jumbotron")),
-		elem.Div(
-			vecty.Markup(vecty.Class("container")),
+		Container(
 			elem.Div(
 				vecty.Markup(vecty.Class("jumbo-stats", "row")),
 				vecty.List(items),

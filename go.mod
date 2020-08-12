@@ -19,6 +19,7 @@ require (
 	github.com/tendermint/tendermint v0.33.7
 	github.com/xeonx/timeago v1.0.0-rc4
 	gitlab.com/vocdoni/go-dvote v0.4.0
+	golang.org/x/text v0.3.3
 	golang.org/x/tools/gopls v0.4.4 // indirect
 	google.golang.org/protobuf v1.21.0
 	marwan.io/vecty-router v0.0.0-20190701140924-0b5c86ca8801
