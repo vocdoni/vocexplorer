@@ -1,4 +1,4 @@
-package components
+package pages
 
 import (
 	"strconv"
@@ -9,6 +9,7 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
@@ -17,7 +18,7 @@ import (
 // TxsView renders the Txs page
 type TxsView struct {
 	vecty.Core
-	cfg *config.Cfg
+	Cfg *config.Cfg
 }
 
 // Render renders the TxsView component
@@ -30,15 +31,15 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	if tx == nil {
 		log.Errorf("Tx unavailable")
 		return elem.Div(
-			&Header{},
+			&components.Header{},
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}
 	tm, err := ptypes.Timestamp(block.GetTime())
 	util.ErrPrint(err)
 	return elem.Div(
-		&Header{},
-		&TxContents{
+		&components.Header{},
+		&components.TxContents{
 			Tx:       tx,
 			Time:     tm,
 			HasBlock: !types.BlockIsEmpty(block),

@@ -61,7 +61,8 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *BlockTxsDashboardView, cfg *config.Cfg) *BlockTxsDashboardView {
+// InitBlockTxsDashboardView initializes the blocks & transactions view (to be splitted)
+func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *BlockTxsDashboardView, cfg *config.Cfg) *BlockTxsDashboardView {
 	// Init tendermint client
 	tClient := rpc.StartClient(cfg.TendermintHost)
 	if tClient == nil {

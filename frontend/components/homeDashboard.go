@@ -49,7 +49,8 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain clients")
 }
 
-func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
+// InitDashboardView returns the home dashboard components
+func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
 	// Init tendermint client
 	tClient := rpc.StartClient(cfg.TendermintHost)
 	// Init Gateway client

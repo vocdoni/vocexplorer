@@ -76,7 +76,8 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	)
 }
 
-func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
+// InitProcessesDashboardView initializes the processes dashboard view
+func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
 	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return ProcessesDashboardView

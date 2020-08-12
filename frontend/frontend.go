@@ -9,7 +9,6 @@ import (
 	"github.com/gopherjs/vecty"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -26,5 +25,5 @@ func main() {
 		util.ErrPrint(err)
 	}
 	vecty.SetTitle("Vochain Block Explorer")
-	vecty.RenderBody(&components.Body{Cfg: cfg})
+	vecty.RenderBody(&Body{Cfg: cfg})
 }

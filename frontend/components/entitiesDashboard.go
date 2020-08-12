@@ -38,7 +38,8 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Connecting to blockchain client")
 }
 
-func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
+// InitEntitiesDashboardView initializes the entities dashboard view
+func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
 	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
 	if gwClient == nil {
 		return EntitiesDashboardView
