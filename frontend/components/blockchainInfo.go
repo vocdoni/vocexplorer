@@ -20,9 +20,6 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
 	return elem.Section(
 		vecty.Markup(vecty.Class("blockchain-info")),
-		// &BlockchainVersion{
-		// 	T: b.T,
-		// },
 		elem.Heading4(
 			vecty.Text("Blockchain information"),
 		),
@@ -52,12 +49,12 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 				elem.TableHeader(vecty.Text("Sync status")),
 				elem.TableData(
 					vecty.If(syncing, &bootstrap.Badge{
-						Text: p.Sprintf("Syncing (%d blocks stored)", +b.T.TotalBlocks),
-						Type: "warning",
+						Contents: p.Sprintf("Syncing (%d blocks stored)", +b.T.TotalBlocks),
+						Type:     "warning",
 					}),
 					vecty.If(!syncing, &bootstrap.Badge{
-						Text: "In sync",
-						Type: "success",
+						Contents: "In sync",
+						Type:     "success",
 					}),
 				),
 			),

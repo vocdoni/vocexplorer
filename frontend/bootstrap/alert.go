@@ -5,19 +5,20 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-type Badge struct {
+type Alert struct {
 	vecty.Core
 	Contents string
 	Type     string
 }
 
-func (b *Badge) Render() vecty.ComponentOrHTML {
+func (b *Alert) Render() vecty.ComponentOrHTML {
 	t := b.Type
 	if len(b.Type) == 0 {
-		t = "primary"
+		t = "success"
 	}
-	return elem.Span(
-		vecty.Markup(vecty.Class("badge", "badge-"+t)),
+
+	return elem.Div(
+		vecty.Markup(vecty.Class("alert", "alert-"+t)),
 		vecty.Markup(
 			vecty.UnsafeHTML(b.Contents),
 		),

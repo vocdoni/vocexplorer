@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 )
 
@@ -15,16 +15,11 @@ type BlockchainVersion struct {
 }
 
 func (b *BlockchainVersion) Render() vecty.ComponentOrHTML {
-	return elem.Div(
-		vecty.Markup(vecty.Class("alert", "alert-success")),
-		vecty.Markup(
-			vecty.UnsafeHTML(
-				fmt.Sprintf(
-					"Connected to blockchain \"<i>%s</i>\" (version %s)",
-					b.T.Genesis.ChainID,
-					b.T.ResultStatus.NodeInfo.Version,
-				),
-			),
+	return &bootstrap.Alert{
+		Contents: fmt.Sprintf(
+			"Connected to blockchain \"<i>%s</i>\" (version %s)",
+			b.T.Genesis.ChainID,
+			b.T.ResultStatus.NodeInfo.Version,
 		),
-	)
+	}
 }
