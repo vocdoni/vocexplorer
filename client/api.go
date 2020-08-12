@@ -36,6 +36,38 @@ func New(addr string) (*Client, context.CancelFunc, error) {
 
 // VochainInfo requests
 
+// GetEntityCount gets number of entities
+func (c *Client) GetEntityCount() (int64, error) {
+	var req MetaRequest
+	req.Method = "getScrutinizerEntityCount"
+	req.Timestamp = int32(time.Now().Unix())
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return 0, err
+	}
+	if !resp.Ok {
+		return 0, fmt.Errorf("cannot get entity count")
+	}
+	return *resp.Size, nil
+}
+
+// GetProcessCount gets number of processes
+func (c *Client) GetProcessCount() (int64, error) {
+	var req MetaRequest
+	req.Method = "getProcessCount"
+	req.Timestamp = int32(time.Now().Unix())
+
+	resp, err := c.Request(req)
+	if err != nil {
+		return 0, err
+	}
+	if !resp.Ok {
+		return 0, fmt.Errorf("cannot get process count")
+	}
+	return *resp.Size, nil
+}
+
 // GetGatewayInfo gets gateway info
 func (c *Client) GetGatewayInfo() ([]string, int32, bool, int32, error) {
 	var req MetaRequest

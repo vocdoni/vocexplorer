@@ -99,6 +99,7 @@ type VochainInfo struct {
 	BlockTime         *[5]int32
 	BlockTimeStamp    int32
 	Entities          []EntityInfo
+	EntityCount       int64
 	EntityIDs         []string
 	EntitySearchIDs   []string
 	EnvelopeHeights   map[string]int64
@@ -106,6 +107,7 @@ type VochainInfo struct {
 	Health            int32
 	Height            int64
 	Ok                bool
+	ProcessCount      int64
 	ProcessIDs        []string
 	ProcessSearchIDs  []string
 	ProcessSearchList map[string]ProcessInfo

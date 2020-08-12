@@ -5,6 +5,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 type Jumbotron struct {
@@ -46,12 +47,12 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					colMarkup,
 					JumboStatTitle("Total processes"),
-					JumboStatValue(true, "23,418"),
+					JumboStatValue(true, util.IntToString(b.vc.ProcessCount)),
 				),
 				elem.Div(
 					colMarkup,
 					JumboStatTitle("Total entities"),
-					JumboStatValue(true, "2,323"),
+					JumboStatValue(true, util.IntToString(b.vc.EntityCount)),
 				),
 			),
 		),
