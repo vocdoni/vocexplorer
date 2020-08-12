@@ -8,8 +8,20 @@ import (
 func UpdateDashboardInfo(c *Client, vc *VochainInfo) {
 	UpdateGatewayInfo(c, vc)
 	UpdateBlockStatus(c, vc)
+	UpdateCounts(c, vc)
 	// UpdateVochainProcessList(c, vc)
 	// UpdateEntityList(c, vc)
+}
+
+// UpdateCounts calls gateway apis, updates total number of processes and entities
+func UpdateCounts(c *Client, vc *VochainInfo) {
+	procs, err := c.GetProcessCount()
+	util.ErrPrint(err)
+	entities, err := c.GetEntityCount()
+	util.ErrPrint(err)
+	vc.ProcessCount = procs
+	vc.EntityCount = entities
+
 }
 
 // UpdateVocDashDashboardInfo calls gateway apis, updates info needed for processes page

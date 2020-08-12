@@ -47,7 +47,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total processes"),
-			JumboStatValue("23,418"),
+			JumboStatValue(util.IntToString(b.vc.ProcessCount)),
 		))
 	}
 
@@ -56,7 +56,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total entities"),
-			JumboStatValue("2,323"),
+			JumboStatValue(util.IntToString(b.vc.EntityCount)),
 		))
 	}
 
