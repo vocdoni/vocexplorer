@@ -15,6 +15,14 @@ type BlockchainInfo struct {
 }
 
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
+
+	if b.T.ResultStatus == nil {
+		return &bootstrap.Alert{
+			Type:     "warning",
+			Contents: "Waiting for blocks data",
+		}
+	}
+
 	syncing := int(b.T.ResultStatus.SyncInfo.LatestBlockHeight)-b.T.TotalBlocks > 1
 	p := message.NewPrinter(language.English)
 

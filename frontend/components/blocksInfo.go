@@ -4,6 +4,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -13,6 +14,14 @@ type AverageBlockTimes struct {
 }
 
 func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
+
+	if a.VC.BlockTime == nil {
+		return &bootstrap.Alert{
+			Type:     "warning",
+			Contents: "Waiting for blocks data",
+		}
+	}
+
 	var items vecty.List
 
 	names := map[int]string{

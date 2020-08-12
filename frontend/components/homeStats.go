@@ -33,7 +33,12 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 				t:  b.t,
 			},
 			Container(
-				renderBlockchainStats(b.t, b.vc),
+				&BlockchainInfo{
+					T: b.t,
+				},
+				&AverageBlockTimes{
+					VC: b.vc,
+				},
 				renderHomeBlockList(b),
 			),
 		)
@@ -63,21 +68,6 @@ func renderHomeBlockList(b *StatsView) vecty.ComponentOrHTML {
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
-}
-
-func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.ComponentOrHTML {
-	if vc.BlockTime != nil && t.ResultStatus != nil {
-		return elem.Div(
-			vecty.Markup(vecty.Class("bc-stats")),
-			&BlockchainInfo{
-				T: t,
-			},
-			&AverageBlockTimes{
-				VC: vc,
-			},
-		)
-	}
-	return elem.Div(vecty.Text("Waiting for transaction & block data..."))
 }
 
 func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
