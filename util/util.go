@@ -31,6 +31,7 @@ func MsToString(ms int32) string {
 	return fmt.Sprintf("%02d:%02d:%04d", minutes, seconds, ms)
 }
 
+// MsToSecondsString only returns the second part of a ms unit, as a string
 func MsToSecondsString(ms int32) string {
 	seconds := ms / 1000
 	seconds = seconds % 60

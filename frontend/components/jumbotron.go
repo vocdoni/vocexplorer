@@ -42,8 +42,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 		))
 	}
 
-	// to be replaced with its proper condition whenever we have the process count
-	if true {
+	if b.vc.ProcessCount > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total processes"),
@@ -51,8 +50,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 		))
 	}
 
-	// to be replaced with its proper condition whenever we have the process count
-	if true {
+	if b.vc.EntityCount > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total entities"),
