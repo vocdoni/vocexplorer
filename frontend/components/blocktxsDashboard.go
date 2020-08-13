@@ -9,6 +9,7 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -49,7 +50,10 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 			},
 		)
 	}
-	return vecty.Text("Connecting to blockchain clients")
+	return &bootstrap.Alert{
+		Contents: "Connecting to blockchain clients",
+		Type:     "warning",
+	}
 }
 
 // InitBlockTxsDashboardView initializes the blocks & transactions view (to be splitted)

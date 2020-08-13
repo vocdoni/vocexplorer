@@ -8,6 +8,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 )
 
 // VocDashDashboardView renders the processes dashboard page
@@ -30,7 +31,10 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 			},
 		)
 	}
-	return vecty.Text("Connecting to blockchain clients")
+	return &bootstrap.Alert{
+		Contents: "Connecting to blockchain clients",
+		Type:     "warning",
+	}
 }
 
 // InitVocDashDashboardView initializes the vocdash page

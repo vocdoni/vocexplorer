@@ -9,6 +9,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -44,7 +45,10 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 			),
 		)
 	}
-	return vecty.Text("Connecting to blockchain clients")
+	return &bootstrap.Alert{
+		Contents: "Connecting to blockchain clients",
+		Type:     "warning",
+	}
 }
 
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {

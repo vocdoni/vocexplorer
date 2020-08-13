@@ -10,6 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -36,7 +37,10 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 			gwClient:  dash.gwClient,
 		}
 	}
-	return vecty.Text("Connecting to blockchain clients")
+	return &bootstrap.Alert{
+		Contents: "Connecting to blockchain clients",
+		Type:     "warning",
+	}
 }
 
 // InitDashboardView returns the home dashboard components
