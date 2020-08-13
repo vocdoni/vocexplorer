@@ -93,7 +93,7 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	if numTx == 0 {
 		data = []vecty.MarkupOrChild{vecty.Text("No transactions")}
 	}
-	transactions := elem.Preformatted(data...)
+	transactions := elem.Preformatted(elem.Code(data...))
 	var evidence []byte
 	if len(block.Evidence.Evidence) > 0 {
 		evidence, err = json.MarshalIndent(block.Evidence, "", "    ")
@@ -106,9 +106,9 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	accordionName := "accordionBlock"
 	return elem.Div(
 		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Block Header", accordionName, "One", elem.Preformatted(vecty.Text(string(header)))),
+		renderCollapsible("Block Header", accordionName, "One", elem.Preformatted(elem.Code(vecty.Text(string(header))))),
 		renderCollapsible("Data", accordionName, "Two", transactions),
-		renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(vecty.Text(string(evidence)))),
-		renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(vecty.Text(string(commit)))),
+		renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(elem.Code(vecty.Text(string(evidence))))),
+		renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(elem.Code(vecty.Text(string(commit))))),
 	)
 }
