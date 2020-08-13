@@ -24,7 +24,7 @@ type BlockContents struct {
 
 // Render renders the BlockContents component
 func (contents *BlockContents) Render() vecty.ComponentOrHTML {
-	return elem.Main(
+	return Container(
 		renderBlockHeader(len(contents.Block.Data.Txs), contents.Hash, contents.Block.Header.Height, contents.Block.Header.Time),
 		renderBlockContents(contents.Block),
 	)

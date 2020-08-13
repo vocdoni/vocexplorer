@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
@@ -23,14 +22,12 @@ type VocDashDashboardView struct {
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
-		return elem.Div(
-			elem.Main(
-				vecty.Markup(vecty.Class("info-pane")),
-				&VochainInfoView{
-					vc:        dash.vc,
-					refreshCh: dash.refreshCh,
-				},
-			),
+		return Container(
+			vecty.Markup(vecty.Class("info-pane")),
+			&VochainInfoView{
+				vc:        dash.vc,
+				refreshCh: dash.refreshCh,
+			},
 		)
 	}
 	return vecty.Text("Connecting to blockchain clients")
