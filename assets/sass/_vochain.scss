@@ -1,25 +1,28 @@
-.recent-blocks {
-  .card-body {
-    font-size: $font-size-xs;
-  }
-}
-
-.block-card-heading {
-  @extend .row;
-  > div {
-    @extend .col-12;
-    @extend .col-lg-6;
-    @extend .float-left;
-  }
+.block-tile + .block-tile {
+  margin-top: 15px;
 }
 
 .responsive-card-deck {
   @extend .row;
   .card-deck-col {
+    @extend .mb-3;
+    @extend .mb-lg-0;
     @extend .col-12;
-    @extend .col-md-6;
-    @extend .col-xl-3;
+    @extend .col-lg-3;
   }
+
+  .recent-blocks & {
+    font-size: $font-size-xxs;
+  }
+
+  .detail {
+    font-size: $font-size-xs;
+  }
+}
+
+.paginated.list .card-deck-col {
+  @extend .col-12;
+  @extend .mb-3;
 }
 
 .dt {

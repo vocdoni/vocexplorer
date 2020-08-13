@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -31,20 +30,10 @@ type BlockTxsDashboardView struct {
 // Render renders the BlockTxsDashboardView component
 func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.tClient != nil && dash.t != nil && dash.t.ResultStatus != nil {
-		return vecty.List(vecty.List{
-			elem.Div(
-				elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-					vecty.Text("Current Block Height: "+util.IntToString(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)),
-				),
-				vecty.If(int(dash.t.ResultStatus.SyncInfo.LatestBlockHeight)-dash.t.TotalBlocks > 1,
-					elem.Div(vecty.Markup(vecty.Class("card-col-3")),
-						vecty.Text("Still Syncing With Gateway... "+util.IntToString(dash.t.TotalBlocks)+" Blocks Stored")),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("card-col-3")),
-					vecty.Text("Total Txs: "+util.IntToString(dash.t.TotalTxs)),
-				),
-			),
+		return Container(
+			&LatestBlocksWidget{
+				T: dash.t,
+			},
 			&BlockList{
 				t:             dash.t,
 				refreshCh:     dash.blockRefresh,
@@ -55,7 +44,10 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 				refreshCh:     dash.txRefresh,
 				disableUpdate: &dash.disableTxsUpdate,
 			},
-		})
+			&BlockchainInfo{
+				T: dash.t,
+			},
+		)
 	}
 	return vecty.Text("Connecting to blockchain clients")
 }
