@@ -89,6 +89,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						),
 					),
 				),
+				&SearchBar{},
 			),
 		),
 	)

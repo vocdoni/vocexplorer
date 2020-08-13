@@ -1,5 +1,14 @@
+.container > section + section {
+  @extend .mt-3;
+}
+
 .block-tile + .block-tile {
   margin-top: 15px;
+}
+
+.card-header > a {
+  color: $card-cap-color;
+  font-weight: bold;
 }
 
 .responsive-card-deck {
@@ -61,4 +70,36 @@ pre {
   white-space: -pre-wrap;
   white-space: -o-pre-wrap;
   word-wrap: break-word;
+}
+
+.navbar-collapse form.form-inline .input-group {
+  width: 100%;
+}
+
+.input-group {
+  & > input {
+    font-size: $font-size-xs;
+  }
+  button {
+    position: relative;
+
+    .icon-lens {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
+  }
+}
+
+.icon-lens::before {
+  content: "";
+  display: inline-block;
+  background-image: $icon-lens;
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
+  background-position: center;
+  width: 100%;
+  height: 100%;
 }

@@ -18,16 +18,16 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 
 	var blockList []vecty.MarkupOrChild
 
-	empty := 4
-	for i := len(b.T.BlockList) - 1; i >= len(b.T.BlockList)-4; i-- {
+	max := 4
+	for i := len(b.T.BlockList) - 1; i >= len(b.T.BlockList)-max; i-- {
 		if types.BlockIsEmpty(b.T.BlockList[i]) {
-			empty--
+			continue
 		}
 		blockList = append(blockList, &BlockCard{
 			Block: b.T.BlockList[i],
 		})
 	}
-	if empty == 0 {
+	if len(blockList) == 0 {
 		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

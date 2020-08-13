@@ -71,17 +71,16 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
-	empty := p.ListSize
 	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
 		if types.BlockIsEmpty(t.BlockList[i]) {
-			empty--
+			continue
 		}
 		// for i, block := range t.BlockList {
 		blockList = append(blockList, &BlockCard{
 			Block: t.BlockList[i],
 		})
 	}
-	if empty == 0 {
+	if len(blockList) == 0 {
 		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

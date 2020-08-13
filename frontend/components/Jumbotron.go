@@ -31,7 +31,7 @@ func JumboStatValue(v string) vecty.MarkupOrChild {
 }
 
 func (b *Jumbotron) Render() vecty.ComponentOrHTML {
-	colMarkup := vecty.Markup(vecty.Class("col-xs-12", "col-sm-4"))
+	colMarkup := vecty.Markup(vecty.Class("col-xs-12", "col-sm-4", "mb-2", "mb-sm-0"))
 	var items vecty.List
 
 	if b.vc.BlockTime != nil && b.vc.BlockTime[0] > 0 {

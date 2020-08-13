@@ -33,13 +33,15 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 				t:  b.t,
 			},
 			Container(
+				&LatestBlocksWidget{
+					T: b.t,
+				},
 				&BlockchainInfo{
 					T: b.t,
 				},
 				&AverageBlockTimes{
 					VC: b.vc,
 				},
-				renderHomeBlockList(b),
 			),
 		)
 	}
