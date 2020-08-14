@@ -28,6 +28,7 @@ func RenderCard(Header, Body, Footer vecty.ComponentOrHTML) vecty.ComponentOrHTM
 	}
 
 	return elem.Div(
+		vecty.Markup(vecty.Class("card")),
 		items,
 	)
 }
