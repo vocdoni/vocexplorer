@@ -29,14 +29,14 @@ func (c *BlockCard) Render() vecty.ComponentOrHTML {
 	p := message.NewPrinter(language.English)
 	return elem.Div(
 		vecty.Markup(vecty.Class("card-deck-col")),
-		&bootstrap.Card{
-			Header: elem.Anchor(
+		bootstrap.RenderCard(
+			elem.Anchor(
 				vecty.Markup(
 					vecty.Attribute("href", "/blocks/"+util.IntToString(c.Block.GetHeight())),
 				),
 				vecty.Text(util.IntToString(c.Block.GetHeight())),
 			),
-			Body: vecty.List{
+			vecty.List{
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Span(
@@ -60,6 +60,7 @@ func (c *BlockCard) Render() vecty.ComponentOrHTML {
 					),
 				),
 			},
-		},
+			nil,
+		),
 	)
 }
