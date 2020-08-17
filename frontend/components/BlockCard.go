@@ -29,7 +29,7 @@ func (c *BlockCard) Render() vecty.ComponentOrHTML {
 	p := message.NewPrinter(language.English)
 	return elem.Div(
 		vecty.Markup(vecty.Class("card-deck-col")),
-		bootstrap.RenderCard(
+		bootstrap.Card(
 			elem.Anchor(
 				vecty.Markup(
 					vecty.Attribute("href", "/blocks/"+util.IntToString(c.Block.GetHeight())),

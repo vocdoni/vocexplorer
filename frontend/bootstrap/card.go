@@ -5,7 +5,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-func RenderCard(Header, Body, Footer vecty.ComponentOrHTML) vecty.ComponentOrHTML {
+func Card(Header, Body, Footer vecty.ComponentOrHTML) vecty.ComponentOrHTML {
 	items := vecty.List{}
 
 	if Header != nil {
