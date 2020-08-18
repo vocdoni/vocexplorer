@@ -17,6 +17,7 @@ type ValidatorsView struct {
 
 // Render renders the ValidatorsView component
 func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
+	v := new(ValidatorContents)
 	address := router.GetNamedVar(home)["id"]
 	validator := dbapi.GetValidator(address)
 	if validator == nil {
@@ -28,8 +29,6 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Div(
 		&Header{},
-		&ValidatorContents{
-			Validator: validator,
-		},
+		initValidatorContentsView(v, validator, home.cfg),
 	)
 }

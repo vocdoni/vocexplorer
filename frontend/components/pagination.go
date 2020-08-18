@@ -19,6 +19,9 @@ type Pagination struct {
 	RenderFunc      func(int) vecty.ComponentOrHTML
 	RenderSearchBar bool
 	SearchBar       func(*Pagination) vecty.ComponentOrHTML
+	PageLeft        func(e *vecty.Event)
+	PageRight       func(e *vecty.Event)
+	PageStart       func(e *vecty.Event)
 	TotalItems      *int
 	TotalPages      int
 }
@@ -29,6 +32,27 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if !p.RenderSearchBar {
 		p.SearchBar = func(*Pagination) vecty.ComponentOrHTML {
 			return nil
+		}
+	}
+	if p.PageLeft == nil {
+		p.PageLeft = func(e *vecty.Event) {
+			*p.CurrentPage = util.Max(*p.CurrentPage-1, 0)
+			p.RefreshCh <- *p.CurrentPage * p.ListSize
+			vecty.Rerender(p)
+		}
+	}
+	if p.PageRight == nil {
+		p.PageRight = func(e *vecty.Event) {
+			*p.CurrentPage = util.Min(*p.CurrentPage+1, p.TotalPages)
+			p.RefreshCh <- *p.CurrentPage * p.ListSize
+			vecty.Rerender(p)
+		}
+	}
+	if p.PageStart == nil {
+		p.PageStart = func(e *vecty.Event) {
+			*p.CurrentPage = 0
+			p.RefreshCh <- *p.CurrentPage * p.ListSize
+			vecty.Rerender(p)
 		}
 	}
 	return elem.Div(
@@ -60,11 +84,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 					elem.Button(
 						vecty.Markup(
 							vecty.Class("page-link"),
-							event.Click(func(e *vecty.Event) {
-								*p.CurrentPage = 0
-								p.RefreshCh <- *p.CurrentPage * p.ListSize
-								vecty.Rerender(p)
-							}),
+							event.Click(p.PageStart),
 							vecty.MarkupIf(
 								*p.CurrentPage != 0,
 								prop.Disabled(false),
@@ -98,11 +118,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 						vecty.Text("prev"),
 						vecty.Markup(
 							vecty.Class("page-link"),
-							event.Click(func(e *vecty.Event) {
-								*p.CurrentPage = util.Max(*p.CurrentPage-1, 0)
-								p.RefreshCh <- *p.CurrentPage * p.ListSize
-								vecty.Rerender(p)
-							}),
+							event.Click(p.PageLeft),
 							vecty.MarkupIf(
 								*p.CurrentPage > 0,
 								prop.Disabled(false),
@@ -129,11 +145,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 					elem.Button(vecty.Text("next"),
 						vecty.Markup(
 							vecty.Class("page-link"),
-							event.Click(func(e *vecty.Event) {
-								*p.CurrentPage = util.Min(*p.CurrentPage+1, p.TotalPages)
-								p.RefreshCh <- *p.CurrentPage * p.ListSize
-								vecty.Rerender(p)
-							}),
+							event.Click(p.PageRight),
 							vecty.MarkupIf(
 								*p.CurrentPage < p.TotalPages,
 								prop.Disabled(false),
