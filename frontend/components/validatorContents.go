@@ -19,7 +19,7 @@ type ValidatorContents struct {
 	BlockList    [config.ListSize]*types.StoreBlock
 	TotalBlocks  int
 	CurrentBlock int
-	blockRefresh chan interface{}
+	blockRefresh chan struct{}
 	Cfg          *config.Cfg
 }
 
@@ -40,7 +40,7 @@ func initValidatorContentsView(v *ValidatorContents, validator *types.Validator,
 }
 
 func (contents *ValidatorContents) updateBlocks() {
-	contents.blockRefresh = make(chan interface{}, 50)
+	contents.blockRefresh = make(chan struct{}, 50)
 	ticker := time.NewTicker(time.Duration(contents.Cfg.RefreshTime) * time.Second)
 	contents.BlockList = dbapi.GetBlockListByValidator(contents.TotalBlocks-contents.CurrentBlock, contents.Validator.GetAddress())
 	reverseBlockList(&contents.BlockList)

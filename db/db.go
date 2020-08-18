@@ -137,11 +137,14 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		}
 		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
-		//TODO: don't create a goroutine for empty tx lists
 		complete = make(chan struct{}, len(txsList))
-		for _, txs := range txsList {
-			go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete)
-			latestTxHeight.Height += int64(len(txs))
+		for i, txs := range txsList {
+			if len(txs) > 0 {
+				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete)
+				latestTxHeight.Height += int64(len(txs))
+			} else {
+				complete <- struct{}{}
+			}
 		}
 
 		// Sync: wait here for all goroutines to complete
@@ -204,7 +207,7 @@ func fetchValidators(height int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 }
 
 func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
-	numTxs := int64(0)
+	numTxs := int64(-1)
 	var height int64
 	for i, tx := range txs {
 		numTxs = int64(i)
