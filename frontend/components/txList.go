@@ -1,11 +1,9 @@
 package components
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
@@ -130,7 +128,7 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(tx.GetHash()))),
+						vecty.Text(util.HexToString(tx.GetHash())),
 					),
 				),
 				vecty.If(rawTx.Type != "",

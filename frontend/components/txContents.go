@@ -2,9 +2,7 @@ package components
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
-	"strings"
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
@@ -136,7 +134,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(tx.GetHash()))),
+						vecty.Text(util.HexToString(tx.GetHash())),
 					),
 					vecty.If(
 						!tm.IsZero(),

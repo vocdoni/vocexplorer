@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -100,4 +101,9 @@ func StripHexString(str *string) {
 	if strings.HasPrefix(*str, "0x") || strings.HasPrefix(*str, "0X") {
 		*str = (*str)[2:]
 	}
+}
+
+//HexToString converts an array of hexbytes to a string
+func HexToString(bytes []byte) string {
+	return strings.ToUpper(hex.EncodeToString(bytes))
 }

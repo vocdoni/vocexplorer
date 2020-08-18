@@ -1,10 +1,8 @@
 package components
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -80,10 +78,10 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
 		if types.BlockIsEmpty(t.BlockList[i]) {
 			empty--
-		}
+		} else {
 		block := t.BlockList[i]
-		// for i, block := range t.BlockList {
 		blockList = append(blockList, renderBlock(block))
+		}
 	}
 	if empty == 0 {
 		fmt.Println("No blocks available")
@@ -132,7 +130,22 @@ func renderBlock(block *types.StoreBlock) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(block.GetHash()))),
+						vecty.Text(util.HexToString(block.GetHash())),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Proposer"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/validators/"+util.HexToString(block.GetProposer())),
+							),
+							vecty.Text(util.HexToString(block.GetProposer())),
+						),
 					),
 				),
 			),

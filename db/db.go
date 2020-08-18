@@ -46,16 +46,38 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 
 	log.Debugf("Connected to " + tmHost)
 	// defer (*cancel)()
-
+	i := 0
 	for {
 		updateBlockList(d, tClient)
+		// Update validators less frequently than blocks
+		if i%20 == 0 {
+			updateValidatorList(d, tClient)
+		}
 		updateEntityList(d)
 		updateProcessList(d)
 		time.Sleep(config.DBWaitTime * time.Millisecond)
+		i++
 	}
 }
 
+func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
+	latestBlockHeight := &types.Height{Height: 1}
+	has, err := d.Has([]byte(config.LatestBlockHeightKey))
+	util.ErrPrint(err)
+	if has {
+		rawValHeight, err := d.Get([]byte(config.LatestBlockHeightKey))
+		util.ErrPrint(err)
+		err = proto.Unmarshal(rawValHeight, latestBlockHeight)
+		util.ErrPrint(err)
+	}
+
+	batch := d.NewBatch()
+	fetchValidators(latestBlockHeight.GetHeight(), c, batch)
+	util.ErrPrint(batch.Write())
+}
+
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
+	// Fetch latest block & tx heights
 	latestBlockHeight := &types.Height{Height: 1}
 	has, err := d.Has([]byte(config.LatestBlockHeightKey))
 	if err != nil {
@@ -67,7 +89,6 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		err = proto.Unmarshal(val, latestBlockHeight)
 		util.ErrPrint(err)
 	}
-
 	latestTxHeight := &types.Height{Height: 1}
 	has, err = d.Has([]byte(config.LatestTxHeightKey))
 	util.ErrPrint(err)
@@ -77,6 +98,8 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		err = proto.Unmarshal(val, latestTxHeight)
 		util.ErrPrint(err)
 	}
+
+	// Fetch latest blockchain block height
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
@@ -138,9 +161,46 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 		batch.Put([]byte(config.LatestTxHeightKey), encTxHeight)
 		batch.Put([]byte(config.LatestBlockHeightKey), encBlockHeight)
-		batch.Write()
+		util.ErrPrint(batch.Write())
 	}
 
+}
+
+func fetchValidators(height int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
+	maxPerPage := 100
+	page := 0
+	resultValidators, err := c.Validators(&height, page, 100)
+	util.ErrPrint(err)
+	// Check if there are more validators.
+	for len(resultValidators.Validators) == maxPerPage {
+		moreValidators, err := c.Validators(&height, page, maxPerPage)
+		util.ErrPrint(err)
+
+		if len(resultValidators.Validators) > 0 {
+			resultValidators.Validators = append(resultValidators.Validators, moreValidators.Validators...)
+		}
+		page++
+	}
+	// Cast each validator as storage struct, marshal, write to batch
+	for i, validator := range resultValidators.Validators {
+		var storeValidator types.Validator
+		storeValidator.Address = validator.Address
+		storeValidator.ProposerPriority = validator.ProposerPriority
+		storeValidator.VotingPower = validator.VotingPower
+		storeValidator.PubKey = validator.PubKey.Bytes()
+		storeValidator.Height = height + int64(i)
+		encValidator, err := proto.Marshal(&storeValidator)
+		util.ErrPrint(err)
+		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
+		valHeightKey := []byte(config.ValHeightPrefix + util.IntToString(storeValidator.GetHeight()))
+		batch.Put(valHeightKey, storeValidator.GetAddress())
+		log.Debugf("Validator address: %s, height: %d", util.HexToString(storeValidator.GetAddress()), storeValidator.GetHeight())
+	}
+	valHeight := types.Height{Height: int64(len(resultValidators.Validators))}
+	encValHeight, err := proto.Marshal(&valHeight)
+	util.ErrPrint(err)
+	batch.Put([]byte(config.LatestValidatorHeightKey), encValHeight)
+	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), height)
 }
 
 func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
@@ -203,6 +263,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	block.NumTxs = int64(len(res.Block.Data.Txs))
 	block.Hash = res.BlockID.Hash
 	block.Height = res.Block.Header.Height
+	block.Proposer = res.Block.ProposerAddress
 	tm, err := ptypes.TimestampProto(res.Block.Header.Time)
 	util.ErrPrint(err)
 	block.Time = tm

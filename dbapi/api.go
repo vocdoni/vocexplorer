@@ -42,6 +42,38 @@ func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
 	return blockList
 }
 
+//GetBlockListByValidator returns a list of blocks with given proposer from the database
+func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.StoreBlock {
+	if i < config.ListSize {
+		i = config.ListSize
+	}
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.StoreBlock{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.StoreBlock{}
+	}
+	var rawBlockList types.ItemList
+	err = proto.Unmarshal(body, &rawBlockList)
+	util.ErrPrint(err)
+	var blockList [config.ListSize]*types.StoreBlock
+	for i, rawBlock := range rawBlockList.GetItems() {
+		if len(rawBlock) > 0 {
+			var block types.StoreBlock
+			err = proto.Unmarshal(rawBlock, &block)
+			blockList[i] = &block
+			util.ErrPrint(err)
+		}
+	}
+	return blockList
+}
+
 //GetBlock returns a single block from the database
 func GetBlock(i int64) *types.StoreBlock {
 	c := &http.Client{
@@ -67,7 +99,7 @@ func GetBlockHeight() int64 {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	resp, err := c.Get("db/height/?key=" + config.LatestBlockHeightKey)
+	resp, err := c.Get("/db/height/?key=" + config.LatestBlockHeightKey)
 	if util.ErrPrint(err) {
 		return 0
 	}
@@ -171,4 +203,24 @@ func GetTxHeight() int64 {
 		util.ErrPrint(err)
 	}
 	return height.GetHeight()
+}
+
+//GetValidator returns a single validator from the database
+func GetValidator(address string) *types.Validator {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/validator/?id=" + address)
+	if util.ErrPrint(err) {
+		return &types.Validator{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return &types.Validator{}
+	}
+	var validator types.Validator
+	err = proto.Unmarshal(body, &validator)
+	util.ErrPrint(err)
+	return &validator
 }
