@@ -38,6 +38,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/db/listtxs/", db.ListTxsHandler(d))
 	m.HandleFunc("/db/tx/", db.GetTxHandler(d))
 	m.HandleFunc("/db/txhash/", db.TxHashRedirectHandler(d))
+	m.HandleFunc("/db/validator/", db.GetValidatorHandler(d))
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.NotFoundHandler = http.Handler(http.NotFoundHandler())
 }

@@ -173,7 +173,6 @@ func GetTxHeight() int64 {
 	return height.GetHeight()
 }
 
-//TODO: make this c.get call actually return a validator
 //GetValidator returns a single validator from the database
 func GetValidator(address string) *types.Validator {
 	c := &http.Client{

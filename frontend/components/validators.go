@@ -5,6 +5,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	router "marwan.io/vecty-router"
 )
 

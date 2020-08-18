@@ -233,3 +233,23 @@ func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *
 		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), 301)
 	}
 }
+
+// GetValidatorHandler writes the validator corresponding to given address key
+func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["id"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			return
+		}
+		id := ids[0]
+		addressBytes, err := hex.DecodeString(id)
+		util.ErrPrint(err)
+		key := append([]byte(config.ValidatorPrefix), addressBytes...)
+		raw, err := db.Get(key)
+		util.ErrPrint(err)
+		w.Write(raw)
+		log.Debugf("Sent validator")
+	}
+}
