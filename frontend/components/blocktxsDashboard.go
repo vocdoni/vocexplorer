@@ -86,9 +86,6 @@ func initBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 
 func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.t == nil {
-	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1

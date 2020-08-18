@@ -111,11 +111,3 @@ func renderBlockchainStats(t *rpc.TendermintInfo, vc *client.VochainInfo) vecty.
 	}
 	return elem.Div(vecty.Text("Waiting for transaction & block data..."))
 }
-
-func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
-	return elem.Div(
-		vecty.Markup(vecty.Class("tx-stats")),
-		vecty.Text("Txs/hr: "),
-		vecty.Text("Txs/day: "),
-	)
-}

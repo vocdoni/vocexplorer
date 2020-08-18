@@ -54,9 +54,6 @@ func initVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 
 func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.vc == nil {
-	}
 	//TODO: update to  use real index
 	client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
 	vecty.Rerender(d)

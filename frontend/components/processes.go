@@ -16,12 +16,12 @@ type ProcessesView struct {
 
 // Render renders the ProcessesView component
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
-	var process client.FullProcessInfo
-	var dash ProcessesDashboardView
+	process := new(client.FullProcessInfo)
+	dash := new(ProcessesDashboardView)
 	return elem.Div(
 		&Header{},
 		elem.Main(
-			initProcessesDashboardView(&process, &dash, router.GetNamedVar(home)["id"], home.cfg),
+			initProcessesDashboardView(process, dash, router.GetNamedVar(home)["id"], home.cfg),
 		),
 	)
 }

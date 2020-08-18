@@ -22,6 +22,7 @@ require (
 	gitlab.com/vocdoni/go-dvote v0.4.0
 	golang.org/x/tools/gopls v0.4.4 // indirect
 	google.golang.org/protobuf v1.21.0
+	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	marwan.io/vecty-router v0.0.0-20190701140924-0b5c86ca8801
 	nhooyr.io/websocket v1.8.6
 )

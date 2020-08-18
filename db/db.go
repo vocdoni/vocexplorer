@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -16,7 +15,6 @@ import (
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -138,7 +136,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
 		complete = make(chan struct{}, len(txsList))
-		for i, txs := range txsList {
+		for _, txs := range txsList {
 			if len(txs) > 0 {
 				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete)
 				latestTxHeight.Height += int64(len(txs))
@@ -295,28 +293,6 @@ func updateProcessList(d *dvotedb.BadgerDB) {
 
 }
 
-// listKeysByHeight returns a list of hashes matching a given prefix, where key is an integer
-func listKeysByHeight(d *dvotedb.BadgerDB, max, from int, prefix string) (list []string) {
-	if max > 64 {
-		max = 64
-	}
-	var keyList []string
-	for i := 0; i < max; i++ {
-		key := prefix + util.IntToString(from)
-		has, err := d.Has([]byte(key))
-		if err != nil {
-			log.Error(err)
-			break
-		}
-		if !has {
-			break
-		}
-		keyList = append(keyList, string(key))
-		from++
-	}
-	return keyList
-}
-
 // listHashesByHeight returns a list of hashes given integer keys
 func listHashesByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][]byte {
 	if max > 64 {
@@ -367,21 +343,22 @@ func pingGateway(host string) bool {
 	}
 }
 
-func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
-	for i := 0; ; i++ {
-		if i > 20 {
-			return nil, nil, false
-		}
-		gwClient, cancel := client.InitGateway(host)
-		if gwClient == nil {
-			time.Sleep(5 * time.Second)
-			continue
-		} else {
-			return gwClient, &cancel, true
-		}
-	}
-}
+// func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
+// 	for i := 0; ; i++ {
+// 		if i > 20 {
+// 			return nil, nil, false
+// 		}
+// 		gwClient, cancel := client.InitGateway(host)
+// 		if gwClient == nil {
+// 			time.Sleep(5 * time.Second)
+// 			continue
+// 		} else {
+// 			return gwClient, &cancel, true
+// 		}
+// 	}
+// }
 
+//StartTendermint starts the tendermint client
 func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 	for i := 0; ; i++ {
 		if i > 20 {

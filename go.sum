@@ -1569,6 +1569,8 @@ honnef.co/go/tools v0.0.1-2020.1.3 h1:sXmLre5bzIR6ypkjXCDI3jHPssRhc8KD/Ome589sc3
 honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 honnef.co/go/tools v0.0.1-2020.1.4 h1:UoveltGrhghAA7ePc+e+QYDHXrBps2PqFZiHkGR/xK8=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
+honnef.co/go/tools v0.0.1-2020.1.5 h1:nI5egYTGJakVyOryqLs1cQO5dO0ksin5XXs2pspk75k=
+honnef.co/go/tools v0.0.1-2020.1.5/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 marwan.io/vecty-router v0.0.0-20190701140924-0b5c86ca8801 h1:iCUUsddFprsvTAbyIV2QYDqirAA9V8U4dX5QfqSqNso=
 marwan.io/vecty-router v0.0.0-20190701140924-0b5c86ca8801/go.mod h1:9F8DpkcpW1dEOqVQ/Bu/ltLFZSXxdYofgjxgxJ/H/Zc=
 mvdan.cc/gofumpt v0.0.0-20200709182408-4fd085cb6d5f h1:gi7cb8HTDZ6q8VqsUpkdoFi3vxwHMneQ6+Q5Ap5hjPE=

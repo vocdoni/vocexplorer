@@ -272,7 +272,6 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	}
 
 	reqOuter := RequestMessage{
-		// ID: "req-2345679",
 		ID:          fmt.Sprintf("%d", rand.Intn(1000)),
 		MetaRequest: reqInner,
 	}
@@ -285,9 +284,8 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// fmt.Println("request:", reqBody)
 	if err := c.Conn.Write(ctx, websocket.MessageText, reqBody); err != nil {
-		return nil, fmt.Errorf("Error: %s: %v", method, err)
+		return nil, fmt.Errorf("error: %s: %v", method, err)
 	}
 	fmt.Println("sent request: " + req.Method)
 	_, message, err := c.Conn.Read(ctx)

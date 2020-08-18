@@ -15,12 +15,12 @@ type VocDashView struct {
 
 // Render renders the VocDashView component
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
-	var vc client.VochainInfo
-	var dash VocDashDashboardView
+	vc := new(client.VochainInfo)
+	dash := new(VocDashDashboardView)
 	return elem.Div(
 		&Header{},
 		elem.Main(
-			initVocDashDashboardView(&vc, &dash, home.cfg),
+			initVocDashDashboardView(vc, dash, home.cfg),
 		),
 	)
 }

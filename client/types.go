@@ -23,7 +23,6 @@ type RequestMessage struct {
 
 // MetaRequest holds a gateway api request, from go-dvote/types
 type MetaRequest struct {
-	// Payload    *VoteTx  `json:"payload,omitempty"`
 	CensusID   string   `json:"censusId,omitempty"`
 	CensusURI  string   `json:"censusUri,omitempty"`
 	ClaimData  string   `json:"claimData,omitempty"`
@@ -138,7 +137,6 @@ type ProcessInfo struct {
 }
 
 // FullProcessInfo holds info about one vochain process, including votes and results
-
 type FullProcessInfo struct {
 	Nullifiers  []string
 	ProcessType string

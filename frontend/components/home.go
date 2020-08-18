@@ -16,11 +16,11 @@ type HomeView struct {
 
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
-	var t rpc.TendermintInfo
-	var vc client.VochainInfo
-	var dash DashboardView
+	t := new(rpc.TendermintInfo)
+	vc := new(client.VochainInfo)
+	dash := new(DashboardView)
 	return elem.Div(
 		&Header{},
-		initDashboardView(&t, &vc, &dash, home.cfg),
+		initDashboardView(t, vc, dash, home.cfg),
 	)
 }

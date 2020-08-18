@@ -73,9 +73,6 @@ func initDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 
 func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.vc == nil {
-	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1

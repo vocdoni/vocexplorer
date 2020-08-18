@@ -26,7 +26,6 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	util.ErrPrint(err)
 	tx := dbapi.GetTx(height)
 	// Get block which houses tx
-	block := dbapi.GetBlock(tx.Store.Height)
 	if tx == nil {
 		log.Errorf("Tx unavailable")
 		return elem.Div(
@@ -34,6 +33,7 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}
+	block := dbapi.GetBlock(tx.Store.Height)
 	tm, err := ptypes.Timestamp(block.GetTime())
 	util.ErrPrint(err)
 	return elem.Div(

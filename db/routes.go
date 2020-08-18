@@ -31,6 +31,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 
 		var height types.Height
 		err = proto.Unmarshal(val, &height)
+		util.ErrPrint(err)
 		log.Debug("Sent height " + util.IntToString(height.GetHeight()) + " for key " + keys[0])
 
 		w.Write(val)
@@ -87,6 +88,7 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 		}
 
 		msg, err := proto.Marshal(&rawBlocks)
+		util.ErrPrint(err)
 		w.Write(msg)
 		log.Debugf("Sent %d blocks", len(rawBlocks.GetItems()))
 	}
@@ -144,6 +146,7 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		}
 
 		msg, err := proto.Marshal(&rawBlocks)
+		util.ErrPrint(err)
 		w.Write(msg)
 		log.Debugf("Sent %d blocks by validator %s", len(rawBlocks.GetItems()), proposers[0])
 	}
@@ -206,6 +209,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			util.ErrPrint(err)
 		}
 		msg, err := proto.Marshal(&rawTxs)
+		util.ErrPrint(err)
 		w.Write(msg)
 		log.Debugf("Sent %d txs", len(rawTxs.GetItems()))
 	}
@@ -254,40 +258,40 @@ func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *
 		if !ok || len(ids[0]) < 1 {
 			log.Errorf("Url Param 'id' is missing")
 			http.Error(w, "Url Param 'id' missing", 400)
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 		id := ids[0]
 		hash, err := hex.DecodeString(id)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 		key := append([]byte(config.TxHashPrefix), hash...)
 		has, err := db.Has(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 		if !has {
 			log.Errorf("Tx hash key not found")
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 		raw, err := db.Get(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 
 		var tx types.StoreTx
 		err = proto.Unmarshal(raw, &tx)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), 302)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
 			return
 		}
 
-		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), 301)
+		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), http.StatusPermanentRedirect)
 	}
 }
 

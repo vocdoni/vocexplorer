@@ -94,9 +94,6 @@ func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 
 func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.process == nil {
-	}
 	//TODO: update to  use real index
 	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID, 0)
 	vecty.Rerender(d)

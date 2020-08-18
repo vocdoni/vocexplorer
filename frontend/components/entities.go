@@ -16,12 +16,12 @@ type EntitiesView struct {
 
 // Render renders the EntitiesView component
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
-	var entity client.EntityInfo
-	var dash EntitiesDashboardView
+	entity := new(client.EntityInfo)
+	dash := new(EntitiesDashboardView)
 	return elem.Div(
 		&Header{},
 		elem.Main(
-			initEntitiesDashboardView(&entity, &dash, router.GetNamedVar(home)["id"], home.cfg),
+			initEntitiesDashboardView(entity, dash, router.GetNamedVar(home)["id"], home.cfg),
 		),
 	)
 }

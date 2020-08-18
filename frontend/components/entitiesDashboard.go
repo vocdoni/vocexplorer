@@ -57,9 +57,6 @@ func initEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 
 func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.entity == nil {
-	}
 	// TODO change to accept real index
 	client.UpdateEntitiesDashboardInfo(d.gwClient, d.entity, entityID, 0)
 	vecty.Rerender(d)
