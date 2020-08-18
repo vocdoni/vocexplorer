@@ -92,7 +92,64 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 	}
 }
 
-// GetBlockHandler writes a list of blocks by height
+// ListBlocksByValidatorHandler writes a list of blocks which share the given proposer
+func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("VALBLOCKS")
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", 400)
+			return
+		}
+		proposers, ok := r.URL.Query()["proposer"]
+		if !ok || len(proposers[0]) < 1 {
+			log.Errorf("Url Param 'proposer' is missing")
+			http.Error(w, "Url Param 'proposer' missing", 400)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+
+		// latestBlockHeight := &types.Height{}
+		// rawValHeight, err := db.Get([]byte(config.LatestBlockHeightKey))
+		// util.ErrPrint(err)
+		// err = proto.Unmarshal(rawValHeight, latestBlockHeight)
+		// util.ErrPrint(err)
+
+		var rawBlocks types.ItemList
+		var tempBlock types.StoreBlock
+		numBlocks := 0
+		// Get blocks by hash, where block proposer matches proposer
+		for ; numBlocks < config.ListSize && from > 0; from-- {
+			log.Debugf("Getting block at height %d", from)
+
+			hashes := listHashesByHeight(db, 1, from, config.BlockHeightPrefix)
+			if len(hashes) == 0 {
+				log.Error("No hashes retrieved")
+				http.Error(w, "No blocks available", 404)
+				return
+			}
+			for _, hash := range hashes {
+				rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+				util.ErrPrint(err)
+				err = proto.Unmarshal(rawBlock, &tempBlock)
+				util.ErrPrint(err)
+				log.Debugf("Found block with proposer %s", tempBlock.GetProposer())
+				if util.HexToString(tempBlock.GetProposer()) == proposers[0] {
+					rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
+					numBlocks++
+				}
+			}
+		}
+
+		msg, err := proto.Marshal(&rawBlocks)
+		w.Write(msg)
+		log.Debugf("Sent %d blocks by validator %s", len(rawBlocks.GetItems()), proposers[0])
+	}
+}
+
+// GetBlockHandler writes a block by height
 func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["id"]
@@ -231,5 +288,25 @@ func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *
 		}
 
 		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), 301)
+	}
+}
+
+// GetValidatorHandler writes the validator corresponding to given address key
+func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["id"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			return
+		}
+		id := ids[0]
+		addressBytes, err := hex.DecodeString(id)
+		util.ErrPrint(err)
+		key := append([]byte(config.ValidatorPrefix), addressBytes...)
+		raw, err := db.Get(key)
+		util.ErrPrint(err)
+		w.Write(raw)
+		log.Debugf("Sent validator")
 	}
 }

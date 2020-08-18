@@ -25,12 +25,12 @@ type BlockContents struct {
 // Render renders the BlockContents component
 func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		renderBlockHeader(len(contents.Block.Data.Txs), contents.Hash, contents.Block.Header.Height, contents.Block.Header.Time),
+		renderBlockHeader(len(contents.Block.Data.Txs), contents.Hash, contents.Block.ProposerAddress, contents.Block.Header.Height, contents.Block.Header.Time),
 		renderBlockContents(contents.Block),
 	)
 }
 
-func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {
+func renderBlockHeader(numTxs int, hash, proposer tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -58,6 +58,20 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
 						vecty.Text(hash.String()),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Proposer Address"),
+					),
+					elem.Div(
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/validators/"+proposer.String()),
+							),
+							vecty.Text(proposer.String()),
+						),
 					),
 				),
 			),
