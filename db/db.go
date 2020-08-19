@@ -59,15 +59,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 }
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
-	latestBlockHeight := &types.Height{Height: 1}
-	has, err := d.Has([]byte(config.LatestBlockHeightKey))
-	util.ErrPrint(err)
-	if has {
-		rawValHeight, err := d.Get([]byte(config.LatestBlockHeightKey))
-		util.ErrPrint(err)
-		err = proto.Unmarshal(rawValHeight, latestBlockHeight)
-		util.ErrPrint(err)
-	}
+	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey)
 
 	batch := d.NewBatch()
 	fetchValidators(latestBlockHeight.GetHeight(), c, batch)
@@ -150,14 +142,14 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 }
 
-func fetchValidators(height int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
+func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
-	resultValidators, err := c.Validators(&height, page, 100)
+	resultValidators, err := c.Validators(&blockHeight, page, 100)
 	util.ErrPrint(err)
 	// Check if there are more validators.
 	for len(resultValidators.Validators) == maxPerPage {
-		moreValidators, err := c.Validators(&height, page, maxPerPage)
+		moreValidators, err := c.Validators(&blockHeight, page, maxPerPage)
 		util.ErrPrint(err)
 
 		if len(resultValidators.Validators) > 0 {
@@ -166,25 +158,18 @@ func fetchValidators(height int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 		page++
 	}
 	// Cast each validator as storage struct, marshal, write to batch
-	for i, validator := range resultValidators.Validators {
+	for _, validator := range resultValidators.Validators {
 		var storeValidator types.Validator
 		storeValidator.Address = validator.Address
 		storeValidator.ProposerPriority = validator.ProposerPriority
 		storeValidator.VotingPower = validator.VotingPower
 		storeValidator.PubKey = validator.PubKey.Bytes()
-		storeValidator.Height = height + int64(i)
 		encValidator, err := proto.Marshal(&storeValidator)
 		util.ErrPrint(err)
 		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
-		valHeightKey := []byte(config.ValHeightPrefix + util.IntToString(storeValidator.GetHeight()))
-		batch.Put(valHeightKey, storeValidator.GetAddress())
-		log.Debugf("Validator address: %s, height: %d", util.HexToString(storeValidator.GetAddress()), storeValidator.GetHeight())
+		log.Debugf("Validator address: %s", util.HexToString(storeValidator.GetAddress()))
 	}
-	valHeight := types.Height{Height: int64(len(resultValidators.Validators))}
-	encValHeight, err := proto.Marshal(&valHeight)
-	util.ErrPrint(err)
-	batch.Put([]byte(config.LatestValidatorHeightKey), encValHeight)
-	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), height)
+	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
 func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
