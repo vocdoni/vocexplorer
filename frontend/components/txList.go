@@ -63,7 +63,7 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 		}
 
 		return elem.Div(
-			vecty.Markup(vecty.Class("recent-blocks")),
+			vecty.Markup(vecty.Class("list", "paginated")),
 			elem.Heading3(
 				vecty.Text("Txs"),
 			),
@@ -105,7 +105,6 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("card-header")),
 				elem.Anchor(
 					vecty.Markup(
-						vecty.Class("nav-link"),
 						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Store.TxHeight))),
 					),
 					vecty.Text(util.IntToString(tx.Store.TxHeight)),
