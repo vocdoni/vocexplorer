@@ -32,13 +32,20 @@
 .tile {
   border-radius: 5px;
   font-size: $font-size-xs;
+  padding: 1rem;
 
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
   &.canceled {
     border-left-color: $gray-500;
+
+    .process-type > div {
+      color: $gray-600;
+    }
   }
   @media (min-width: map-get($grid-breakpoints, "md")) {
+    padding: 0;
+
     .process-type > div {
       background-color: lighten($green, 50%);
       border: 1px solid $green;
@@ -48,7 +55,6 @@
     &.canceled .process-type > div {
       background-color: $gray-400;
       border-color: $gray-500;
-      color: $gray-600;
     }
   }
 
@@ -71,19 +77,12 @@
 
     > div {
       @extend .d-flex;
-      @extend .flex-row;
-      @extend .flex-md-column;
-      @extend .align-items-center;
+      @extend .flex-column;
+      @extend .align-items-md-center;
     }
 
     .type {
       font-weight: bold;
-    }
-
-    @media (min-width: map-get($grid-breakpoints, "md")) {
-      .type, .status {
-        display: block;
-      }
     }
   }
 
@@ -92,8 +91,8 @@
     @extend .col-lg-8;
     @extend .d-flex;
     @extend .flex-column;
-    @extend .pr-2;
-    @extend .pr-md-0;
+    @extend .mt-3;
+    @extend .mt-md-0;
   }
 
   .process-details {
@@ -103,7 +102,7 @@
     @extend .flex-row;
     @extend .flex-md-column;
     @extend .flex-nowrap;
-    @extend .justify-content-center;
+    @extend .justify-content-md-center;
     @extend .text-md-right;
     @extend .mt-3;
     @extend .mt-md-0;
