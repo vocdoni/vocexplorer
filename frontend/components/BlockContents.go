@@ -66,7 +66,7 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 }
 
 func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
-	header, err := json.MarshalIndent(block.Header, "", "    ")
+	header, err := json.MarshalIndent(block.Header, "", "\t")
 	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
 	numTx := 0
@@ -96,12 +96,12 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	transactions := elem.Preformatted(elem.Code(data...))
 	var evidence []byte
 	if len(block.Evidence.Evidence) > 0 {
-		evidence, err = json.MarshalIndent(block.Evidence, "", "    ")
+		evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
 		util.ErrPrint(err)
 	} else {
 		evidence = []byte("No evidence")
 	}
-	commit, err := json.MarshalIndent(block.LastCommit, "", "    ")
+	commit, err := json.MarshalIndent(block.LastCommit, "", "\t")
 	util.ErrPrint(err)
 	accordionName := "accordionBlock"
 	return elem.Div(

@@ -1,3 +1,10 @@
+
+pre {
+  -moz-tab-size: 2;
+  -webkit-tab-size: 2;
+  tab-size: 2;
+}
+
 .container > section + section {
   @extend .mt-3;
 }
@@ -36,13 +43,19 @@
 
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
-  &.canceled {
+  &.paused {
     border-left-color: $gray-500;
-
     .process-type > div {
       color: $gray-600;
     }
   }
+  &.canceled {
+    border-left-color: $yellow;
+    .process-type > div {
+      color: darken($yellow, 10%);
+    }
+  }
+
   @media (min-width: map-get($grid-breakpoints, "md")) {
     padding: 0;
 
@@ -53,6 +66,10 @@
       margin-bottom: -1px;
     }
     &.canceled .process-type > div {
+      background-color: lighten($yellow, 40%);
+      border: 1px solid $yellow;
+    }
+    &.paused .process-type > div {
       background-color: $gray-400;
       border-color: $gray-500;
     }

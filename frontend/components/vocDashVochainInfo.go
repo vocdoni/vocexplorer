@@ -154,7 +154,7 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 	)
 }
 
-func ProcessBlock(hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
+func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile-body")),
 		elem.Div(
@@ -174,14 +174,17 @@ func ProcessBlock(hok bool, height int64, info client.ProcessInfo) vecty.Compone
 			vecty.Markup(vecty.Class("process-contents")),
 			elem.Div(
 				elem.Div(
+					elem.Anchor(
+						vecty.Markup(vecty.Class("hash")),
+						vecty.Markup(vecty.Attribute("href", "/processes/"+ID)),
+						vecty.Text(ID),
+					),
+				),
+				elem.Div(
 					vecty.Markup(vecty.Class("envelopes")),
 					vecty.Text(
 						fmt.Sprintf("%d envelopes", height),
 					),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("hash")),
-					vecty.Text("(hash &/or other info?)"),
 				),
 			),
 		),
@@ -218,7 +221,7 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 			elemList,
 			elem.Div(
 				vecty.Markup(vecty.Class("tile", info.State)),
-				ProcessBlock(hok, height, info),
+				ProcessBlock(ID, hok, height, info),
 			),
 		)
 	}

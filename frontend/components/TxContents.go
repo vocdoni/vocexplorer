@@ -36,7 +36,7 @@ func (contents *TxContents) Render() vecty.ComponentOrHTML {
 func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
 	var txResult coretypes.ResultTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
-	result, err := json.MarshalIndent(txResult, "", "    ")
+	result, err := json.MarshalIndent(txResult, "", "\t")
 	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
 	err = json.Unmarshal(tx.Store.Tx, &rawTx)
@@ -56,38 +56,38 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 			var vote dvotetypes.VotePackage
 			rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
 			if util.ErrPrint(err) {
-				txContents, err = json.MarshalIndent(typedTx, "", "    ")
+				txContents, err = json.MarshalIndent(typedTx, "", "\t")
 				break
 			}
 			err = json.Unmarshal(rawVote, &vote)
 			if util.ErrPrint(err) {
-				txContents, err = json.MarshalIndent(typedTx, "", "    ")
+				txContents, err = json.MarshalIndent(typedTx, "", "\t")
 				break
 			}
-			voteIndent, err := json.MarshalIndent(vote, "", "    ")
+			voteIndent, err := json.MarshalIndent(vote, "", "\t")
 			typedTx.VotePackage = string(voteIndent)
 		}
-		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
 		nullifier = typedTx.Nullifier
 	case "newProcess":
 		var typedTx dvotetypes.NewProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
 		entityID = typedTx.EntityID
 	case "cancelProcess":
 		var typedTx dvotetypes.CancelProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
 	case "admin", "addValidator", "removeValidator", "addOracle", "removeOracle", "addProcessKeys", "revealProcessKeys":
 		var typedTx dvotetypes.AdminTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
 	}
