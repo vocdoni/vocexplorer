@@ -127,6 +127,7 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 		return renderValidatorBlocks(contents.BlockList)
 	}
+	//TODO: keep track of pages with map
 	p.PageLeft = func(e *vecty.Event) {
 		*p.CurrentPage = util.Max(*p.CurrentPage-1, 0)
 		contents.CurrentBlock = util.Max(contents.CurrentBlock-p.ListSize, 0)

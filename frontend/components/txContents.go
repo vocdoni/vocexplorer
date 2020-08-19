@@ -53,6 +53,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		util.ErrPrint(err)
 
 		// Decode vote package if vote is unencrypted
+		// TODO decrypt votes
 		if len(typedTx.EncryptionKeyIndexes) == 0 {
 			var vote dvotetypes.VotePackage
 			rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)

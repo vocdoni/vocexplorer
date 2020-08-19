@@ -76,28 +76,11 @@ func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Fetch latest block & tx heights
-	latestBlockHeight := &types.Height{Height: 1}
-	has, err := d.Has([]byte(config.LatestBlockHeightKey))
-	if err != nil {
-		log.Error(err)
-	}
-	if has {
-		val, err := d.Get([]byte(config.LatestBlockHeightKey))
-		util.ErrPrint(err)
-		err = proto.Unmarshal(val, latestBlockHeight)
-		util.ErrPrint(err)
-	}
-	latestTxHeight := &types.Height{Height: 1}
-	has, err = d.Has([]byte(config.LatestTxHeightKey))
-	util.ErrPrint(err)
-	if has {
-		val, err := d.Get([]byte(config.LatestTxHeightKey))
-		util.ErrPrint(err)
-		err = proto.Unmarshal(val, latestTxHeight)
-		util.ErrPrint(err)
-	}
+	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey)
+	latestTxHeight := getHeight(d, config.LatestTxHeightKey)
+	latestEnvelopeHeight := getHeight(d, config.LatestEnvelopeHeightKey)
+	latestEnvelopeHeight.GetHeight()
 
-	// Fetch latest blockchain block height
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
@@ -372,4 +355,19 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 			return tmClient, true
 		}
 	}
+}
+
+func getHeight(d *dvotedb.BadgerDB, key string) *types.Height {
+	height := &types.Height{Height: 1}
+	has, err := d.Has([]byte(key))
+	if err != nil {
+		log.Error(err)
+	}
+	if has {
+		val, err := d.Get([]byte(key))
+		util.ErrPrint(err)
+		err = proto.Unmarshal(val, height)
+		util.ErrPrint(err)
+	}
+	return height
 }
