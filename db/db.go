@@ -8,21 +8,21 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync/atomic"
-
-	"github.com/golang/protobuf/ptypes"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"google.golang.org/protobuf/proto"
-
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
+	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 // NewDB initializes a badger database at the given path
@@ -375,13 +375,27 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, batch dvotedb.Batch) {
 
 		// Write vote package
 		votePackage := types.Envelope{
-			Nullifier: voteTx.Nullifier,
 			ProcessID: voteTx.ProcessID,
 			Package:   voteTx.VotePackage,
 		}
-		if votePackage.Nullifier == "" {
-			log.Error("vote without nullifier")
-			return
+
+		// Generate nullifier as in go-dvote vochain/transaction.go
+		signature := voteTx.Signature
+		voteTx.Signature = ""
+		voteTx.Type = ""
+		voteBytes, err := json.Marshal(&voteTx)
+		util.ErrPrint(err)
+		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, signature)
+		if err != nil {
+			log.Errorf("cannot extract public key from signature (%s)", err)
+		}
+		addr, err := ethereum.AddrFromPublicKey(pubKey)
+		if err != nil {
+			log.Errorf("cannot extract address from public key: (%s)", err)
+		}
+		votePackage.Nullifier, err = vochain.GenerateNullifier(addr, votePackage.ProcessID)
+		if err != nil {
+			log.Errorf("cannot generate nullifier: (%s)", err)
 		}
 		for _, index := range voteTx.EncryptionKeyIndexes {
 			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
