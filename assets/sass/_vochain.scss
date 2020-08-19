@@ -30,10 +30,27 @@
 }
 
 .tile {
-  border: 1px solid lightgray;
-  border-left: 4px solid $green;
   border-radius: 5px;
   font-size: $font-size-xs;
+
+  border: 1px solid $gray-400;
+  border-left: 4px solid $green;
+  &.canceled {
+    border-left-color: $gray-500;
+  }
+  @media (min-width: map-get($grid-breakpoints, "md")) {
+    .process-type > div {
+      background-color: lighten($green, 50%);
+      border: 1px solid $green;
+      margin-top: -1px;
+      margin-bottom: -1px;
+    }
+    &.canceled .process-type > div {
+      background-color: $gray-400;
+      border-color: $gray-500;
+      color: $gray-600;
+    }
+  }
 
   .tile-body {
     @extend .row;
@@ -64,13 +81,6 @@
     }
 
     @media (min-width: map-get($grid-breakpoints, "md")) {
-      > div {
-        background-color: lighten($green, 50%);
-        border: 1px solid $green;
-        margin-top: -1px;
-        margin-bottom: -1px;
-      }
-
       .type, .status {
         display: block;
       }
@@ -97,6 +107,25 @@
     @extend .text-md-right;
     @extend .mt-3;
     @extend .mt-md-0;
+  }
+}
+
+.pagination-wrapper {
+  @extend .d-flex;
+  @extend .flex-row;
+  @extend .flex-nowrap;
+  @extend .justify-content-between;
+
+  .page-count {
+    order: 2;
+  }
+
+  .pagination-searchbar {
+    order: 1;
+  }
+
+  .pagination {
+    order: 3;
   }
 }
 

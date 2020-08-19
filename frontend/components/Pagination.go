@@ -33,17 +33,19 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Div(
 		elem.Navigation(
+			vecty.Markup(vecty.Class("pagination-wrapper")),
 			elem.Div(
-				vecty.Markup(vecty.Class("pagination-wrapper")),
+				vecty.Markup(vecty.Class("page-count")),
 				elem.Span(
-					vecty.Markup(vecty.Class("page-count")),
 					vecty.Text(
 						fmt.Sprintf("Page %d", *p.CurrentPage+1),
 					),
 				),
 			),
-			// vecty.If(p.RenderSearchBar, p.SearchBar(p)),
-			p.SearchBar(p),
+			vecty.If(p.RenderSearchBar, elem.Div(
+				vecty.Markup(vecty.Class("pagination-searchbar")),
+				p.SearchBar(p),
+			)),
 			elem.UnorderedList(
 				vecty.Markup(vecty.Class("pagination")),
 				elem.ListItem(

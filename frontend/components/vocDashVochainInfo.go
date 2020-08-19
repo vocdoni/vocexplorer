@@ -217,7 +217,7 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 		elemList = append(
 			elemList,
 			elem.Div(
-				vecty.Markup(vecty.Class("tile")),
+				vecty.Markup(vecty.Class("tile", info.State)),
 				ProcessBlock(hok, height, info),
 			),
 		)
