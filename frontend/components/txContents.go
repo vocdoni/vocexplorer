@@ -100,9 +100,9 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		processID = typedTx.ProcessID
 	}
 
-	util.StripHexString(&entityID)
-	util.StripHexString(&processID)
-	util.StripHexString(&nullifier)
+	entityID = util.StripHexString(entityID)
+	processID = util.StripHexString(processID)
+	nullifier = util.StripHexString(nullifier)
 
 	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
 	accordionName := "accordionTx"

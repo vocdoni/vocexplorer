@@ -1,10 +1,13 @@
 package db
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sync/atomic"
 
 	"github.com/golang/protobuf/ptypes"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -15,6 +18,7 @@ import (
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
+	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -59,7 +63,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 }
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
-	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey)
+	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
 
 	batch := d.NewBatch()
 	fetchValidators(latestBlockHeight.GetHeight(), c, batch)
@@ -68,31 +72,30 @@ func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Fetch latest block & tx heights
-	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey)
-	latestTxHeight := getHeight(d, config.LatestTxHeightKey)
-	latestEnvelopeHeight := getHeight(d, config.LatestEnvelopeHeightKey)
-	latestEnvelopeHeight.GetHeight()
+	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
+	latestTxHeight := getHeight(d, config.LatestTxHeightKey, 1)
+	latestEnvelopeHeight := getHeight(d, config.LatestEnvelopeHeightKey, 0)
 
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
 	}
-	blockHeight := status.SyncInfo.LatestBlockHeight
+	gwBlockHeight := status.SyncInfo.LatestBlockHeight
 
 	// Wait for new blocks to be available
-	for blockHeight-latestBlockHeight.GetHeight() < 1 {
+	for gwBlockHeight-latestBlockHeight.GetHeight() < 1 {
 		time.Sleep(500 * time.Millisecond)
 		status, err := c.Status()
 		if err != nil {
 			log.Error(err)
 		}
-		blockHeight = status.SyncInfo.LatestBlockHeight
+		gwBlockHeight = status.SyncInfo.LatestBlockHeight
 	}
 
 	batch := d.NewBatch()
 
 	i := int64(0)
-	numNewBlocks := util.Min(config.NumBlockUpdates, int(blockHeight-latestBlockHeight.GetHeight()))
+	numNewBlocks := util.Min(config.NumBlockUpdates, int(gwBlockHeight-latestBlockHeight.GetHeight()))
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
 	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
@@ -113,7 +116,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		complete = make(chan struct{}, len(txsList))
 		for _, txs := range txsList {
 			if len(txs) > 0 {
-				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete)
+				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete, latestEnvelopeHeight)
 				latestTxHeight.Height += int64(len(txs))
 			} else {
 				complete <- struct{}{}
@@ -129,14 +132,16 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 			num++
 		}
 		blockHeight := types.Height{Height: latestBlockHeight.GetHeight() + i}
-		txHeight := types.Height{Height: latestTxHeight.GetHeight()}
 		encBlockHeight, err := proto.Marshal(&blockHeight)
 		util.ErrPrint(err)
-		encTxHeight, err := proto.Marshal(&txHeight)
+		encTxHeight, err := proto.Marshal(latestTxHeight)
+		util.ErrPrint(err)
+		encEnvHeight, err := proto.Marshal(latestEnvelopeHeight)
 		util.ErrPrint(err)
 
 		batch.Put([]byte(config.LatestTxHeightKey), encTxHeight)
 		batch.Put([]byte(config.LatestBlockHeightKey), encBlockHeight)
+		batch.Put([]byte(config.LatestEnvelopeHeightKey), encEnvHeight)
 		util.ErrPrint(batch.Write())
 	}
 
@@ -172,7 +177,7 @@ func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}, envHeight *types.Height) {
 	numTxs := int64(-1)
 	var height int64
 	for i, tx := range txs {
@@ -190,6 +195,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 			TxResult: result,
 			Index:    txRes.Index,
 		}
+		storeEnvelope(txStore.Tx, envHeight, batch)
 		txVal, err := proto.Marshal(&txStore)
 		util.ErrPrint(err)
 		util.ErrPrint(err)
@@ -342,8 +348,8 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 	}
 }
 
-func getHeight(d *dvotedb.BadgerDB, key string) *types.Height {
-	height := &types.Height{Height: 1}
+func getHeight(d *dvotedb.BadgerDB, key string, def int64) *types.Height {
+	height := &types.Height{Height: def}
 	has, err := d.Has([]byte(key))
 	if err != nil {
 		log.Error(err)
@@ -355,4 +361,54 @@ func getHeight(d *dvotedb.BadgerDB, key string) *types.Height {
 		util.ErrPrint(err)
 	}
 	return height
+}
+
+func storeEnvelope(tx tmtypes.Tx, height *types.Height, batch dvotedb.Batch) {
+	var rawTx dvotetypes.Tx
+	err := json.Unmarshal(tx, &rawTx)
+	util.ErrPrint(err)
+	if rawTx.Type == "vote" {
+		myHeight := atomic.AddInt64(&height.Height, 1)
+		var voteTx dvotetypes.VoteTx
+		err = json.Unmarshal(tx, &voteTx)
+		util.ErrPrint(err)
+
+		// Write vote package
+		votePackage := types.Envelope{
+			Nullifier: voteTx.Nullifier,
+			ProcessID: voteTx.ProcessID,
+			Package:   voteTx.VotePackage,
+		}
+		if votePackage.Nullifier == "" {
+			log.Error("vote without nullifier")
+			return
+		}
+		for _, index := range voteTx.EncryptionKeyIndexes {
+			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
+		}
+		rawEnvelope, err := proto.Marshal(&votePackage)
+		util.ErrPrint(err)
+		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(myHeight))...)
+		batch.Put(packageKey, rawEnvelope)
+
+		// Write nullifier:height
+		storeHeight := types.Height{Height: myHeight}
+		rawHeight, err := proto.Marshal(&storeHeight)
+		util.ErrPrint(err)
+		nullifier, err := hex.DecodeString(util.StripHexString(voteTx.Nullifier))
+		util.ErrPrint(err)
+		nullifierKey := append([]byte(config.EnvNullifierPrefix), nullifier...)
+		batch.Put(nullifierKey, rawHeight)
+
+		// Write pid|height:height
+		heightBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(heightBytes, uint64(myHeight))
+		PIDBytes, err := hex.DecodeString(util.StripHexString(voteTx.ProcessID))
+		util.ErrPrint(err)
+		heightKey := append([]byte(config.EnvPIDPrefix), heightBytes...)
+		heightKey = append(heightKey, PIDBytes...)
+		batch.Put(heightKey, rawHeight)
+
+		log.Debugf("Stored envelope %s of process %s at height %d", votePackage.Nullifier, voteTx.ProcessID, myHeight)
+	}
 }

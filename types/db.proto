@@ -9,6 +9,13 @@ message Height {
     int64 Height = 1;
 }
 
+message Envelope {
+    repeated int32 EncryptionKeyIndexes = 1;
+    string Nullifier = 2;
+    string ProcessID = 3;
+    string Package = 4;
+}
+
 message StoreBlock {
     bytes Hash = 1;
     int64 Height = 2;
