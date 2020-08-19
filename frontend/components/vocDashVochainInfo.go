@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"strings"
 	"syscall/js"
 
@@ -44,6 +45,7 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 			b.vc.ProcessSearchIDs = util.TrimSlice(temp, config.ListSize, &b.processesIndex)
 			b.numProcesses = len(temp)
 		}
+
 		return elem.Section(
 			elem.Input(vecty.Markup(
 				event.Input(func(e *vecty.Event) {
@@ -146,8 +148,48 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 		),
 		elem.Heading4(vecty.Text("Process ID list: ")),
 		vecty.If(len(b.vc.ProcessSearchList) < b.numProcesses, vecty.Text("Loading process info...")),
-		elem.UnorderedList(
+		elem.Div(
 			renderProcessItems(b.vc.ProcessSearchIDs, b.vc.EnvelopeHeights, b.vc.ProcessSearchList)...,
+		),
+	)
+}
+
+func ProcessBlock(hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("tile-body")),
+		elem.Div(
+			vecty.Markup(vecty.Class("process-type")),
+			elem.Div(
+				elem.Span(
+					vecty.Markup(vecty.Class("type")),
+					vecty.Text(info.ProcessType),
+				),
+				elem.Span(
+					vecty.Markup(vecty.Class("status")),
+					vecty.Text(info.State),
+				),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("process-contents")),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("envelopes")),
+					vecty.Text(
+						fmt.Sprintf("%d envelopes", height),
+					),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("hash")),
+					vecty.Text("(hash &/or other info?)"),
+				),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("process-details")),
+			elem.Div(
+				vecty.Text("(date?)"),
+			),
 		),
 	)
 }
@@ -160,13 +202,23 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 	for _, ID := range IDs {
 		height, hok := heights[ID]
 		info, iok := procs[ID]
+
+		if !iok {
+			elemList = append(
+				elemList,
+				elem.Div(
+					vecty.Markup(vecty.Class("loading")),
+					vecty.Text("Loading process info..."),
+				),
+			)
+			continue
+		}
+
 		elemList = append(
 			elemList,
-			elem.ListItem(
-				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/processes/"+ID)), vecty.Text(ID)),
-				vecty.If(!iok, vecty.Text(": loading process info...")),
-				vecty.If(iok, vecty.Text(": type: "+info.ProcessType+", state: "+info.State)),
-				vecty.If(hok, vecty.Text(", "+util.IntToString(height)+" envelopes")),
+			elem.Div(
+				vecty.Markup(vecty.Class("tile")),
+				ProcessBlock(hok, height, info),
 			),
 		)
 	}
