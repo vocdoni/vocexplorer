@@ -75,10 +75,7 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 		if types.BlockIsEmpty(t.BlockList[i]) {
 			continue
 		}
-		// for i, block := range t.BlockList {
-		blockList = append(blockList, &BlockCard{
-			Block: t.BlockList[i],
-		})
+		blockList = append(blockList, BlockCard(t.BlockList[i]))
 	}
 	if len(blockList) == 0 {
 		fmt.Println("No blocks available")

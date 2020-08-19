@@ -14,16 +14,11 @@ import (
 	"golang.org/x/text/message"
 )
 
-type BlockCard struct {
-	vecty.Core
-	Block *types.StoreBlock
-}
-
-func (c *BlockCard) Render() vecty.ComponentOrHTML {
+func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	var tm time.Time
 	var err error
-	if c.Block.GetTime() != nil {
-		tm, err = ptypes.Timestamp(c.Block.GetTime())
+	if block.GetTime() != nil {
+		tm, err = ptypes.Timestamp(block.GetTime())
 		util.ErrPrint(err)
 	}
 	p := message.NewPrinter(language.English)
@@ -32,16 +27,16 @@ func (c *BlockCard) Render() vecty.ComponentOrHTML {
 		bootstrap.Card(
 			elem.Anchor(
 				vecty.Markup(
-					vecty.Attribute("href", "/blocks/"+util.IntToString(c.Block.GetHeight())),
+					vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 				),
-				vecty.Text(util.IntToString(c.Block.GetHeight())),
+				vecty.Text(util.IntToString(block.GetHeight())),
 			),
 			vecty.List{
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Span(
 						vecty.Markup(vecty.Class("mr-2")),
-						vecty.Text(p.Sprintf("%d transactions", c.Block.GetNumTxs())),
+						vecty.Text(p.Sprintf("%d transactions", block.GetNumTxs())),
 					),
 					elem.Span(
 						vecty.Text(util.GetTimeAgoFormatter().Format(tm)),
@@ -55,8 +50,8 @@ func (c *BlockCard) Render() vecty.ComponentOrHTML {
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Markup(vecty.Attribute("title", hex.EncodeToString(c.Block.GetHash()))),
-						vecty.Text(hex.EncodeToString(c.Block.GetHash())),
+						vecty.Markup(vecty.Attribute("title", hex.EncodeToString(block.GetHash()))),
+						vecty.Text(hex.EncodeToString(block.GetHash())),
 					),
 				),
 			},
