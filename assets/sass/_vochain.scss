@@ -111,10 +111,19 @@
 }
 
 .pagination-wrapper {
-  @extend .d-flex;
   @extend .flex-row;
+  @extend .flex-column;
+  @extend .flex-md-row;
+  @extend .d-flex;
   @extend .flex-nowrap;
   @extend .justify-content-between;
+  margin-bottom: .75rem;
+
+  .page-count, .pagination-searchbar, .pagination {
+    @extend .d-flex;
+    @extend .align-items-center;
+    margin-bottom: 0;
+  }
 
   .page-count {
     order: 2;
