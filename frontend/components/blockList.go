@@ -57,7 +57,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 			))
 		}
 
-		return elem.Div(
+		return elem.Section(
 			vecty.Markup(vecty.Class("list", "paginated")),
 			elem.Heading3(
 				vecty.Text("Blocks"),
@@ -75,7 +75,10 @@ func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.Compone
 		if types.BlockIsEmpty(t.BlockList[i]) {
 			continue
 		}
-		blockList = append(blockList, BlockCard(t.BlockList[i]))
+		blockList = append(blockList, elem.Div(
+			vecty.Markup(vecty.Class("paginated-card")),
+			BlockCard(t.BlockList[i]),
+		))
 	}
 	if len(blockList) == 0 {
 		fmt.Println("No blocks available")

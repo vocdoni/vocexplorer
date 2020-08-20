@@ -23,7 +23,10 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 		if types.BlockIsEmpty(b.T.BlockList[i]) {
 			continue
 		}
-		blockList = append(blockList, BlockCard(b.T.BlockList[i]))
+		blockList = append(blockList, elem.Div(
+			vecty.Markup(vecty.Class("card-deck-col")),
+			BlockCard(b.T.BlockList[i]),
+		))
 	}
 	if len(blockList) == 0 {
 		fmt.Println("No blocks available")

@@ -1,12 +1,16 @@
-
 pre {
   -moz-tab-size: 2;
   -webkit-tab-size: 2;
   tab-size: 2;
 }
 
-.container > section + section {
-  @extend .mt-3;
+.container > section {
+  &:first-of-type {
+    @extend .mt-3;
+  }
+  + section {
+    @extend .mt-3;
+  }
 }
 
 .block-tile + .block-tile {
@@ -18,13 +22,23 @@ pre {
   font-weight: bold;
 }
 
+.list.paginated .paginated-card {
+  @extend .col-12;
+
+  + .paginated-card {
+    @extend .mt-3;
+  }
+}
+
 .responsive-card-deck {
   @extend .row;
   .card-deck-col {
-    @extend .mb-3;
-    @extend .mb-lg-0;
     @extend .col-12;
     @extend .col-lg-3;
+    + .card-deck-col {
+      @extend .mt-3;
+      @extend .mt-lg-0;
+    }
   }
 
   .recent-blocks & {
@@ -43,15 +57,18 @@ pre {
 
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
+
+  &.newProcess,
   &.paused {
     border-left-color: $gray-500;
-    .process-type > div {
+    .type > div {
       color: $gray-600;
     }
   }
+  &.cancelProcess,
   &.canceled {
     border-left-color: $yellow;
-    .process-type > div {
+    .type > div {
       color: darken($yellow, 10%);
     }
   }
@@ -59,19 +76,25 @@ pre {
   @media (min-width: map-get($grid-breakpoints, "md")) {
     padding: 0;
 
-    .process-type > div {
+    .type > div {
       background-color: lighten($green, 50%);
       border: 1px solid $green;
       margin-top: -1px;
       margin-bottom: -1px;
     }
-    &.canceled .process-type > div {
-      background-color: lighten($yellow, 40%);
-      border: 1px solid $yellow;
+    &.cancelProcess,
+    &.canceled {
+      .type > div {
+        background-color: lighten($yellow, 40%);
+        border: 1px solid $yellow;
+      }
     }
-    &.paused .process-type > div {
-      background-color: $gray-400;
-      border-color: $gray-500;
+    &.newProcess,
+    &.paused {
+      .type > div {
+        background-color: $gray-400;
+        border-color: $gray-500;
+      }
     }
   }
 
@@ -83,12 +106,12 @@ pre {
     margin-top: 1rem;
   }
   @media (min-width: map-get($grid-breakpoints, "md")) {
-    .process-type > div, .process-contents > div, .process-details > div {
+    .type > div, .contents > div, .details > div {
       padding: 1rem;
     }
   }
 
-  .process-type {
+  .type {
     @extend .col-md-2;
     color: darken($green, 18%);
 
@@ -98,12 +121,12 @@ pre {
       @extend .align-items-md-center;
     }
 
-    .type {
+    .title {
       font-weight: bold;
     }
   }
 
-  .process-contents {
+  .contents {
     @extend .col-md-7;
     @extend .col-lg-8;
     @extend .d-flex;
@@ -112,7 +135,7 @@ pre {
     @extend .mt-md-0;
   }
 
-  .process-details {
+  .details {
     @extend .col-md-3;
     @extend .col-lg-2;
     @extend .d-flex;
@@ -152,11 +175,6 @@ pre {
   .pagination {
     order: 3;
   }
-}
-
-.paginated.list .card-deck-col {
-  @extend .col-12;
-  @extend .mb-3;
 }
 
 .dt {

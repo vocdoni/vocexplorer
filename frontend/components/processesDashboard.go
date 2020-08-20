@@ -33,16 +33,14 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 		if st == "" {
 			t = "unknown"
 		}
-		return elem.Div(
-			elem.Main(
-				elem.Heading4(vecty.Text("Process "+dash.processID)),
-				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
-				renderResults(dash.process.Results),
-				vecty.Markup(vecty.Class("info-pane")),
-				&EnvelopeListView{
-					process: dash.process,
-				},
-			),
+		return Container(
+			elem.Heading4(vecty.Text("Process "+dash.processID)),
+			elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
+			renderResults(dash.process.Results),
+			vecty.Markup(vecty.Class("info-pane")),
+			&EnvelopeListView{
+				process: dash.process,
+			},
 		)
 	}
 	return &bootstrap.Alert{

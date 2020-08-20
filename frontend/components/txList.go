@@ -1,11 +1,9 @@
 package components
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
@@ -62,10 +60,10 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 			))
 		}
 
-		return elem.Div(
+		return elem.Section(
 			vecty.Markup(vecty.Class("list", "paginated")),
 			elem.Heading3(
-				vecty.Text("Txs"),
+				vecty.Text("Transactions"),
 			),
 			p,
 		)
@@ -89,7 +87,7 @@ func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentO
 		fmt.Println("No txs available")
 		return elem.Div(vecty.Text("Loading Txs..."))
 	}
-	txList = append(txList, vecty.Markup(vecty.Class("responsive-card-deck")))
+
 	return elem.Div(
 		txList...,
 	)
@@ -99,22 +97,26 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx.Store.Tx, &rawTx)
 	util.ErrPrint(err)
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
+	return elem.Div(
+		vecty.Markup(vecty.Class("tile", rawTx.Type)),
+		elem.Div(
+			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
-				vecty.Markup(vecty.Class("card-header")),
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Store.TxHeight))),
+				vecty.Markup(vecty.Class("type")),
+				elem.Div(
+					elem.Span(
+						vecty.Markup(vecty.Class("title")),
+						vecty.Text(rawTx.Type),
 					),
-					vecty.Text(util.IntToString(tx.Store.TxHeight)),
 				),
 			),
 			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
+				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					vecty.Markup(vecty.Class("dt")),
-					vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
+					vecty.Text(
+						fmt.Sprintf("%s transaction on block ", humanize.Ordinal(int(tx.Store.Index+1))),
+					),
 					elem.Anchor(
 						vecty.Markup(
 							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
@@ -122,20 +124,6 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 						vecty.Text(util.IntToString(tx.Store.Height)),
 					),
 				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Hash"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(strings.ToUpper(hex.EncodeToString(tx.GetHash()))),
-					),
-				),
-				vecty.If(rawTx.Type != "",
-					elem.Div(
-						vecty.Text("Type: "+rawTx.Type),
-					)),
 			),
 		),
 	)

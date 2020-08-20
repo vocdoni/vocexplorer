@@ -22,40 +22,37 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 		util.ErrPrint(err)
 	}
 	p := message.NewPrinter(language.English)
-	return elem.Div(
-		vecty.Markup(vecty.Class("card-deck-col")),
-		bootstrap.Card(
-			elem.Anchor(
-				vecty.Markup(
-					vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
-				),
-				vecty.Text(util.IntToString(block.GetHeight())),
+	return bootstrap.Card(
+		elem.Anchor(
+			vecty.Markup(
+				vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 			),
-			vecty.List{
-				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Span(
-						vecty.Markup(vecty.Class("mr-2")),
-						vecty.Text(p.Sprintf("%d transactions", block.GetNumTxs())),
-					),
-					elem.Span(
-						vecty.Text(util.GetTimeAgoFormatter().Format(tm)),
-					),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("detail", "text-truncate", "mt-2")),
-					elem.Span(
-						vecty.Markup(vecty.Class("dt", "mr-2")),
-						vecty.Text("Hash"),
-					),
-					elem.Span(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Markup(vecty.Attribute("title", hex.EncodeToString(block.GetHash()))),
-						vecty.Text(hex.EncodeToString(block.GetHash())),
-					),
-				),
-			},
-			nil,
+			vecty.Text(util.IntToString(block.GetHeight())),
 		),
+		vecty.List{
+			elem.Div(
+				vecty.Markup(vecty.Class("block-card-heading")),
+				elem.Span(
+					vecty.Markup(vecty.Class("mr-2")),
+					vecty.Text(p.Sprintf("%d transactions", block.GetNumTxs())),
+				),
+				elem.Span(
+					vecty.Text(util.GetTimeAgoFormatter().Format(tm)),
+				),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("detail", "text-truncate", "mt-2")),
+				elem.Span(
+					vecty.Markup(vecty.Class("dt", "mr-2")),
+					vecty.Text("Hash"),
+				),
+				elem.Span(
+					vecty.Markup(vecty.Class("dd")),
+					vecty.Markup(vecty.Attribute("title", hex.EncodeToString(block.GetHash()))),
+					vecty.Text(hex.EncodeToString(block.GetHash())),
+				),
+			),
+		},
+		nil,
 	)
 }

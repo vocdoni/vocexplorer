@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 )
@@ -14,5 +15,12 @@ type Stats struct {
 
 // Render renders the Stats component
 func (stats *Stats) Render() vecty.ComponentOrHTML {
-	return components.Container(vecty.Text("Most stats will be moved here :)"))
+	return components.Container(
+		elem.Section(
+			elem.Heading3(
+				vecty.Text("Stats"),
+			),
+			vecty.Text("Most stats will be moved here :)"),
+		),
+	)
 }

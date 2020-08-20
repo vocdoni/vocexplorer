@@ -156,42 +156,45 @@ func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 
 func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile-body")),
+		vecty.Markup(vecty.Class("tile", info.State)),
 		elem.Div(
-			vecty.Markup(vecty.Class("process-type")),
+			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
-				elem.Span(
-					vecty.Markup(vecty.Class("type")),
-					vecty.Text(info.ProcessType),
-				),
-				elem.Span(
-					vecty.Markup(vecty.Class("status")),
-					vecty.Text(info.State),
-				),
-			),
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("process-contents")),
-			elem.Div(
+				vecty.Markup(vecty.Class("type")),
 				elem.Div(
-					elem.Anchor(
-						vecty.Markup(vecty.Class("hash")),
-						vecty.Markup(vecty.Attribute("href", "/processes/"+ID)),
-						vecty.Text(ID),
+					elem.Span(
+						vecty.Markup(vecty.Class("title")),
+						vecty.Text(info.ProcessType),
 					),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("envelopes")),
-					vecty.Text(
-						fmt.Sprintf("%d envelopes", height),
+					elem.Span(
+						vecty.Markup(vecty.Class("status")),
+						vecty.Text(info.State),
 					),
 				),
 			),
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("process-details")),
 			elem.Div(
-				vecty.Text("(date?)"),
+				vecty.Markup(vecty.Class("contents")),
+				elem.Div(
+					elem.Div(
+						elem.Anchor(
+							vecty.Markup(vecty.Class("hash")),
+							vecty.Markup(vecty.Attribute("href", "/processes/"+ID)),
+							vecty.Text(ID),
+						),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("envelopes")),
+						vecty.Text(
+							fmt.Sprintf("%d envelopes", height),
+						),
+					),
+				),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("details")),
+				elem.Div(
+					vecty.Text("(date?)"),
+				),
 			),
 		),
 	)
@@ -219,10 +222,7 @@ func renderProcessItems(IDs []string, heights map[string]int64, procs map[string
 
 		elemList = append(
 			elemList,
-			elem.Div(
-				vecty.Markup(vecty.Class("tile", info.State)),
-				ProcessBlock(ID, hok, height, info),
-			),
+			ProcessBlock(ID, hok, height, info),
 		)
 	}
 	return elemList
