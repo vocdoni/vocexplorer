@@ -15,6 +15,7 @@ require (
 	github.com/ipfs/go-todocounter v0.0.2 // indirect
 	github.com/libp2p/go-libp2p-autonat-svc v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-routing v0.1.0 // indirect
+	github.com/prometheus/procfs v0.1.3 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.3
 	github.com/tendermint/go-amino v0.15.1
