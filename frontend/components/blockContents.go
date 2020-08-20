@@ -12,6 +12,7 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -25,9 +26,88 @@ type BlockContents struct {
 // Render renders the BlockContents component
 func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 	return Container(
-		renderBlockHeader(len(contents.Block.Data.Txs), contents.Hash, contents.Block.Header.Height, contents.Block.Header.Time),
-		renderBlockContents(contents.Block),
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: BlockDetails(contents.Block),
+					}),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("extra-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body:       vecty.Text("card body"),
+						ClassNames: []string{"validators"},
+					}),
+					bootstrap.Card(bootstrap.CardParams{
+						Body:       vecty.Text("card body"),
+						ClassNames: []string{"flex-grow-1", "ml-0", "ml-md-5", "ml-lg-0"},
+					}),
+				),
+			),
+		),
+		elem.Section(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Header: elem.Heading2(
+						vecty.Text("2do"),
+					),
+					Body: renderBlockContents(contents.Block),
+				}),
+			),
+		),
 	)
+}
+
+func BlockDetails(block *tmtypes.Block) vecty.List {
+	return vecty.List{
+		elem.Heading1(
+			vecty.Markup(vecty.Class("card-title")),
+			vecty.Text("Block details"),
+		),
+		elem.Heading2(
+			vecty.Text(fmt.Sprintf("Block Height: %d", block.Header.Height)),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("details")),
+			elem.Span(
+				vecty.Text(fmt.Sprintf("%d transactions", len(block.Data.Txs))),
+			),
+			elem.Span(
+				vecty.Text(fmt.Sprintf("%d bytes", block.Size())),
+			),
+			elem.Span(
+				vecty.Text(
+					fmt.Sprintf("%s (%s)", humanize.Time(block.Header.Time), block.Header.Time.Local().String()),
+				),
+			),
+		),
+		elem.HorizontalRule(),
+		elem.DescriptionList(
+			elem.Definition(
+				vecty.Text("Hash"),
+			),
+			elem.Description(
+				vecty.Text(block.Header.Hash().String()),
+			),
+			elem.Definition(
+				vecty.Text("Parent hash"),
+			),
+			elem.Description(
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", fmt.Sprintf("/blocks/%d", block.Header.Height-1)),
+					),
+					vecty.Text(block.Header.LastBlockID.Hash.String()),
+				),
+			),
+		),
+	}
 }
 
 func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {

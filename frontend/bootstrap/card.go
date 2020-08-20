@@ -5,30 +5,39 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-func Card(Header, Body, Footer vecty.ComponentOrHTML) vecty.ComponentOrHTML {
-	items := vecty.List{}
+type CardParams struct {
+	Header     vecty.ComponentOrHTML
+	Body       vecty.ComponentOrHTML
+	Footer     vecty.ComponentOrHTML
+	ClassNames []string
+}
 
-	if Header != nil {
+func Card(p CardParams) vecty.ComponentOrHTML {
+	items := vecty.List{}
+	classes := p.ClassNames
+	classes = append(classes, "card")
+
+	if p.Header != nil {
 		items = append(items, elem.Div(
 			vecty.Markup(vecty.Class("card-header")),
-			Header,
+			p.Header,
 		))
 	}
-	if Body != nil {
+	if p.Body != nil {
 		items = append(items, elem.Div(
 			vecty.Markup(vecty.Class("card-body")),
-			Body,
+			p.Body,
 		))
 	}
-	if Footer != nil {
+	if p.Footer != nil {
 		items = append(items, elem.Div(
 			vecty.Markup(vecty.Class("card-footer")),
-			Body,
+			p.Body,
 		))
 	}
 
 	return elem.Div(
-		vecty.Markup(vecty.Class("card")),
+		vecty.Markup(vecty.Class(classes...)),
 		items,
 	)
 }

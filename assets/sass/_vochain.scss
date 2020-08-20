@@ -177,6 +177,59 @@ pre {
   }
 }
 
+.details-view {
+  h1 {
+    font-size: $h4-font-size;
+  }
+  h2 {
+    font-size: $h6-font-size;
+  }
+
+  .card {
+    @extend .mb-3;
+    @extend .mb-md-5;
+
+    &.validators {
+      @extend .flex-grow-1;
+    }
+  }
+
+  .main-column {
+    @extend .col-md-12;
+    @extend .col-lg-8;
+    @extend .pr-lg-0;
+
+    .card {
+      @extend .mr-lg-5;
+    }
+
+    .details {
+      font-size: $font-size-xs;
+
+      @extend .d-flex;
+      @extend .justify-content-start;
+      @extend .text-muted;
+      > span {
+        @extend .mr-4;
+
+        &:last-of-type {
+          @extend .mr-0;
+        }
+      }
+    }
+  }
+
+  .extra-column {
+    @extend .col-md-12;
+    @extend .col-lg-4;
+    @extend .d-flex;
+    @extend .flex-column;
+    @extend .flex-md-row;
+    @extend .flex-lg-column;
+    @extend .pl-lg-0;
+  }
+}
+
 .dt {
   @extend dt;
 }

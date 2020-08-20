@@ -23,14 +23,14 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 		util.ErrPrint(err)
 	}
 	p := message.NewPrinter(language.English)
-	return bootstrap.Card(
-		elem.Anchor(
+	return bootstrap.Card(bootstrap.CardParams{
+		Header: elem.Anchor(
 			vecty.Markup(
 				vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 			),
 			vecty.Text(util.IntToString(block.GetHeight())),
 		),
-		vecty.List{
+		Body: vecty.List{
 			elem.Div(
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Span(
@@ -54,6 +54,5 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 				),
 			),
 		},
-		nil,
-	)
+	})
 }

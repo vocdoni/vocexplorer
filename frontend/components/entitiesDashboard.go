@@ -25,14 +25,16 @@ type EntitiesDashboardView struct {
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.entity != nil {
 		return Container(
-			elem.Heading4(vecty.Text(
-				fmt.Sprintf("Entity %s", dash.entityID),
-			)),
-			vecty.Markup(vecty.Class("info-pane")),
-			&ProcessListView{
-				entity:    dash.entity,
-				refreshCh: dash.refreshCh,
-			},
+			elem.Section(
+				elem.Heading4(vecty.Text(
+					fmt.Sprintf("Entity %s", dash.entityID),
+				)),
+				vecty.Markup(vecty.Class("info-pane")),
+				&ProcessListView{
+					entity:    dash.entity,
+					refreshCh: dash.refreshCh,
+				},
+			),
 		)
 	}
 	return Container(vecty.Text("Connecting to blockchain client"))
