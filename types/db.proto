@@ -14,6 +14,8 @@ message Envelope {
     string Nullifier = 2;
     string ProcessID = 3;
     string Package = 4;
+    int64 ProcessHeight = 5;
+    int64 GlobalHeight = 6;
 }
 
 message StoreBlock {
