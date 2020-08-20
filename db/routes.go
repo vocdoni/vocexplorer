@@ -97,7 +97,6 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 // ListBlocksByValidatorHandler writes a list of blocks which share the given proposer
 func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Debug("VALBLOCKS")
 		froms, ok := r.URL.Query()["from"]
 		if !ok || len(froms[0]) < 1 {
 			log.Errorf("Url Param 'from' is missing")
@@ -112,12 +111,6 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		}
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-
-		// latestBlockHeight := &types.Height{}
-		// rawValHeight, err := db.Get([]byte(config.LatestBlockHeightKey))
-		// util.ErrPrint(err)
-		// err = proto.Unmarshal(rawValHeight, latestBlockHeight)
-		// util.ErrPrint(err)
 
 		var rawBlocks types.ItemList
 		var tempBlock types.StoreBlock
@@ -149,6 +142,52 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		util.ErrPrint(err)
 		w.Write(msg)
 		log.Debugf("Sent %d blocks by validator %s", len(rawBlocks.GetItems()), proposers[0])
+	}
+}
+
+// ListEnvelopesByProcessHandler writes a list of envelopes which share the given process
+func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", 400)
+			return
+		}
+		processes, ok := r.URL.Query()["process"]
+		if !ok || len(processes[0]) < 1 {
+			log.Errorf("Url Param 'process' is missing")
+			http.Error(w, "Url Param 'process' missing", 400)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+
+		procEnvHeightMap := getHeightMap(db, config.ProcessEnvelopeHeightMapKey)
+		envHeight, ok := procEnvHeightMap.Heights[processes[0]]
+		if !ok {
+			envHeight = 0
+		}
+		from = util.Min(from, int(envHeight))
+
+		// Get envelope nullifiers by pid|height
+		nullifiers := listHashesByHeight(db, config.ListSize, from, config.EnvPIDPrefix+processes[0])
+		if len(nullifiers) == 0 {
+			log.Error("No hashes retrieved")
+			http.Error(w, "No blocks available", 404)
+			return
+		}
+		var rawEnvelopes types.ItemList
+		for _, nullifier := range nullifiers {
+			rawEnvelope, err := db.Get(append([]byte(config.EnvNullifierPrefix), nullifier...))
+			util.ErrPrint(err)
+			rawEnvelopes.Items = append(rawEnvelopes.GetItems(), rawEnvelope)
+		}
+
+		msg, err := proto.Marshal(&rawEnvelopes)
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Sent %d envelopes by process %s", len(rawEnvelopes.GetItems()), processes[0])
 	}
 }
 
