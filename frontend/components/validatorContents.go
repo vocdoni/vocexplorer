@@ -15,18 +15,19 @@ import (
 // ValidatorContents renders validator contents
 type ValidatorContents struct {
 	vecty.Core
-	Validator    *types.Validator
-	BlockList    [config.ListSize]*types.StoreBlock
-	TotalBlocks  int
-	CurrentBlock int
-	blockRefresh chan struct{}
-	Cfg          *config.Cfg
+	Validator       *types.Validator
+	BlockList       [config.ListSize]*types.StoreBlock
+	TotalBlocks     int
+	ValidatorBlocks int
+	CurrentBlock    int
+	blockRefresh    chan struct{}
+	Cfg             *config.Cfg
 }
 
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		renderValidatorHeader(contents.Validator),
+		contents.renderValidatorHeader(),
 		contents.renderValidatorBlockList(),
 	)
 }
@@ -35,6 +36,7 @@ func initValidatorContentsView(v *ValidatorContents, validator *types.Validator,
 	v.Validator = validator
 	v.Cfg = cfg
 	v.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	v.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address)))
 	go v.updateBlocks()
 	return v
 }
@@ -70,13 +72,13 @@ func (contents *ValidatorContents) updateBlocks() {
 
 }
 
-func renderValidatorHeader(val *types.Validator) vecty.ComponentOrHTML {
+func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				elem.Heading2(
 					vecty.Markup(vecty.Class("card-header")),
-					vecty.Text("Validator Address "+util.HexToString(val.GetAddress())),
+					vecty.Text("Validator Address "+util.HexToString(contents.Validator.GetAddress())),
 				),
 			),
 			elem.Div(
@@ -84,11 +86,21 @@ func renderValidatorHeader(val *types.Validator) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Blocks"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(util.IntToString(contents.ValidatorBlocks)),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
 						vecty.Text("Priority"),
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(val.GetProposerPriority())),
+						vecty.Text(util.IntToString(contents.Validator.GetProposerPriority())),
 					),
 				),
 				elem.Div(
@@ -98,7 +110,7 @@ func renderValidatorHeader(val *types.Validator) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(val.GetVotingPower())),
+						vecty.Text(util.IntToString(contents.Validator.GetVotingPower())),
 					),
 				),
 				elem.Div(
@@ -108,7 +120,7 @@ func renderValidatorHeader(val *types.Validator) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(val.GetPubKey())),
+						vecty.Text(util.HexToString(contents.Validator.GetPubKey())),
 					),
 				),
 			),

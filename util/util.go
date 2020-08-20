@@ -6,7 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/go-dvote/util"
 )
 
 // ErrPrint prints an error to stdout. If err is nil, return false. If err is not nil, return true
@@ -107,4 +110,15 @@ func StripHexString(str string) string {
 //HexToString converts an array of hexbytes to a string
 func HexToString(bytes []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bytes))
+}
+
+//from go-dvote vochain/apputils.go. Copied here because vochain conflicts with build constraints
+
+// GenerateNullifier generates the nullifier of a vote (hash(address+processId)).
+func GenerateNullifier(address ethcommon.Address, processID string) (string, error) {
+	pidBytes, err := hex.DecodeString(util.TrimHex(processID))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", ethereum.HashRaw([]byte(fmt.Sprintf("%s%s", address.Bytes(), pidBytes)))), nil
 }

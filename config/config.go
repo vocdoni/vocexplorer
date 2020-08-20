@@ -57,6 +57,8 @@ const (
 	LatestTxHeightKey = "LatestTxHeight"
 	//LatestValidatorHeightKey is the key for the value of the latest validator height stored
 	LatestValidatorHeightKey = "LatestValHeight"
+	//ValidatorHeightMapKey is the key for the map of validator block heights
+	ValidatorHeightMapKey = "ValHeightMap"
 	//LatestEnvelopeHeightKey is the key for the value of the latest envelope height stored
 	LatestEnvelopeHeightKey = "LatestEnvHeight"
 )

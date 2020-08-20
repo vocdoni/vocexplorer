@@ -49,3 +49,7 @@ message Validator {
     int64 VotingPower = 3;
     int64 ProposerPriority = 4;
 }
+
+message HeightMap {
+    map<string, int64> heights = 1;
+}

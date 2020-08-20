@@ -74,6 +74,32 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 	return blockList
 }
 
+//GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
+func GetValidatorBlockHeight(proposer string) int64 {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/numblocksvalidator/?proposer=" + proposer)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return 0
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
+}
+
 //GetBlock returns a single block from the database
 func GetBlock(i int64) *types.StoreBlock {
 	c := &http.Client{

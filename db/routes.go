@@ -152,6 +152,91 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 	}
 }
 
+// NumBlocksByValidatorHandler writes the number of blocks which share the given proposer
+func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		proposers, ok := r.URL.Query()["proposer"]
+		if !ok || len(proposers[0]) < 1 {
+			log.Errorf("Url Param 'proposer' is missing")
+			http.Error(w, "Url Param 'proposer' missing", 400)
+			return
+		}
+		var heightMap types.HeightMap
+		valMapKey := []byte(config.ValidatorHeightMapKey)
+		has, err := db.Has(valMapKey)
+		util.ErrPrint(err)
+		if has {
+			rawValMap, err := db.Get(valMapKey)
+			util.ErrPrint(err)
+			proto.Unmarshal(rawValMap, &heightMap)
+		}
+		height, ok := heightMap.Heights[proposers[0]]
+		if !ok {
+			height = 0
+		}
+		blockHeight := &types.Height{Height: int64(height)}
+		msg, err := proto.Marshal(blockHeight)
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Found %d blocks by validator %s", blockHeight.GetHeight(), proposers[0])
+	}
+}
+
+// // NumBlocksByValidatorHandler writes the number of blocks which share the given proposer
+// func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		proposers, ok := r.URL.Query()["proposer"]
+// 		if !ok || len(proposers[0]) < 1 {
+// 			log.Errorf("Url Param 'proposer' is missing")
+// 			http.Error(w, "Url Param 'proposer' missing", 400)
+// 			return
+// 		}
+
+// 		latestBlockHeight := getHeight(db, config.LatestBlockHeightKey, 1)
+// 		numBlocks := int64(0)
+// 		complete := make(chan struct{})
+// 		// Get blocks by hash, where block proposer matches proposer
+// 		height := 1
+// 		for ; height < int(latestBlockHeight.GetHeight()); height++ {
+// 			go countBlockByValidator(&numBlocks, db, height, proposers[0], complete)
+// 		}
+// 		// Sync all countBlock routines
+// 		for range complete {
+// 			if height <= 2 {
+// 				break
+// 			}
+// 			height--
+// 		}
+
+// 		blockHeight := &types.Height{Height: int64(numBlocks)}
+// 		msg, err := proto.Marshal(blockHeight)
+// 		util.ErrPrint(err)
+// 		w.Write(msg)
+// 		log.Debugf("Found %d blocks by validator %s", blockHeight.GetHeight(), proposers[0])
+// 	}
+// }
+
+// func countBlockByValidator(numBlocks *int64, db *dvotedb.BadgerDB, height int, proposer string, complete chan struct{}) {
+// 	defer func() { complete <- struct{}{} }()
+// 	key := []byte(config.BlockHeightPrefix + util.IntToString(height))
+// 	has, err := db.Has(key)
+// 	if !has || util.ErrPrint(err) {
+// 		return
+// 	}
+// 	hash, err := db.Get(key)
+// 	if err != nil {
+// 		log.Error(err)
+// 	}
+// 	var tempBlock types.StoreBlock
+// 	rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+// 	util.ErrPrint(err)
+// 	err = proto.Unmarshal(rawBlock, &tempBlock)
+// 	util.ErrPrint(err)
+// 	if util.HexToString(tempBlock.GetProposer()) == proposer {
+// 		atomic.AddInt64(numBlocks, 1)
+// 	}
+// }
+
 // GetBlockHandler writes a block by height
 func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
