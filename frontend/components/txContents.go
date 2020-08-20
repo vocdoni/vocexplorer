@@ -12,7 +12,6 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/xeonx/timeago"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -141,7 +140,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 					vecty.If(
 						!tm.IsZero(),
 						elem.Div(
-							vecty.Text(timeago.English.Format(tm)),
+							vecty.Text(humanize.Time(tm)),
 						),
 					),
 				),

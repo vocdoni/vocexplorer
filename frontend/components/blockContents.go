@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/xeonx/timeago"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -47,7 +47,7 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 						vecty.Text(util.IntToString(numTxs)+" transactions"),
 					),
 					elem.Div(
-						vecty.Text(timeago.English.Format(tm)),
+						vecty.Text(humanize.Time(tm)),
 					),
 				),
 				elem.Div(

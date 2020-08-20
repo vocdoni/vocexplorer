@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -37,7 +38,7 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Text(p.Sprintf("%d transactions", block.GetNumTxs())),
 				),
 				elem.Span(
-					vecty.Text(util.GetTimeAgoFormatter().Format(tm)),
+					vecty.Text(humanize.Time(tm)),
 				),
 			),
 			elem.Div(

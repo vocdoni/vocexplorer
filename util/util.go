@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/xeonx/timeago"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
@@ -109,16 +107,4 @@ func StripHexString(str *string) {
 	if strings.HasPrefix(*str, "0x") || strings.HasPrefix(*str, "0X") {
 		*str = (*str)[2:]
 	}
-}
-
-var English = timeago.English
-
-func GetTimeAgoFormatter() *timeago.Config {
-	English.Periods[1] = timeago.FormatPeriod{
-		D:    time.Minute,
-		One:  "~1 minute",
-		Many: "%d minutes",
-	}
-
-	return &English
 }
