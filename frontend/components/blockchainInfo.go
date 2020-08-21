@@ -53,12 +53,12 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 					p.Sprintf("%d", b.T.Genesis.ConsensusParams.Block.MaxBytes),
 				)),
 			),
-			// elem.TableRow(
-			// 	elem.TableHeader(vecty.Text("Total transactions")),
-			// 	elem.TableData(vecty.Text(
-			// 		p.Sprintf("%d", b.T.TotalTxs),
-			// 	)),
-			// ),
+			elem.TableRow(
+				elem.TableHeader(vecty.Text("Total transactions")),
+				elem.TableData(vecty.Text(
+					p.Sprintf("%d", b.T.TotalTxs),
+				)),
+			),
 			elem.TableRow(
 				elem.TableHeader(vecty.Text("Number of validators")),
 				elem.TableData(vecty.Text(

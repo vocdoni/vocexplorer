@@ -71,6 +71,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	d.t.TotalTxs = int(dbapi.GetTxHeight() - 1)
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 	vecty.Rerender(d)
 	for {
@@ -84,8 +85,8 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t)
 			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			d.t.TotalTxs = int(dbapi.GetTxHeight() - 1)
 			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
@@ -101,6 +102,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			d.blockIndex = i
 			oldBlocks := d.t.TotalBlocks
 			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			d.t.TotalTxs = int(dbapi.GetTxHeight() - 1)
 			if i < 1 {
 				oldBlocks = d.t.TotalBlocks
 			}
