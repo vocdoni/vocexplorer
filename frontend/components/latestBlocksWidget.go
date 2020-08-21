@@ -5,6 +5,7 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
@@ -36,9 +37,13 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 
 	return elem.Section(
 		vecty.Markup(vecty.Class("recent-blocks")),
-		elem.Heading4(vecty.Text("Latest blocks")),
-		elem.Div(
-			blockList...,
-		),
+		bootstrap.Card(bootstrap.CardParams{
+			Body: vecty.List{
+				elem.Heading4(vecty.Text("Latest blocks")),
+				elem.Div(
+					blockList...,
+				),
+			},
+		}),
 	)
 }

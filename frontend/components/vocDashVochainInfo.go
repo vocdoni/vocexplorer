@@ -47,21 +47,25 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 		}
 
 		return elem.Section(
-			elem.Input(vecty.Markup(
-				event.Input(func(e *vecty.Event) {
-					search := e.Target.Get("value").String()
-					if search != "" {
-						js.Global().Set("searchTerm", search)
-					} else {
-						js.Global().Set("searchTerm", "")
-					}
-					b.refreshCh <- true
-					vecty.Rerender(b)
-				}),
-				prop.Placeholder("search IDs"),
-			)),
-			renderProcessList(b),
-			renderEntityList(b),
+			vecty.Markup(vecty.Class("card")),
+			elem.Div(
+				vecty.Markup(vecty.Class("card-body")),
+				elem.Input(vecty.Markup(
+					event.Input(func(e *vecty.Event) {
+						search := e.Target.Get("value").String()
+						if search != "" {
+							js.Global().Set("searchTerm", search)
+						} else {
+							js.Global().Set("searchTerm", "")
+						}
+						b.refreshCh <- true
+						vecty.Rerender(b)
+					}),
+					prop.Placeholder("search IDs"),
+				)),
+				renderProcessList(b),
+				renderEntityList(b),
+			),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
