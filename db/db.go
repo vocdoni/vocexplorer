@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -307,13 +306,14 @@ func updateProcessList(d *dvotedb.BadgerDB) {
 }
 
 // listItemsByHeight returns a list of items given integer keys
-func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][]byte {
+func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]byte {
 	if max > 64 {
 		max = 64
 	}
 	var hashList [][]byte
 	for ; max > 0; max-- {
-		key := []byte(prefix + util.IntToString(height))
+		heightKey := []byte(util.IntToString(height))
+		key := append(prefix, heightKey...)
 		has, err := d.Has(key)
 		if !has || util.ErrPrint(err) {
 			break
@@ -421,13 +421,12 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 
 		// Update height of process env belongs to
 		procHeightMapMutex.Lock()
-		procHeight, ok := procHeightMap.Heights[votePackage.GetProcessID()]
+		procHeight, ok := procHeightMap.Heights[util.StripHexString(votePackage.GetProcessID())]
 		if !ok {
 			procHeight = 0
 		}
 		procHeight++
-		log.Debug(procHeight)
-		procHeightMap.Heights[votePackage.GetProcessID()] = procHeight
+		procHeightMap.Heights[util.StripHexString(votePackage.GetProcessID())] = procHeight
 		procHeightMapMutex.Unlock()
 
 		votePackage.ProcessHeight = procHeight
@@ -454,13 +453,13 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
 		}
 
-		// Write height:package
+		// Write globalHeight:package
 		rawEnvelope, err := proto.Marshal(&votePackage)
 		util.ErrPrint(err)
 		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(globalHeight))...)
 		batch.Put(packageKey, rawEnvelope)
 
-		// Write nullifier:height
+		// Write nullifier:globalHeight
 		storeHeight := types.Height{Height: globalHeight}
 		rawHeight, err := proto.Marshal(&storeHeight)
 		util.ErrPrint(err)
@@ -469,9 +468,8 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		nullifierKey := append([]byte(config.EnvNullifierPrefix), nullifier...)
 		batch.Put(nullifierKey, rawHeight)
 
-		// Write pid|heightbyPID:height
-		heightBytes := make([]byte, 8)
-		binary.LittleEndian.PutUint64(heightBytes, uint64(procHeight))
+		// Write pid|heightbyPID:globalHeight
+		heightBytes := []byte(util.IntToString(procHeight))
 		PIDBytes, err := hex.DecodeString(util.StripHexString(votePackage.ProcessID))
 		util.ErrPrint(err)
 		heightKey := append([]byte(config.EnvPIDPrefix), PIDBytes...)

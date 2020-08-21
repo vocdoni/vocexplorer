@@ -298,7 +298,9 @@ func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Env
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
 		if len(rawEnvelope) > 0 {
-			err = proto.Unmarshal(rawEnvelope, envList[i])
+			envelope := new(types.Envelope)
+			err = proto.Unmarshal(rawEnvelope, envelope)
+			envList[i] = envelope
 			util.ErrPrint(err)
 		}
 	}

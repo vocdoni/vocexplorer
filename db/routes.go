@@ -75,7 +75,7 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 		}
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-		hashes := listItemsByHeight(db, config.ListSize, from, config.BlockHeightPrefix)
+		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.BlockHeightPrefix))
 		if len(hashes) == 0 {
 			http.Error(w, "No blocks available", 404)
 			return
@@ -119,7 +119,7 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		for ; numBlocks < config.ListSize && from > 0; from-- {
 			log.Debugf("Getting block at height %d", from)
 
-			hashes := listItemsByHeight(db, 1, from, config.BlockHeightPrefix)
+			hashes := listItemsByHeight(db, 1, from, []byte(config.BlockHeightPrefix))
 			if len(hashes) == 0 {
 				log.Error("No hashes retrieved")
 				http.Error(w, "No blocks available", 404)
@@ -171,15 +171,20 @@ func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWri
 		from = util.Min(from, int(envHeight))
 
 		// Get envelope heights by pid|height
-		heights := listItemsByHeight(db, config.ListSize, from, config.EnvPIDPrefix+processes[0])
+		processBytes, err := hex.DecodeString(processes[0])
+		util.ErrPrint(err)
+		heights := listItemsByHeight(db, config.ListSize, from, append([]byte(config.EnvPIDPrefix), processBytes...))
 		if len(heights) == 0 {
 			log.Error("No hashes retrieved")
 			http.Error(w, "No blocks available", 404)
 			return
 		}
 		var rawEnvelopes types.ItemList
-		for _, height := range heights {
-			rawEnvelope, err := db.Get(append([]byte(config.EnvPackagePrefix), height...))
+		// Get envelope packages by globalheight:package
+		for _, rawHeight := range heights {
+			height := new(types.Height)
+			util.ErrPrint(proto.Unmarshal(rawHeight, height))
+			rawEnvelope, err := db.Get(append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(height.GetHeight()))...))
 			util.ErrPrint(err)
 			rawEnvelopes.Items = append(rawEnvelopes.GetItems(), rawEnvelope)
 		}
@@ -207,7 +212,7 @@ func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *h
 		from = util.Min(from, int(envHeight.GetHeight()))
 
 		// Get envelope packages
-		packages := listItemsByHeight(db, config.ListSize, from, config.EnvPackagePrefix)
+		packages := listItemsByHeight(db, config.ListSize, from, []byte(config.EnvPackagePrefix))
 		if len(packages) == 0 {
 			log.Error("No envelopes retrieved")
 			http.Error(w, "No envelopes available", 404)
@@ -371,7 +376,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		}
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-		hashes := listItemsByHeight(db, config.ListSize, from, config.TxHeightPrefix)
+		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
 			http.Error(w, "No txs available", 404)
