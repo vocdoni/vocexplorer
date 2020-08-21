@@ -9,6 +9,15 @@ message Height {
     int64 Height = 1;
 }
 
+message Envelope {
+    repeated int32 EncryptionKeyIndexes = 1;
+    string Nullifier = 2;
+    string ProcessID = 3;
+    string Package = 4;
+    int64 ProcessHeight = 5;
+    int64 GlobalHeight = 6;
+}
+
 message StoreBlock {
     bytes Hash = 1;
     int64 Height = 2;
@@ -41,5 +50,8 @@ message Validator {
     bytes PubKey = 2;
     int64 VotingPower = 3;
     int64 ProposerPriority = 4;
-    int64 Height = 5;
+}
+
+message HeightMap {
+    map<string, int64> heights = 1;
 }

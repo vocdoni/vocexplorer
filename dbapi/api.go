@@ -74,6 +74,32 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 	return blockList
 }
 
+//GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
+func GetValidatorBlockHeight(proposer string) int64 {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/numblocksvalidator/?proposer=" + proposer)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return 0
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
+}
+
 //GetBlock returns a single block from the database
 func GetBlock(i int64) *types.StoreBlock {
 	c := &http.Client{
@@ -223,4 +249,134 @@ func GetValidator(address string) *types.Validator {
 	err = proto.Unmarshal(body, &validator)
 	util.ErrPrint(err)
 	return &validator
+}
+
+//GetEnvelopeList returns a list of envelopes from the database
+func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/listenvelopes/?from=" + util.IntToString(i))
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.Envelope{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.Envelope{}
+	}
+	var rawEnvList types.ItemList
+	err = proto.Unmarshal(body, &rawEnvList)
+	util.ErrPrint(err)
+	var envList [config.ListSize]*types.Envelope
+	for i, rawEnvelope := range rawEnvList.GetItems() {
+		if len(rawEnvelope) > 0 {
+			envelope := new(types.Envelope)
+			err = proto.Unmarshal(rawEnvelope, envelope)
+			envList[i] = envelope
+			util.ErrPrint(err)
+		}
+	}
+	return envList
+}
+
+//GetEnvelope gets a single envelope by global height
+func GetEnvelope(height int64) *types.Envelope {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/envelope/?height=" + util.IntToString(height))
+	if util.ErrPrint(err) {
+		return &types.Envelope{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return &types.Envelope{}
+	}
+	envelope := new(types.Envelope)
+	err = proto.Unmarshal(body, envelope)
+	util.ErrPrint(err)
+	return envelope
+}
+
+//GetEnvelopeListByProcess returns a list of envelopes by process
+func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Envelope {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/listenvelopesprocess/?from=" + util.IntToString(i) + "&process=" + process)
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.Envelope{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return [config.ListSize]*types.Envelope{}
+	}
+	var rawEnvList types.ItemList
+	err = proto.Unmarshal(body, &rawEnvList)
+	util.ErrPrint(err)
+	var envList [config.ListSize]*types.Envelope
+	for i, rawEnvelope := range rawEnvList.GetItems() {
+		if len(rawEnvelope) > 0 {
+			envelope := new(types.Envelope)
+			err = proto.Unmarshal(rawEnvelope, envelope)
+			envList[i] = envelope
+			util.ErrPrint(err)
+		}
+	}
+	return envList
+}
+
+//GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
+func GetProcessEnvelopeHeight(process string) int64 {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/envprocheight/?process=" + process)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return 0
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
+}
+
+//GetEnvelopeHeight returns the latest envelope height stored by the database
+func GetEnvelopeHeight() int64 {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/height/?key=" + config.LatestEnvelopeHeightKey)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return 0
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
 }

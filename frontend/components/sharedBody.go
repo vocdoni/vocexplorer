@@ -25,6 +25,7 @@ func (b Body) Render() vecty.ComponentOrHTML {
 		router.NewRoute("/blocks/{id}", &BlocksView{cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/txs/{id}", &TxsView{cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators/{id}", &ValidatorsView{cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelopes/{id}", &EnvelopesView{cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NotFoundHandler(&notFound{}),
 	)
 }

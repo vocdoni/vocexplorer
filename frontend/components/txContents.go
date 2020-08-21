@@ -1,7 +1,6 @@
 package components
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"time"
 
@@ -31,6 +30,8 @@ func (contents *TxContents) Render() vecty.ComponentOrHTML {
 	)
 }
 
+//TODO: link to envelope. Possibly store envelope nullifier/height in tx
+
 func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
 	var txResult coretypes.ResultTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
@@ -43,7 +44,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	util.ErrPrint(err)
 	var txContents []byte
 	var processID string
-	var nullifier string
+	// var nullifier string
 	var entityID string
 
 	switch rawTx.Type {
@@ -53,28 +54,29 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		util.ErrPrint(err)
 
 		// Decode vote package if vote is unencrypted
-		if len(typedTx.EncryptionKeyIndexes) == 0 {
-			var vote dvotetypes.VotePackage
-			rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
-			if util.ErrPrint(err) {
-				txContents, err = json.MarshalIndent(typedTx, "", "    ")
-				util.ErrPrint(err)
-				break
-			}
-			err = json.Unmarshal(rawVote, &vote)
-			if util.ErrPrint(err) {
-				txContents, err = json.MarshalIndent(typedTx, "", "    ")
-				util.ErrPrint(err)
-				break
-			}
-			voteIndent, err := json.MarshalIndent(vote, "", "    ")
-			util.ErrPrint(err)
-			typedTx.VotePackage = string(voteIndent)
-		}
+		// TODO decrypt votes
+		// if len(typedTx.EncryptionKeyIndexes) == 0 {
+		// 	var vote dvotetypes.VotePackage
+		// 	rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
+		// 	if util.ErrPrint(err) {
+		// 		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		// 		util.ErrPrint(err)
+		// 		break
+		// 	}
+		// 	err = json.Unmarshal(rawVote, &vote)
+		// 	if util.ErrPrint(err) {
+		// 		txContents, err = json.MarshalIndent(typedTx, "", "    ")
+		// 		util.ErrPrint(err)
+		// 		break
+		// 	}
+		// 	voteIndent, err := json.MarshalIndent(vote, "", "    ")
+		// 	util.ErrPrint(err)
+		// 	typedTx.VotePackage = string(voteIndent)
+		// }
 		txContents, err = json.MarshalIndent(typedTx, "", "    ")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
-		nullifier = typedTx.Nullifier
+		// nullifier = typedTx.Nullifier
 	case "newProcess":
 		var typedTx dvotetypes.NewProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
@@ -99,9 +101,9 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		processID = typedTx.ProcessID
 	}
 
-	util.StripHexString(&entityID)
-	util.StripHexString(&processID)
-	util.StripHexString(&nullifier)
+	entityID = util.StripHexString(entityID)
+	processID = util.StripHexString(processID)
+	// nullifier = util.StripHexString(nullifier)
 
 	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
 	accordionName := "accordionTx"
@@ -186,18 +188,18 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 						),
 					),
 				),
-				vecty.If(
-					nullifier != "",
-					elem.Div(
-						vecty.Text("Belongs to envelope "),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", "/envelopes/"+nullifier),
-							),
-							vecty.Text(nullifier),
-						),
-					),
-				),
+				// vecty.If(
+				// 	nullifier != "" && rawTx.Type == "vote",
+				// 	elem.Div(
+				// 		vecty.Text("Contains vote envelope "),
+				// 		elem.Anchor(
+				// 			vecty.Markup(
+				// 				vecty.Attribute("href", "/envelopes/"+nullifier),
+				// 			),
+				// 			vecty.Text(nullifier),
+				// 		),
+				// 	),
+				// ),
 			),
 		),
 	),

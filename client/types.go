@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"nhooyr.io/websocket"
 )
 
@@ -101,8 +103,9 @@ type VochainInfo struct {
 	EntityCount       int64
 	EntityIDs         []string
 	EntitySearchIDs   []string
+	EnvelopeHeight    int
 	EnvelopeHeights   map[string]int64
-	Envelopes         []EnvelopeInfo
+	EnvelopeList      [config.ListSize]*types.Envelope
 	Health            int32
 	Height            int64
 	Ok                bool
@@ -138,8 +141,9 @@ type ProcessInfo struct {
 
 // FullProcessInfo holds info about one vochain process, including votes and results
 type FullProcessInfo struct {
-	Nullifiers  []string
-	ProcessType string
-	Results     [][]uint32
-	State       string
+	EnvelopeList   [config.ListSize]*types.Envelope
+	EnvelopeHeight int
+	ProcessType    string
+	Results        [][]uint32
+	State          string
 }

@@ -97,10 +97,11 @@ func TrimSlice(slice []string, lim int, page *int) []string {
 }
 
 //StripHexString removes the hex prefix from a string
-func StripHexString(str *string) {
-	if strings.HasPrefix(*str, "0x") || strings.HasPrefix(*str, "0X") {
-		*str = (*str)[2:]
+func StripHexString(str string) string {
+	if strings.HasPrefix(str, "0x") || strings.HasPrefix(str, "0X") {
+		return str[2:]
 	}
+	return str
 }
 
 //HexToString converts an array of hexbytes to a string

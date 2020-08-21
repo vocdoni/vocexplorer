@@ -134,7 +134,7 @@ func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
 }
 
 // UpdateProcessesDashboardInfo updates process info to include status and recent envelopes
-func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID string, index int) {
+func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID string) {
 	if process == nil {
 		process = new(FullProcessInfo)
 	}
@@ -144,9 +144,6 @@ func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID
 		process.Results = res
 		process.State = st
 	}
-	GetIDs(&process.Nullifiers, c, func() ([]string, error) {
-		return c.GetEnvelopeList(processID, int64(index))
-	})
 }
 
 // UpdateEntitiesDashboardInfo updates entity info to include recent processes
