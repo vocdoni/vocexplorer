@@ -227,6 +227,32 @@ func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *h
 	}
 }
 
+// GetEnvelopeHandler writes a single envelope
+func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		heights, ok := r.URL.Query()["height"]
+		if !ok || len(heights[0]) < 1 {
+			log.Errorf("Url Param 'id' is missing")
+			http.Error(w, "Url Param 'id' missing", 400)
+			return
+		}
+		height, err := strconv.Atoi(heights[0])
+		util.ErrPrint(err)
+
+		envHeight := getHeight(db, config.LatestEnvelopeHeightKey, 1)
+		if height > int(envHeight.GetHeight()) {
+			log.Errorf("Requested envelope does not exist")
+			http.Error(w, "Requested envelope does not exist", 400)
+			return
+		}
+		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(height))...)
+		rawPackage, err := db.Get(packageKey)
+		util.ErrPrint(err)
+		w.Write(rawPackage)
+		log.Debugf("Sent envelope %d", height)
+	}
+}
+
 // EnvelopeHeightByProcessHandler writes the number of envelopes which share the given processID
 func EnvelopeHeightByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

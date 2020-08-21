@@ -278,6 +278,26 @@ func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
 	return envList
 }
 
+//GetEnvelope gets a single envelope by global height
+func GetEnvelope(height int64) *types.Envelope {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/envelope/?height=" + util.IntToString(height))
+	if util.ErrPrint(err) {
+		return &types.Envelope{}
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return &types.Envelope{}
+	}
+	envelope := new(types.Envelope)
+	err = proto.Unmarshal(body, envelope)
+	util.ErrPrint(err)
+	return envelope
+}
+
 //GetEnvelopeListByProcess returns a list of envelopes by process
 func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Envelope {
 	c := &http.Client{
