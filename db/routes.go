@@ -112,36 +112,38 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
 
+		validatorHeightMap := getHeightMap(db, config.ValidatorHeightMapKey)
+		valHeight, ok := validatorHeightMap.Heights[proposers[0]]
+		if !ok {
+			valHeight = 0
+		}
+		from = util.Max(util.Min(from, int(valHeight)), config.ListSize)
+
+		// Get block heights by validator|height
+		proposerBytes, err := hex.DecodeString(proposers[0])
+		util.ErrPrint(err)
+		hashes := listItemsByHeight(db, config.ListSize, from, append([]byte(config.BlockByValidatorPrefix), proposerBytes...))
+		if len(hashes) == 0 {
+			log.Error("No hashes retrieved")
+			http.Error(w, "No blocks available", 404)
+			return
+		}
+
 		var rawBlocks types.ItemList
 		var tempBlock types.StoreBlock
-		numBlocks := 0
-		// Get blocks by hash, where block proposer matches proposer
-		for ; numBlocks < config.ListSize && from > 0; from-- {
-			log.Debugf("Getting block at height %d", from)
-
-			hashes := listItemsByHeight(db, 1, from, []byte(config.BlockHeightPrefix))
-			if len(hashes) == 0 {
-				log.Error("No hashes retrieved")
-				http.Error(w, "No blocks available", 404)
-				return
-			}
-			for _, hash := range hashes {
-				rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-				util.ErrPrint(err)
-				err = proto.Unmarshal(rawBlock, &tempBlock)
-				util.ErrPrint(err)
-				log.Debugf("Found block with proposer %s", tempBlock.GetProposer())
-				if util.HexToString(tempBlock.GetProposer()) == proposers[0] {
-					rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
-					numBlocks++
-				}
-			}
+		// Get blocks by hash:block
+		for _, hash := range hashes {
+			rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
+			util.ErrPrint(err)
+			err = proto.Unmarshal(rawBlock, &tempBlock)
+			util.ErrPrint(err)
+			rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
 		}
 
 		msg, err := proto.Marshal(&rawBlocks)
 		util.ErrPrint(err)
 		w.Write(msg)
-		log.Debugf("Sent %d blocks by validator %s", len(rawBlocks.GetItems()), proposers[0])
+		log.Debugf("Sent %d blocks by validator %s from height %d", len(rawBlocks.GetItems()), proposers[0], from)
 	}
 }
 

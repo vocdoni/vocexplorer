@@ -290,11 +290,17 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 
 	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
 	blockHashKey := append([]byte(config.BlockHashPrefix), block.GetHash()...)
-	hashValue := block.Hash
+	validatorHeightKey := append([]byte(config.BlockByValidatorPrefix), block.GetProposer()...)
+	validatorHeightKey = append(validatorHeightKey, []byte(util.IntToString(height))...)
+	hashValue := block.GetHash()
 
 	// Thread-safe batch operations
+	// Store hash:body
 	(*batch).Put(blockHashKey, bodyValue)
+	// Store globalheight:hash
 	(*batch).Put(blockHeightKey, hashValue)
+	// Store validator|heightbyValidator:hash
+	(*batch).Put(validatorHeightKey, hashValue)
 }
 
 func updateEntityList(d *dvotedb.BadgerDB) {

@@ -51,6 +51,8 @@ const (
 	EnvNullifierPrefix = "08"
 	//EnvPIDPrefix is the key prefix for envelope heights by processID
 	EnvPIDPrefix = "09"
+	//BlockByValidatorPrefix is the key prefix for block hash by validator
+	BlockByValidatorPrefix = "10"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored

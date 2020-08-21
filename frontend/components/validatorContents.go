@@ -15,13 +15,15 @@ import (
 // ValidatorContents renders validator contents
 type ValidatorContents struct {
 	vecty.Core
-	Validator       *types.Validator
-	BlockList       [config.ListSize]*types.StoreBlock
-	TotalBlocks     int
-	ValidatorBlocks int
-	CurrentBlock    int
-	blockRefresh    chan struct{}
-	Cfg             *config.Cfg
+	Validator           *types.Validator
+	BlockList           [config.ListSize]*types.StoreBlock
+	ValidatorBlocks     int
+	disableBlocksUpdate bool
+	CurrentBlock        int
+	CurrentPage         int
+	quitCh              chan struct{}
+	blockRefresh        chan int
+	Cfg                 *config.Cfg
 }
 
 // Render renders the ValidatorContents component
@@ -35,41 +37,53 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator, cfg *config.Cfg) *ValidatorContents {
 	v.Validator = validator
 	v.Cfg = cfg
-	v.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	v.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address)))
+	v.quitCh = make(chan struct{})
+	v.blockRefresh = make(chan int, 50)
+	v.disableBlocksUpdate = false
+	v.CurrentBlock = 0
 	go v.updateBlocks()
 	return v
 }
 
 func (contents *ValidatorContents) updateBlocks() {
-	contents.blockRefresh = make(chan struct{}, 50)
 	ticker := time.NewTicker(time.Duration(contents.Cfg.RefreshTime) * time.Second)
-	contents.BlockList = dbapi.GetBlockListByValidator(contents.TotalBlocks-contents.CurrentBlock, contents.Validator.GetAddress())
-	reverseBlockList(&contents.BlockList)
+	updateValidatorBlocks(contents, contents.ValidatorBlocks-contents.CurrentBlock)
 	vecty.Rerender(contents)
 	for {
 		select {
-		case <-contents.blockRefresh:
+		case i := <-contents.blockRefresh:
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case <-contents.blockRefresh:
+				case i = <-contents.blockRefresh:
 				default:
 					break blockloop
 				}
 			}
-			contents.BlockList = dbapi.GetBlockListByValidator(contents.TotalBlocks-contents.CurrentBlock, contents.Validator.GetAddress())
-			reverseBlockList(&contents.BlockList)
+			contents.CurrentBlock = i
+			oldBlocks := contents.ValidatorBlocks
+			contents.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))) - 1
+			if i < 1 {
+				oldBlocks = contents.ValidatorBlocks
+			}
+			updateValidatorBlocks(contents, oldBlocks-contents.CurrentBlock)
 			vecty.Rerender(contents)
 		case <-ticker.C:
-			contents.BlockList = dbapi.GetBlockListByValidator(contents.TotalBlocks-contents.CurrentBlock, contents.Validator.GetAddress())
-			reverseBlockList(&contents.BlockList)
+			if !contents.disableBlocksUpdate {
+				updateValidatorBlocks(contents, contents.ValidatorBlocks-contents.CurrentBlock)
+			}
 			vecty.Rerender(contents)
 		}
 
 	}
 
+}
+
+func updateValidatorBlocks(contents *ValidatorContents, i int) {
+	contents.BlockList = dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	reverseBlockList(&contents.BlockList)
 }
 
 func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML {
@@ -130,30 +144,16 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 
 func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrHTML {
 	p := &Pagination{
-		TotalPages:      int(contents.TotalBlocks) / config.ListSize,
-		TotalItems:      &contents.TotalBlocks,
-		CurrentPage:     new(int),
+		TotalPages:      int(contents.ValidatorBlocks) / config.ListSize,
+		TotalItems:      &contents.ValidatorBlocks,
+		CurrentPage:     &contents.CurrentPage,
 		ListSize:        config.ListSize,
+		DisableUpdate:   &contents.disableBlocksUpdate,
+		RefreshCh:       contents.blockRefresh,
 		RenderSearchBar: false,
 	}
 	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 		return renderValidatorBlocks(contents.BlockList)
-	}
-	//TODO: keep track of pages with map
-	p.PageLeft = func(e *vecty.Event) {
-		*p.CurrentPage = util.Max(*p.CurrentPage-1, 0)
-		contents.CurrentBlock = util.Max(contents.CurrentBlock-p.ListSize, 0)
-		contents.blockRefresh <- struct{}{}
-	}
-	p.PageRight = func(e *vecty.Event) {
-		*p.CurrentPage = util.Min(*p.CurrentPage+1, p.TotalPages)
-		contents.CurrentBlock = util.Min(contents.CurrentBlock+p.ListSize, p.TotalPages)
-		contents.blockRefresh <- struct{}{}
-	}
-	p.PageStart = func(e *vecty.Event) {
-		*p.CurrentPage = 0
-		contents.CurrentBlock = 0
-		contents.blockRefresh <- struct{}{}
 	}
 
 	return elem.Div(
