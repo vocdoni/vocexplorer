@@ -60,6 +60,12 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 				)),
 			),
 			elem.TableRow(
+				elem.TableHeader(vecty.Text("Total vote envelopes")),
+				elem.TableData(vecty.Text(
+					p.Sprintf("%d", b.T.TotalEnvelopes),
+				)),
+			),
+			elem.TableRow(
 				elem.TableHeader(vecty.Text("Number of validators")),
 				elem.TableData(vecty.Text(
 					p.Sprintf("%d", len(b.T.Genesis.Validators)),

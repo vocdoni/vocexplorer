@@ -200,7 +200,6 @@ func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 		encValidator, err := proto.Marshal(&storeValidator)
 		util.ErrPrint(err)
 		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
-		log.Debugf("Validator address: %s", util.HexToString(storeValidator.GetAddress()))
 	}
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
