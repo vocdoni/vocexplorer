@@ -75,7 +75,7 @@ func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http
 		}
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-		hashes := listHashesByHeight(db, config.ListSize, from, config.BlockHeightPrefix)
+		hashes := listItemsByHeight(db, config.ListSize, from, config.BlockHeightPrefix)
 		if len(hashes) == 0 {
 			http.Error(w, "No blocks available", 404)
 			return
@@ -119,7 +119,7 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 		for ; numBlocks < config.ListSize && from > 0; from-- {
 			log.Debugf("Getting block at height %d", from)
 
-			hashes := listHashesByHeight(db, 1, from, config.BlockHeightPrefix)
+			hashes := listItemsByHeight(db, 1, from, config.BlockHeightPrefix)
 			if len(hashes) == 0 {
 				log.Error("No hashes retrieved")
 				http.Error(w, "No blocks available", 404)
@@ -170,16 +170,16 @@ func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWri
 		}
 		from = util.Min(from, int(envHeight))
 
-		// Get envelope nullifiers by pid|height
-		nullifiers := listHashesByHeight(db, config.ListSize, from, config.EnvPIDPrefix+processes[0])
-		if len(nullifiers) == 0 {
+		// Get envelope heights by pid|height
+		heights := listItemsByHeight(db, config.ListSize, from, config.EnvPIDPrefix+processes[0])
+		if len(heights) == 0 {
 			log.Error("No hashes retrieved")
 			http.Error(w, "No blocks available", 404)
 			return
 		}
 		var rawEnvelopes types.ItemList
-		for _, nullifier := range nullifiers {
-			rawEnvelope, err := db.Get(append([]byte(config.EnvNullifierPrefix), nullifier...))
+		for _, height := range heights {
+			rawEnvelope, err := db.Get(append([]byte(config.EnvPackagePrefix), height...))
 			util.ErrPrint(err)
 			rawEnvelopes.Items = append(rawEnvelopes.GetItems(), rawEnvelope)
 		}
@@ -188,6 +188,67 @@ func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWri
 		util.ErrPrint(err)
 		w.Write(msg)
 		log.Debugf("Sent %d envelopes by process %s", len(rawEnvelopes.GetItems()), processes[0])
+	}
+}
+
+// ListEnvelopesHandler writes a list of envelopes
+func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", 400)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+
+		envHeight := getHeight(db, config.LatestEnvelopeHeightKey, 1)
+		from = util.Min(from, int(envHeight.GetHeight()))
+
+		// Get envelope packages
+		packages := listItemsByHeight(db, config.ListSize, from, config.EnvPackagePrefix)
+		if len(packages) == 0 {
+			log.Error("No envelopes retrieved")
+			http.Error(w, "No envelopes available", 404)
+			return
+		}
+		rawEnvelopes := &types.ItemList{Items: packages}
+
+		msg, err := proto.Marshal(rawEnvelopes)
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Sent %d envelopes", len(rawEnvelopes.GetItems()))
+	}
+}
+
+// EnvelopeHeightByProcessHandler writes the number of envelopes which share the given processID
+func EnvelopeHeightByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		processes, ok := r.URL.Query()["process"]
+		if !ok || len(processes[0]) < 1 {
+			log.Errorf("Url Param 'process' is missing")
+			http.Error(w, "Url Param 'process' missing", 400)
+			return
+		}
+		var heightMap types.HeightMap
+		valMapKey := []byte(config.ProcessEnvelopeHeightMapKey)
+		has, err := db.Has(valMapKey)
+		util.ErrPrint(err)
+		if has {
+			rawValMap, err := db.Get(valMapKey)
+			util.ErrPrint(err)
+			proto.Unmarshal(rawValMap, &heightMap)
+		}
+		height, ok := heightMap.Heights[processes[0]]
+		if !ok {
+			height = 0
+		}
+		envHeight := &types.Height{Height: int64(height)}
+		msg, err := proto.Marshal(envHeight)
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Found %d envelopes by process %s", envHeight.GetHeight(), processes[0])
 	}
 }
 
@@ -310,7 +371,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		}
 		from, err := strconv.Atoi(froms[0])
 		util.ErrPrint(err)
-		hashes := listHashesByHeight(db, config.ListSize, from, config.TxHeightPrefix)
+		hashes := listItemsByHeight(db, config.ListSize, from, config.TxHeightPrefix)
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
 			http.Error(w, "No txs available", 404)

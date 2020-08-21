@@ -306,8 +306,8 @@ func updateProcessList(d *dvotedb.BadgerDB) {
 
 }
 
-// listHashesByHeight returns a list of hashes given integer keys
-func listHashesByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][]byte {
+// listItemsByHeight returns a list of items given integer keys
+func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix string) [][]byte {
 	if max > 64 {
 		max = 64
 	}
