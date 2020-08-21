@@ -156,7 +156,7 @@ func (c *BlockContents) BlockDetails(block *tmtypes.Block) vecty.List {
 	}
 }
 
-func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {
+func renderBlockHeader(numTxs int, hash, proposer tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -184,6 +184,20 @@ func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
 						vecty.Text(hash.String()),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Proposer Address"),
+					),
+					elem.Div(
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/validators/"+proposer.String()),
+							),
+							vecty.Text(proposer.String()),
+						),
 					),
 				),
 			),

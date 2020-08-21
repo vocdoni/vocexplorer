@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"nhooyr.io/websocket"
 )
 
@@ -23,7 +25,6 @@ type RequestMessage struct {
 
 // MetaRequest holds a gateway api request, from go-dvote/types
 type MetaRequest struct {
-	// Payload    *VoteTx  `json:"payload,omitempty"`
 	CensusID   string   `json:"censusId,omitempty"`
 	CensusURI  string   `json:"censusUri,omitempty"`
 	ClaimData  string   `json:"claimData,omitempty"`
@@ -102,8 +103,9 @@ type VochainInfo struct {
 	EntityCount       int64
 	EntityIDs         []string
 	EntitySearchIDs   []string
+	EnvelopeHeight    int
 	EnvelopeHeights   map[string]int64
-	Envelopes         []EnvelopeInfo
+	EnvelopeList      [config.ListSize]*types.Envelope
 	Health            int32
 	Height            int64
 	Ok                bool
@@ -138,10 +140,10 @@ type ProcessInfo struct {
 }
 
 // FullProcessInfo holds info about one vochain process, including votes and results
-
 type FullProcessInfo struct {
-	Nullifiers  []string
-	ProcessType string
-	Results     [][]uint32
-	State       string
+	EnvelopeList   [config.ListSize]*types.Envelope
+	EnvelopeHeight int
+	ProcessType    string
+	Results        [][]uint32
+	State          string
 }

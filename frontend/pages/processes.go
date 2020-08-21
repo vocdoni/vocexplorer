@@ -16,7 +16,8 @@ type ProcessesView struct {
 
 // Render renders the ProcessesView component
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
-	var process client.FullProcessInfo
-	var dash components.ProcessesDashboardView
-	return components.InitProcessesDashboardView(&process, &dash, router.GetNamedVar(home)["id"], home.Cfg)
+	process := new(client.FullProcessInfo)
+	dash := new(components.ProcessesDashboardView)
+	return components.InitProcessesDashboardView(process, dash, router.GetNamedVar(home)["id"], home.Cfg)
+
 }

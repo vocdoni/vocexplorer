@@ -124,6 +124,16 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 						vecty.Text(util.IntToString(tx.Store.Height)),
 					),
 				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Hash"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(util.HexToString(tx.GetHash())),
+					),
+				),
 			),
 		),
 	)

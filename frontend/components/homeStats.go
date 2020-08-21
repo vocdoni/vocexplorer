@@ -71,11 +71,3 @@ func renderHomeBlockList(b *StatsView) vecty.ComponentOrHTML {
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
 }
-
-func renderTimeStats(t *rpc.TendermintInfo) vecty.ComponentOrHTML {
-	return elem.Div(
-		vecty.Markup(vecty.Class("tx-stats")),
-		vecty.Text("Txs/hr: "),
-		vecty.Text("Txs/day: "),
-	)
-}
