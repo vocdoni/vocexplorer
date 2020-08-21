@@ -108,6 +108,18 @@ func BlockView(block *tmtypes.Block) vecty.List {
 					vecty.Text(block.Header.LastBlockID.Hash.String()),
 				),
 			),
+			elem.DefinitionTerm(
+				vecty.Markup(vecty.Class("dt")),
+				vecty.Text("Proposer Address"),
+			),
+			elem.Description(
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", "/validators/"+block.ProposerAddress.String()),
+					),
+					vecty.Text(block.ProposerAddress.String()),
+				),
+			),
 		),
 	}
 }

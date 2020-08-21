@@ -30,7 +30,6 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	if tx == nil {
 		log.Errorf("Tx unavailable")
 		return elem.Div(
-			&components.Header{},
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}

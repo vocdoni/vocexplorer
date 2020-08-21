@@ -29,7 +29,6 @@ func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	if envelope == nil || types.EnvelopeIsEmpty(envelope) {
 		log.Errorf("Envelope unavailable")
 		return elem.Div(
-			&components.Header{},
 			elem.Main(vecty.Text("Envelope not available")),
 		)
 	}
@@ -40,7 +39,6 @@ func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	votePackage := new(dvotetypes.VotePackageStruct)
 	util.ErrPrint(json.Unmarshal(packageBytes, votePackage))
 	return elem.Div(
-		&components.Header{},
 		&components.EnvelopeContents{
 			Envelope:    envelope,
 			VotePackage: votePackage,

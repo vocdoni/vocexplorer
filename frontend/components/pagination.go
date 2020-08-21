@@ -18,6 +18,7 @@ type Pagination struct {
 	RefreshCh       chan int
 	RenderFunc      func(int) vecty.ComponentOrHTML
 	RenderSearchBar bool
+	DisableUpdate   *bool
 	SearchBar       func(*Pagination) vecty.ComponentOrHTML
 	PageLeft        func(e *vecty.Event)
 	PageRight       func(e *vecty.Event)
@@ -37,6 +38,11 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if p.PageLeft == nil {
 		p.PageLeft = func(e *vecty.Event) {
 			*p.CurrentPage = util.Max(*p.CurrentPage-1, 0)
+			if *p.CurrentPage != 0 {
+				*p.DisableUpdate = true
+			} else {
+				*p.DisableUpdate = false
+			}
 			p.RefreshCh <- *p.CurrentPage * p.ListSize
 			vecty.Rerender(p)
 		}
@@ -44,6 +50,11 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if p.PageRight == nil {
 		p.PageRight = func(e *vecty.Event) {
 			*p.CurrentPage = util.Min(*p.CurrentPage+1, p.TotalPages)
+			if *p.CurrentPage != 0 {
+				*p.DisableUpdate = true
+			} else {
+				*p.DisableUpdate = false
+			}
 			p.RefreshCh <- *p.CurrentPage * p.ListSize
 			vecty.Rerender(p)
 		}
@@ -51,6 +62,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if p.PageStart == nil {
 		p.PageStart = func(e *vecty.Event) {
 			*p.CurrentPage = 0
+			*p.DisableUpdate = false
 			p.RefreshCh <- *p.CurrentPage * p.ListSize
 			vecty.Rerender(p)
 		}

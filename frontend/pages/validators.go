@@ -24,12 +24,10 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 	if validator == nil {
 		log.Errorf("Validator unavailable")
 		return elem.Div(
-			&components.Header{},
 			elem.Main(vecty.Text("Validator not available")),
 		)
 	}
 	return elem.Div(
-		&components.Header{},
 		components.InitValidatorContentsView(v, validator, home.Cfg),
 	)
 }

@@ -53,6 +53,20 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Text(hex.EncodeToString(block.GetHash())),
 				),
 			),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text("Proposer Address"),
+				),
+				elem.Div(
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/validators/"+util.HexToString(block.GetProposer())),
+						),
+						vecty.Text(util.HexToString(block.GetProposer())),
+					),
+				),
+			),
 		},
 	})
 }

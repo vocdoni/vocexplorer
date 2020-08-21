@@ -32,6 +32,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 			CurrentPage:     &b.currentPage,
 			RefreshCh:       b.refreshCh,
 			ListSize:        config.ListSize,
+			DisableUpdate:   b.disableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {

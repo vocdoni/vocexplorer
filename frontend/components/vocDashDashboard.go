@@ -59,6 +59,7 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.quitCh = make(chan struct{})
 	VocDashDashboardView.refreshCh = make(chan bool, 20)
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
+	VocDashDashboardView.disableEnvelopesUpdate = false
 
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
@@ -86,7 +87,9 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 		case <-ticker.C:
 			//TODO: update to  use real index
 			d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-			updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+			if !d.disableEnvelopesUpdate {
+				updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+			}
 			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
