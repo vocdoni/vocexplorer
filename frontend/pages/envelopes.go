@@ -1,4 +1,4 @@
-package components
+package pages
 
 import (
 	"encoding/base64"
@@ -9,8 +9,8 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
@@ -19,7 +19,6 @@ import (
 // EnvelopesView renders the Envelopes page
 type EnvelopesView struct {
 	vecty.Core
-	cfg *config.Cfg
 }
 
 // Render renders the EnvelopesView component
@@ -30,7 +29,7 @@ func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	if envelope == nil || types.EnvelopeIsEmpty(envelope) {
 		log.Errorf("Envelope unavailable")
 		return elem.Div(
-			&Header{},
+			&components.Header{},
 			elem.Main(vecty.Text("Envelope not available")),
 		)
 	}
@@ -41,8 +40,8 @@ func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	votePackage := new(dvotetypes.VotePackageStruct)
 	util.ErrPrint(json.Unmarshal(packageBytes, votePackage))
 	return elem.Div(
-		&Header{},
-		&EnvelopeContents{
+		&components.Header{},
+		&components.EnvelopeContents{
 			Envelope:    envelope,
 			VotePackage: votePackage,
 		},
