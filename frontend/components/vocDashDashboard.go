@@ -24,7 +24,6 @@ type VocDashDashboardView struct {
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
-			vecty.Markup(vecty.Class("info-pane")),
 			&VochainInfoView{
 				vc:        dash.vc,
 				refreshCh: dash.refreshCh,

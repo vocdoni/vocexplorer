@@ -188,20 +188,39 @@ pre {
       @extend .col-sm-9;
     }
   }
+
+  .card {
+    border-radius: $cnc-border-radius;
+    background: $cnc-bg;
+  }
 }
 
 .card-body {
-  > nav:first-child ul {
-    @extend .nav;
-    @extend .nav-tabs;
+  > nav:first-child {
+    margin-left: -$card-spacer-x;
+    margin-top: -$card-spacer-x;
+    margin-right: -$card-spacer-x;
 
-    li {
-      @extend .nav-item;
+    ul {
+      padding: 1rem;
+      padding-bottom: 0;
 
-      a, button {
-        @extend .nav-link;
+      @extend .nav;
+      @extend .nav-tabs;
+
+      li {
+        @extend .mr-2;
+
+        @extend .nav-item;
+
+        a, button {
+          @extend .nav-link;
+        }
       }
     }
+  }
+  .tabs-content {
+    margin-top: 1rem;
   }
 }
 

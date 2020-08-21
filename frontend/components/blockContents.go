@@ -3,13 +3,11 @@ package components
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
@@ -112,7 +110,7 @@ func BlockView(block *tmtypes.Block) vecty.List {
 	}
 }
 
-func (c *BlockContents) tabLink(text, tab string) vecty.ComponentOrHTML {
+func (c *BlockContents) tabLink(tab, text string) vecty.ComponentOrHTML {
 	return elem.ListItem(
 		elem.Button(
 			vecty.Markup(
@@ -142,69 +140,34 @@ func (c *BlockContents) BlockDetails(block *tmtypes.Block) vecty.List {
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
-				c.tabLink("Transactions", "transactions"),
-				c.tabLink("Header", "header"),
-				c.tabLink("Evidence", "evidence"),
+				c.tabLink("transactions", "Transactions"),
+				c.tabLink("header", "Header"),
+				c.tabLink("evidence", "Evidence"),
+				c.tabLink("last-commit", "Last commit"),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			c.tabContents("transactions", vecty.Text("Transactions")),
-			c.tabContents("header", vecty.Text("Header")),
-			c.tabContents("evidence", vecty.Text("Evidence")),
+			c.tabContents("transactions", preformattedBlockTransactions(c.Block)),
+			c.tabContents("header", preformattedBlockHeader(c.Block)),
+			c.tabContents("evidence", preformattedBlockEvidence(c.Block)),
+			c.tabContents("last-commit", preformattedBlockLastCommit(c.Block)),
 		),
 	}
 }
 
-func renderBlockHeader(numTxs int, hash tmbytes.HexBytes, height int64, tm time.Time) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
-			elem.Div(
-				elem.Heading2(
-					vecty.Markup(vecty.Class("card-header")),
-					vecty.Text("Block "+util.IntToString(height)),
-				),
-			),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
-				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Div(
-						vecty.Text(util.IntToString(numTxs)+" transactions"),
-					),
-					elem.Div(
-						vecty.Text(humanize.Time(tm)),
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Hash"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(hash.String()),
-					),
-				),
-			),
-		),
-	)
-}
-
-func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
-	header, err := json.MarshalIndent(block.Header, "", "\t")
-	util.ErrPrint(err)
+func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	numTx := 0
 	data := []vecty.MarkupOrChild{vecty.Text("Transactions: [\n")}
 	for _, tx := range block.Data.Txs {
 		numTx++
-		err = json.Unmarshal(tx, &rawTx)
+		err := json.Unmarshal(tx, &rawTx)
 		util.ErrPrint(err)
 		data = append(
 			data,
 			elem.Div(
-				vecty.Text("    Hash: "),
+				vecty.Text("\tHash: "),
 				elem.Anchor(
 					vecty.Markup(
 						vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash())),
@@ -219,22 +182,34 @@ func renderBlockContents(block *tmtypes.Block) vecty.ComponentOrHTML {
 	if numTx == 0 {
 		data = []vecty.MarkupOrChild{vecty.Text("No transactions")}
 	}
-	transactions := elem.Preformatted(elem.Code(data...))
+
+	return elem.Preformatted(elem.Code(data...))
+}
+
+func preformattedBlockEvidence(block *tmtypes.Block) vecty.ComponentOrHTML {
 	var evidence []byte
+	var err error
+
 	if len(block.Evidence.Evidence) > 0 {
 		evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
 		util.ErrPrint(err)
 	} else {
 		evidence = []byte("No evidence")
 	}
+
+	return elem.Preformatted(elem.Code(vecty.Text(string(evidence))))
+}
+
+func preformattedBlockLastCommit(block *tmtypes.Block) vecty.ComponentOrHTML {
 	commit, err := json.MarshalIndent(block.LastCommit, "", "\t")
 	util.ErrPrint(err)
-	accordionName := "accordionBlock"
-	return elem.Div(
-		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Block Header", accordionName, "One", elem.Preformatted(elem.Code(vecty.Text(string(header))))),
-		renderCollapsible("Data", accordionName, "Two", transactions),
-		renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(elem.Code(vecty.Text(string(evidence))))),
-		renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(elem.Code(vecty.Text(string(commit))))),
-	)
+
+	return elem.Preformatted(elem.Code(vecty.Text(string(commit))))
+}
+
+func preformattedBlockHeader(block *tmtypes.Block) vecty.ComponentOrHTML {
+	header, err := json.MarshalIndent(block.Header, "", "\t")
+	util.ErrPrint(err)
+
+	return elem.Preformatted(elem.Code(vecty.Text(string(header))))
 }

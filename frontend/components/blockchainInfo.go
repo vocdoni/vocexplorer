@@ -28,44 +28,50 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
 	return elem.Section(
 		vecty.Markup(vecty.Class("blockchain-info")),
-		elem.Heading4(
-			vecty.Text("Blockchain information"),
-		),
-		elem.Table(
-			vecty.Markup(vecty.Class("table")),
-			elem.TableRow(
-				elem.TableHeader(vecty.Text("ID")),
-				elem.TableData(vecty.Text(b.T.Genesis.ChainID)),
-			),
-			elem.TableRow(
-				elem.TableHeader(vecty.Text("Version")),
-				elem.TableData(vecty.Text(b.T.ResultStatus.NodeInfo.Version)),
-			),
-			elem.TableRow(
-				elem.TableHeader(vecty.Text("Block Height")),
-				elem.TableData(vecty.Text(
-					p.Sprintf("%d", b.T.ResultStatus.SyncInfo.LatestBlockHeight),
-				)),
-			),
-			elem.TableRow(
-				elem.TableHeader(vecty.Text("Total transactions")),
-				elem.TableData(vecty.Text(
-					p.Sprintf("%d", b.T.TotalTxs),
-				)),
-			),
-			elem.TableRow(
-				elem.TableHeader(vecty.Text("Sync status")),
-				elem.TableData(
-					vecty.If(syncing, &bootstrap.Badge{
-						Contents: p.Sprintf("Syncing (%d blocks stored)", +b.T.TotalBlocks),
-						Type:     "warning",
-					}),
-					vecty.If(!syncing, &bootstrap.Badge{
-						Contents: "In sync",
-						Type:     "success",
-					}),
-				),
-			),
+		bootstrap.Card(
+			bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading4(
+						vecty.Text("Blockchain information"),
+					),
+					elem.Table(
+						vecty.Markup(vecty.Class("table")),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("ID")),
+							elem.TableData(vecty.Text(b.T.Genesis.ChainID)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Version")),
+							elem.TableData(vecty.Text(b.T.ResultStatus.NodeInfo.Version)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Block Height")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.ResultStatus.SyncInfo.LatestBlockHeight),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Total transactions")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.TotalTxs),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Sync status")),
+							elem.TableData(
+								vecty.If(syncing, &bootstrap.Badge{
+									Contents: p.Sprintf("Syncing (%d blocks stored)", +b.T.TotalBlocks),
+									Type:     "warning",
+								}),
+								vecty.If(!syncing, &bootstrap.Badge{
+									Contents: "In sync",
+									Type:     "success",
+								}),
+							),
+						),
+					),
+				},
+			},
 		),
 	)
 }

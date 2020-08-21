@@ -4,6 +4,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 )
 
@@ -17,10 +18,14 @@ type Stats struct {
 func (stats *Stats) Render() vecty.ComponentOrHTML {
 	return components.Container(
 		elem.Section(
-			elem.Heading3(
-				vecty.Text("Stats"),
-			),
-			vecty.Text("Most stats will be moved here :)"),
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading3(
+						vecty.Text("Stats"),
+					),
+					vecty.Text("Most stats will be moved here :)"),
+				},
+			}),
 		),
 	)
 }
