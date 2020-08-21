@@ -8,11 +8,15 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -21,6 +25,7 @@ type BlockContents struct {
 	vecty.Core
 	Block *tmtypes.Block
 	Hash  tmbytes.HexBytes
+	// BlockDetails vecty.ComponentOrHTML
 }
 
 // Render renders the BlockContents component
@@ -33,7 +38,7 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body: BlockDetails(contents.Block),
+						Body: BlockView(contents.Block),
 					}),
 				),
 				elem.Div(
@@ -54,17 +59,14 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("col-12")),
 				bootstrap.Card(bootstrap.CardParams{
-					Header: elem.Heading2(
-						vecty.Text("2do"),
-					),
-					Body: renderBlockContents(contents.Block),
+					Body: contents.BlockDetails(contents.Block),
 				}),
 			),
 		),
 	)
 }
 
-func BlockDetails(block *tmtypes.Block) vecty.List {
+func BlockView(block *tmtypes.Block) vecty.List {
 	return vecty.List{
 		elem.Heading1(
 			vecty.Markup(vecty.Class("card-title")),
@@ -81,21 +83,21 @@ func BlockDetails(block *tmtypes.Block) vecty.List {
 			elem.Span(
 				vecty.Text(fmt.Sprintf("%d bytes", block.Size())),
 			),
-			elem.Span(
-				vecty.Text(
-					fmt.Sprintf("%s (%s)", humanize.Time(block.Header.Time), block.Header.Time.Local().String()),
-				),
-			),
+			elem.Span(vecty.Text(fmt.Sprintf(
+				"%s (%s)",
+				humanize.Time(block.Header.Time),
+				block.Header.Time.Local().String(),
+			))),
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(
-			elem.Definition(
+			elem.DefinitionTerm(
 				vecty.Text("Hash"),
 			),
 			elem.Description(
 				vecty.Text(block.Header.Hash().String()),
 			),
-			elem.Definition(
+			elem.DefinitionTerm(
 				vecty.Text("Parent hash"),
 			),
 			elem.Description(
@@ -106,6 +108,50 @@ func BlockDetails(block *tmtypes.Block) vecty.List {
 					vecty.Text(block.Header.LastBlockID.Hash.String()),
 				),
 			),
+		),
+	}
+}
+
+func (c *BlockContents) tabLink(text, tab string) vecty.ComponentOrHTML {
+	return elem.ListItem(
+		elem.Button(
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					dispatcher.Dispatch(&actions.BlocksTabChange{
+						Tab: tab,
+					})
+					vecty.Rerender(c)
+				}),
+			),
+			vecty.Markup(vecty.ClassMap{
+				"active": store.BlockTabActive == tab,
+			}),
+			vecty.Text(text),
+		),
+	)
+}
+
+func (c *BlockContents) tabContents(tab string, contents vecty.ComponentOrHTML) vecty.MarkupOrChild {
+	return vecty.If(tab == store.BlockTabActive, elem.Div(
+		contents,
+	))
+}
+
+func (c *BlockContents) BlockDetails(block *tmtypes.Block) vecty.List {
+	return vecty.List{
+		elem.Navigation(
+			vecty.Markup(vecty.Class("tabs")),
+			elem.UnorderedList(
+				c.tabLink("Transactions", "transactions"),
+				c.tabLink("Header", "header"),
+				c.tabLink("Evidence", "evidence"),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("tabs-content")),
+			c.tabContents("transactions", vecty.Text("Transactions")),
+			c.tabContents("header", vecty.Text("Header")),
+			c.tabContents("evidence", vecty.Text("Evidence")),
 		),
 	}
 }

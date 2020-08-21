@@ -177,6 +177,34 @@ pre {
   }
 }
 
+.card {
+  dl {
+    @extend .row;
+
+    dt {
+      @extend .col-sm-3;
+    }
+    dd {
+      @extend .col-sm-9;
+    }
+  }
+}
+
+.card-body {
+  > nav:first-child ul {
+    @extend .nav;
+    @extend .nav-tabs;
+
+    li {
+      @extend .nav-item;
+
+      a, button {
+        @extend .nav-link;
+      }
+    }
+  }
+}
+
 .details-view {
   h1 {
     font-size: $h4-font-size;
@@ -191,6 +219,10 @@ pre {
 
     &.validators {
       @extend .flex-grow-1;
+    }
+
+    dl {
+      font-size: $font-size-xs;
     }
   }
 
@@ -208,6 +240,8 @@ pre {
 
       @extend .d-flex;
       @extend .justify-content-start;
+      @extend .flex-column;
+      @extend .flex-md-row;
       @extend .text-muted;
       > span {
         @extend .mr-4;
