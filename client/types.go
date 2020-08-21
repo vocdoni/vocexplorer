@@ -103,8 +103,9 @@ type VochainInfo struct {
 	EntityCount       int64
 	EntityIDs         []string
 	EntitySearchIDs   []string
+	EnvelopeHeight    int
 	EnvelopeHeights   map[string]int64
-	Envelopes         []EnvelopeInfo
+	EnvelopeList      [config.ListSize]*types.Envelope
 	Health            int32
 	Height            int64
 	Ok                bool

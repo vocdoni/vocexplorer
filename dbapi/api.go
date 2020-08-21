@@ -271,7 +271,9 @@ func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
 		if len(rawEnvelope) > 0 {
-			err = proto.Unmarshal(rawEnvelope, envList[i])
+			envelope := new(types.Envelope)
+			err = proto.Unmarshal(rawEnvelope, envelope)
+			envList[i] = envelope
 			util.ErrPrint(err)
 		}
 	}
@@ -333,6 +335,32 @@ func GetProcessEnvelopeHeight(process string) int64 {
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get("/db/envprocheight/?process=" + process)
+	if util.ErrPrint(err) {
+		return 0
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Request not valid")
+		return 0
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+	if util.ErrPrint(err) {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err = proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
+}
+
+//GetEnvelopeHeight returns the latest envelope height stored by the database
+func GetEnvelopeHeight() int64 {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := c.Get("/db/height/?key=" + config.LatestEnvelopeHeightKey)
 	if util.ErrPrint(err) {
 		return 0
 	}

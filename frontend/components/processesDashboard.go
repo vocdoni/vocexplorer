@@ -46,7 +46,7 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 
 				renderResults(dash.process.Results),
 				vecty.Markup(vecty.Class("info-pane")),
-				&EnvelopeListView{
+				&ProcessesEnvelopeListView{
 					process:       dash.process,
 					refreshCh:     dash.refreshCh,
 					disableUpdate: &dash.disableEnvelopesUpdate,
@@ -95,7 +95,7 @@ func initProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 	ProcessesDashboardView.process = process
 	ProcessesDashboardView.processID = processID
 	ProcessesDashboardView.quitCh = make(chan struct{})
-	ProcessesDashboardView.refreshCh = make(chan int)
+	ProcessesDashboardView.refreshCh = make(chan int, 50)
 	BeforeUnload(func() {
 		close(ProcessesDashboardView.quitCh)
 	})
@@ -108,7 +108,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
 	d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
 	if d.process.EnvelopeHeight > 0 {
-		updateEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
 	}
 	vecty.Rerender(d)
 	for {
@@ -122,7 +122,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
 			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
 			if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
-				updateEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+				updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
 			}
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
@@ -142,14 +142,14 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 				oldEnvelopes = d.process.EnvelopeHeight
 			}
 			if d.process.EnvelopeHeight > 0 {
-				updateEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
 			}
 			vecty.Rerender(d)
 		}
 	}
 }
 
-func updateEnvelopes(d *ProcessesDashboardView, index int) {
+func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
 	log.Infof("Getting envelopes from index %d", util.IntToString(index))
 	list := dbapi.GetEnvelopeListByProcess(index, d.processID)
 	reverseEnvelopeList(&list)
