@@ -57,7 +57,7 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("col-12")),
 				bootstrap.Card(bootstrap.CardParams{
-					Body: contents.BlockDetails(contents.Block),
+					Body: contents.BlockDetails(),
 				}),
 			),
 		),
@@ -147,7 +147,7 @@ func (c *BlockContents) tabContents(tab string, contents vecty.ComponentOrHTML) 
 	))
 }
 
-func (c *BlockContents) BlockDetails(block *tmtypes.Block) vecty.List {
+func (c *BlockContents) BlockDetails() vecty.List {
 	return vecty.List{
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
