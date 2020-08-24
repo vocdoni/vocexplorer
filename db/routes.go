@@ -42,221 +42,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// // HashHandler writes the hash value corresponding to the given key
-// func HashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		w.Header().Set("Content-Type", "text/plain")
-// 		// w.Header().Set("Content-Length", util.IntToString(len("Key not found")))
-// 		keys, ok := r.URL.Query()["key"]
-// 		if !ok || len(keys[0]) < 1 {
-// 			log.Errorf("Url Param 'key' is missing")
-// 			fmt.Fprintf(w, "Key not found")
-// 			// http.Error(w, "Url Param 'key' missing", 400)
-// 			return
-// 		}
-// 		hash, err := db.Get([]byte(keys[0]))
-// 		if err != nil {
-// 			log.Error(err)
-// 			fmt.Fprintf(w, "Key not found")
-// 			// http.Error(w, "Key not found", 400)
-// 			return
-// 		}
-// 		w.Header().Set("Content-Length", util.IntToString(len(tmbytes.HexBytes(hash).String())))
-// 		log.Infof("Hash: %s", tmbytes.HexBytes(hash).String())
-// 		fmt.Fprintf(w, tmbytes.HexBytes(hash).String())
-// 		log.Debugf("Sent %d bytes", len(hash))
-// 	}
-// }
-
-// ListBlocksHandler writes a list of blocks by height
-func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		froms, ok := r.URL.Query()["from"]
-		if !ok || len(froms[0]) < 1 {
-			log.Errorf("Url Param 'from' is missing")
-			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
-			return
-		}
-		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
-		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.BlockHeightPrefix))
-		if len(hashes) == 0 {
-			http.Error(w, "No blocks available", http.StatusInternalServerError)
-			return
-		}
-		var rawBlocks types.ItemList
-		for _, hash := range hashes {
-			rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-			rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
-			util.ErrPrint(err)
-		}
-
-		msg, err := proto.Marshal(&rawBlocks)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
-			return
-		}
-		w.Write(msg)
-		log.Debugf("Sent %d blocks", len(rawBlocks.GetItems()))
-	}
-}
-
-// ListBlocksByValidatorHandler writes a list of blocks which share the given proposer
-func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		froms, ok := r.URL.Query()["from"]
-		if !ok || len(froms[0]) < 1 {
-			log.Errorf("Url Param 'from' is missing")
-			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
-			return
-		}
-		proposers, ok := r.URL.Query()["proposer"]
-		if !ok || len(proposers[0]) < 1 {
-			log.Errorf("Url Param 'proposer' is missing")
-			http.Error(w, "Url Param 'proposer' missing", http.StatusInternalServerError)
-			return
-		}
-		from, err := strconv.Atoi(froms[0])
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Url Param 'from' must represent an integer", http.StatusBadRequest)
-			return
-		}
-
-		validatorHeightMap := getHeightMap(db, config.ValidatorHeightMapKey)
-		valHeight, ok := validatorHeightMap.Heights[proposers[0]]
-		if !ok {
-			valHeight = 0
-		}
-		from = util.Max(util.Min(from, int(valHeight)), config.ListSize)
-
-		// Get block heights by validator|height
-		proposerBytes, err := hex.DecodeString(proposers[0])
-		util.ErrPrint(err)
-		hashes := listItemsByHeight(db, config.ListSize, from, append([]byte(config.BlockByValidatorPrefix), proposerBytes...))
-		if len(hashes) == 0 {
-			log.Error("No hashes retrieved")
-			http.Error(w, "No blocks available", http.StatusInternalServerError)
-			return
-		}
-
-		var rawBlocks types.ItemList
-		var tempBlock types.StoreBlock
-		// Get blocks by hash:block
-		for _, hash := range hashes {
-			rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-			util.ErrPrint(err)
-			err = proto.Unmarshal(rawBlock, &tempBlock)
-			util.ErrPrint(err)
-			rawBlocks.Items = append(rawBlocks.GetItems(), rawBlock)
-		}
-
-		msg, err := proto.Marshal(&rawBlocks)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
-			return
-		}
-		w.Write(msg)
-		log.Debugf("Sent %d blocks by validator %s from height %d", len(rawBlocks.GetItems()), proposers[0], from)
-	}
-}
-
-// ListEnvelopesByProcessHandler writes a list of envelopes which share the given process
-func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		froms, ok := r.URL.Query()["from"]
-		if !ok || len(froms[0]) < 1 {
-			log.Errorf("Url Param 'from' is missing")
-			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
-			return
-		}
-		processes, ok := r.URL.Query()["process"]
-		if !ok || len(processes[0]) < 1 {
-			log.Errorf("Url Param 'process' is missing")
-			http.Error(w, "Url Param 'process' missing", http.StatusInternalServerError)
-			return
-		}
-		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
-
-		procEnvHeightMap := getHeightMap(db, config.ProcessEnvelopeHeightMapKey)
-		envHeight, ok := procEnvHeightMap.Heights[processes[0]]
-		if !ok {
-			envHeight = 0
-		}
-		from = util.Min(from, int(envHeight))
-
-		// Get envelope heights by pid|height
-		processBytes, err := hex.DecodeString(processes[0])
-		util.ErrPrint(err)
-		heights := listItemsByHeight(db, config.ListSize, from, append([]byte(config.EnvPIDPrefix), processBytes...))
-		if len(heights) == 0 {
-			log.Error("No hashes retrieved")
-			http.Error(w, "No blocks available", 404)
-			return
-		}
-		var rawEnvelopes types.ItemList
-		// Get envelope packages by globalheight:package
-		for _, rawHeight := range heights {
-			height := new(types.Height)
-			util.ErrPrint(proto.Unmarshal(rawHeight, height))
-			rawEnvelope, err := db.Get(append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(height.GetHeight()))...))
-			util.ErrPrint(err)
-			rawEnvelopes.Items = append(rawEnvelopes.GetItems(), rawEnvelope)
-		}
-
-		msg, err := proto.Marshal(&rawEnvelopes)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
-			return
-		}
-		util.ErrPrint(err)
-		w.Write(msg)
-		log.Debugf("Sent %d envelopes by process %s", len(rawEnvelopes.GetItems()), processes[0])
-	}
-}
-
-// ListEnvelopesHandler writes a list of envelopes
-func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		froms, ok := r.URL.Query()["from"]
-		if !ok || len(froms[0]) < 1 {
-			log.Errorf("Url Param 'from' is missing")
-			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
-			return
-		}
-		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
-
-		envHeight := getHeight(db, config.LatestEnvelopeHeightKey, 1)
-		from = util.Min(from, int(envHeight.GetHeight()))
-
-		// Get envelope packages
-		packages := listItemsByHeight(db, config.ListSize, from, []byte(config.EnvPackagePrefix))
-		if len(packages) == 0 {
-			log.Error("No envelopes retrieved")
-			http.Error(w, "No envelopes available", http.StatusInternalServerError)
-			return
-		}
-		rawEnvelopes := &types.ItemList{Items: packages}
-
-		msg, err := proto.Marshal(rawEnvelopes)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
-			return
-		}
-		util.ErrPrint(err)
-		w.Write(msg)
-		log.Debugf("Sent %d envelopes", len(rawEnvelopes.GetItems()))
-	}
-}
-
-// GetEnvelopeHandler writes a single envelope
-func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		heights, ok := r.URL.Query()["height"]
 		if !ok || len(heights[0]) < 1 {
@@ -267,22 +53,144 @@ func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *htt
 		height, err := strconv.Atoi(heights[0])
 		util.ErrPrint(err)
 
-		envHeight := getHeight(db, config.LatestEnvelopeHeightKey, 1)
+		envHeight := getHeight(db, heightKey, 0)
 		if height > int(envHeight.GetHeight()) {
-			log.Errorf("Requested envelope does not exist")
-			http.Error(w, "Requested envelope does not exist", http.StatusInternalServerError)
+			log.Errorf("Requested item does not exist")
+			http.Error(w, "Requested item does not exist", http.StatusInternalServerError)
 			return
 		}
-		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(height))...)
-		rawPackage, err := db.Get(packageKey)
+		processKey := append([]byte(key), []byte(util.IntToString(height))...)
+		rawProcess, err := db.Get(processKey)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Vote package not found", http.StatusInternalServerError)
+			http.Error(w, "item not found", http.StatusInternalServerError)
 			return
 		}
-		w.Write(rawPackage)
-		log.Debugf("Sent envelope %d", height)
+		w.Write(rawProcess)
+		log.Debugf("sent item with key %s, height %d", key, height)
 	}
+}
+
+func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byte) ([]byte, error)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+		items := listItemsByHeight(db, config.ListSize, from, []byte(key))
+		if len(items) == 0 {
+			http.Error(w, "No items available", http.StatusInternalServerError)
+			return
+		}
+		var itemList types.ItemList
+		for _, rawItem := range items {
+			newItem, err := getItem(rawItem)
+			util.ErrPrint(err)
+			if len(newItem) > 0 {
+				rawItem = newItem
+			}
+			itemList.Items = append(itemList.GetItems(), rawItem)
+		}
+
+		msg, err := proto.Marshal(&itemList)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
+			return
+		}
+		w.Write(msg)
+		log.Debugf("Sent %d items", len(itemList.GetItems()))
+	}
+}
+
+func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getHeightPrefix, itemPrefix string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		froms, ok := r.URL.Query()["from"]
+		if !ok || len(froms[0]) < 1 {
+			log.Errorf("Url Param 'from' is missing")
+			http.Error(w, "Url Param 'from' missing", http.StatusBadRequest)
+			return
+		}
+		parents, ok := r.URL.Query()[parentName]
+		if !ok || len(parents[0]) < 1 {
+			log.Errorf("Url Param '" + parentName + "' is missing")
+			http.Error(w, "Url Param '"+parentName+"' is missing", http.StatusBadRequest)
+			return
+		}
+		from, err := strconv.Atoi(froms[0])
+		util.ErrPrint(err)
+
+		heightMap := getHeightMap(db, heightMapKey)
+		itemHeight, ok := heightMap.Heights[parents[0]]
+		if !ok {
+			itemHeight = 0
+		}
+		from = util.Max(util.Min(from, int(itemHeight)), config.ListSize)
+
+		// Get keys
+		parentBytes, err := hex.DecodeString(parents[0])
+		util.ErrPrint(err)
+		keys := listItemsByHeight(db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
+		if len(keys) == 0 {
+			log.Error("No keys retrieved")
+			http.Error(w, "No items available", 404)
+			return
+		}
+		var rawItems types.ItemList
+		// Get packages by height:package
+		for _, rawKey := range keys {
+			height := new(types.Height)
+			util.ErrPrint(proto.Unmarshal(rawKey, height))
+			rawPackage, err := db.Get(append([]byte(itemPrefix), []byte(util.IntToString(height.GetHeight()))...))
+			util.ErrPrint(err)
+			rawItems.Items = append(rawItems.GetItems(), rawPackage)
+		}
+
+		msg, err := proto.Marshal(&rawItems)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
+			return
+		}
+		util.ErrPrint(err)
+		w.Write(msg)
+		log.Debugf("Sent %d items by %s %s", len(rawItems.GetItems()), parentName, parents[0])
+	}
+}
+
+// ListBlocksHandler writes a list of blocks by height
+func ListBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsHandler(db,
+		config.BlockHeightPrefix,
+		func(key []byte) ([]byte, error) {
+			return db.Get(append([]byte(config.BlockHashPrefix), key...))
+		})
+}
+
+// ListBlocksByValidatorHandler writes a list of blocks which share the given proposer
+func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsByParent(db, "proposer", config.ValidatorHeightMapKey, config.BlockByValidatorPrefix, config.BlockHashPrefix)
+}
+
+// ListEnvelopesByProcessHandler writes a list of envelopes which share the given process
+func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsByParent(db, "process", config.ProcessEnvelopeHeightMapKey, config.EnvPIDPrefix, config.EnvPackagePrefix)
+}
+
+// ListEnvelopesHandler writes a list of envelopes
+func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsHandler(db, config.EnvPackagePrefix, func(key []byte) ([]byte, error) {
+		return []byte{}, nil
+	})
+}
+
+// GetEnvelopeHandler writes a single envelope
+func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildItemByHeightHandler(db, config.LatestEnvelopeHeightKey, config.EnvPackagePrefix)
 }
 
 // EnvelopeHeightByProcessHandler writes the number of envelopes which share the given processID
@@ -354,72 +262,17 @@ func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrite
 	}
 }
 
-// // NumBlocksByValidatorHandler writes the number of blocks which share the given proposer
-// func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		proposers, ok := r.URL.Query()["proposer"]
-// 		if !ok || len(proposers[0]) < 1 {
-// 			log.Errorf("Url Param 'proposer' is missing")
-// 			http.Error(w, "Url Param 'proposer' missing", 400)
-// 			return
-// 		}
-
-// 		latestBlockHeight := getHeight(db, config.LatestBlockHeightKey, 1)
-// 		numBlocks := int64(0)
-// 		complete := make(chan struct{})
-// 		// Get blocks by hash, where block proposer matches proposer
-// 		height := 1
-// 		for ; height < int(latestBlockHeight.GetHeight()); height++ {
-// 			go countBlockByValidator(&numBlocks, db, height, proposers[0], complete)
-// 		}
-// 		// Sync all countBlock routines
-// 		for range complete {
-// 			if height <= 2 {
-// 				break
-// 			}
-// 			height--
-// 		}
-
-// 		blockHeight := &types.Height{Height: int64(numBlocks)}
-// 		msg, err := proto.Marshal(blockHeight)
-// 		util.ErrPrint(err)
-// 		w.Write(msg)
-// 		log.Debugf("Found %d blocks by validator %s", blockHeight.GetHeight(), proposers[0])
-// 	}
-// }
-
-// func countBlockByValidator(numBlocks *int64, db *dvotedb.BadgerDB, height int, proposer string, complete chan struct{}) {
-// 	defer func() { complete <- struct{}{} }()
-// 	key := []byte(config.BlockHeightPrefix + util.IntToString(height))
-// 	has, err := db.Has(key)
-// 	if !has || util.ErrPrint(err) {
-// 		return
-// 	}
-// 	hash, err := db.Get(key)
-// 	if err != nil {
-// 		log.Error(err)
-// 	}
-// 	var tempBlock types.StoreBlock
-// 	rawBlock, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-// 	util.ErrPrint(err)
-// 	err = proto.Unmarshal(rawBlock, &tempBlock)
-// 	util.ErrPrint(err)
-// 	if util.HexToString(tempBlock.GetProposer()) == proposer {
-// 		atomic.AddInt64(numBlocks, 1)
-// 	}
-// }
-
 // GetBlockHandler writes a block by height
 func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ids, ok := r.URL.Query()["id"]
-		if !ok || len(ids[0]) < 1 {
-			log.Errorf("Url Param 'id' is missing")
-			http.Error(w, "Url Param 'id' missing", 400)
+		heights, ok := r.URL.Query()["height"]
+		if !ok || len(heights[0]) < 1 {
+			log.Errorf("Url Param 'height' is missing")
+			http.Error(w, "Url Param 'height' missing", 400)
 			return
 		}
-		id := ids[0]
-		key := []byte(config.BlockHeightPrefix + id)
+		height := heights[0]
+		key := []byte(config.BlockHeightPrefix + height)
 		hash, err := db.Get(key)
 		if err != nil {
 			log.Error(err)
@@ -428,7 +281,7 @@ func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.R
 		util.ErrPrint(err)
 
 		w.Write(raw)
-		log.Debugf("Sent block %s", id)
+		log.Debugf("Sent block %s", height)
 	}
 }
 
@@ -570,4 +423,33 @@ func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 		w.Write(raw)
 		log.Debugf("Sent validator")
 	}
+}
+
+// GetEntityHandler writes a single entity
+func GetEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildItemByHeightHandler(db, config.LatestEntityHeight, config.EntityIDPrefix)
+}
+
+// GetProcessHandler writes a single process
+func GetProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildItemByHeightHandler(db, config.LatestProcessHeight, config.ProcessIDPrefix)
+}
+
+// ListEntitiesHandler writes a list of entities from 'from'
+func ListEntitiesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsHandler(db, config.EntityIDPrefix, func(key []byte) ([]byte, error) {
+		return []byte{}, nil
+	})
+}
+
+// ListProcessesHandler writes a list of processes from 'from'
+func ListProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsHandler(db, config.ProcessIDPrefix, func(key []byte) ([]byte, error) {
+		return []byte{}, nil
+	})
+}
+
+// ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
+func ListProcessesByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsByParent(db, "entity", config.EntityProcessHeightMapKey, config.ProcessByEntityPrefix, config.ProcessIDPrefix)
 }

@@ -105,7 +105,7 @@ func GetBlock(i int64) *types.StoreBlock {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	resp, err := c.Get("/db/block/?id=" + util.IntToString(i))
+	resp, err := c.Get("/db/block/?height=" + util.IntToString(i))
 	if util.ErrPrint(err) {
 		return &types.StoreBlock{}
 	}

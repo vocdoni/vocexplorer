@@ -89,7 +89,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			if !d.disableEnvelopesUpdate {
 				updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
 			}
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 10)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case <-d.refreshCh:

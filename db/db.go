@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -18,6 +19,7 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/vochain"
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -34,20 +36,23 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
 func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 
-	ping := pingGateway(gwHost)
-	if !ping {
-		log.Warn("Gateway Client is not running. Running as detached database")
-		return
-	}
 	// Init tendermint client
 	tClient, up := StartTendermint(tmHost)
 	if !up {
 		log.Warn("Cannot connect to tendermint client. Running as detached database")
 		return
 	}
-
 	log.Debugf("Connected to " + tmHost)
-	// defer (*cancel)()
+
+	// Init gateway client
+	gwClient, cancel, up := startGateway(gwHost)
+	if !up {
+		log.Warn("Cannot connect to gateway client. Running as detached database")
+		return
+	}
+	defer (*cancel)()
+	log.Debugf("Connected to " + gwHost)
+
 	i := 0
 	for {
 		updateBlockList(d, tClient)
@@ -55,8 +60,8 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 		if i%20 == 0 {
 			updateValidatorList(d, tClient)
 		}
-		updateEntityList(d)
-		updateProcessList(d)
+		updateEntityList(d, gwClient)
+		updateProcessList(d, gwClient)
 		time.Sleep(config.DBWaitTime * time.Millisecond)
 		i++
 	}
@@ -93,10 +98,10 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Get Height maps: stored in map object so each update isn't slow db-write/get
 	// Map of validator:num blocks
 	valMap := getHeightMap(d, config.ValidatorHeightMapKey)
-	valMapMutex := &sync.Mutex{}
+	valMapMutex := new(sync.Mutex)
 	// Map of pid:num envelopes
 	procEnvHeightMap := getHeightMap(d, config.ProcessEnvelopeHeightMapKey)
-	procEnvHeightMapMutex := &sync.Mutex{}
+	procEnvHeightMapMutex := new(sync.Mutex)
 
 	status, err := c.Status()
 	if err != nil {
@@ -302,12 +307,131 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	(*batch).Put(validatorHeightKey, hashValue)
 }
 
-func updateEntityList(d *dvotedb.BadgerDB) {
+func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
+	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
+	gatewayEntityHeight, err := c.GetEntityCount()
+	util.ErrPrint(err)
+	if localEntityHeight == gatewayEntityHeight {
+		return
+	}
+	newEntities, err := c.GetScrutinizerEntities(localEntityHeight)
+	if len(newEntities) < 1 {
+		log.Warn("No new entities fetched")
+		return
+	}
+	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
 
+	// write new entities to db
+	batch := d.NewBatch()
+	i := 0
+	entity := ""
+	for i, entity = range newEntities {
+		heightKey := append([]byte(config.EntityIDPrefix), []byte(util.IntToString(int(localEntityHeight)+i))...)
+		rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+		if util.ErrPrint(err) {
+			break
+		}
+		batch.Put(heightKey, rawEntity)
+		// Add new entity to height map with height of 0 so db will get new entity's processes
+		if _, ok := heightMap.GetHeights()[entity]; ok {
+			log.Error("Fetched entity already stored")
+		}
+		heightMap.Heights[entity] = 0
+	}
+
+	rawValMap, err := proto.Marshal(heightMap)
+	util.ErrPrint(err)
+	log.Debugf("Fetched %d new entities at height %d", len(newEntities), int(localEntityHeight)+i+1)
+
+	// Write entity height
+	encHeight := types.Height{Height: localEntityHeight + int64(i) + 1}
+	rawHeight, err := proto.Marshal(&encHeight)
+	util.ErrPrint(err)
+	heightKey := []byte(config.LatestEntityHeight)
+	batch.Put(heightKey, rawHeight)
+	// Write entity/process height map
+	heightMapKey := []byte(config.EntityProcessHeightMapKey)
+	batch.Put(heightMapKey, rawValMap)
+	batch.Write()
 }
 
-func updateProcessList(d *dvotedb.BadgerDB) {
+func updateProcessList(d *dvotedb.BadgerDB, c *client.Client) {
+	localProcessHeight := getHeight(d, config.LatestProcessHeight, 0).GetHeight()
+	gatewayProcessHeight, err := c.GetProcessCount()
+	util.ErrPrint(err)
+	if localProcessHeight == gatewayProcessHeight {
+		return
+	}
 
+	// Get height map for list of entities, current heights stored
+	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
+	// Initialize concurrency helper variables
+	heightMapMutex := new(sync.Mutex)
+	numNewProcesses := 0
+	complete := make(chan struct{}, len(heightMap.Heights))
+
+	batch := d.NewBatch()
+
+	for entity, height := range heightMap.Heights {
+		// go fetchProcesses(entity, height, batch, heightMap, heightMapMutex, &numNewProcesses, c, complete)
+		fetchProcesses(entity, height, batch, heightMap, heightMapMutex, &numNewProcesses, c, complete)
+	}
+	log.Debugf("Found %d stored entities", len(heightMap.Heights))
+
+	// Sync: wait here for all goroutines to complete
+	num := 0
+	for range complete {
+		if num >= len(heightMap.Heights)-1 {
+			break
+		}
+		num++
+	}
+	log.Debugf("Fetched %d new processes", numNewProcesses)
+
+	// Write updated entity process height map
+	rawHeightMap, err := proto.Marshal(heightMap)
+	util.ErrPrint(err)
+	heightMapKey := []byte(config.EntityProcessHeightMapKey)
+	batch.Put(heightMapKey, rawHeightMap)
+	// Write global process height
+	encHeight := types.Height{Height: localProcessHeight + int64(numNewProcesses)}
+	rawHeight, err := proto.Marshal(&encHeight)
+	util.ErrPrint(err)
+	heightKey := []byte(config.LatestProcessHeight)
+	batch.Put(heightKey, rawHeight)
+	batch.Write()
+}
+
+func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex *sync.Mutex, numNew *int, c *client.Client, complete chan struct{}) {
+	defer func() {
+		complete <- struct{}{}
+	}()
+	newProcessList, err := c.GetProcessList(entity, height)
+	if util.ErrPrint(err) || len(newProcessList) < 1 {
+		return
+	}
+	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+	util.ErrPrint(err)
+	var process string
+	for _, process = range newProcessList {
+		rawProcess, err := hex.DecodeString(util.StripHexString(process))
+		util.ErrPrint(err)
+		heightMapMutex.Lock()
+		*numNew++
+		globalHeight := int(height) + *numNew
+		localHeight := heightMap.Heights[entity]
+		heightMap.Heights[entity]++
+		heightMapMutex.Unlock()
+
+		// Write Height:PID
+		processKey := append([]byte(config.ProcessIDPrefix), []byte(util.IntToString(int(height)+globalHeight))...)
+		batch.Put(processKey, rawProcess)
+
+		// Write Entity|LocalHeight:ProcessHeight
+		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
+		entityProcessKey = append(entityProcessKey, []byte(util.IntToString(int(localHeight)))...)
+		batch.Put(entityProcessKey, []byte(util.IntToString(globalHeight)))
+	}
 }
 
 // listItemsByHeight returns a list of items given integer keys
@@ -361,20 +485,25 @@ func pingGateway(host string) bool {
 	}
 }
 
-// func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
-// 	for i := 0; ; i++ {
-// 		if i > 20 {
-// 			return nil, nil, false
-// 		}
-// 		gwClient, cancel := client.InitGateway(host)
-// 		if gwClient == nil {
-// 			time.Sleep(5 * time.Second)
-// 			continue
-// 		} else {
-// 			return gwClient, &cancel, true
-// 		}
-// 	}
-// }
+func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
+	ping := pingGateway(host)
+	if !ping {
+		log.Warn("Gateway Client is not running. Running as detached database")
+		return nil, nil, false
+	}
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, nil, false
+		}
+		gwClient, cancel := client.InitGateway("http://" + host + "/dvote")
+		if gwClient == nil {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return gwClient, &cancel, true
+		}
+	}
+}
 
 //StartTendermint starts the tendermint client
 func StartTendermint(host string) (*tmhttp.HTTP, bool) {
