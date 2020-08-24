@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -81,9 +82,6 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 
 func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.t == nil {
-	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
@@ -152,19 +150,27 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 func updateBlocks(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Blocks from index %d", util.IntToString(index))
 	list := dbapi.GetBlockList(index)
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
-	}
+	reverseBlockList(&list)
 	d.t.BlockList = list
 }
 
 func updateTxs(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Txs from index %d", util.IntToString(index))
 	list := dbapi.GetTxList(index)
+	reverseTxList(&list)
+	d.t.TxList = list
+}
+
+func reverseBlockList(list *[config.ListSize]*types.StoreBlock) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]
 	}
-	d.t.TxList = list
+}
+
+func reverseTxList(list *[config.ListSize]*types.SendTx) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
 }

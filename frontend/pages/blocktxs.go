@@ -15,7 +15,7 @@ type BlockTxsView struct {
 
 // Render renders the BlockTxsView component
 func (bv *BlockTxsView) Render() vecty.ComponentOrHTML {
-	var t rpc.TendermintInfo
-	var dash components.BlockTxsDashboardView
-	return components.InitBlockTxsDashboardView(&t, &dash, bv.Cfg)
+	t := new(rpc.TendermintInfo)
+	dash := new(components.BlockTxsDashboardView)
+	return components.InitBlockTxsDashboardView(t, dash, bv.Cfg)
 }

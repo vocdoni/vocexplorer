@@ -15,21 +15,21 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ProcessesEnvelopeListView renders the envelope list pane
-type ProcessesEnvelopeListView struct {
+// EnvelopeListView renders the envelope list pane
+type EnvelopeListView struct {
 	vecty.Core
 	currentPage   int
 	disableUpdate *bool
 	refreshCh     chan int
-	process       *client.FullProcessInfo
+	vochain       *client.VochainInfo
 }
 
 // Render renders the EnvelopeListView component
-func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
-	if b.process != nil && b.process.EnvelopeHeight > 0 {
+func (b *EnvelopeListView) Render() vecty.ComponentOrHTML {
+	if b.vochain != nil && b.vochain.EnvelopeHeight > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.process.EnvelopeHeight) / config.ListSize,
-			TotalItems:      &b.process.EnvelopeHeight,
+			TotalPages:      int(b.vochain.EnvelopeHeight) / config.ListSize,
+			TotalItems:      &b.vochain.EnvelopeHeight,
 			CurrentPage:     &b.currentPage,
 			RefreshCh:       b.refreshCh,
 			ListSize:        config.ListSize,
@@ -37,7 +37,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderProcessEnvelopes(p, b.process, index)
+			return renderEnvelopes(p, b.vochain, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -66,22 +66,22 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			p,
 		)
 	}
-	if b.process.EnvelopeHeight < 1 {
-		return elem.Div(vecty.Text("This process has no envelopes"))
+	if b.vochain.EnvelopeHeight < 1 {
+		return elem.Div(vecty.Text("No envelopes available"))
 	}
 	return elem.Div(vecty.Text("Waiting for envelopes..."))
 }
 
-func renderProcessEnvelopes(p *Pagination, process *client.FullProcessInfo, index int) vecty.ComponentOrHTML {
+func renderEnvelopes(p *Pagination, vochain *client.VochainInfo, index int) vecty.ComponentOrHTML {
 	var EnvelopeList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(process.EnvelopeList) - 1; i >= len(process.EnvelopeList)-p.ListSize; i-- {
-		if types.EnvelopeIsEmpty(process.EnvelopeList[i]) {
+	for i := len(vochain.EnvelopeList) - 1; i >= len(vochain.EnvelopeList)-p.ListSize; i-- {
+		if types.EnvelopeIsEmpty(vochain.EnvelopeList[i]) {
 			empty--
 		} else {
-			envelope := process.EnvelopeList[i]
-			EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
+			envelope := vochain.EnvelopeList[i]
+			EnvelopeList = append(EnvelopeList, renderEnvelope(envelope))
 		}
 	}
 	if empty == 0 {
@@ -94,7 +94,7 @@ func renderProcessEnvelopes(p *Pagination, process *client.FullProcessInfo, inde
 	)
 }
 
-func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
+func renderEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
@@ -104,7 +104,7 @@ func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 						vecty.Class("nav-link"),
 						vecty.Attribute("href", "/envelopes/"+util.IntToString(envelope.GetGlobalHeight())),
 					),
-					vecty.Text(util.IntToString(envelope.GetProcessHeight())),
+					vecty.Text(util.IntToString(envelope.GetGlobalHeight())),
 				),
 			),
 			elem.Div(
@@ -112,7 +112,7 @@ func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetGlobalHeight()))+" envelope on the blockchain"),
+						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "+util.StripHexString(envelope.ProcessID)),
 					),
 					elem.Div(
 						elem.Div(

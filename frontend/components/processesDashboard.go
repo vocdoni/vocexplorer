@@ -7,19 +7,25 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
-	gwClient  *client.Client
-	process   *client.FullProcessInfo
-	processID string
-	quitCh    chan struct{}
+	gwClient               *client.Client
+	process                *client.FullProcessInfo
+	processID              string
+	envelopeIndex          int
+	disableEnvelopesUpdate bool
+	quitCh                 chan struct{}
+	refreshCh              chan int
 }
 
 // Render renders the ProcessesDashboardView component
@@ -39,10 +45,14 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 					fmt.Sprintf("Process %s", dash.processID),
 				)),
 				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
+				elem.Heading5(vecty.Text("Number of votes : "+util.IntToString(dash.process.EnvelopeHeight))),
+
 				renderResults(dash.process.Results),
 				vecty.Markup(vecty.Class("info-pane")),
-				&EnvelopeListView{
-					process: dash.process,
+				&ProcessesEnvelopeListView{
+					process:       dash.process,
+					refreshCh:     dash.refreshCh,
+					disableUpdate: &dash.disableEnvelopesUpdate,
 				},
 			),
 		)
@@ -92,6 +102,7 @@ func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 	ProcessesDashboardView.process = process
 	ProcessesDashboardView.processID = processID
 	ProcessesDashboardView.quitCh = make(chan struct{})
+	ProcessesDashboardView.refreshCh = make(chan int, 50)
 	BeforeUnload(func() {
 		close(ProcessesDashboardView.quitCh)
 	})
@@ -101,15 +112,12 @@ func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 
 func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.process == nil {
+	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+	d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
+	if d.process.EnvelopeHeight > 0 {
+		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
 	}
-	//TODO: update to  use real index
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID, 0)
 	vecty.Rerender(d)
-	// time.Sleep(250 * time.Millisecond)
-	// client.UpdateAuxProcessInfo(d.gwClient, d.vc)
-	// vecty.Rerender(d)
 	for {
 		select {
 		case <-d.quitCh:
@@ -118,10 +126,46 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			//TODO: update to  use real index
-			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID, 0)
-			// client.UpdateAuxProcessInfo(d.gwClient, d.process)
+			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
+			if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
+				updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+			}
+			vecty.Rerender(d)
+		case i := <-d.refreshCh:
+		loop:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case i = <-d.refreshCh:
+				default:
+					break loop
+				}
+			}
+			d.envelopeIndex = i
+			oldEnvelopes := d.process.EnvelopeHeight
+			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
+			if i < 1 {
+				oldEnvelopes = d.process.EnvelopeHeight
+			}
+			if d.process.EnvelopeHeight > 0 {
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
+			}
 			vecty.Rerender(d)
 		}
+	}
+}
+
+func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
+	log.Infof("Getting envelopes from index %d", util.IntToString(index))
+	list := dbapi.GetEnvelopeListByProcess(index, d.processID)
+	reverseEnvelopeList(&list)
+	d.process.EnvelopeList = list
+}
+
+func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
 	}
 }

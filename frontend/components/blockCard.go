@@ -28,7 +28,7 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 			vecty.Markup(
 				vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 			),
-			vecty.Text(util.IntToString(block.GetHeight())),
+			vecty.Text("Block "+util.IntToString(block.GetHeight())),
 		),
 		Body: vecty.List{
 			elem.Div(
@@ -51,6 +51,20 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("dd")),
 					vecty.Markup(vecty.Attribute("title", hex.EncodeToString(block.GetHash()))),
 					vecty.Text(hex.EncodeToString(block.GetHash())),
+				),
+			),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text("Proposer Address"),
+				),
+				elem.Div(
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/validators/"+util.HexToString(block.GetProposer())),
+						),
+						vecty.Text(util.HexToString(block.GetProposer())),
+					),
 				),
 			),
 		},

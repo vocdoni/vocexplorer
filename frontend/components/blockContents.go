@@ -42,7 +42,8 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("extra-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body:       vecty.Text("card body"),
+						Header:     elem.Heading4(vecty.Text("Validators")),
+						Body:       ValidatorsList(contents.Block),
 						ClassNames: []string{"validators"},
 					}),
 					bootstrap.Card(bootstrap.CardParams{
@@ -60,6 +61,15 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 					Body: contents.BlockDetails(contents.Block),
 				}),
 			),
+		),
+	)
+}
+
+func ValidatorsList(block *tmtypes.Block) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Anchor(
+			vecty.Markup(vecty.Attribute("href", "/validators/"+block.ProposerAddress.String())),
+			vecty.Text(block.ProposerAddress.String()),
 		),
 	)
 }
@@ -104,6 +114,18 @@ func BlockView(block *tmtypes.Block) vecty.List {
 						vecty.Attribute("href", fmt.Sprintf("/blocks/%d", block.Header.Height-1)),
 					),
 					vecty.Text(block.Header.LastBlockID.Hash.String()),
+				),
+			),
+			elem.DefinitionTerm(
+				vecty.Markup(vecty.Class("dt")),
+				vecty.Text("Proposer Address"),
+			),
+			elem.Description(
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", "/validators/"+block.ProposerAddress.String()),
+					),
+					vecty.Text(block.ProposerAddress.String()),
 				),
 			),
 		),

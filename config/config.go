@@ -43,8 +43,26 @@ const (
 	TxHeightPrefix = "04"
 	//TxHashPrefix is the key prefix for transactions by hash
 	TxHashPrefix = "05"
+	//ValidatorPrefix is the key prefix for validators by address
+	ValidatorPrefix = "06"
+	//EnvPackagePrefix is the key prefix for envelope packages by height
+	EnvPackagePrefix = "07"
+	//EnvNullifierPrefix is the key prefix for envelope heights by nullifier
+	EnvNullifierPrefix = "08"
+	//EnvPIDPrefix is the key prefix for envelope heights by processID
+	EnvPIDPrefix = "09"
+	//BlockByValidatorPrefix is the key prefix for block hash by validator
+	BlockByValidatorPrefix = "10"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored
 	LatestTxHeightKey = "LatestTxHeight"
+	//LatestValidatorHeightKey is the key for the value of the latest validator height stored
+	LatestValidatorHeightKey = "LatestValHeight"
+	//ValidatorHeightMapKey is the key for the map of validator block heights
+	ValidatorHeightMapKey = "ValHeightMap"
+	//ProcessEnvelopeHeightMapKey is the key for the map of process envelope heights
+	ProcessEnvelopeHeightMapKey = "ProcEnvHeight"
+	//LatestEnvelopeHeightKey is the key for the value of the latest envelope height stored
+	LatestEnvelopeHeightKey = "LatestEnvHeight"
 )

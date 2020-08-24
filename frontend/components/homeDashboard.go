@@ -66,14 +66,17 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	return DashboardView
 }
 
+func updateHeight(t *rpc.TendermintInfo) {
+	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
+	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())
+}
+
 func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	// Wait for data structs to load
-	for d == nil || d.vc == nil {
-	}
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	client.UpdateDashboardInfo(d.gwClient, d.vc)
-	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+	updateHeight(d.t)
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 	vecty.Rerender(d)
 	for {
@@ -86,9 +89,8 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			return
 		case <-ticker.C:
 			rpc.UpdateTendermintInfo(d.tClient, d.t)
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			updateHeight(d.t)
 			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-
 			client.UpdateDashboardInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
@@ -103,7 +105,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			}
 			d.blockIndex = i
 			oldBlocks := d.t.TotalBlocks
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			updateHeight(d.t)
 			if i < 1 {
 				oldBlocks = d.t.TotalBlocks
 			}

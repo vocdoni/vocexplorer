@@ -36,6 +36,7 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 			CurrentPage:     &b.currentPage,
 			RefreshCh:       b.refreshCh,
 			ListSize:        config.ListSize,
+			DisableUpdate:   b.disableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
@@ -127,6 +128,16 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
 						),
 						vecty.Text(util.IntToString(tx.Store.Height)),
+					),
+				),
+				elem.Div(
+					elem.Div(
+						vecty.Markup(vecty.Class("dt")),
+						vecty.Text("Hash"),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("dd")),
+						vecty.Text(util.HexToString(tx.GetHash())),
 					),
 				),
 			),

@@ -29,7 +29,6 @@ func (home *BlocksView) Render() vecty.ComponentOrHTML {
 	if block == nil {
 		log.Errorf("Block unavailable")
 		return elem.Div(
-			&components.Header{},
 			elem.Main(vecty.Text("Block not available")),
 		)
 	}
