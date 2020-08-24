@@ -9,6 +9,7 @@ import (
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -60,10 +61,14 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 
 		return elem.Section(
 			vecty.Markup(vecty.Class("list", "paginated")),
-			elem.Heading3(
-				vecty.Text("Blocks"),
-			),
-			p,
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading3(
+						vecty.Text("Blocks"),
+					),
+					p,
+				},
+			}),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))

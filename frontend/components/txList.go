@@ -12,6 +12,7 @@ import (
 	"github.com/gopherjs/vecty/prop"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -63,10 +64,14 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 
 		return elem.Section(
 			vecty.Markup(vecty.Class("list", "paginated")),
-			elem.Heading3(
-				vecty.Text("Transactions"),
-			),
-			p,
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading3(
+						vecty.Text("Transactions"),
+					),
+					p,
+				},
+			}),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for txchain info..."))

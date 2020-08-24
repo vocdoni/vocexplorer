@@ -15,6 +15,9 @@ $font-size-xs: $font-size-base * .85;
 // cards
 $card-cap-color: $white;
 $card-cap-bg: $blue;
-$card-bg: rgba($body-bg, .03);
+$card-border-width: 0;
+$card-border-radius: 10px;
+$cnc-bg: rgba($body-bg, .3);
+$cnc-border-radius: 3px;
 
 $icon-lens: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23444444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><line x1='21' y1='21' x2='16.65' y2='16.65'></line></svg>") !default;

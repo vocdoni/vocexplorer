@@ -44,17 +44,21 @@ func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 	}
 
 	return elem.Section(
-		elem.Heading4(vecty.Text("Average block times: ")),
-		elem.Table(
-			vecty.Markup(vecty.Class("table")),
-			elem.TableHead(
-				elem.TableRow(
-					elem.TableHeader(vecty.Text("Time period")),
-					elem.TableHeader(vecty.Text("Avg. time"))),
-			),
-			elem.TableBody(
-				items,
-			),
-		),
+		bootstrap.Card(bootstrap.CardParams{
+			Body: vecty.List{
+				elem.Heading4(vecty.Text("Average block times: ")),
+				elem.Table(
+					vecty.Markup(vecty.Class("table")),
+					elem.TableHead(
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Time period")),
+							elem.TableHeader(vecty.Text("Avg. time"))),
+					),
+					elem.TableBody(
+						items,
+					),
+				),
+			},
+		}),
 	)
 }
