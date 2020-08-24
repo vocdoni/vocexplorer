@@ -31,10 +31,9 @@ type DashboardView struct {
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
 		return &StatsView{
-			t:         dash.t,
-			vc:        dash.vc,
-			refreshCh: dash.refreshCh,
-			gwClient:  dash.gwClient,
+			t:        dash.t,
+			vc:       dash.vc,
+			gwClient: dash.gwClient,
 		}
 	}
 	return &bootstrap.Alert{
