@@ -192,7 +192,10 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 	}
 	data = append(data, vecty.Text("]"))
 	if numTx == 0 {
-		data = []vecty.MarkupOrChild{vecty.Text("No transactions")}
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("No transactions"),
+		)
 	}
 
 	return elem.Preformatted(elem.Code(data...))
@@ -202,12 +205,15 @@ func preformattedBlockEvidence(block *tmtypes.Block) vecty.ComponentOrHTML {
 	var evidence []byte
 	var err error
 
-	if len(block.Evidence.Evidence) > 0 {
-		evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
-		util.ErrPrint(err)
-	} else {
-		evidence = []byte("No evidence")
+	if len(block.Evidence.Evidence) <= 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("No evidence"),
+		)
 	}
+
+	evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
+	util.ErrPrint(err)
 
 	return elem.Preformatted(elem.Code(vecty.Text(string(evidence))))
 }

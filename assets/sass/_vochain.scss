@@ -50,6 +50,7 @@ pre {
   }
 }
 
+// tile are the long cards with a colored side
 .tile {
   border-radius: 5px;
   font-size: $font-size-xs;
@@ -180,6 +181,7 @@ pre {
   }
 }
 
+
 .card {
   dl {
     @extend .row;
@@ -192,6 +194,7 @@ pre {
     }
   }
 
+  // cnc stands for card in card ;)
   .card {
     border-radius: $cnc-border-radius;
     background: $cnc-bg;
@@ -199,25 +202,57 @@ pre {
 }
 
 .card-body {
+  // Tabs menu
   > nav:first-child {
     margin-left: -$card-spacer-x;
     margin-top: -$card-spacer-x;
     margin-right: -$card-spacer-x;
 
     ul {
-      padding: 1rem;
+      padding: $card-spacer-x;
       padding-bottom: 0;
 
       @extend .nav;
       @extend .nav-tabs;
+      @extend .flex-column;
+      @extend .flex-sm-row;
 
       li {
-        @extend .mr-2;
-
         @extend .nav-item;
+        @extend .p-sm-0;
+        @extend .mr-sm-2;
+        @extend .d-flex;
+        @extend .d-sm-inline-block;
+
+        button:hover, button:focus, button:active {
+          border-color: $gray-300;
+        }
+
+        &:last-child button,
+        button.active {
+          border-bottom-color: transparent;
+        }
+
+        + li {
+          button {
+            border-top-color: transparent;
+          }
+        }
 
         a, button {
+          @extend .col-12;
           @extend .nav-link;
+          border-radius: 0;
+          border-color: $gray-200;
+        }
+
+        @media (min-width: map-get($grid-breakpoints, "sm")) {
+          a, button, + li button, button.active, &:last-child button {
+            border-top-left-radius: $nav-tabs-border-radius;
+            border-top-right-radius: $nav-tabs-border-radius;
+            border-color: $nav-tabs-link-active-border-color;
+            border-bottom: none;
+          }
         }
       }
     }
@@ -227,6 +262,19 @@ pre {
   }
 }
 
+.tabs-content pre {
+  padding: 1rem;
+  margin: 0;
+  background-color: #f8f9fa;
+  color: #6c757d;
+
+  &.empty {
+    text-align: center;
+    font-family: $font-family-base;
+  }
+}
+
+// detail view of entities (blocks, transactions.. whatever)
 .details-view {
   h1 {
     font-size: $h4-font-size;
