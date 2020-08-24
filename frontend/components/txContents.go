@@ -10,6 +10,7 @@ import (
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -24,9 +25,7 @@ type TxContents struct {
 
 // Render renders the TxContents component
 func (contents *TxContents) Render() vecty.ComponentOrHTML {
-	return elem.Main(
-		renderFullTx(contents.Tx, contents.Time, contents.HasBlock),
-	)
+	return renderFullTx(contents.Tx, contents.Time, contents.HasBlock)
 }
 
 //TODO: link to envelope. Possibly store envelope nullifier/height in tx
@@ -102,106 +101,82 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 
 	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
 	accordionName := "accordionTx"
-	return elem.Div(elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
+
+	return bootstrap.Card(bootstrap.CardParams{
+		Header: vecty.Text("Transaction " + util.IntToString(tx.Store.TxHeight)),
+		Body: elem.Div(
 			elem.Div(
-				vecty.Markup(vecty.Class("card-header")),
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/txs/"+util.IntToString((tx.Store.TxHeight))),
+				vecty.Markup(vecty.Class("dt")),
+				vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
+				vecty.If(
+					hasBlock,
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
+						),
+						vecty.Text(util.IntToString(tx.Store.Height)),
 					),
-					vecty.Text("Transaction "+util.IntToString(tx.Store.TxHeight)),
+				),
+				vecty.If(
+					!hasBlock,
+					vecty.Text(util.IntToString(tx.Store.Height)+" (block not yet available)"),
 				),
 			),
 			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
 				elem.Div(
 					vecty.Markup(vecty.Class("dt")),
-					vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
-					vecty.If(
-						hasBlock,
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
-							),
-							vecty.Text(util.IntToString(tx.Store.Height)),
-						),
-					),
-					vecty.If(
-						!hasBlock,
-						vecty.Text(util.IntToString(tx.Store.Height)+" (block not yet available)"),
-					),
+					vecty.Text("Hash"),
 				),
 				elem.Div(
+					vecty.Markup(vecty.Class("dd")),
+					vecty.Text(util.HexToString(tx.GetHash())),
+				),
+				vecty.If(
+					!tm.IsZero(),
 					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Hash"),
+						vecty.Text(humanize.Time(tm)),
 					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(tx.GetHash())),
-					),
-					vecty.If(
-						!tm.IsZero(),
-						elem.Div(
-							vecty.Text(humanize.Time(tm)),
-						),
-					),
+				),
+			),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text("Transaction Type"),
 				),
 				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Transaction Type"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(rawTx.Type),
-					),
+					vecty.Markup(vecty.Class("dd")),
+					vecty.Text(rawTx.Type),
 				),
-				vecty.If(
-					entityID != "",
-					elem.Div(
-						vecty.Text("Belongs to entity "),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", "/entities/"+entityID),
-							),
-							vecty.Text(entityID),
+			),
+			vecty.If(
+				entityID != "",
+				elem.Div(
+					vecty.Text("Belongs to entity "),
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/entities/"+entityID),
 						),
+						vecty.Text(entityID),
 					),
 				),
-				vecty.If(
-					processID != "",
-					elem.Div(
-						vecty.Text("Belongs to process "),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", "/processes/"+processID),
-							),
-							vecty.Text(processID),
+			),
+			vecty.If(
+				processID != "",
+				elem.Div(
+					vecty.Text("Belongs to process "),
+					elem.Anchor(
+						vecty.Markup(
+							vecty.Attribute("href", "/processes/"+processID),
 						),
+						vecty.Text(processID),
 					),
 				),
-				// vecty.If(
-				// 	nullifier != "" && rawTx.Type == "vote",
-				// 	elem.Div(
-				// 		vecty.Text("Contains vote envelope "),
-				// 		elem.Anchor(
-				// 			vecty.Markup(
-				// 				vecty.Attribute("href", "/envelopes/"+nullifier),
-				// 			),
-				// 			vecty.Text(nullifier),
-				// 		),
-				// 	),
-				// ),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
+				renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
+				renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
 			),
 		),
-	),
-		elem.Div(
-			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-			renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
-			renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
-		),
-	)
+	})
 }

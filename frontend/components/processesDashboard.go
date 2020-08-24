@@ -41,19 +41,22 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 		}
 		return Container(
 			elem.Section(
-				elem.Heading4(vecty.Text(
-					fmt.Sprintf("Process %s", dash.processID),
-				)),
-				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
-				elem.Heading5(vecty.Text("Number of votes : "+util.IntToString(dash.process.EnvelopeHeight))),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading4(vecty.Text(
+							fmt.Sprintf("Process %s", dash.processID),
+						)),
+						elem.Heading5(vecty.Text("Process type: " + t + ", state: " + st)),
+						elem.Heading5(vecty.Text("Number of votes : " + util.IntToString(dash.process.EnvelopeHeight))),
 
-				renderResults(dash.process.Results),
-				vecty.Markup(vecty.Class("info-pane")),
-				&ProcessesEnvelopeListView{
-					process:       dash.process,
-					refreshCh:     dash.refreshCh,
-					disableUpdate: &dash.disableEnvelopesUpdate,
-				},
+						renderResults(dash.process.Results),
+						&ProcessesEnvelopeListView{
+							process:       dash.process,
+							refreshCh:     dash.refreshCh,
+							disableUpdate: &dash.disableEnvelopesUpdate,
+						},
+					},
+				}),
 			),
 		)
 	}
