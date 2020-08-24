@@ -113,9 +113,12 @@ pre {
 
   .type {
     @extend .col-md-2;
+    @extend .d-flex;
     color: darken($green, 18%);
 
     > div {
+      flex: 1;
+      justify-content: center;
       @extend .d-flex;
       @extend .flex-column;
       @extend .align-items-md-center;
