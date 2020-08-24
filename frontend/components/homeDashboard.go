@@ -10,7 +10,9 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -67,6 +69,9 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 }
 
 func updateHeight(t *rpc.TendermintInfo) {
+	dispatcher.Dispatch(&actions.BlocksHeightUpdate{
+		Height: dbapi.GetBlockHeight(),
+	})
 	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
 	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())

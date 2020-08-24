@@ -4,6 +4,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -47,7 +48,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						elem.TableRow(
 							elem.TableHeader(vecty.Text("Block Height")),
 							elem.TableData(vecty.Text(
-								p.Sprintf("%d", b.T.ResultStatus.SyncInfo.LatestBlockHeight),
+								p.Sprintf("%d", store.CurrentBlockHeight),
 							)),
 						),
 						elem.TableRow(
