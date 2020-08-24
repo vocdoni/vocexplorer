@@ -1,21 +1,10 @@
 package store
 
 import (
-	"fmt"
-
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
-
-// type Store struct {
-// 	BlockTabActive string
-// 	Listeners      *storeutil.ListenerRegistry
-// }
-
-// var Instance = Store{
-// 	Listeners: storeutil.NewListenerRegistry(),
-// }
 
 var (
 	BlockTabActive = "transactions"
@@ -36,7 +25,6 @@ func onAction(action interface{}) {
 		BlockTabActive = a.Tab
 
 	case *actions.BlocksHeightUpdate:
-		fmt.Println(a.Height)
 		CurrentBlockHeight = a.Height
 
 	default:
