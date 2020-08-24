@@ -27,7 +27,7 @@ type BlockContents struct {
 }
 
 // Render renders the BlockContents component
-func (contents *BlockContents) Render() vecty.ComponentOrHTML {
+func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	return Container(
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view")),
@@ -36,14 +36,20 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body: BlockView(contents.Block),
+						Body: BlockView(c.Block),
 					}),
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("extra-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body:       vecty.Text("card body"),
-						ClassNames: []string{"validators"},
+						Header: elem.Heading4(vecty.Text("Validator")),
+						Body: elem.Div(
+							elem.Anchor(
+								vecty.Markup(vecty.Attribute("href", "/validators/"+c.Block.ValidatorsHash.String())),
+								vecty.Text(c.Block.ValidatorsHash.String()),
+							),
+						),
+						ClassNames: []string{"validator"},
 					}),
 					bootstrap.Card(bootstrap.CardParams{
 						Body:       vecty.Text("card body"),
@@ -57,7 +63,7 @@ func (contents *BlockContents) Render() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("col-12")),
 				bootstrap.Card(bootstrap.CardParams{
-					Body: contents.BlockDetails(),
+					Body: c.BlockDetails(),
 				}),
 			),
 		),
