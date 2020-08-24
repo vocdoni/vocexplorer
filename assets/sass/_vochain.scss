@@ -115,6 +115,7 @@ pre {
   .type {
     @extend .col-md-2;
     @extend .d-flex;
+    word-wrap: anywhere;
     color: darken($green, 18%);
 
     > div {
