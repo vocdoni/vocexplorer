@@ -57,7 +57,6 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
 	VocDashDashboardView.quitCh = make(chan struct{})
-	VocDashDashboardView.refreshCh = make(chan bool, 20)
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
 	VocDashDashboardView.disableEnvelopesUpdate = false
 	store.Entities.PagChannel = make(chan int, 50)

@@ -15,11 +15,17 @@ var (
 	Listeners = storeutil.NewListenerRegistry()
 
 	Processes struct {
-		Tab string
+		Tab           string
+		PagChannel    chan int
+		CurrentPage   int
+		DisableUpdate bool
 	}
 
 	Entities struct {
-		Tab string
+		Tab           string
+		CurrentPage   int
+		PagChannel    chan int
+		DisableUpdate bool
 	}
 )
 
