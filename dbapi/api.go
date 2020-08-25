@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -43,9 +44,27 @@ func getHeight(url string) int64 {
 	return height.GetHeight()
 }
 
+func getHeightMap(url string) map[string]int64 {
+	body, ok := request(url)
+	if !ok {
+		return map[string]int64{}
+	}
+	var heightMap types.HeightMap
+	if len(body) > 0 {
+		err := proto.Unmarshal(body, &heightMap)
+		util.ErrPrint(err)
+	}
+	return heightMap.GetHeights()
+}
+
 //GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
 func GetProcessEnvelopeHeight(process string) int64 {
 	return getHeight("/db/envprocheight/?process=" + process)
+}
+
+//GetProcessEnvelopeHeightMap returns the entire map of process envelope heights
+func GetProcessEnvelopeHeightMap() map[string]int64 {
+	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeHeightMapKey)
 }
 
 //GetEnvelopeHeight returns the latest envelope height stored by the database
@@ -65,7 +84,12 @@ func GetEntityHeight() int64 {
 
 //GetEntityProcessHeight returns the number of processes belonging to a
 func GetEntityProcessHeight(entity string) int64 {
-	return getHeight("/db/envprocheight/?entity=" + entity)
+	return getHeight("/db/entityprocheight/?entity=" + entity)
+}
+
+//GetEntityProcessHeightMap returns the entire map of entity process heights
+func GetEntityProcessHeightMap() map[string]int64 {
+	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessHeightMapKey)
 }
 
 //GetBlockHeight returns the latest block height stored by the database
@@ -253,7 +277,7 @@ func GetEntityList(i int) [config.ListSize]string {
 	var entityList [config.ListSize]string
 	for i, rawEntity := range rawEntityList.GetItems() {
 		if len(rawEntity) > 0 {
-			entity := util.HexToString(rawEntity)
+			entity := strings.ToLower(util.HexToString(rawEntity))
 			entityList[i] = entity
 			util.ErrPrint(err)
 		}
@@ -273,10 +297,29 @@ func GetProcessList(i int) [config.ListSize]string {
 	var processList [config.ListSize]string
 	for i, rawProcess := range rawProcessList.GetItems() {
 		if len(rawProcess) > 0 {
-			process := util.HexToString(rawProcess)
+			process := strings.ToLower(util.HexToString(rawProcess))
 			processList[i] = process
 			util.ErrPrint(err)
 		}
 	}
 	return processList
+}
+
+//GetProcessListByEntity returns a list of processes by entity
+func GetProcessListByEntity(i int, entity string) [config.ListSize]string {
+	body, ok := request("/db/listprocessesbyentity/?from=" + util.IntToString(i) + "&entity=" + entity)
+	if !ok {
+		return [config.ListSize]string{}
+	}
+	var rawProcessList types.ItemList
+	err := proto.Unmarshal(body, &rawProcessList)
+	util.ErrPrint(err)
+	var envList [config.ListSize]string
+	for i, rawProcess := range rawProcessList.GetItems() {
+		if len(rawProcess) > 0 {
+			envelope := strings.ToLower(util.HexToString(rawProcess))
+			envList[i] = envelope
+		}
+	}
+	return envList
 }

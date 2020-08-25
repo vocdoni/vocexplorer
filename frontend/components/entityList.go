@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gopherjs/vecty"
@@ -34,7 +35,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return elem.Div(renderEntityItems(b.vochain.EntityIDs)...)
+			return elem.Div(renderEntityItems(b.vochain.EntityIDs, b.vochain.ProcessHeights)...)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -58,7 +59,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-entities")),
 			elem.Heading3(
-				vecty.Text("entities"),
+				vecty.Text("Entities"),
 			),
 			p,
 		)
@@ -68,19 +69,63 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Div(vecty.Text("Waiting for entities..."))
 }
+func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("tile")),
+		elem.Div(
+			vecty.Markup(vecty.Class("tile-body")),
+			elem.Div(
+				vecty.Markup(vecty.Class("type")),
+			// elem.Div(
+			// 	elem.Span(
+			// 		vecty.Markup(vecty.Class("title")),
+			// 		vecty.Text(ID),
+			// 	),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("contents")),
+			elem.Div(
+				elem.Div(
+					elem.Anchor(
+						vecty.Markup(vecty.Class("hash")),
+						vecty.Markup(vecty.Attribute("href", "/entities/"+ID)),
+						vecty.Text(ID),
+					),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("envelopes")),
+					vecty.Text(
+						fmt.Sprintf("%d processes", height),
+					),
+				),
+			),
+		),
+	// elem.Div(
+	// 	vecty.Markup(vecty.Class("details")),
+	// 	elem.Div(
+	// 		vecty.Text("(date?)"),
+	// 	),
+	// ),
+	)
+}
 
-func renderEntityItems(slice [config.ListSize]string) []vecty.MarkupOrChild {
+func renderEntityItems(slice [config.ListSize]string, heights map[string]int64) []vecty.MarkupOrChild {
 	if len(slice) == 0 {
 		return []vecty.MarkupOrChild{vecty.Text("No valid entities")}
 	}
 	var elemList []vecty.MarkupOrChild
 	for _, ID := range slice {
-		elemList = append(
-			elemList,
-			elem.ListItem(
-				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/entities/"+ID)), vecty.Text(ID)),
-			),
-		)
+		if ID != "" {
+			height, hok := heights[ID]
+			if !hok {
+				height = 0
+			}
+			elemList = append(
+				elemList,
+				EntityBlock(ID, height),
+			)
+		}
 	}
 	return elemList
 }

@@ -36,7 +36,7 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 		}
 		st := dash.process.State
 		if st == "" {
-			t = "unknown"
+			st = "unknown"
 		}
 		return Container(
 			elem.Section(

@@ -17,9 +17,9 @@ import (
 type ProcessListView struct {
 	vecty.Core
 	currentPage   int
+	vochain       *client.VochainInfo
 	disableUpdate *bool
 	refreshCh     chan int
-	vochain       *client.VochainInfo
 }
 
 // Render renders the ProcessListView component
@@ -122,24 +122,26 @@ func renderProcessItems(IDs [config.ListSize]string, heights map[string]int64, p
 	}
 	var elemList []vecty.MarkupOrChild
 	for _, ID := range IDs {
-		height, hok := heights[ID]
-		info, iok := procs[ID]
+		if ID != "" {
+			height, hok := heights[ID]
+			info, iok := procs[ID]
 
-		if !iok {
+			if !iok {
+				elemList = append(
+					elemList,
+					elem.Div(
+						vecty.Markup(vecty.Class("loading")),
+						vecty.Text("Loading process info..."),
+					),
+				)
+				continue
+			}
+
 			elemList = append(
 				elemList,
-				elem.Div(
-					vecty.Markup(vecty.Class("loading")),
-					vecty.Text("Loading process info..."),
-				),
+				ProcessBlock(ID, hok, height, info),
 			)
-			continue
 		}
-
-		elemList = append(
-			elemList,
-			ProcessBlock(ID, hok, height, info),
-		)
 	}
 	return elemList
 }

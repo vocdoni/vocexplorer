@@ -42,6 +42,34 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// HeightMapHandler writes the string:int64 height map corresponding to given key
+func HeightMapHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		keys, ok := r.URL.Query()["key"]
+		if !ok || len(keys[0]) < 1 {
+			log.Errorf("Url Param 'key' is missing")
+			http.Error(w, "Url Param 'key' missing", http.StatusBadRequest)
+			return
+		}
+		val, err := db.Get([]byte(keys[0]))
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Key not found", http.StatusInternalServerError)
+			return
+		}
+
+		var heightMap types.HeightMap
+		err = proto.Unmarshal(val, &heightMap)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Height map not found", http.StatusInternalServerError)
+			return
+		}
+		log.Debug("Sent height map for key " + keys[0])
+		w.Write(val)
+	}
+}
+
 func buildItemByIDHandler(db *dvotedb.BadgerDB, IDName, itemPrefix string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()[IDName]
@@ -162,7 +190,6 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
-		// from = util.Max(util.Min(from, int(itemHeight)), config.ListSize)
 		from = util.Min(from, int(itemHeight))
 
 		// Get keys
@@ -174,11 +201,13 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
+		log.Debugf("%d Keys: %+v", keys, len(keys))
 		var rawItems types.ItemList
 		// Get packages by height:package
 		for _, rawKey := range keys {
 			height := new(types.Height)
 			util.ErrPrint(proto.Unmarshal(rawKey, height))
+			log.Debugf("Getting item from height %d", height.GetHeight())
 			rawPackage, err := db.Get(append([]byte(itemPrefix), []byte(util.IntToString(height.GetHeight()))...))
 			util.ErrPrint(err)
 			rawItems.Items = append(rawItems.GetItems(), rawPackage)

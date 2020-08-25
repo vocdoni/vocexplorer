@@ -85,7 +85,6 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 	updateVocdash(d)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
-	client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 	vecty.Rerender(d)
 	for {
 		select {
@@ -96,7 +95,6 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			return
 		case <-ticker.C:
 			updateVocdash(d)
-			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshEntities:
 		entityLoop:
@@ -137,6 +135,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			}
 			if d.vc.ProcessCount > 0 {
 				updateProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
+				client.UpdateProcessResults(d.gwClient, d.vc)
 			}
 			vecty.Rerender(d)
 		case i := <-d.refreshEnvelopes:
@@ -173,6 +172,7 @@ func updateVocdash(d *VocDashDashboardView) {
 	}
 	if !d.disableProcessesUpdate {
 		updateProcesses(d, util.Max(d.vc.ProcessCount-d.processIndex, config.ListSize))
+		client.UpdateProcessResults(d.gwClient, d.vc)
 	}
 }
 
@@ -195,6 +195,8 @@ func updateProcesses(d *VocDashDashboardView, index int) {
 	list := dbapi.GetProcessList(index)
 	reverseIDList(&list)
 	d.vc.ProcessIDs = list
+	d.vc.EnvelopeHeights = dbapi.GetProcessEnvelopeHeightMap()
+	d.vc.ProcessHeights = dbapi.GetEntityProcessHeightMap()
 }
 
 func updateHeights(d *VocDashDashboardView) {

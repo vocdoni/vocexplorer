@@ -104,6 +104,7 @@ type VochainInfo struct {
 	EntityIDs       [config.ListSize]string
 	EnvelopeHeight  int
 	EnvelopeHeights map[string]int64
+	ProcessHeights  map[string]int64
 	EnvelopeList    [config.ListSize]*types.Envelope
 	Health          int32
 	Height          int64
@@ -117,10 +118,10 @@ type VochainInfo struct {
 
 // EntityInfo holds info about one vochain entity
 type EntityInfo struct {
-	EnvelopeHeights  map[string]int64
-	ProcessIDs       []string
-	ProcessList      map[string]ProcessInfo
-	ProcessSearchIDs []string
+	EnvelopeHeights map[string]int64
+	ProcessIDs      [config.ListSize]string
+	ProcessTypes    map[string]ProcessInfo
+	ProcessCount    int
 }
 
 // EnvelopeInfo holds info about one vochain envelope

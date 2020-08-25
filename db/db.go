@@ -425,13 +425,16 @@ func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap 
 		heightMapMutex.Unlock()
 
 		// Write Height:PID
-		processKey := append([]byte(config.ProcessIDPrefix), []byte(util.IntToString(int(height)+globalHeight))...)
+		processKey := append([]byte(config.ProcessIDPrefix), []byte(util.IntToString(globalHeight))...)
 		batch.Put(processKey, rawProcess)
 
 		// Write Entity|LocalHeight:ProcessHeight
 		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
 		entityProcessKey = append(entityProcessKey, []byte(util.IntToString(int(localHeight)))...)
-		batch.Put(entityProcessKey, []byte(util.IntToString(globalHeight)))
+		storeHeight := &types.Height{Height: int64(globalHeight)}
+		rawStoreHeight, err := proto.Marshal(storeHeight)
+		util.ErrPrint(err)
+		batch.Put(entityProcessKey, rawStoreHeight)
 	}
 }
 
@@ -441,13 +444,17 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 		max = 64
 	}
 	var hashList [][]byte
-	for ; max > 0; max-- {
+	for ; max > 0 && height >= 0; max-- {
 		heightKey := []byte(util.IntToString(height))
 		key := append(prefix, heightKey...)
+		log.Debugf("Test item at height %d", height)
+
 		has, err := d.Has(key)
 		if !has || util.ErrPrint(err) {
-			break
+			height--
+			continue
 		}
+		log.Debugf("Found item at height %d", height)
 		val, err := d.Get(key)
 		if err != nil {
 			log.Error(err)

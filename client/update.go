@@ -1,7 +1,7 @@
 package client
 
 import (
-	"fmt"
+	"strings"
 
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -78,8 +78,8 @@ func GetIDs(IDList *[]string, c *Client, getList func() ([]string, error)) {
 	util.ErrPrint(err)
 }
 
-// UpdateAuxProcessInfo updates auxilary info for all currently displayed process id's
-func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
+// UpdateProcessResults updates auxilary info for all currently displayed process id's
+func UpdateProcessResults(c *Client, vc *VochainInfo) {
 	if vc.ProcessResults == nil {
 		vc.ProcessResults = make(map[string]ProcessInfo)
 	}
@@ -87,19 +87,14 @@ func UpdateAuxProcessInfo(c *Client, vc *VochainInfo) {
 		vc.EnvelopeHeights = make(map[string]int64)
 	}
 	for _, ID := range vc.ProcessIDs {
-		fmt.Println("Getting process results for process " + ID)
-		if _, ok := vc.ProcessResults[ID]; !ok {
-			t, st, _, err := c.GetProcessResults(ID)
-			if !util.ErrPrint(err) {
-				vc.ProcessResults[ID] = ProcessInfo{
-					ProcessType: t,
-					State:       st}
-			}
-		}
-		if _, ok := vc.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				vc.EnvelopeHeights[ID] = height
+		if ID != "" {
+			if _, ok := vc.ProcessResults[ID]; !ok {
+				t, st, _, err := c.GetProcessResults(strings.ToLower(ID))
+				if !util.ErrPrint(err) {
+					vc.ProcessResults[ID] = ProcessInfo{
+						ProcessType: t,
+						State:       st}
+				}
 			}
 		}
 	}
@@ -118,69 +113,24 @@ func UpdateProcessesDashboardInfo(c *Client, process *FullProcessInfo, processID
 	}
 }
 
-// UpdateEntitiesDashboardInfo updates entity info to include recent processes
-func UpdateEntitiesDashboardInfo(c *Client, entity *EntityInfo, entityID string, index int) {
-	if entity == nil {
-		entity = new(EntityInfo)
-	}
-	GetIDs(&entity.ProcessIDs, c, func() ([]string, error) {
-		return c.GetProcessList(entityID, int64(index))
-	})
-}
-
 // UpdateAuxEntityInfo updates process info map to include all currently displayed process IDs
 func UpdateAuxEntityInfo(c *Client, e *EntityInfo) {
-	if e.ProcessList == nil {
-		e.ProcessList = make(map[string]ProcessInfo)
+	if e.ProcessTypes == nil {
+		e.ProcessTypes = make(map[string]ProcessInfo)
 	}
 	if e.EnvelopeHeights == nil {
 		e.EnvelopeHeights = make(map[string]int64)
 	}
-	// If all processes are populated, send no requests. Process results are not updated without page refresh.
-	if len(e.ProcessList) >= len(e.ProcessIDs) && len(e.EnvelopeHeights) >= len(e.ProcessIDs) {
-		return
-	}
-	numReq := 0
 	for _, ID := range e.ProcessIDs {
-		if _, ok := e.ProcessList[ID]; !ok {
-			t, st, _, err := c.GetProcessResults(ID)
-			if !util.ErrPrint(err) {
-				e.ProcessList[ID] = ProcessInfo{
-					ProcessType: t,
-					State:       st}
+		if ID != "" {
+			if _, ok := e.ProcessTypes[ID]; !ok {
+				t, st, _, err := c.GetProcessResults(strings.ToLower(ID))
+				if !util.ErrPrint(err) {
+					e.ProcessTypes[ID] = ProcessInfo{
+						ProcessType: t,
+						State:       st}
+				}
 			}
-			numReq++
 		}
-		if _, ok := e.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				e.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
-	}
-	// If currently-displayed processes are populated, start to populate ones which could be displayed
-	// This reduces load time & allows for type/state search.
-	for _, ID := range e.ProcessIDs {
-		if numReq >= 20 {
-			break
-		}
-		if _, ok := e.ProcessList[ID]; !ok {
-			t, st, _, err := c.GetProcessResults(ID)
-			if !util.ErrPrint(err) {
-				e.ProcessList[ID] = ProcessInfo{
-					ProcessType: t,
-					State:       st}
-			}
-			numReq++
-		}
-		if _, ok := e.EnvelopeHeights[ID]; !ok {
-			height, err := c.GetEnvelopeHeight(ID)
-			if !util.ErrPrint(err) {
-				e.EnvelopeHeights[ID] = height
-			}
-			numReq++
-		}
-
 	}
 }
