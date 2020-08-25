@@ -137,7 +137,12 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(tx.GetHash())),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/db/txhash/?hash="+util.HexToString(tx.GetHash())),
+							),
+							vecty.Text(util.HexToString(tx.GetHash())),
+						),
 					),
 				),
 			),
