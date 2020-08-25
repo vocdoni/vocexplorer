@@ -13,12 +13,6 @@ var (
 
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
-
-	Processes struct {
-		CurrentPage   int
-		PagChannel    chan int
-		DisableUpdate bool
-	}
 )
 
 func init() {

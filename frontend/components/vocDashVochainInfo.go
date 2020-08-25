@@ -11,8 +11,6 @@ import (
 	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -29,7 +27,6 @@ type VochainInfoView struct {
 
 // Render renders the VochainInfoView component
 func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
-
 	if b.vc != nil {
 		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
 			b.vc.EntitySearchIDs = util.TrimSlice(b.vc.EntityIDs, config.ListSize, &b.entitiesIndex)
@@ -50,12 +47,25 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 		}
 
 		return elem.Section(
-			bootstrap.Card(bootstrap.CardParams{
-				Body: vecty.List{
-					renderProcessList(b),
-					renderEntityList(b),
-				},
-			}),
+			vecty.Markup(vecty.Class("card")),
+			elem.Div(
+				vecty.Markup(vecty.Class("card-body")),
+				elem.Input(vecty.Markup(
+					event.Input(func(e *vecty.Event) {
+						search := e.Target.Get("value").String()
+						if search != "" {
+							js.Global().Set("searchTerm", search)
+						} else {
+							js.Global().Set("searchTerm", "")
+						}
+						b.refreshCh <- true
+						vecty.Rerender(b)
+					}),
+					prop.Placeholder("search IDs"),
+				)),
+				renderProcessList(b),
+				renderEntityList(b),
+			),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
@@ -105,42 +115,46 @@ func renderEntityList(b *VochainInfoView) vecty.ComponentOrHTML {
 
 func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
 	return elem.Div(
-		&Pagination{
-			CurrentPage:     &store.Processes.CurrentPage,
-			ListSize:        config.ListSize,
-			TotalItems:      &b.numProcesses,
-			RefreshCh:       store.Processes.PagChannel,
-			DisableUpdate:   &store.Processes.DisableUpdate,
-			RenderSearchBar: false,
-			RenderFunc: func(index int) vecty.ComponentOrHTML {
-				list := make(vecty.List, len(b.vc.ProcessSearchIDs))
-				IDs := b.vc.ProcessSearchIDs
-				heights := b.vc.EnvelopeHeights
-				procs := b.vc.ProcessSearchList
-
-				for _, ID := range IDs {
-					height, hok := heights[ID]
-					info, iok := procs[ID]
-
-					if !iok {
-						list = append(
-							list,
-							elem.Div(
-								vecty.Markup(vecty.Class("loading")),
-								vecty.Text("Loading process info..."),
-							),
-						)
-						continue
-					}
-
-					list = append(
-						list,
-						ProcessBlock(ID, hok, height, info),
-					)
-				}
-				return elem.Div(list)
-			},
-		},
+		elem.Button(
+			vecty.Text("prev"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.processesIndex--
+					b.refreshCh <- true
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					b.processesIndex > 0,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					b.processesIndex < 1,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.Button(vecty.Text("next"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.processesIndex++
+					b.refreshCh <- true
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					(b.processesIndex+1)*config.ListSize < b.numProcesses,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					(b.processesIndex+1)*config.ListSize >= b.numProcesses,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.Heading4(vecty.Text("Process ID list: ")),
+		vecty.If(len(b.vc.ProcessSearchList) < b.numProcesses, vecty.Text("Loading process info...")),
+		elem.Div(
+			renderProcessItems(b.vc.ProcessSearchIDs, b.vc.EnvelopeHeights, b.vc.ProcessSearchList)...,
+		),
 	)
 }
 
@@ -188,6 +202,34 @@ func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) ve
 			),
 		),
 	)
+}
+
+func renderProcessItems(IDs []string, heights map[string]int64, procs map[string]client.ProcessInfo) []vecty.MarkupOrChild {
+	if len(IDs) == 0 {
+		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
+	}
+	var elemList []vecty.MarkupOrChild
+	for _, ID := range IDs {
+		height, hok := heights[ID]
+		info, iok := procs[ID]
+
+		if !iok {
+			elemList = append(
+				elemList,
+				elem.Div(
+					vecty.Markup(vecty.Class("loading")),
+					vecty.Text("Loading process info..."),
+				),
+			)
+			continue
+		}
+
+		elemList = append(
+			elemList,
+			ProcessBlock(ID, hok, height, info),
+		)
+	}
+	return elemList
 }
 
 func renderEntityItems(slice []string) []vecty.MarkupOrChild {
