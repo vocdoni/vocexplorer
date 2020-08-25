@@ -7,30 +7,85 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
 )
 
-//GetBlockList returns a list of blocks from the database
-func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
+func request(url string) ([]byte, bool) {
 	c := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	resp, err := c.Get("/db/listblocks/?from=" + util.IntToString(i))
+	resp, err := c.Get(url)
 	if util.ErrPrint(err) {
-		return [config.ListSize]*types.StoreBlock{}
+		return []byte{}, false
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
 	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
 		fmt.Println(string(body))
+		return []byte{}, false
+	}
+	return body, true
+}
+
+func getHeight(url string) int64 {
+	body, ok := request(url)
+	if !ok {
+		return 0
+	}
+	var height types.Height
+	if len(body) > 0 {
+		err := proto.Unmarshal(body, &height)
+		util.ErrPrint(err)
+	}
+	return height.GetHeight()
+}
+
+//GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
+func GetProcessEnvelopeHeight(process string) int64 {
+	return getHeight("/db/envprocheight/?process=" + process)
+}
+
+//GetEnvelopeHeight returns the latest envelope height stored by the database
+func GetEnvelopeHeight() int64 {
+	return getHeight("/db/height/?key=" + config.LatestEnvelopeHeightKey)
+}
+
+//GetProcessHeight returns the latest process height stored by the database
+func GetProcessHeight() int64 {
+	return getHeight("/db/height/?key=" + config.LatestProcessHeight)
+}
+
+//GetEntityHeight returns the latest envelope height stored by the database
+func GetEntityHeight() int64 {
+	return getHeight("/db/height/?key=" + config.LatestEntityHeight)
+}
+
+//GetBlockHeight returns the latest block height stored by the database
+func GetBlockHeight() int64 {
+	return getHeight("/db/height/?key=" + config.LatestBlockHeightKey)
+}
+
+//GetTxHeight returns the latest tx height stored by the database
+func GetTxHeight() int64 {
+	return getHeight("db/height/?key=" + config.LatestTxHeightKey)
+}
+
+//GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
+func GetValidatorBlockHeight(proposer string) int64 {
+	return getHeight("/db/numblocksvalidator/?proposer=" + proposer)
+}
+
+//GetBlockList returns a list of blocks from the database
+func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
+	body, ok := request("/db/listblocks/?from=" + util.IntToString(i))
+	if !ok {
 		return [config.ListSize]*types.StoreBlock{}
 	}
 	var rawBlockList types.ItemList
-	err = proto.Unmarshal(body, &rawBlockList)
+	err := proto.Unmarshal(body, &rawBlockList)
 	util.ErrPrint(err)
 	var blockList [config.ListSize]*types.StoreBlock
 	for i, rawBlock := range rawBlockList.GetItems() {
@@ -49,21 +104,12 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 	if i < config.ListSize {
 		i = config.ListSize
 	}
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
-	if util.ErrPrint(err) {
-		return [config.ListSize]*types.StoreBlock{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
+	if !ok {
 		return [config.ListSize]*types.StoreBlock{}
 	}
 	var rawBlockList types.ItemList
-	err = proto.Unmarshal(body, &rawBlockList)
+	err := proto.Unmarshal(body, &rawBlockList)
 	util.ErrPrint(err)
 	var blockList [config.ListSize]*types.StoreBlock
 	for i, rawBlock := range rawBlockList.GetItems() {
@@ -77,99 +123,26 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 	return blockList
 }
 
-//GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
-func GetValidatorBlockHeight(proposer string) int64 {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/numblocksvalidator/?proposer=" + proposer)
-	if util.ErrPrint(err) {
-		return 0
-	}
-	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Request not valid")
-		return 0
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
-		return 0
-	}
-	var height types.Height
-	if len(body) > 0 {
-		err = proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
-	}
-	return height.GetHeight()
-}
-
 //GetBlock returns a single block from the database
 func GetBlock(i int64) *types.StoreBlock {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/block/?height=" + util.IntToString(i))
-	if util.ErrPrint(err) {
-		return &types.StoreBlock{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/block/?height=" + util.IntToString(i))
+	if !ok {
 		return &types.StoreBlock{}
 	}
 	var block types.StoreBlock
-	err = proto.Unmarshal(body, &block)
+	err := proto.Unmarshal(body, &block)
 	util.ErrPrint(err)
 	return &block
 }
 
-//GetBlockHeight returns the latest block height stored by the database
-func GetBlockHeight() int64 {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/height/?key=" + config.LatestBlockHeightKey)
-	if util.ErrPrint(err) {
-		return 0
-	}
-	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Request not valid")
-		return 0
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
-		return 0
-	}
-	var height types.Height
-	if len(body) > 0 {
-		err = proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
-	}
-	return height.GetHeight()
-}
-
 //GetTxList returns a list of transactions from the database
 func GetTxList(from int) [config.ListSize]*types.SendTx {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/listtxs/?from=" + util.IntToString(from))
-	if util.ErrPrint(err) {
-		return [config.ListSize]*types.SendTx{}
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Errorf("Request not valid")
-		return [config.ListSize]*types.SendTx{}
-	}
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	body, ok := request("/db/listtxs/?from=" + util.IntToString(from))
+	if !ok {
 		return [config.ListSize]*types.SendTx{}
 	}
 	var rawTxList types.ItemList
-	err = proto.Unmarshal(body, &rawTxList)
+	err := proto.Unmarshal(body, &rawTxList)
 	util.ErrPrint(err)
 	var txList [config.ListSize]*types.SendTx
 	for i, rawTx := range rawTxList.GetItems() {
@@ -185,88 +158,38 @@ func GetTxList(from int) [config.ListSize]*types.SendTx {
 
 //GetTx returns a transaction from the database
 func GetTx(height int64) *types.SendTx {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/tx/?id=" + util.IntToString(height))
-	if util.ErrPrint(err) {
-		return &types.SendTx{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/tx/?id=" + util.IntToString(height))
+	if !ok {
 		return &types.SendTx{}
 	}
 	var tx types.SendTx
 	if len(body) > 0 {
-		err = proto.Unmarshal(body, &tx)
+		err := proto.Unmarshal(body, &tx)
 		util.ErrPrint(err)
 	}
 	return &tx
 }
 
-//GetTxHeight returns the latest tx height stored by the database
-func GetTxHeight() int64 {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("db/height/?key=" + config.LatestTxHeightKey)
-	if util.ErrPrint(err) {
-		return 0
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
-		return 0
-	}
-	var height types.Height
-	if len(body) > 0 {
-		err = proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
-	}
-	return height.GetHeight()
-}
-
 //GetValidator returns a single validator from the database
 func GetValidator(address string) *types.Validator {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/validator/?id=" + address)
-	if util.ErrPrint(err) {
-		return &types.Validator{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/validator/?id=" + address)
+	if !ok {
 		return &types.Validator{}
 	}
 	var validator types.Validator
-	err = proto.Unmarshal(body, &validator)
+	err := proto.Unmarshal(body, &validator)
 	util.ErrPrint(err)
 	return &validator
 }
 
 //GetEnvelopeList returns a list of envelopes from the database
 func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/listenvelopes/?from=" + util.IntToString(i))
-	if util.ErrPrint(err) {
-		return [config.ListSize]*types.Envelope{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/listenvelopes/?from=" + util.IntToString(i))
+	if !ok {
 		return [config.ListSize]*types.Envelope{}
 	}
 	var rawEnvList types.ItemList
-	err = proto.Unmarshal(body, &rawEnvList)
+	err := proto.Unmarshal(body, &rawEnvList)
 	util.ErrPrint(err)
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
@@ -282,42 +205,24 @@ func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
 
 //GetEnvelope gets a single envelope by global height
 func GetEnvelope(height int64) *types.Envelope {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/envelope/?height=" + util.IntToString(height))
-	if util.ErrPrint(err) {
-		return &types.Envelope{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/envelope/?height=" + util.IntToString(height))
+	if !ok {
 		return &types.Envelope{}
 	}
 	envelope := new(types.Envelope)
-	err = proto.Unmarshal(body, envelope)
+	err := proto.Unmarshal(body, envelope)
 	util.ErrPrint(err)
 	return envelope
 }
 
 //GetEnvelopeListByProcess returns a list of envelopes by process
 func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Envelope {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/listenvelopesprocess/?from=" + util.IntToString(i) + "&process=" + process)
-	if util.ErrPrint(err) {
-		return [config.ListSize]*types.Envelope{}
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
+	body, ok := request("/db/listenvelopesprocess/?from=" + util.IntToString(i) + "&process=" + process)
+	if !ok {
 		return [config.ListSize]*types.Envelope{}
 	}
 	var rawEnvList types.ItemList
-	err = proto.Unmarshal(body, &rawEnvList)
+	err := proto.Unmarshal(body, &rawEnvList)
 	util.ErrPrint(err)
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
@@ -329,50 +234,4 @@ func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Env
 		}
 	}
 	return envList
-}
-
-//GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
-func GetProcessEnvelopeHeight(process string) int64 {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/envprocheight/?process=" + process)
-	if util.ErrPrint(err) {
-		return 0
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
-		return 0
-	}
-	var height types.Height
-	if len(body) > 0 {
-		err = proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
-	}
-	return height.GetHeight()
-}
-
-//GetEnvelopeHeight returns the latest envelope height stored by the database
-func GetEnvelopeHeight() int64 {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := c.Get("/db/height/?key=" + config.LatestEnvelopeHeightKey)
-	if util.ErrPrint(err) {
-		return 0
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
-		return 0
-	}
-	var height types.Height
-	if len(body) > 0 {
-		err = proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
-	}
-	return height.GetHeight()
 }
