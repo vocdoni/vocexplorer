@@ -332,6 +332,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
 			break
 		}
 		batch.Put(heightKey, rawEntity)
+		log.Debugf("Stored entity %s height %d", entity, int(localEntityHeight)+i)
 		// Add new entity to height map with height of 0 so db will get new entity's processes
 		if _, ok := heightMap.GetHeights()[entity]; ok {
 			log.Error("Fetched entity already stored")

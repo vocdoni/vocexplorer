@@ -13,8 +13,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ProcessListView renders the process list pane
-type ProcessListView struct {
+// EntityProcessListView renders the process list pane
+type EntityProcessListView struct {
 	vecty.Core
 	entity         *client.EntityInfo
 	numProcesses   int
@@ -22,8 +22,8 @@ type ProcessListView struct {
 	refreshCh      chan bool
 }
 
-// Render renders the ProcessListView component
-func (b *ProcessListView) Render() vecty.ComponentOrHTML {
+// Render renders the EntityProcessListView component
+func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 	if b.entity != nil {
 		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
 			b.entity.ProcessSearchIDs = util.TrimSlice(b.entity.ProcessIDs, config.ListSize, &b.processesIndex)
@@ -55,7 +55,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
 }
-func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
+func entityRenderProcessList(b *EntityProcessListView) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Button(
 			vecty.Text("prev"),

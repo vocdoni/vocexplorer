@@ -110,6 +110,7 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 		util.ErrPrint(err)
 		items := listItemsByHeight(db, config.ListSize, from, []byte(key))
 		if len(items) == 0 {
+			log.Error("Retrieved no items")
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
@@ -158,7 +159,7 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 		itemHeight, ok := heightMap.Heights[parents[0]]
 		if !ok {
 			log.Error("Parent does not exist")
-			http.Error(w, "No items available", 404)
+			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
 		// from = util.Max(util.Min(from, int(itemHeight)), config.ListSize)
@@ -170,7 +171,7 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 		keys := listItemsByHeight(db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
 		if len(keys) == 0 {
 			log.Error("No keys retrieved")
-			http.Error(w, "No items available", 404)
+			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
 		var rawItems types.ItemList

@@ -240,3 +240,43 @@ func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Env
 	}
 	return envList
 }
+
+//GetEntityList returns a list of entities from the database
+func GetEntityList(i int) [config.ListSize]string {
+	body, ok := request("/db/listentities/?from=" + util.IntToString(i))
+	if !ok {
+		return [config.ListSize]string{}
+	}
+	var rawEntityList types.ItemList
+	err := proto.Unmarshal(body, &rawEntityList)
+	util.ErrPrint(err)
+	var entityList [config.ListSize]string
+	for i, rawEntity := range rawEntityList.GetItems() {
+		if len(rawEntity) > 0 {
+			entity := util.HexToString(rawEntity)
+			entityList[i] = entity
+			util.ErrPrint(err)
+		}
+	}
+	return entityList
+}
+
+//GetProcessList returns a list of entities from the database
+func GetProcessList(i int) [config.ListSize]string {
+	body, ok := request("/db/listprocesses/?from=" + util.IntToString(i))
+	if !ok {
+		return [config.ListSize]string{}
+	}
+	var rawProcessList types.ItemList
+	err := proto.Unmarshal(body, &rawProcessList)
+	util.ErrPrint(err)
+	var processList [config.ListSize]string
+	for i, rawProcess := range rawProcessList.GetItems() {
+		if len(rawProcess) > 0 {
+			process := util.HexToString(rawProcess)
+			processList[i] = process
+			util.ErrPrint(err)
+		}
+	}
+	return processList
+}

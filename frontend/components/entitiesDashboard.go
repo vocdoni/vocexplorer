@@ -30,7 +30,7 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 					fmt.Sprintf("Entity %s", dash.entityID),
 				)),
 				vecty.Markup(vecty.Class("info-pane")),
-				&ProcessListView{
+				&EntityProcessListView{
 					entity:    dash.entity,
 					refreshCh: dash.refreshCh,
 				},
