@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -20,9 +21,10 @@ type VocDashDashboardView struct {
 	gwClient               *client.Client
 	envelopeIndex          int
 	quitCh                 chan struct{}
-	refreshCh              chan bool
 	disableEnvelopesUpdate bool
 	refreshEnvelopes       chan int
+	refreshEntities        chan int
+	refreshProcesses       chan int
 	vc                     *client.VochainInfo
 }
 
@@ -31,8 +33,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
 			&VochainInfoView{
-				vc:        dash.vc,
-				refreshCh: dash.refreshCh,
+				vc: dash.vc,
 			},
 			&EnvelopeListView{
 				vochain:       dash.vc,
@@ -59,6 +60,10 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.refreshCh = make(chan bool, 20)
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
 	VocDashDashboardView.disableEnvelopesUpdate = false
+	store.Entities.PagChannel = make(chan int, 50)
+	store.Processes.PagChannel = make(chan int, 50)
+	VocDashDashboardView.refreshEntities = store.Entities.PagChannel
+	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
 
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
@@ -89,13 +94,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			if !d.disableEnvelopesUpdate {
 				updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
 			}
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
-			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
-			vecty.Rerender(d)
-		case <-d.refreshCh:
-			d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-			updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
+			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 10)
 			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 			vecty.Rerender(d)
 		case i := <-d.refreshEnvelopes:
