@@ -19,6 +19,12 @@ var (
 		PagChannel    chan int
 		DisableUpdate bool
 	}
+
+	Entities struct {
+		CurrentPage   int
+		PagChannel    chan int
+		DisableUpdate bool
+	}
 )
 
 func init() {
