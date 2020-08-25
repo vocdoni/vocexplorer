@@ -7,6 +7,8 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -50,90 +52,96 @@ func (b *VochainInfoView) Render() vecty.ComponentOrHTML {
 		return elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
 				Body: vecty.List{
-					elem.Heading1(
-						vecty.Text("Processes"),
-					),
-					b.ProcessesPaginatedList(),
+					renderProcessList(b),
+					renderEntityList(b),
 				},
-			}),
-			bootstrap.Card(bootstrap.CardParams{
-				Body: b.EntitiesPaginatedList(),
 			}),
 		)
 	}
 	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
 }
 
-func (b *VochainInfoView) EntitiesPaginatedList() vecty.ComponentOrHTML {
-	slice := b.vc.EntityIDs
-
-	return &Pagination{
-		CurrentPage:     &store.Entities.CurrentPage,
-		ListSize:        config.ListSize,
-		TotalItems:      &b.numEntities,
-		RefreshCh:       store.Entities.PagChannel,
-		DisableUpdate:   &store.Entities.DisableUpdate,
-		RenderSearchBar: false,
-		RenderFunc: func(index int) vecty.ComponentOrHTML {
-			if len(slice) == 0 {
-				return elem.Div(
-					vecty.Markup(vecty.Class("error")),
-					vecty.Text("No valid entities"),
-				)
-			}
-
-			list := make(vecty.List, len(slice))
-			for _, ID := range slice {
-				list = append(
-					list,
-					elem.ListItem(
-						elem.Anchor(vecty.Markup(vecty.Attribute("href", "/entities/"+ID)), vecty.Text(ID)),
-					),
-				)
-			}
-
-			return elem.Div(list)
-		},
-	}
+func renderEntityList(b *VochainInfoView) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Heading4(vecty.Text("Entity ID list: ")),
+		elem.Button(
+			vecty.Text("prev"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.entitiesIndex--
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					b.entitiesIndex > 0,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					b.entitiesIndex < 1,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.Button(vecty.Text("next"),
+			vecty.Markup(
+				event.Click(func(e *vecty.Event) {
+					b.entitiesIndex++
+					vecty.Rerender(b)
+				}),
+				vecty.MarkupIf(
+					(b.entitiesIndex+1)*config.ListSize < b.numEntities,
+					prop.Disabled(false),
+				),
+				vecty.MarkupIf(
+					(b.entitiesIndex+1)*config.ListSize >= b.numEntities,
+					prop.Disabled(true),
+				),
+			),
+		),
+		elem.UnorderedList(
+			renderEntityItems(b.vc.EntitySearchIDs)...,
+		),
+	)
 }
 
-func (b *VochainInfoView) ProcessesPaginatedList() vecty.ComponentOrHTML {
-	return &Pagination{
-		CurrentPage:     &store.Processes.CurrentPage,
-		ListSize:        config.ListSize,
-		TotalItems:      &b.numProcesses,
-		RefreshCh:       store.Processes.PagChannel,
-		DisableUpdate:   &store.Processes.DisableUpdate,
-		RenderSearchBar: false,
-		RenderFunc: func(index int) vecty.ComponentOrHTML {
-			list := make(vecty.List, len(b.vc.ProcessSearchIDs))
-			IDs := b.vc.ProcessSearchIDs
-			heights := b.vc.EnvelopeHeights
-			procs := b.vc.ProcessSearchList
+func renderProcessList(b *VochainInfoView) vecty.ComponentOrHTML {
+	return elem.Div(
+		&Pagination{
+			CurrentPage:     &store.Processes.CurrentPage,
+			ListSize:        config.ListSize,
+			TotalItems:      &b.numProcesses,
+			RefreshCh:       store.Processes.PagChannel,
+			DisableUpdate:   &store.Processes.DisableUpdate,
+			RenderSearchBar: false,
+			RenderFunc: func(index int) vecty.ComponentOrHTML {
+				list := make(vecty.List, len(b.vc.ProcessSearchIDs))
+				IDs := b.vc.ProcessSearchIDs
+				heights := b.vc.EnvelopeHeights
+				procs := b.vc.ProcessSearchList
 
-			for _, ID := range IDs {
-				height, hok := heights[ID]
-				info, iok := procs[ID]
+				for _, ID := range IDs {
+					height, hok := heights[ID]
+					info, iok := procs[ID]
 
-				if !iok {
+					if !iok {
+						list = append(
+							list,
+							elem.Div(
+								vecty.Markup(vecty.Class("loading")),
+								vecty.Text("Loading process info..."),
+							),
+						)
+						continue
+					}
+
 					list = append(
 						list,
-						elem.Div(
-							vecty.Markup(vecty.Class("loading")),
-							vecty.Text("Loading process info..."),
-						),
+						ProcessBlock(ID, hok, height, info),
 					)
-					continue
 				}
-
-				list = append(
-					list,
-					ProcessBlock(ID, hok, height, info),
-				)
-			}
-			return elem.Div(list)
+				return elem.Div(list)
+			},
 		},
-	}
+	)
 }
 
 func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
@@ -180,6 +188,22 @@ func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) ve
 			),
 		),
 	)
+}
+
+func renderEntityItems(slice []string) []vecty.MarkupOrChild {
+	if len(slice) == 0 {
+		return []vecty.MarkupOrChild{vecty.Text("No valid entities")}
+	}
+	var elemList []vecty.MarkupOrChild
+	for _, ID := range slice {
+		elemList = append(
+			elemList,
+			elem.ListItem(
+				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/entities/"+ID)), vecty.Text(ID)),
+			),
+		)
+	}
+	return elemList
 }
 
 func searchStateType(vc *client.VochainInfo, search string) []string {
