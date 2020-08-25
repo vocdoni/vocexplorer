@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -19,10 +20,15 @@ type VocDashDashboardView struct {
 	vecty.Core
 	gwClient               *client.Client
 	envelopeIndex          int
+	entityIndex            int
+	processIndex           int
 	quitCh                 chan struct{}
-	refreshCh              chan bool
 	disableEnvelopesUpdate bool
+	disableEntitiesUpdate  bool
+	disableProcessesUpdate bool
 	refreshEnvelopes       chan int
+	refreshEntities        chan int
+	refreshProcesses       chan int
 	vc                     *client.VochainInfo
 }
 
@@ -30,9 +36,15 @@ type VocDashDashboardView struct {
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
-			&VochainInfoView{
-				vc:        dash.vc,
-				refreshCh: dash.refreshCh,
+			&ProcessListView{
+				vochain:       dash.vc,
+				refreshCh:     dash.refreshProcesses,
+				disableUpdate: &dash.disableProcessesUpdate,
+			},
+			&EntityListView{
+				vochain:       dash.vc,
+				refreshCh:     dash.refreshEntities,
+				disableUpdate: &dash.disableEntitiesUpdate,
 			},
 			&EnvelopeListView{
 				vochain:       dash.vc,
@@ -56,8 +68,9 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
 	VocDashDashboardView.quitCh = make(chan struct{})
-	VocDashDashboardView.refreshCh = make(chan bool, 20)
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
+	VocDashDashboardView.refreshProcesses = make(chan int, 50)
+	VocDashDashboardView.refreshEntities = make(chan int, 50)
 	VocDashDashboardView.disableEnvelopesUpdate = false
 
 	BeforeUnload(func() {
@@ -69,12 +82,9 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 
 func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-	updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-	client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
+	updateVocdash(d)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
-	client.UpdateAuxProcessInfo(d.gwClient, d.vc)
 	vecty.Rerender(d)
 	for {
 		select {
@@ -84,28 +94,58 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			//TODO: update to  use real index
-			d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-			if !d.disableEnvelopesUpdate {
-				updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-			}
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
-			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
+			updateVocdash(d)
 			vecty.Rerender(d)
-		case <-d.refreshCh:
-			d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-			updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-			client.UpdateVocDashDashboardInfo(d.gwClient, d.vc, 0)
-			client.UpdateAuxProcessInfo(d.gwClient, d.vc)
+		case i := <-d.refreshEntities:
+		entityLoop:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case i = <-d.refreshEntities:
+				default:
+					break entityLoop
+				}
+			}
+			d.entityIndex = i
+			oldEntities := d.vc.EntityCount
+			d.vc.EntityCount = int(dbapi.GetEntityHeight())
+			if i < 1 {
+				oldEntities = d.vc.EntityCount
+			}
+			if d.vc.EntityCount > 0 {
+				updateEntities(d, util.Max(oldEntities-d.entityIndex-1, config.ListSize-1))
+			}
+			vecty.Rerender(d)
+		case i := <-d.refreshProcesses:
+		processLoop:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case i = <-d.refreshProcesses:
+				default:
+					break processLoop
+
+				}
+			}
+			d.processIndex = i
+			oldProcesses := d.vc.ProcessCount
+			d.vc.ProcessCount = int(dbapi.GetProcessHeight())
+			if i < 1 {
+				oldProcesses = d.vc.ProcessCount
+			}
+			if d.vc.ProcessCount > 0 {
+				updateProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
+				client.UpdateProcessResults(d.gwClient, d.vc)
+			}
 			vecty.Rerender(d)
 		case i := <-d.refreshEnvelopes:
-		loop:
+		envelopeLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
 				case i = <-d.refreshEnvelopes:
 				default:
-					break loop
+					break envelopeLoop
 				}
 			}
 			d.envelopeIndex = i
@@ -122,9 +162,59 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 	}
 }
 
+func updateVocdash(d *VocDashDashboardView) {
+	updateHeights(d)
+	if !d.disableEnvelopesUpdate {
+		updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+	}
+	if !d.disableEntitiesUpdate {
+		updateEntities(d, util.Max(d.vc.EntityCount-d.entityIndex-1, config.ListSize-1))
+	}
+	if !d.disableProcessesUpdate {
+		updateProcesses(d, util.Max(d.vc.ProcessCount-d.processIndex, config.ListSize))
+		client.UpdateProcessResults(d.gwClient, d.vc)
+	}
+}
+
 func updateEnvelopes(d *VocDashDashboardView, index int) {
 	log.Infof("Getting envelopes from index %d", util.IntToString(index))
 	list := dbapi.GetEnvelopeList(index)
 	reverseEnvelopeList(&list)
 	d.vc.EnvelopeList = list
+}
+
+func updateEntities(d *VocDashDashboardView, index int) {
+	log.Infof("Getting entities from index %d", util.IntToString(index))
+	list := dbapi.GetEntityList(index)
+	reverseIDList(&list)
+	d.vc.EntityIDs = list
+}
+
+func updateProcesses(d *VocDashDashboardView, index int) {
+	log.Infof("Getting processes from index %d", util.IntToString(index))
+	list := dbapi.GetProcessList(index)
+	reverseIDList(&list)
+	d.vc.ProcessIDs = list
+	d.vc.EnvelopeHeights = dbapi.GetProcessEnvelopeHeightMap()
+	d.vc.ProcessHeights = dbapi.GetEntityProcessHeightMap()
+}
+
+func updateHeights(d *VocDashDashboardView) {
+	d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
+	d.vc.EntityCount = int(dbapi.GetEntityHeight())
+	d.vc.ProcessCount = int(dbapi.GetProcessHeight())
+}
+
+func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
+}
+
+func reverseIDList(list *[config.ListSize]string) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
 }

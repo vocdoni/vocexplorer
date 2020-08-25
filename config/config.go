@@ -31,9 +31,9 @@ const (
 	NumBlockUpdates = 100
 	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
 	DBWaitTime = 0
-	//ProcessIDPrefix is the key prefix for process id's
+	//ProcessIDPrefix is the key prefix for process id's by height
 	ProcessIDPrefix = "00"
-	//EntityIDPrefix is the key prefix for entity id's
+	//EntityIDPrefix is the key prefix for entity id's by height
 	EntityIDPrefix = "01"
 	//BlockHeightPrefix is the key prefix for block hashes by height
 	BlockHeightPrefix = "02"
@@ -53,6 +53,8 @@ const (
 	EnvPIDPrefix = "09"
 	//BlockByValidatorPrefix is the key prefix for block hash by validator
 	BlockByValidatorPrefix = "10"
+	//ProcessByEntityPrefix is the key prefix for process heights by entity process height
+	ProcessByEntityPrefix = "11"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored
@@ -65,4 +67,10 @@ const (
 	ProcessEnvelopeHeightMapKey = "ProcEnvHeight"
 	//LatestEnvelopeHeightKey is the key for the value of the latest envelope height stored
 	LatestEnvelopeHeightKey = "LatestEnvHeight"
+	//LatestEntityHeight is the key for the value of the latest entity height stored
+	LatestEntityHeight = "LatestEntityHeight"
+	//LatestProcessHeight is the key for the value of the latest process height stored
+	LatestProcessHeight = "LatestProcessHeight"
+	//EntityProcessHeightMapKey is the key for the map of entity process heights
+	EntityProcessHeightMapKey = "EntityProcHeight"
 )

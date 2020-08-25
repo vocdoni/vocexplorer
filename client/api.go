@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"nhooyr.io/websocket"
@@ -16,7 +17,7 @@ import (
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*Client, context.CancelFunc) {
 	// Init Gateway client
-	fmt.Println("connecting to " + host)
+	log.Infof("connecting to " + host)
 	gwClient, cancel, err := New(host)
 	if util.ErrPrint(err) {
 		return nil, cancel
@@ -142,7 +143,7 @@ func (c *Client) GetScrutinizerEntities(from int64) ([]string, error) {
 	req.Method = "getScrutinizerEntities"
 	req.Timestamp = int32(time.Now().Unix())
 	req.From = from
-	req.ListSize = int64(config.ListSize)
+	req.ListSize = 64
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -163,7 +164,7 @@ func (c *Client) GetProcessList(entityID string, from int64) ([]string, error) {
 	req.Timestamp = int32(time.Now().Unix())
 	req.EntityID = entityID
 	req.From = from
-	req.ListSize = int64(config.ListSize)
+	req.ListSize = 64
 
 	resp, err := c.Request(req)
 	if err != nil {
@@ -287,7 +288,7 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 	if err := c.Conn.Write(ctx, websocket.MessageText, reqBody); err != nil {
 		return nil, fmt.Errorf("error: %s: %v", method, err)
 	}
-	fmt.Println("sent request: " + req.Method)
+	// fmt.Println("sent request: " + req.Method)
 	_, message, err := c.Conn.Read(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)

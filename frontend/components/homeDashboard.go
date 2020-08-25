@@ -68,6 +68,8 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 func updateHeight(t *rpc.TendermintInfo) {
 	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
+	t.TotalEntities = int(dbapi.GetEntityHeight())
+	t.TotalProcesses = int(dbapi.GetProcessHeight())
 	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())
 }
 

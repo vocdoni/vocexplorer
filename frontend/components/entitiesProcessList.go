@@ -1,8 +1,7 @@
 package components
 
 import (
-	"strings"
-	"syscall/js"
+	"strconv"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -13,122 +12,58 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ProcessListView renders the process list pane
-type ProcessListView struct {
+// EntityProcessListView renders the process list pane
+type EntityProcessListView struct {
 	vecty.Core
-	entity         *client.EntityInfo
-	numProcesses   int
-	processesIndex int
-	refreshCh      chan bool
+	entity        *client.EntityInfo
+	currentPage   int
+	disableUpdate *bool
+	refreshCh     chan int
 }
 
-// Render renders the ProcessListView component
-func (b *ProcessListView) Render() vecty.ComponentOrHTML {
-	if b.entity != nil {
-		if js.Global().Get("searchTerm").IsUndefined() || js.Global().Get("searchTerm").String() == "" {
-			b.entity.ProcessSearchIDs = util.TrimSlice(b.entity.ProcessIDs, config.ListSize, &b.processesIndex)
-			b.numProcesses = len(b.entity.ProcessIDs)
-		} else {
-			search := js.Global().Get("searchTerm").String()
-			temp := util.SearchSlice(b.entity.ProcessIDs, search)
-			if len(temp) <= 0 {
-				temp = entitySearchStateType(b.entity, search)
-			}
-			b.entity.ProcessSearchIDs = util.TrimSlice(temp, config.ListSize, &b.processesIndex)
-			b.numProcesses = len(temp)
+func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
+	if b.entity != nil && b.entity.ProcessCount > 0 {
+		p := &Pagination{
+			TotalPages:      int(b.entity.ProcessCount) / config.ListSize,
+			TotalItems:      &b.entity.ProcessCount,
+			CurrentPage:     &b.currentPage,
+			RefreshCh:       b.refreshCh,
+			ListSize:        config.ListSize,
+			DisableUpdate:   b.disableUpdate,
+			RenderSearchBar: true,
 		}
-		return elem.Section(
-			elem.Input(vecty.Markup(
+		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
+			return elem.Div(renderProcessItems(b.entity.ProcessIDs, b.entity.EnvelopeHeights, b.entity.ProcessTypes)...)
+		}
+		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
+			return elem.Input(vecty.Markup(
 				event.Input(func(e *vecty.Event) {
 					search := e.Target.Get("value").String()
-					if search != "" {
-						js.Global().Set("searchTerm", search)
+					index, err := strconv.Atoi(e.Target.Get("value").String())
+					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
+						*self.CurrentPage = 0
+						*b.disableUpdate = false
+						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
-						js.Global().Set("searchTerm", "")
+						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
+						*b.disableUpdate = true
+						self.RefreshCh <- int(*self.TotalItems) - index
 					}
-					vecty.Rerender(b)
+					vecty.Rerender(self)
 				}),
-				prop.Placeholder("search IDs"),
-			)),
-			entityRenderProcessList(b),
+				prop.Placeholder("search processes"),
+			))
+		}
+		return elem.Div(
+			vecty.Markup(vecty.Class("recent-processes")),
+			elem.Heading3(
+				vecty.Text("Processes"),
+			),
+			p,
 		)
 	}
-	return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
-}
-func entityRenderProcessList(b *ProcessListView) vecty.ComponentOrHTML {
-	return elem.Div(
-		elem.Button(
-			vecty.Text("prev"),
-			vecty.Markup(
-				event.Click(func(e *vecty.Event) {
-					b.processesIndex--
-					b.refreshCh <- true
-					vecty.Rerender(b)
-				}),
-				vecty.MarkupIf(
-					b.processesIndex > 0,
-					prop.Disabled(false),
-				),
-				vecty.MarkupIf(
-					b.processesIndex < 1,
-					prop.Disabled(true),
-				),
-			),
-		),
-		elem.Button(vecty.Text("next"),
-			vecty.Markup(
-				event.Click(func(e *vecty.Event) {
-					b.processesIndex++
-					b.refreshCh <- true
-					vecty.Rerender(b)
-				}),
-				vecty.MarkupIf(
-					(b.processesIndex+1)*config.ListSize < b.numProcesses,
-					prop.Disabled(false),
-				),
-				vecty.MarkupIf(
-					(b.processesIndex+1)*config.ListSize >= b.numProcesses,
-					prop.Disabled(true),
-				),
-			),
-		),
-		elem.Heading4(vecty.Text("Process ID list: ")),
-		vecty.If(len(b.entity.ProcessList) < b.numProcesses, vecty.Text("Loading process info...")),
-		elem.UnorderedList(
-			entityRenderProcessItems(b.entity.ProcessSearchIDs, b.entity.EnvelopeHeights, b.entity.ProcessList)...,
-		),
-	)
-}
-
-func entityRenderProcessItems(IDs []string, heights map[string]int64, procs map[string]client.ProcessInfo) []vecty.MarkupOrChild {
-	if len(IDs) == 0 {
-		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
+	if b.entity.ProcessCount < 1 {
+		return elem.Div(vecty.Text("No processes available"))
 	}
-	var elemList []vecty.MarkupOrChild
-	for _, ID := range IDs {
-		height, hok := heights[ID]
-		info, iok := procs[ID]
-		elemList = append(
-			elemList,
-			elem.ListItem(
-				elem.Anchor(vecty.Markup(vecty.Attribute("href", "/processes/"+ID)), vecty.Text(ID)),
-				vecty.If(!iok, vecty.Text(": loading process info...")),
-				vecty.If(iok, vecty.Text(": type: "+info.ProcessType+", state: "+info.State)),
-				vecty.If(hok, vecty.Text(", "+util.IntToString(height)+" envelopes")),
-			))
-	}
-	return elemList
-}
-
-func entitySearchStateType(entity *client.EntityInfo, search string) []string {
-	var IDList []string
-	for _, key := range entity.ProcessIDs {
-		info, ok := entity.ProcessList[key]
-		if ok {
-			if strings.Contains(info.State, search) || strings.Contains(info.ProcessType, search) {
-				IDList = append(IDList, key)
-			}
-		}
-	}
-	return IDList
+	return elem.Div(vecty.Text("Waiting for processes..."))
 }

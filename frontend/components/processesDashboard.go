@@ -12,7 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -37,7 +36,7 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 		}
 		st := dash.process.State
 		if st == "" {
-			t = "unknown"
+			st = "unknown"
 		}
 		return Container(
 			elem.Section(
@@ -161,11 +160,4 @@ func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
 	list := dbapi.GetEnvelopeListByProcess(index, d.processID)
 	reverseEnvelopeList(&list)
 	d.process.EnvelopeList = list
-}
-
-func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
-	}
 }
