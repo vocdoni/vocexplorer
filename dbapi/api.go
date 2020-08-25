@@ -63,6 +63,11 @@ func GetEntityHeight() int64 {
 	return getHeight("/db/height/?key=" + config.LatestEntityHeight)
 }
 
+//GetEntityProcessHeight returns the number of processes belonging to a
+func GetEntityProcessHeight(entity string) int64 {
+	return getHeight("/db/envprocheight/?entity=" + entity)
+}
+
 //GetBlockHeight returns the latest block height stored by the database
 func GetBlockHeight() int64 {
 	return getHeight("/db/height/?key=" + config.LatestBlockHeightKey)

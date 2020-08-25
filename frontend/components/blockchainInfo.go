@@ -63,6 +63,18 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 							)),
 						),
 						elem.TableRow(
+							elem.TableHeader(vecty.Text("Total entities")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.TotalEntities),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Total processes")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.TotalProcesses),
+							)),
+						),
+						elem.TableRow(
 							elem.TableHeader(vecty.Text("Total vote envelopes")),
 							elem.TableData(vecty.Text(
 								p.Sprintf("%d", b.T.TotalEnvelopes),
