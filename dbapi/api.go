@@ -1,6 +1,7 @@
 package dbapi
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +25,8 @@ func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return [config.ListSize]*types.StoreBlock{}
 	}
 	var rawBlockList types.ItemList
@@ -56,7 +58,8 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return [config.ListSize]*types.StoreBlock{}
 	}
 	var rawBlockList types.ItemList
@@ -83,7 +86,7 @@ func GetValidatorBlockHeight(proposer string) int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		log.Errorf("Request not valid")
 		return 0
 	}
@@ -111,7 +114,8 @@ func GetBlock(i int64) *types.StoreBlock {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return &types.StoreBlock{}
 	}
 	var block types.StoreBlock
@@ -129,7 +133,7 @@ func GetBlockHeight() int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		log.Errorf("Request not valid")
 		return 0
 	}
@@ -156,7 +160,7 @@ func GetTxList(from int) [config.ListSize]*types.SendTx {
 		return [config.ListSize]*types.SendTx{}
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		log.Errorf("Request not valid")
 		return [config.ListSize]*types.SendTx{}
 	}
@@ -189,12 +193,9 @@ func GetTx(height int64) *types.SendTx {
 		return &types.SendTx{}
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		log.Errorf("Request not valid")
-		return &types.SendTx{}
-	}
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return &types.SendTx{}
 	}
 	var tx types.SendTx
@@ -215,12 +216,9 @@ func GetTxHeight() int64 {
 		return 0
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		log.Errorf("Request not valid")
-		return 0
-	}
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return 0
 	}
 	var height types.Height
@@ -242,7 +240,8 @@ func GetValidator(address string) *types.Validator {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return &types.Validator{}
 	}
 	var validator types.Validator
@@ -262,7 +261,8 @@ func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return [config.ListSize]*types.Envelope{}
 	}
 	var rawEnvList types.ItemList
@@ -291,7 +291,8 @@ func GetEnvelope(height int64) *types.Envelope {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return &types.Envelope{}
 	}
 	envelope := new(types.Envelope)
@@ -311,7 +312,8 @@ func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Env
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return [config.ListSize]*types.Envelope{}
 	}
 	var rawEnvList types.ItemList
@@ -338,13 +340,10 @@ func GetProcessEnvelopeHeight(process string) int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	if resp.StatusCode != 200 {
-		log.Errorf("Request not valid")
-		return 0
-	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return 0
 	}
 	var height types.Height
@@ -364,13 +363,10 @@ func GetEnvelopeHeight() int64 {
 	if util.ErrPrint(err) {
 		return 0
 	}
-	if resp.StatusCode != 200 {
-		log.Errorf("Request not valid")
-		return 0
-	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) {
+	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+		fmt.Println(string(body))
 		return 0
 	}
 	var height types.Height

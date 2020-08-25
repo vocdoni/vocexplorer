@@ -42,7 +42,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string) func(w http.ResponseWriter, r *http.Request) {
+func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string, getItem func(key []byte) ([]byte, error)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		heights, ok := r.URL.Query()["height"]
 		if !ok || len(heights[0]) < 1 {
@@ -59,14 +59,22 @@ func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string) func(
 			http.Error(w, "Requested item does not exist", http.StatusInternalServerError)
 			return
 		}
-		processKey := append([]byte(key), []byte(util.IntToString(height))...)
-		rawProcess, err := db.Get(processKey)
+		itemKey := append([]byte(key), []byte(util.IntToString(height))...)
+		rawItem, err := db.Get(itemKey)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "item not found", http.StatusInternalServerError)
 			return
 		}
-		w.Write(rawProcess)
+		if getItem != nil {
+			rawItem, err = getItem(rawItem)
+			if err != nil {
+				log.Error(err)
+				http.Error(w, "item not found", http.StatusInternalServerError)
+				return
+			}
+		}
+		w.Write(rawItem)
 		log.Debugf("sent item with key %s, height %d", key, height)
 	}
 }
@@ -88,10 +96,13 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 		}
 		var itemList types.ItemList
 		for _, rawItem := range items {
-			newItem, err := getItem(rawItem)
-			util.ErrPrint(err)
-			if len(newItem) > 0 {
-				rawItem = newItem
+			if getItem != nil {
+				rawItem, err = getItem(rawItem)
+				if err != nil {
+					log.Error(err)
+					http.Error(w, "item not found", http.StatusInternalServerError)
+					return
+				}
 			}
 			itemList.Items = append(itemList.GetItems(), rawItem)
 		}
@@ -127,9 +138,12 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 		heightMap := getHeightMap(db, heightMapKey)
 		itemHeight, ok := heightMap.Heights[parents[0]]
 		if !ok {
-			itemHeight = 0
+			log.Error("Parent does not exist")
+			http.Error(w, "No items available", 404)
+			return
 		}
-		from = util.Max(util.Min(from, int(itemHeight)), config.ListSize)
+		// from = util.Max(util.Min(from, int(itemHeight)), config.ListSize)
+		from = util.Min(from, int(itemHeight))
 
 		// Get keys
 		parentBytes, err := hex.DecodeString(parents[0])
@@ -183,14 +197,12 @@ func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWri
 
 // ListEnvelopesHandler writes a list of envelopes
 func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsHandler(db, config.EnvPackagePrefix, func(key []byte) ([]byte, error) {
-		return []byte{}, nil
-	})
+	return buildListItemsHandler(db, config.EnvPackagePrefix, nil)
 }
 
 // GetEnvelopeHandler writes a single envelope
 func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestEnvelopeHeightKey, config.EnvPackagePrefix)
+	return buildItemByHeightHandler(db, config.LatestEnvelopeHeightKey, config.EnvPackagePrefix, nil)
 }
 
 // EnvelopeHeightByProcessHandler writes the number of envelopes which share the given processID
@@ -264,25 +276,12 @@ func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrite
 
 // GetBlockHandler writes a block by height
 func GetBlockHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		heights, ok := r.URL.Query()["height"]
-		if !ok || len(heights[0]) < 1 {
-			log.Errorf("Url Param 'height' is missing")
-			http.Error(w, "Url Param 'height' missing", 400)
-			return
-		}
-		height := heights[0]
-		key := []byte(config.BlockHeightPrefix + height)
-		hash, err := db.Get(key)
-		if err != nil {
-			log.Error(err)
-		}
-		raw, err := db.Get(append([]byte(config.BlockHashPrefix), hash...))
-		util.ErrPrint(err)
-
-		w.Write(raw)
-		log.Debugf("Sent block %s", height)
-	}
+	return buildItemByHeightHandler(db,
+		config.LatestBlockHeightKey,
+		config.BlockHeightPrefix,
+		func(key []byte) ([]byte, error) {
+			return db.Get(append([]byte(config.BlockHashPrefix), key...))
+		})
 }
 
 // ListTxsHandler writes a list of txs starting with the given height key
@@ -427,26 +426,22 @@ func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 
 // GetEntityHandler writes a single entity
 func GetEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestEntityHeight, config.EntityIDPrefix)
+	return buildItemByHeightHandler(db, config.LatestEntityHeight, config.EntityIDPrefix, nil)
 }
 
 // GetProcessHandler writes a single process
 func GetProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestProcessHeight, config.ProcessIDPrefix)
+	return buildItemByHeightHandler(db, config.LatestProcessHeight, config.ProcessIDPrefix, nil)
 }
 
 // ListEntitiesHandler writes a list of entities from 'from'
 func ListEntitiesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsHandler(db, config.EntityIDPrefix, func(key []byte) ([]byte, error) {
-		return []byte{}, nil
-	})
+	return buildListItemsHandler(db, config.EntityIDPrefix, nil)
 }
 
 // ListProcessesHandler writes a list of processes from 'from'
 func ListProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsHandler(db, config.ProcessIDPrefix, func(key []byte) ([]byte, error) {
-		return []byte{}, nil
-	})
+	return buildListItemsHandler(db, config.ProcessIDPrefix, nil)
 }
 
 // ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
