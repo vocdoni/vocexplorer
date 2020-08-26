@@ -346,6 +346,10 @@ pre {
   &.no-column {
     .main-column {
       @extend .col-12;
+      padding-right: $grid-gutter-width / 2 !important;
+      .card {
+        @extend .mr-0;
+      }
     }
   }
 }
