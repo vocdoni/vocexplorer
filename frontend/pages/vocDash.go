@@ -18,5 +18,4 @@ func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	vc := new(client.VochainInfo)
 	dash := new(components.VocDashDashboardView)
 	return components.InitVocDashDashboardView(vc, dash, home.Cfg)
-
 }

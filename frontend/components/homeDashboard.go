@@ -33,10 +33,9 @@ type DashboardView struct {
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
 		return &StatsView{
-			t:         dash.t,
-			vc:        dash.vc,
-			refreshCh: dash.refreshCh,
-			gwClient:  dash.gwClient,
+			t:        dash.t,
+			vc:       dash.vc,
+			gwClient: dash.gwClient,
 		}
 	}
 	return &bootstrap.Alert{
@@ -74,6 +73,8 @@ func updateHeight(t *rpc.TendermintInfo) {
 	})
 	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
 	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
+	t.TotalEntities = int(dbapi.GetEntityHeight())
+	t.TotalProcesses = int(dbapi.GetProcessHeight())
 	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())
 }
 

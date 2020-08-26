@@ -26,6 +26,8 @@ type TendermintInfo struct {
 	TotalBlocks    int
 	TotalTxs       int
 	TotalEnvelopes int
+	TotalEntities  int
+	TotalProcesses int
 	TxList         [config.ListSize]*types.SendTx
 }
 

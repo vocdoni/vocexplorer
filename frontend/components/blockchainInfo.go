@@ -6,6 +6,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/util"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -64,6 +65,18 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 							)),
 						),
 						elem.TableRow(
+							elem.TableHeader(vecty.Text("Total entities")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.TotalEntities),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Total processes")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", b.T.TotalProcesses),
+							)),
+						),
+						elem.TableRow(
 							elem.TableHeader(vecty.Text("Total vote envelopes")),
 							elem.TableData(vecty.Text(
 								p.Sprintf("%d", b.T.TotalEnvelopes),
@@ -78,10 +91,17 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						elem.TableRow(
 							elem.TableHeader(vecty.Text("Sync status")),
 							elem.TableData(
-								vecty.If(syncing, &bootstrap.Badge{
-									Contents: p.Sprintf("Syncing (%d blocks stored)", +b.T.TotalBlocks),
-									Type:     "warning",
-								}),
+								// This badge component does not rerender when it should. Not sure why
+								// vecty.If(syncing, &bootstrap.Badge{
+								// 	Contents: p.Sprintf("Syncing (%d blocks stored)", b.T.TotalBlocks),
+								// 	Type:     "warning",
+								// }),
+								vecty.If(syncing, elem.Span(
+									vecty.Markup(vecty.Class("badge", "badge-warning")),
+									vecty.Markup(
+										vecty.UnsafeHTML("Syncing ("+util.IntToString(b.T.TotalBlocks)+" blocks stored)"),
+									),
+								)),
 								vecty.If(!syncing, &bootstrap.Badge{
 									Contents: "In sync",
 									Type:     "success",

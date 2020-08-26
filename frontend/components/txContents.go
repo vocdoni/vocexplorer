@@ -33,6 +33,7 @@ func (contents *TxContents) Render() vecty.ComponentOrHTML {
 func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
 	var txResult coretypes.ResultTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
+	util.ErrPrint(err)
 	result, err := json.MarshalIndent(txResult, "", "\t")
 	util.ErrPrint(err)
 	var rawTx dvotetypes.Tx
