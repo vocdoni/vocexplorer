@@ -15,14 +15,17 @@ import (
 // EnvelopeContents renders envelope contents
 type EnvelopeContents struct {
 	vecty.Core
-	Envelope    *types.Envelope
-	VotePackage *dvotetypes.VotePackageStruct
+	Envelope         *types.Envelope
+	DecryptionStatus string
+	DisplayPackage   bool
+	VotePackage      *dvotetypes.VotePackage
 }
 
 // Render renders the EnvelopeContents component
 func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
 		renderEnvelopeHeader(contents.Envelope),
+		vecty.Text(contents.DecryptionStatus),
 		contents.renderVotePackage(),
 	)
 }
@@ -45,7 +48,12 @@ func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "+util.StripHexString(envelope.GetProcessID())),
+						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "),
+						elem.Anchor(
+							vecty.Markup(vecty.Class("hash")),
+							vecty.Markup(vecty.Attribute("href", "/processes/"+util.StripHexString(envelope.GetProcessID()))),
+							vecty.Text(util.StripHexString(envelope.GetProcessID())),
+						),
 					),
 					elem.Div(
 						elem.Div(
@@ -64,14 +72,17 @@ func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
 }
 
 func (contents *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
-	voteString, err := json.MarshalIndent(contents.VotePackage, "", "\t")
-	util.ErrPrint(err)
-	accordionName := "accordionEnv"
-	return elem.Div(
-		vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-		renderCollapsible("Envelope Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(voteString)))),
-		// renderCollapsible("Data", accordionName, "Two", transactions),
-		// renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(vecty.Text(string(evidence)))),
-		// renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(vecty.Text(string(commit)))),
-	)
+	if contents.DisplayPackage {
+		voteString, err := json.MarshalIndent(contents.VotePackage, "", "\t")
+		util.ErrPrint(err)
+		accordionName := "accordionEnv"
+		return elem.Div(
+			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
+			renderCollapsible("Envelope Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(voteString)))),
+			// renderCollapsible("Data", accordionName, "Two", transactions),
+			// renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(vecty.Text(string(evidence)))),
+			// renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(vecty.Text(string(commit)))),
+		)
+	}
+	return nil
 }

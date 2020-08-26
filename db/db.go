@@ -34,7 +34,7 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
+func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 
 	// Init tendermint client
 	tClient, up := StartTendermint(tmHost)
@@ -45,7 +45,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 	log.Debugf("Connected to " + tmHost)
 
 	// Init gateway client
-	gwClient, cancel, up := startGateway(gwHost)
+	gwClient, cancel, up := startGateway(gwHost, gwSocket)
 	if !up {
 		log.Warn("Cannot connect to gateway client. Running as detached database")
 		return
@@ -494,7 +494,7 @@ func pingGateway(host string) bool {
 	}
 }
 
-func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
+func startGateway(host, socket string) (*client.Client, *context.CancelFunc, bool) {
 	ping := pingGateway(host)
 	if !ping {
 		log.Warn("Gateway Client is not running. Running as detached database")
@@ -504,7 +504,7 @@ func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
 		if i > 20 {
 			return nil, nil, false
 		}
-		gwClient, cancel := client.InitGateway("http://" + host + "/dvote")
+		gwClient, cancel := client.InitGateway("http://" + host + socket)
 		if gwClient == nil {
 			time.Sleep(5 * time.Second)
 			continue

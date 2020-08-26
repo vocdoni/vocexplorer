@@ -117,7 +117,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if !cfg.Detached {
-		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
+		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.GatewaySocket, cfg.Global.TendermintHost)
 	} else {
 		log.Infof("Running in detached mode")
 	}

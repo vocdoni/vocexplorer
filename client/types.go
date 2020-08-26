@@ -16,6 +16,13 @@ type Client struct {
 	Ctx  context.Context
 }
 
+type Pkeys struct {
+	Pub  []Key
+	Priv []Key
+	Comm []Key
+	Rev  []Key
+}
+
 // RequestMessage holds a decoded request but does not decode the body. from go-dvote
 type RequestMessage struct {
 	ID          string          `json:"id"`
@@ -57,41 +64,50 @@ type ResponseMessage struct {
 	Signature string `json:"signature"`
 }
 
+type Key struct {
+	Idx int    `json:"idx"`
+	Key string `json:"key"`
+}
+
 // MetaResponse holds a gateway api response, from go-dvote/types
 type MetaResponse struct {
-	APIList        []string   `json:"apiList,omitempty"`
-	BlockTime      *[5]int32  `json:"blockTime,omitempty"`
-	BlockTimestamp int32      `json:"blockTimestamp,omitempty"`
-	CensusID       string     `json:"censusId,omitempty"`
-	CensusList     []string   `json:"censusList,omitempty"`
-	ClaimsData     []string   `json:"claimsData,omitempty"`
-	Content        string     `json:"content,omitempty"`
-	EntityID       string     `json:"entityId,omitempty"`
-	EntityIDs      []string   `json:"entityIds,omitempty"`
-	Files          []byte     `json:"files,omitempty"`
-	Finished       *bool      `json:"finished,omitempty"`
-	Health         int32      `json:"health,omitempty"`
-	Height         *int64     `json:"height,omitempty"`
-	InvalidClaims  []int      `json:"invalidClaims,omitempty"`
-	Message        string     `json:"message,omitempty"`
-	Nullifier      string     `json:"nullifier,omitempty"`
-	Nullifiers     *[]string  `json:"nullifiers,omitempty"`
-	Ok             bool       `json:"ok"`
-	Paused         *bool      `json:"paused,omitempty"`
-	Payload        string     `json:"payload,omitempty"`
-	ProcessIDs     []string   `json:"processIds,omitempty"`
-	ProcessList    []string   `json:"processList,omitempty"`
-	Registered     *bool      `json:"registered,omitempty"`
-	Request        string     `json:"request"`
-	Results        [][]uint32 `json:"results,omitempty"`
-	Root           string     `json:"root,omitempty"`
-	Siblings       string     `json:"siblings,omitempty"`
-	Size           *int64     `json:"size,omitempty"`
-	State          string     `json:"state,omitempty"`
-	Timestamp      int32      `json:"timestamp"`
-	Type           string     `json:"type,omitempty"`
-	URI            string     `json:"uri,omitempty"`
-	ValidProof     *bool      `json:"validProof,omitempty"`
+	APIList              []string   `json:"apiList,omitempty"`
+	BlockTime            *[5]int32  `json:"blockTime,omitempty"`
+	BlockTimestamp       int32      `json:"blockTimestamp,omitempty"`
+	CensusID             string     `json:"censusId,omitempty"`
+	CensusList           []string   `json:"censusList,omitempty"`
+	ClaimsData           []string   `json:"claimsData,omitempty"`
+	Content              string     `json:"content,omitempty"`
+	EntityID             string     `json:"entityId,omitempty"`
+	EntityIDs            []string   `json:"entityIds,omitempty"`
+	Files                []byte     `json:"files,omitempty"`
+	Finished             *bool      `json:"finished,omitempty"`
+	Health               int32      `json:"health,omitempty"`
+	Height               *int64     `json:"height,omitempty"`
+	InvalidClaims        []int      `json:"invalidClaims,omitempty"`
+	Message              string     `json:"message,omitempty"`
+	Nullifier            string     `json:"nullifier,omitempty"`
+	Nullifiers           *[]string  `json:"nullifiers,omitempty"`
+	Ok                   bool       `json:"ok"`
+	Paused               *bool      `json:"paused,omitempty"`
+	Payload              string     `json:"payload,omitempty"`
+	ProcessIDs           []string   `json:"processIds,omitempty"`
+	ProcessList          []string   `json:"processList,omitempty"`
+	Registered           *bool      `json:"registered,omitempty"`
+	Request              string     `json:"request"`
+	Results              [][]uint32 `json:"results,omitempty"`
+	Root                 string     `json:"root,omitempty"`
+	Siblings             string     `json:"siblings,omitempty"`
+	Size                 *int64     `json:"size,omitempty"`
+	State                string     `json:"state,omitempty"`
+	Timestamp            int32      `json:"timestamp"`
+	Type                 string     `json:"type,omitempty"`
+	URI                  string     `json:"uri,omitempty"`
+	ValidProof           *bool      `json:"validProof,omitempty"`
+	CommitmentKeys       []Key      `json:"commitmentKeys,omitempty"`
+	EncryptionPrivKeys   []Key      `json:"encryptionPrivKeys,omitempty"`
+	RevealKeys           []Key      `json:"revealKeys,omitempty"`
+	EncryptionPublicKeys []Key      `json:"encryptionPubKeys,omitempty"`
 }
 
 // VochainInfo holds info about vochain as a whole

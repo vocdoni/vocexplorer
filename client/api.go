@@ -69,6 +69,26 @@ func (c *Client) GetProcessCount() (int64, error) {
 	return *resp.Size, nil
 }
 
+// GetProcessKeys gets process keys
+func (c *Client) GetProcessKeys(pid string) (*Pkeys, error) {
+	var req MetaRequest
+	req.Method = "getProcessKeys"
+	req.ProcessID = pid
+	// req.EntityID = eid
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf("cannot get keys for process %s: (%s)", pid, resp.Message)
+	}
+	return &Pkeys{
+		Pub:  resp.EncryptionPublicKeys,
+		Priv: resp.EncryptionPrivKeys,
+		Comm: resp.CommitmentKeys,
+		Rev:  resp.RevealKeys}, nil
+}
+
 // GetGatewayInfo gets gateway info
 func (c *Client) GetGatewayInfo() ([]string, int32, bool, int32, error) {
 	var req MetaRequest
