@@ -153,7 +153,10 @@ func (p *ProcessesDashboardView) ProcessTabs() vecty.List {
 
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
-		return elem.Heading6(vecty.Text("No results yet"))
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("No results yet"),
+		)
 	}
 	var resultList []vecty.MarkupOrChild
 	var header []vecty.MarkupOrChild
