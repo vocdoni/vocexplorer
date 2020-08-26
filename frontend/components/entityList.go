@@ -56,13 +56,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 				prop.Placeholder("search entities"),
 			))
 		}
-		return elem.Div(
-			vecty.Markup(vecty.Class("recent-entities")),
-			elem.Heading3(
-				vecty.Text("Entities"),
-			),
-			p,
-		)
+		return p
 	}
 	if b.vochain.EntityCount < 1 {
 		return elem.Div(vecty.Text("No entities available"))

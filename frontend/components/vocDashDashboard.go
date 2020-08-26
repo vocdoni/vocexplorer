@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -37,21 +38,42 @@ type VocDashDashboardView struct {
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
-			&ProcessListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshProcesses,
-				disableUpdate: &dash.disableProcessesUpdate,
-			},
-			&EntityListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshEntities,
-				disableUpdate: &dash.disableEntitiesUpdate,
-			},
-			&EnvelopeListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshEnvelopes,
-				disableUpdate: &dash.disableEnvelopesUpdate,
-			},
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Processes")),
+						&ProcessListView{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshProcesses,
+							disableUpdate: &dash.disableProcessesUpdate,
+						},
+					},
+				}),
+			),
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Entities")),
+						&EntityListView{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshEntities,
+							disableUpdate: &dash.disableEntitiesUpdate,
+						},
+					},
+				}),
+			),
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Envelopes")),
+						&EnvelopeList{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshEnvelopes,
+							disableUpdate: &dash.disableEnvelopesUpdate,
+						},
+					},
+				}),
+			),
 		)
 	}
 	return &bootstrap.Alert{
