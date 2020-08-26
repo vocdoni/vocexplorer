@@ -28,7 +28,7 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 			vecty.Markup(
 				vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
 			),
-			vecty.Text("Block "+util.IntToString(block.GetHeight())),
+			vecty.Text("#"+util.IntToString(block.GetHeight())),
 		),
 		Body: vecty.List{
 			elem.Div(

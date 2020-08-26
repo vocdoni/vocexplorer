@@ -11,7 +11,9 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -29,42 +31,131 @@ type ProcessesDashboardView struct {
 
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.process != nil {
-		t := dash.process.ProcessType
-		if t == "" {
-			t = "unknown"
+	if dash == nil || dash.gwClient == nil || dash.process == nil {
+		return &bootstrap.Alert{
+			Contents: "Connecting to blockchain clients",
+			Type:     "warning",
 		}
-		st := dash.process.State
-		if st == "" {
-			st = "unknown"
-		}
-		return Container(
-			elem.Section(
-				elem.Heading4(vecty.Text(
-					fmt.Sprintf("Process %s", dash.processID),
-				)),
-				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
-				elem.Heading5(vecty.Text("Number of votes : "+util.IntToString(dash.process.EnvelopeHeight))),
-
-				renderResults(dash.process.Results),
-				vecty.Markup(vecty.Class("info-pane")),
-				&ProcessesEnvelopeListView{
-					process:       dash.process,
-					refreshCh:     dash.refreshCh,
-					disableUpdate: &dash.disableEnvelopesUpdate,
-				},
-			),
-		)
 	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
+
+	t := dash.process.ProcessType
+	if t == "" {
+		t = "unknown"
+	}
+	st := dash.process.State
+	if st == "" {
+		st = "unknown"
+	}
+
+	return Container(
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view", "no-column")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: dash.ProcessDetails(),
+					}),
+				),
+			),
+		),
+		elem.Section(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: dash.ProcessTabs(),
+				}),
+			),
+		),
+	)
+}
+
+func (p *ProcessesDashboardView) ProcessDetails() vecty.List {
+	t := p.process.ProcessType
+	if t == "" {
+		t = "unknown"
+	}
+	st := p.process.State
+	if st == "" {
+		st = "unknown"
+	}
+
+	return vecty.List{
+		elem.Heading1(
+			vecty.Text("Process details"),
+		),
+		elem.Heading2(vecty.Text(p.processID)),
+		elem.Div(
+			vecty.Markup(vecty.Class("badges")),
+			elem.Span(
+				vecty.Markup(vecty.Class("badge", st)),
+				vecty.Text(st),
+			),
+		),
+		elem.HorizontalRule(),
+		elem.DescriptionList(
+			elem.DefinitionTerm(vecty.Text("Process type")),
+			elem.Description(vecty.Text(t)),
+			elem.DefinitionTerm(vecty.Text("State")),
+			elem.Description(vecty.Text(st)),
+			elem.DefinitionTerm(vecty.Text("Registered votes")),
+			elem.Description(vecty.Text(util.IntToString(p.process.EnvelopeHeight))),
+		),
+	}
+}
+
+type ProcessTab struct {
+	*Tab
+}
+
+func (p *ProcessTab) dispatch() interface{} {
+	return &actions.ProcessesTabChange{
+		Tab: p.alias(),
+	}
+}
+
+func (p *ProcessTab) store() string {
+	return store.Processes.Tab
+}
+
+func (p *ProcessesDashboardView) ProcessTabs() vecty.List {
+	results := &ProcessTab{&Tab{
+		Text:  "Results",
+		Alias: "results",
+	}}
+	envelopes := &ProcessTab{&Tab{
+		Text:  "Envelopes",
+		Alias: "envelopes",
+	}}
+
+	return vecty.List{
+		elem.Navigation(
+			vecty.Markup(vecty.Class("tabs")),
+			elem.UnorderedList(
+				TabLink(p, results),
+				TabLink(p, envelopes),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("tabs-content")),
+			TabContents(results, renderResults(p.process.Results)),
+			TabContents(envelopes, &ProcessesEnvelopeListView{
+				process:       p.process,
+				refreshCh:     p.refreshCh,
+				disableUpdate: &p.disableEnvelopesUpdate,
+			}),
+		),
 	}
 }
 
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
-		return elem.Heading6(vecty.Text("No results yet"))
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("No results yet"),
+		)
 	}
 	var resultList []vecty.MarkupOrChild
 	var header []vecty.MarkupOrChild

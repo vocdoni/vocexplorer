@@ -36,9 +36,13 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 	block := dbapi.GetBlock(tx.Store.Height)
 	tm, err := ptypes.Timestamp(block.GetTime())
 	util.ErrPrint(err)
-	return &components.TxContents{
-		Tx:       tx,
-		Time:     tm,
-		HasBlock: !types.BlockIsEmpty(block),
-	}
+	return components.Container(
+		elem.Section(
+			&components.TxContents{
+				Tx:       tx,
+				Time:     tm,
+				HasBlock: !types.BlockIsEmpty(block),
+			},
+		),
+	)
 }

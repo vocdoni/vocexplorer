@@ -67,7 +67,10 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 		)
 	}
 	if b.process.EnvelopeHeight < 1 {
-		return elem.Div(vecty.Text("This process has no envelopes"))
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("This process has no envelopes"),
+		)
 	}
 	return elem.Div(vecty.Text("Waiting for envelopes..."))
 }

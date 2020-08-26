@@ -15,8 +15,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// EnvelopeListView renders the envelope list pane
-type EnvelopeListView struct {
+// EnvelopeList renders the envelope list pane
+type EnvelopeList struct {
 	vecty.Core
 	currentPage   int
 	disableUpdate *bool
@@ -24,8 +24,8 @@ type EnvelopeListView struct {
 	vochain       *client.VochainInfo
 }
 
-// Render renders the EnvelopeListView component
-func (b *EnvelopeListView) Render() vecty.ComponentOrHTML {
+// Render renders the EnvelopeList component
+func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
 	if b.vochain != nil && b.vochain.EnvelopeHeight > 0 {
 		p := &Pagination{
 			TotalPages:      int(b.vochain.EnvelopeHeight) / config.ListSize,
@@ -58,13 +58,7 @@ func (b *EnvelopeListView) Render() vecty.ComponentOrHTML {
 				prop.Placeholder("search envelopes"),
 			))
 		}
-		return elem.Div(
-			vecty.Markup(vecty.Class("recent-envelopes")),
-			elem.Heading3(
-				vecty.Text("Envelopes"),
-			),
-			p,
-		)
+		return p
 	}
 	if b.vochain.EnvelopeHeight < 1 {
 		return elem.Div(vecty.Text("No envelopes available"))

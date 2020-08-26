@@ -56,13 +56,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 				prop.Placeholder("search processes"),
 			))
 		}
-		return elem.Div(
-			vecty.Markup(vecty.Class("recent-processes")),
-			elem.Heading3(
-				vecty.Text("Processes"),
-			),
-			p,
-		)
+		return p
 	}
 	if b.vochain.ProcessCount < 1 {
 		return elem.Div(vecty.Text("No processes available"))
