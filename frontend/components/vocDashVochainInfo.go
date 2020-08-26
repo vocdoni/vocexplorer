@@ -23,7 +23,6 @@ type VochainInfoView struct {
 	numEntities    int
 	numProcesses   int
 	processesIndex int
-	refreshCh      chan bool
 	vc             *client.VochainInfo
 }
 
