@@ -310,9 +310,10 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 
 func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
 	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
-	gatewayEntityHeight, err := c.GetEntityCount()
-	util.ErrPrint(err)
-	if localEntityHeight == gatewayEntityHeight {
+	// gatewayEntityHeight, err := c.GetEntityCount()
+	// util.ErrPrint(err)
+	// if localEntityHeight == gatewayEntityHeight {
+	if localEntityHeight > 0 {
 		return
 	}
 	newEntities, err := c.GetScrutinizerEntities(localEntityHeight)
@@ -451,14 +452,11 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 	for ; max > 0 && height >= 0; max-- {
 		heightKey := []byte(util.IntToString(height))
 		key := append(prefix, heightKey...)
-		log.Debugf("Test item at height %d", height)
-
 		has, err := d.Has(key)
 		if !has || util.ErrPrint(err) {
 			height--
 			continue
 		}
-		log.Debugf("Found item at height %d", height)
 		val, err := d.Get(key)
 		if err != nil {
 			log.Error(err)
@@ -622,7 +620,6 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		heightKey = append(heightKey, heightBytes...)
 		batch.Put(heightKey, rawHeight)
 
-		log.Debugf("Stored envelope %s of process %s at height %d, process height %d", votePackage.Nullifier, votePackage.ProcessID, globalHeight, procHeight)
 		return votePackage.Nullifier
 	}
 	return ""
