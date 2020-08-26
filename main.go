@@ -157,7 +157,7 @@ func main() {
 	s := &http.Server{
 		Addr:           urlR.Host,
 		ReadTimeout:    20 * time.Second,
-		WriteTimeout:   20 * time.Second,
+		WriteTimeout:   40 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 

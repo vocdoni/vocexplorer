@@ -20,6 +20,14 @@ func InitGateway(host string) (*Client, context.CancelFunc) {
 	log.Infof("connecting to " + host)
 	gwClient, cancel, err := New(host)
 	if util.ErrPrint(err) {
+		for i := 0; i < 10; i++ {
+			gwClient, cancel, err = New(host)
+			if !util.ErrPrint(err) {
+				break
+			}
+		}
+	}
+	if err != nil {
 		return nil, cancel
 	}
 	return gwClient, cancel
