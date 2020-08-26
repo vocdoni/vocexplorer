@@ -465,3 +465,47 @@ func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *
 		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), http.StatusPermanentRedirect)
 	}
 }
+
+// EnvelopeNullifierRedirectHandler redirects to the envelope corresponding to given nullifier
+func EnvelopeNullifierRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ids, ok := r.URL.Query()["nullifier"]
+		if !ok || len(ids[0]) < 1 {
+			log.Errorf("Url Param 'nullifier' is missing")
+			http.Error(w, "Url Param 'nullifier' missing", 400)
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+		id := ids[0]
+		hash, err := hex.DecodeString(id)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+		key := append([]byte(config.EnvNullifierPrefix), hash...)
+		has, err := db.Has(key)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+		if !has {
+			log.Errorf("Nullifier key not found")
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+		raw, err := db.Get(key)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+
+		var height types.Height
+		err = proto.Unmarshal(raw, &height)
+		if util.ErrPrint(err) {
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			return
+		}
+
+		http.Redirect(w, r, "/envelopes/"+util.IntToString(height.GetHeight()), http.StatusPermanentRedirect)
+	}
+}

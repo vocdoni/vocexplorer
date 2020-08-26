@@ -47,6 +47,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/db/listtxs/", db.ListTxsHandler(d))
 	m.HandleFunc("/db/tx/", db.GetTxHandler(d))
 	m.HandleFunc("/db/txhash/", db.TxHashRedirectHandler(d))
+	m.HandleFunc("/db/envelopenullifier/", db.EnvelopeNullifierRedirectHandler(d))
 	m.HandleFunc("/db/validator/", db.GetValidatorHandler(d))
 	m.HandleFunc("/db/entity/", db.GetEntityHandler(d))
 	m.HandleFunc("/db/process/", db.GetProcessHandler(d))

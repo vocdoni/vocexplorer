@@ -42,7 +42,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	util.ErrPrint(err)
 	var txContents []byte
 	var processID string
-	// var nullifier string
+	var nullifier string
 	var entityID string
 
 	switch rawTx.Type {
@@ -72,7 +72,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		util.ErrPrint(err)
 		processID = typedTx.ProcessID
-		// nullifier = typedTx.Nullifier
+		nullifier = typedTx.Nullifier
 	case "newProcess":
 		var typedTx dvotetypes.NewProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
@@ -99,9 +99,8 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 
 	entityID = util.StripHexString(entityID)
 	processID = util.StripHexString(processID)
-	// nullifier = util.StripHexString(nullifier)
+	nullifier = util.StripHexString(nullifier)
 
-	// txContents := base64.StdEncoding.EncodeToString(tx.Store.Tx)
 	accordionName := "accordionTx"
 	return elem.Div(elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
@@ -184,18 +183,19 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 						),
 					),
 				),
-				// vecty.If(
-				// 	nullifier != "" && rawTx.Type == "vote",
-				// 	elem.Div(
-				// 		vecty.Text("Contains vote envelope "),
-				// 		elem.Anchor(
-				// 			vecty.Markup(
-				// 				vecty.Attribute("href", "/envelopes/"+nullifier),
-				// 			),
-				// 			vecty.Text(nullifier),
-				// 		),
-				// 	),
-				// ),
+				vecty.If(
+					// nullifier != "" && rawTx.Type == "vote",
+					true,
+					elem.Div(
+						vecty.Text("Contains vote envelope "),
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Attribute("href", "/envelopenullifier/?nullifier="+nullifier),
+							),
+							vecty.Text(nullifier),
+						),
+					),
+				),
 			),
 		),
 	),
