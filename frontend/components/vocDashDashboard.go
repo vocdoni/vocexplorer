@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -36,21 +38,42 @@ type VocDashDashboardView struct {
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
-			&ProcessListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshProcesses,
-				disableUpdate: &dash.disableProcessesUpdate,
-			},
-			&EntityListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshEntities,
-				disableUpdate: &dash.disableEntitiesUpdate,
-			},
-			&EnvelopeListView{
-				vochain:       dash.vc,
-				refreshCh:     dash.refreshEnvelopes,
-				disableUpdate: &dash.disableEnvelopesUpdate,
-			},
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Processes")),
+						&ProcessListView{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshProcesses,
+							disableUpdate: &dash.disableProcessesUpdate,
+						},
+					},
+				}),
+			),
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Entities")),
+						&EntityListView{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshEntities,
+							disableUpdate: &dash.disableEntitiesUpdate,
+						},
+					},
+				}),
+			),
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Envelopes")),
+						&EnvelopeList{
+							vochain:       dash.vc,
+							refreshCh:     dash.refreshEnvelopes,
+							disableUpdate: &dash.disableEnvelopesUpdate,
+						},
+					},
+				}),
+			),
 		)
 	}
 	return &bootstrap.Alert{
@@ -72,6 +95,10 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.refreshProcesses = make(chan int, 50)
 	VocDashDashboardView.refreshEntities = make(chan int, 50)
 	VocDashDashboardView.disableEnvelopesUpdate = false
+	store.Entities.PagChannel = make(chan int, 50)
+	store.Processes.PagChannel = make(chan int, 50)
+	VocDashDashboardView.refreshEntities = store.Entities.PagChannel
+	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
 
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)

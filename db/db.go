@@ -227,7 +227,8 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 			TxResult: result,
 			Index:    txRes.Index,
 		}
-		storeEnvelope(txStore.Tx, envHeight, procHeightMap, procHeightMapMutex, batch)
+		// If voteTx, get envelope nullifier
+		txStore.Nullifier = storeEnvelope(txStore.Tx, envHeight, procHeightMap, procHeightMapMutex, batch)
 		txVal, err := proto.Marshal(&txStore)
 		util.ErrPrint(err)
 		util.ErrPrint(err)
@@ -544,7 +545,7 @@ func getHeight(d *dvotedb.BadgerDB, key string, def int64) *types.Height {
 	return height
 }
 
-func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) {
+func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) string {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx, &rawTx)
 	util.ErrPrint(err)
@@ -619,5 +620,7 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		batch.Put(heightKey, rawHeight)
 
 		log.Debugf("Stored envelope %s of process %s at height %d, process height %d", votePackage.Nullifier, votePackage.ProcessID, globalHeight, procHeight)
+		return votePackage.Nullifier
 	}
+	return ""
 }

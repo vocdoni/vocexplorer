@@ -11,6 +11,9 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -26,25 +29,65 @@ type EntitiesDashboardView struct {
 	refreshCh              chan int
 }
 
+type EntitiesTab struct {
+	*Tab
+}
+
+func (e *EntitiesTab) dispatch() interface{} {
+	return &actions.EntitiesTabChange{
+		Tab: e.alias(),
+	}
+}
+
+func (e *EntitiesTab) store() string {
+	return store.Entities.Tab
+}
+
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.entity != nil {
-		return Container(
-			elem.Section(
-				elem.Heading4(vecty.Text(
-					fmt.Sprintf("Entity %s", dash.entityID),
-				)),
-				elem.Heading5(vecty.Text("Number of processes : "+util.IntToString(dash.entity.ProcessCount))),
-				vecty.Markup(vecty.Class("info-pane")),
-				&EntityProcessListView{
-					entity:        dash.entity,
-					refreshCh:     dash.refreshCh,
-					disableUpdate: &dash.disableProcessesUpdate,
-				},
-			),
-		)
+	if dash == nil || dash.gwClient == nil || dash.entity == nil {
+		return Container(&bootstrap.Alert{
+			Type:     "warning",
+			Contents: "Connecting to blockchain client",
+		})
 	}
-	return Container(vecty.Text("Connecting to blockchain client"))
+
+	return Container(
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view", "no-column")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: dash.EntityDetails(),
+					}),
+				),
+			),
+		),
+		elem.Section(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: &EntityProcessListView{
+						entity:        dash.entity,
+						refreshCh:     dash.refreshCh,
+						disableUpdate: &dash.disableProcessesUpdate,
+					},
+				}),
+			),
+		),
+	)
+}
+
+func (e *EntitiesDashboardView) EntityDetails() vecty.List {
+	return vecty.List{
+		elem.Heading1(
+			vecty.Text("Entity details"),
+		),
+		elem.Heading2(vecty.Text(e.entityID)),
+	}
 }
 
 // InitEntitiesDashboardView initializes the entities dashboard view

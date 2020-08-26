@@ -33,6 +33,7 @@ message StoreTx {
     int64 TxHeight = 4;
     // Bytes-representation of rxresult. Could be nested resultTx struct
     bytes TxResult = 5;
+    string Nullifier = 6;
 }
 
 message SendTx {
