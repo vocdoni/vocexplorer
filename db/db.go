@@ -369,14 +369,15 @@ func updateProcessList(d *dvotedb.BadgerDB, c *client.Client) {
 	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
 	// Initialize concurrency helper variables
 	heightMapMutex := new(sync.Mutex)
+	requestMutex := new(sync.Mutex)
 	numNewProcesses := 0
 	complete := make(chan struct{}, len(heightMap.Heights))
 
 	batch := d.NewBatch()
 
 	for entity, height := range heightMap.Heights {
-		// go fetchProcesses(entity, height, batch, heightMap, heightMapMutex, &numNewProcesses, c, complete)
-		fetchProcesses(entity, height, batch, heightMap, heightMapMutex, &numNewProcesses, c, complete)
+		go fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
+		// fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
 	}
 	log.Debugf("Found %d stored entities", len(heightMap.Heights))
 
@@ -404,11 +405,13 @@ func updateProcessList(d *dvotedb.BadgerDB, c *client.Client) {
 	batch.Write()
 }
 
-func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex *sync.Mutex, numNew *int, c *client.Client, complete chan struct{}) {
+func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *client.Client, complete chan struct{}) {
 	defer func() {
 		complete <- struct{}{}
 	}()
+	requestMutex.Lock()
 	newProcessList, err := c.GetProcessList(entity, height)
+	requestMutex.Unlock()
 	if util.ErrPrint(err) || len(newProcessList) < 1 {
 		return
 	}
