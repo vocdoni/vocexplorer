@@ -70,27 +70,31 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
 				vecty.Markup(vecty.Class("type")),
-			// elem.Div(
-			// 	elem.Span(
-			// 		vecty.Markup(vecty.Class("title")),
-			// 		vecty.Text(ID),
-			// 	),
-			),
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("contents")),
-			elem.Div(
 				elem.Div(
-					elem.Anchor(
-						vecty.Markup(vecty.Class("hash")),
-						vecty.Markup(vecty.Attribute("href", "/entities/"+ID)),
-						vecty.Text(ID),
+					elem.Span(
+						vecty.Markup(vecty.Class("title")),
+						elem.Anchor(
+							vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+ID)),
+							vecty.Text("Entity Manager Page"),
+						),
 					),
 				),
+			),
+			elem.Div(
+				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
-					vecty.Markup(vecty.Class("envelopes")),
-					vecty.Text(
-						fmt.Sprintf("%d processes", height),
+					elem.Div(
+						elem.Anchor(
+							vecty.Markup(vecty.Class("hash")),
+							vecty.Markup(vecty.Attribute("href", "/entities/"+ID)),
+							vecty.Text(ID),
+						),
+					),
+					elem.Div(
+						vecty.Markup(vecty.Class("envelopes")),
+						vecty.Text(
+							fmt.Sprintf("%d processes", height),
+						),
 					),
 				),
 			),

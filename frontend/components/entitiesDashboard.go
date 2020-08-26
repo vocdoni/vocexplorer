@@ -87,6 +87,11 @@ func (e *EntitiesDashboardView) EntityDetails() vecty.List {
 			vecty.Text("Entity details"),
 		),
 		elem.Heading2(vecty.Text(e.entityID)),
+		elem.Anchor(
+			vecty.Markup(vecty.Class("hash")),
+			vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+e.entityID)),
+			vecty.Text("Entity Manager Page"),
+		),
 	}
 }
 
