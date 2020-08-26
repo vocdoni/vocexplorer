@@ -7,13 +7,11 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -128,48 +126,53 @@ func BlockView(block *tmtypes.Block) vecty.List {
 	}
 }
 
-func (c *BlockContents) tabLink(tab, text string) vecty.ComponentOrHTML {
-	return elem.ListItem(
-		elem.Button(
-			vecty.Markup(
-				event.Click(func(e *vecty.Event) {
-					dispatcher.Dispatch(&actions.BlocksTabChange{
-						Tab: tab,
-					})
-					vecty.Rerender(c)
-				}),
-			),
-			vecty.Markup(vecty.ClassMap{
-				"active": store.BlockTabActive == tab,
-			}),
-			vecty.Text(text),
-		),
-	)
+type BlockTab struct {
+	*Tab
 }
 
-func (c *BlockContents) tabContents(tab string, contents vecty.ComponentOrHTML) vecty.MarkupOrChild {
-	return vecty.If(tab == store.BlockTabActive, elem.Div(
-		contents,
-	))
+func (b *BlockTab) store() string {
+	return store.BlockTabActive
+}
+func (b *BlockTab) dispatch() interface{} {
+	return &actions.BlocksTabChange{
+		Tab: b.alias(),
+	}
 }
 
 func (c *BlockContents) BlockDetails() vecty.List {
+	transactions := &BlockTab{&Tab{
+		Text:  "Transactions",
+		Alias: "transactions",
+	}}
+	header := &BlockTab{&Tab{
+		Text:  "Header",
+		Alias: "header",
+	}}
+	evidence := &BlockTab{&Tab{
+		Text:  "Evidence",
+		Alias: "evidence",
+	}}
+	lastCommit := &BlockTab{&Tab{
+		Text:  "Last commit",
+		Alias: "last-commit",
+	}}
+
 	return vecty.List{
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
-				c.tabLink("transactions", "Transactions"),
-				c.tabLink("header", "Header"),
-				c.tabLink("evidence", "Evidence"),
-				c.tabLink("last-commit", "Last commit"),
+				TabLink(c, transactions),
+				TabLink(c, header),
+				TabLink(c, evidence),
+				TabLink(c, lastCommit),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			c.tabContents("transactions", preformattedBlockTransactions(c.Block)),
-			c.tabContents("header", preformattedBlockHeader(c.Block)),
-			c.tabContents("evidence", preformattedBlockEvidence(c.Block)),
-			c.tabContents("last-commit", preformattedBlockLastCommit(c.Block)),
+			TabContents(transactions, preformattedBlockTransactions(c.Block)),
+			TabContents(header, preformattedBlockHeader(c.Block)),
+			TabContents(evidence, preformattedBlockEvidence(c.Block)),
+			TabContents(lastCommit, preformattedBlockLastCommit(c.Block)),
 		),
 	}
 }

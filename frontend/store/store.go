@@ -7,15 +7,22 @@ import (
 )
 
 var (
-	BlockTabActive = "transactions"
+	BlockTabActive string
 	// CurrentBlockHeight stores the latest known block height
 	CurrentBlockHeight int64
 
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
+
+	Processes struct {
+		Tab string
+	}
 )
 
 func init() {
+	BlockTabActive = "transactions"
+	Processes.Tab = "results"
+
 	dispatcher.Register(onAction)
 }
 
@@ -26,6 +33,9 @@ func onAction(action interface{}) {
 
 	case *actions.BlocksHeightUpdate:
 		CurrentBlockHeight = a.Height
+
+	case *actions.ProcessesTabChange:
+		Processes.Tab = a.Tab
 
 	default:
 		return // don't fire listeners
