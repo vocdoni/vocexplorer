@@ -15,6 +15,7 @@ import (
 // ValidatorContents renders validator contents
 type ValidatorContents struct {
 	vecty.Core
+	serverConnected     bool
 	Validator           *types.Validator
 	BlockList           [config.ListSize]*types.StoreBlock
 	ValidatorBlocks     int
@@ -28,7 +29,8 @@ type ValidatorContents struct {
 
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
-	return elem.Main(
+	return Container(
+		renderServerConnectionBanner(contents.serverConnected),
 		contents.renderValidatorHeader(),
 		contents.renderValidatorBlockList(),
 	)
@@ -45,6 +47,7 @@ func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator,
 	v.blockRefresh = make(chan int, 50)
 	v.disableBlocksUpdate = false
 	v.CurrentBlock = 0
+	v.serverConnected = true
 	go v.updateBlocks()
 	return v
 }
@@ -88,6 +91,11 @@ func (contents *ValidatorContents) updateBlocks() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
+	if !dbapi.Ping() {
+		contents.serverConnected = false
+	} else {
+		contents.serverConnected = true
+	}
 	newVal, ok := dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
 	if ok {
 		contents.BlockList = newVal

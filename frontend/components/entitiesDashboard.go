@@ -20,6 +20,8 @@ import (
 // EntitiesDashboardView renders the entities dashboard page
 type EntitiesDashboardView struct {
 	vecty.Core
+	gatewayConnected       bool
+	serverConnected        bool
 	gwClient               *client.Client
 	entity                 *client.EntityInfo
 	entityID               string
@@ -53,6 +55,8 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
+		renderGatewayConnectionBanner(dash.gatewayConnected),
+		renderServerConnectionBanner(dash.serverConnected),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
@@ -106,6 +110,8 @@ func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	EntitiesDashboardView.entityID = entityID
 	EntitiesDashboardView.quitCh = make(chan struct{})
 	EntitiesDashboardView.refreshCh = make(chan int, 50)
+	EntitiesDashboardView.serverConnected = true
+	EntitiesDashboardView.gatewayConnected = true
 	BeforeUnload(func() {
 		close(EntitiesDashboardView.quitCh)
 	})
@@ -151,6 +157,16 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
+	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+		d.gatewayConnected = false
+	} else {
+		d.gatewayConnected = true
+	}
+	if !dbapi.Ping() {
+		d.serverConnected = false
+	} else {
+		d.serverConnected = true
+	}
 	newCount, ok := dbapi.GetEntityProcessHeight(d.entityID)
 	if ok {
 		d.entity.ProcessCount = int(newCount)

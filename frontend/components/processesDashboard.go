@@ -20,6 +20,8 @@ import (
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
+	gatewayConnected       bool
+	serverConnected        bool
 	gwClient               *client.Client
 	process                *client.FullProcessInfo
 	processID              string
@@ -48,6 +50,8 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
+		renderGatewayConnectionBanner(dash.gatewayConnected),
+		renderServerConnectionBanner(dash.serverConnected),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
@@ -242,6 +246,16 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 }
 
 func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
+	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+		d.gatewayConnected = false
+	} else {
+		d.gatewayConnected = true
+	}
+	if !dbapi.Ping() {
+		d.serverConnected = false
+	} else {
+		d.serverConnected = true
+	}
 	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
 	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
 	if ok {

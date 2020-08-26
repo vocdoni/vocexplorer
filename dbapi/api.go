@@ -14,6 +14,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func Ping() bool {
+	c := &http.Client{
+		Timeout: 1 * time.Second,
+	}
+	resp, err := c.Get("/ping")
+	if err != nil || resp == nil {
+		return false
+	}
+	return true
+}
+
 func request(url string) ([]byte, bool) {
 	c := &http.Client{
 		Timeout: 10 * time.Second,

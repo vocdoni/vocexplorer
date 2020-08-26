@@ -18,6 +18,8 @@ import (
 // BlockTxsDashboardView renders the dashboard landing page
 type BlockTxsDashboardView struct {
 	vecty.Core
+	gatewayConnected    bool
+	serverConnected     bool
 	blockIndex          int
 	blockRefresh        chan int
 	disableBlocksUpdate bool
@@ -33,6 +35,8 @@ type BlockTxsDashboardView struct {
 func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.tClient != nil && dash.t != nil && dash.t.ResultStatus != nil {
 		return Container(
+			renderGatewayConnectionBanner(dash.gatewayConnected),
+			renderServerConnectionBanner(dash.serverConnected),
 			&LatestBlocksWidget{
 				T: dash.t,
 			},
@@ -73,6 +77,8 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 	BlockTxsDashboardView.txIndex = 0
 	BlockTxsDashboardView.disableBlocksUpdate = false
 	BlockTxsDashboardView.disableTxsUpdate = false
+	BlockTxsDashboardView.gatewayConnected = true
+	BlockTxsDashboardView.serverConnected = true
 	BeforeUnload(func() {
 		close(BlockTxsDashboardView.quitCh)
 	})
@@ -138,6 +144,16 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 }
 
 func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
+	if !rpc.Ping(d.tClient) {
+		d.gatewayConnected = false
+	} else {
+		d.gatewayConnected = true
+	}
+	if !dbapi.Ping() {
+		d.serverConnected = false
+	} else {
+		d.serverConnected = true
+	}
 	updateHeight(d.t)
 	rpc.UpdateTendermintInfo(d.tClient, d.t)
 	if !d.disableBlocksUpdate {

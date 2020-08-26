@@ -32,6 +32,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 	m.HandleFunc("/validators/{id}", indexHandler)
 
 	// API Routes
+	m.HandleFunc("/ping", db.PingHandler())
 	m.HandleFunc("/config", configHandler(cfg))
 	m.HandleFunc("/db/listblocks/", db.ListBlocksHandler(d))
 	m.HandleFunc("/db/listblocksvalidator/", db.ListBlocksByValidatorHandler(d))

@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -20,23 +21,29 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	blockIndex int
-	gwClient   *client.Client
-	quitCh     chan struct{}
-	refreshCh  chan int
-	t          *rpc.TendermintInfo
-	tClient    *http.HTTP
-	vc         *client.VochainInfo
+	gatewayConnected bool
+	serverConnected  bool
+	blockIndex       int
+	gwClient         *client.Client
+	quitCh           chan struct{}
+	t                *rpc.TendermintInfo
+	tClient          *http.HTTP
+	vc               *client.VochainInfo
 }
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
+	log.Println(dash.gatewayConnected)
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
-		return &StatsView{
-			t:        dash.t,
-			vc:       dash.vc,
-			gwClient: dash.gwClient,
-		}
+		return Container(
+			renderGatewayConnectionBanner(dash.gatewayConnected),
+			renderServerConnectionBanner(dash.serverConnected),
+			&StatsView{
+				t:        dash.t,
+				vc:       dash.vc,
+				gwClient: dash.gwClient,
+			},
+		)
 	}
 	return &bootstrap.Alert{
 		Contents: "Connecting to blockchain clients",
@@ -58,8 +65,9 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	DashboardView.t = t
 	DashboardView.vc = vc
 	DashboardView.quitCh = make(chan struct{})
-	DashboardView.refreshCh = make(chan int, 50)
 	DashboardView.blockIndex = 0
+	DashboardView.serverConnected = true
+	DashboardView.gatewayConnected = true
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
@@ -95,10 +103,7 @@ func updateHeight(t *rpc.TendermintInfo) {
 
 func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	client.UpdateDashboardInfo(d.gwClient, d.vc)
-	updateHeight(d.t)
-	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
+	updateHomeDashboardInfo(d)
 	vecty.Rerender(d)
 	for {
 		select {
@@ -109,31 +114,27 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t)
-			updateHeight(d.t)
-			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-			client.UpdateDashboardInfo(d.gwClient, d.vc)
-			vecty.Rerender(d)
-		case i := <-d.refreshCh:
-		loop:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case i = <-d.refreshCh:
-				default:
-					break loop
-				}
-			}
-			d.blockIndex = i
-			oldBlocks := d.t.TotalBlocks
-			updateHeight(d.t)
-			if i < 1 {
-				oldBlocks = d.t.TotalBlocks
-			}
-			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
+			updateHomeDashboardInfo(d)
 			vecty.Rerender(d)
 		}
 	}
+}
+
+func updateHomeDashboardInfo(d *DashboardView) {
+	if !rpc.Ping(d.tClient) || d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+		d.gatewayConnected = false
+	} else {
+		d.gatewayConnected = true
+	}
+	if !dbapi.Ping() {
+		d.serverConnected = false
+	} else {
+		d.serverConnected = true
+	}
+	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	client.UpdateDashboardInfo(d.gwClient, d.vc)
+	updateHeight(d.t)
+	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {

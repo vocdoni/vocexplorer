@@ -62,6 +62,14 @@ func initClient(host string) (*http.HTTP, error) {
 	return c, nil
 }
 
+func Ping(c *http.HTTP) bool {
+	status, err := c.Status()
+	if err != nil || status == nil {
+		return false
+	}
+	return true
+}
+
 //UpdateTendermintInfo updates the tendermint info
 func UpdateTendermintInfo(c *http.HTTP, t *TendermintInfo) {
 	t.GetHealth(c)

@@ -20,6 +20,8 @@ import (
 // VocDashDashboardView renders the processes dashboard page
 type VocDashDashboardView struct {
 	vecty.Core
+	gatewayConnected       bool
+	serverConnected        bool
 	gwClient               *client.Client
 	envelopeIndex          int
 	entityIndex            int
@@ -38,6 +40,8 @@ type VocDashDashboardView struct {
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
+			renderGatewayConnectionBanner(dash.gatewayConnected),
+			renderServerConnectionBanner(dash.serverConnected),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
@@ -99,6 +103,8 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	store.Processes.PagChannel = make(chan int, 50)
 	VocDashDashboardView.refreshEntities = store.Entities.PagChannel
 	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
+	VocDashDashboardView.serverConnected = true
+	VocDashDashboardView.gatewayConnected = true
 
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
@@ -199,6 +205,16 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 }
 
 func updateVocdash(d *VocDashDashboardView) {
+	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+		d.gatewayConnected = false
+	} else {
+		d.gatewayConnected = true
+	}
+	if !dbapi.Ping() {
+		d.serverConnected = false
+	} else {
+		d.serverConnected = true
+	}
 	updateHeights(d)
 	if !d.disableEnvelopesUpdate {
 		updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
