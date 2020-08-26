@@ -10,11 +10,13 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+//LatestBlocksWidget is a component for a widget of recent blocks
 type LatestBlocksWidget struct {
 	vecty.Core
 	T *rpc.TendermintInfo
 }
 
+//Render renders the LatestBlocksWidget component
 func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 
 	var blockList []vecty.MarkupOrChild

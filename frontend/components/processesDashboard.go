@@ -76,12 +76,13 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func (p *ProcessesDashboardView) ProcessDetails() vecty.List {
-	t := p.process.ProcessType
+//ProcessDetails renders the details of a process
+func (dash *ProcessesDashboardView) ProcessDetails() vecty.List {
+	t := dash.process.ProcessType
 	if t == "" {
 		t = "unknown"
 	}
-	st := p.process.State
+	st := dash.process.State
 	if st == "" {
 		st = "unknown"
 	}
@@ -90,7 +91,7 @@ func (p *ProcessesDashboardView) ProcessDetails() vecty.List {
 		elem.Heading1(
 			vecty.Text("Process details"),
 		),
-		elem.Heading2(vecty.Text(p.processID)),
+		elem.Heading2(vecty.Text(dash.processID)),
 		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
@@ -105,11 +106,12 @@ func (p *ProcessesDashboardView) ProcessDetails() vecty.List {
 			elem.DefinitionTerm(vecty.Text("State")),
 			elem.Description(vecty.Text(st)),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
-			elem.Description(vecty.Text(util.IntToString(p.process.EnvelopeHeight))),
+			elem.Description(vecty.Text(util.IntToString(dash.process.EnvelopeHeight))),
 		),
 	}
 }
 
+//ProcessTab is a single tab of a process page
 type ProcessTab struct {
 	*Tab
 }
@@ -124,7 +126,8 @@ func (p *ProcessTab) store() string {
 	return store.Processes.Tab
 }
 
-func (p *ProcessesDashboardView) ProcessTabs() vecty.List {
+//ProcessTabs renders the tabs for a process
+func (dash *ProcessesDashboardView) ProcessTabs() vecty.List {
 	results := &ProcessTab{&Tab{
 		Text:  "Results",
 		Alias: "results",
@@ -138,17 +141,17 @@ func (p *ProcessesDashboardView) ProcessTabs() vecty.List {
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
-				TabLink(p, results),
-				TabLink(p, envelopes),
+				TabLink(dash, results),
+				TabLink(dash, envelopes),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(results, renderResults(p.process.Results)),
+			TabContents(results, renderResults(dash.process.Results)),
 			TabContents(envelopes, &ProcessesEnvelopeListView{
-				process:       p.process,
-				refreshCh:     p.refreshCh,
-				disableUpdate: &p.disableEnvelopesUpdate,
+				process:       dash.process,
+				refreshCh:     dash.refreshCh,
+				disableUpdate: &dash.disableEnvelopesUpdate,
 			}),
 		),
 	}

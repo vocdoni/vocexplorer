@@ -6,11 +6,13 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 )
 
+//ConnectedBanner is the component to display a banner if server is disconnected
 type ConnectedBanner struct {
 	vecty.Core
 	connection string
 }
 
+//Render renders the ConnectedBanner component
 func (b *ConnectedBanner) Render() vecty.ComponentOrHTML {
 	return elem.Div(
 		&bootstrap.Alert{

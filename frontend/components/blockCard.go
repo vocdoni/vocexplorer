@@ -15,6 +15,7 @@ import (
 	"golang.org/x/text/message"
 )
 
+//BlockCard renders a single block card
 func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	var tm time.Time
 	var err error

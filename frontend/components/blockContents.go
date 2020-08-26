@@ -68,6 +68,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	)
 }
 
+//BlockView renders a single block card
 func BlockView(block *tmtypes.Block) vecty.List {
 	return vecty.List{
 		elem.Heading1(
@@ -126,6 +127,7 @@ func BlockView(block *tmtypes.Block) vecty.List {
 	}
 }
 
+//BlockTab component displays a tab for the block page
 type BlockTab struct {
 	*Tab
 }
@@ -139,6 +141,7 @@ func (b *BlockTab) dispatch() interface{} {
 	}
 }
 
+//BlockDetails displays the details for a single block
 func (c *BlockContents) BlockDetails() vecty.List {
 	transactions := &BlockTab{&Tab{
 		Text:  "Transactions",

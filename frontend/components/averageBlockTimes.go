@@ -8,11 +8,13 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
+//AverageBlockTimes is the component to display avg block times
 type AverageBlockTimes struct {
 	vecty.Core
 	VC *client.VochainInfo
 }
 
+//Render renders the AverageBlockTimes component
 func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 
 	if a.VC.BlockTime == nil {

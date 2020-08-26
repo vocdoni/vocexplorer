@@ -11,11 +11,13 @@ import (
 	"golang.org/x/text/message"
 )
 
+//BlockchainInfo is the component to display blockchain information
 type BlockchainInfo struct {
 	vecty.Core
 	T *rpc.TendermintInfo
 }
 
+//Render renders the BlockchainInfo component
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
 	if b.T.ResultStatus == nil {

@@ -31,6 +31,7 @@ type EntitiesDashboardView struct {
 	refreshCh              chan int
 }
 
+//EntitiesTab is the tab component for entities
 type EntitiesTab struct {
 	*Tab
 }
@@ -85,15 +86,16 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func (e *EntitiesDashboardView) EntityDetails() vecty.List {
+//EntityDetails renders the details of a single entity
+func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 	return vecty.List{
 		elem.Heading1(
 			vecty.Text("Entity details"),
 		),
-		elem.Heading2(vecty.Text(e.entityID)),
+		elem.Heading2(vecty.Text(dash.entityID)),
 		elem.Anchor(
 			vecty.Markup(vecty.Class("hash")),
-			vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+e.entityID)),
+			vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+dash.entityID)),
 			vecty.Text("Entity Manager Page"),
 		),
 	}

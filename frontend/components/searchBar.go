@@ -5,10 +5,12 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+//SearchBar is a component for a search bar
 type SearchBar struct {
 	vecty.Core
 }
 
+//Render renders the SearchBar component
 func (s *SearchBar) Render() vecty.ComponentOrHTML {
 	return elem.Form(
 		vecty.Markup(vecty.Class("form-inline", "my-2", "my-lg-0")),

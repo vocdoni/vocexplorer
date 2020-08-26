@@ -21,6 +21,7 @@ type EntityProcessListView struct {
 	refreshCh     chan int
 }
 
+//Render renders the EntityProcessListView component
 func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 	if b.entity != nil && b.entity.ProcessCount > 0 {
 		p := &Pagination{

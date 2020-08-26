@@ -64,6 +64,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("Waiting for processes..."))
 }
 
+//ProcessBlock renders a single process card
 func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", info.State)),

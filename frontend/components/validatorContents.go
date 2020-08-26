@@ -36,6 +36,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	)
 }
 
+//InitValidatorContentsView initializes the view
 func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator, cfg *config.Cfg) *ValidatorContents {
 	v.Validator = validator
 	v.Cfg = cfg

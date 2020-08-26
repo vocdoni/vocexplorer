@@ -63,6 +63,8 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Div(vecty.Text("Waiting for entities..."))
 }
+
+//EntityBlock renders a single entity card
 func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile")),

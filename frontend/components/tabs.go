@@ -7,6 +7,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
+//TabAction is the interface for a tab action
 type TabAction interface {
 	alias() string
 	dispatch() interface{}
@@ -14,6 +15,7 @@ type TabAction interface {
 	text() string
 }
 
+//Tab is a page tab object
 type Tab struct {
 	Alias string
 	Text  string
@@ -26,6 +28,7 @@ func (b *Tab) text() string {
 	return b.Text
 }
 
+//TabLink renders a tab's link
 func TabLink(c vecty.Component, tab TabAction) vecty.ComponentOrHTML {
 	return elem.ListItem(
 		elem.Button(
@@ -43,6 +46,7 @@ func TabLink(c vecty.Component, tab TabAction) vecty.ComponentOrHTML {
 	)
 }
 
+//TabContents renders a tab's contents
 func TabContents(tab TabAction, contents vecty.ComponentOrHTML) vecty.MarkupOrChild {
 	return vecty.If(tab.alias() == tab.store(), elem.Div(
 		contents,

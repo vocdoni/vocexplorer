@@ -10,12 +10,14 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
+//Jumbotron is a component for an info banner of statistics
 type Jumbotron struct {
 	vecty.Core
 	t  *rpc.TendermintInfo
 	vc *client.VochainInfo
 }
 
+//JumboStatTitle renders the jumbotron statistic title
 func JumboStatTitle(t string) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("stat-title")),
@@ -23,6 +25,7 @@ func JumboStatTitle(t string) vecty.ComponentOrHTML {
 	)
 }
 
+//JumboStatValue renders a jumbotron statistic contents
 func JumboStatValue(v string) vecty.MarkupOrChild {
 	return elem.Div(
 		vecty.Markup(vecty.Class("stat-value")),
@@ -30,6 +33,7 @@ func JumboStatValue(v string) vecty.MarkupOrChild {
 	)
 }
 
+//Render renders the jumbotron component
 func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 	colMarkup := vecty.Markup(vecty.Class("col-xs-12", "col-sm-4", "mb-2", "mb-sm-0"))
 	var items vecty.List

@@ -14,6 +14,7 @@ type BlockchainVersion struct {
 	T *rpc.TendermintInfo
 }
 
+//Render renders the BlockchainVersion component
 func (b *BlockchainVersion) Render() vecty.ComponentOrHTML {
 	return &bootstrap.Alert{
 		Contents: fmt.Sprintf(
