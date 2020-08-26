@@ -17,11 +17,16 @@ var (
 	Processes struct {
 		Tab string
 	}
+
+	Entities struct {
+		Tab string
+	}
 )
 
 func init() {
 	BlockTabActive = "transactions"
 	Processes.Tab = "results"
+	Entities.Tab = "processes"
 
 	dispatcher.Register(onAction)
 }
