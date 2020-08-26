@@ -37,7 +37,10 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator, cfg *config.Cfg) *ValidatorContents {
 	v.Validator = validator
 	v.Cfg = cfg
-	v.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address)))
+	newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address))
+	if ok {
+		v.ValidatorBlocks = int(newVal)
+	}
 	v.quitCh = make(chan struct{})
 	v.blockRefresh = make(chan int, 50)
 	v.disableBlocksUpdate = false
@@ -64,7 +67,10 @@ func (contents *ValidatorContents) updateBlocks() {
 			}
 			contents.CurrentBlock = i
 			oldBlocks := contents.ValidatorBlocks
-			contents.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))) - 1
+			newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
+			if ok {
+				contents.ValidatorBlocks = int(newVal) - 1
+			}
 			if i < 1 {
 				oldBlocks = contents.ValidatorBlocks
 			}
@@ -82,7 +88,10 @@ func (contents *ValidatorContents) updateBlocks() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	contents.BlockList = dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	newVal, ok := dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	if ok {
+		contents.BlockList = newVal
+	}
 	reverseBlockList(&contents.BlockList)
 }
 

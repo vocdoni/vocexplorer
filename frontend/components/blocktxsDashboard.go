@@ -82,11 +82,7 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 
 func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-	d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
-	updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
-	updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
+	updateBlockTxsDashboard(d)
 	vecty.Rerender(d)
 	for {
 		select {
@@ -95,15 +91,7 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t)
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-			d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
-			if !d.disableBlocksUpdate {
-				updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
-			}
-			if !d.disableTxsUpdate {
-				updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
-			}
+			updateBlockTxsDashboard(d)
 			vecty.Rerender(d)
 		case i := <-d.blockRefresh:
 		blockloop:
@@ -117,7 +105,8 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 			}
 			d.blockIndex = i
 			oldBlocks := d.t.TotalBlocks
-			d.t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
+			newHeight, _ := dbapi.GetBlockHeight()
+			d.t.TotalBlocks = int(newHeight) - 1
 			if i < 1 {
 				oldBlocks = d.t.TotalBlocks
 			}
@@ -136,7 +125,8 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 			}
 			d.txIndex = i
 			oldTxs := d.t.TotalTxs
-			d.t.TotalTxs = int(dbapi.GetTxHeight()) - 1
+			newHeight, _ := dbapi.GetTxHeight()
+			d.t.TotalTxs = int(newHeight) - 1
 			if i < 1 {
 				oldTxs = d.t.TotalTxs
 			}
@@ -147,18 +137,33 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 	}
 }
 
+func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
+	updateHeight(d.t)
+	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	if !d.disableBlocksUpdate {
+		updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
+	}
+	if !d.disableTxsUpdate {
+		updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
+	}
+}
+
 func updateBlocks(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Blocks from index %d", util.IntToString(index))
-	list := dbapi.GetBlockList(index)
-	reverseBlockList(&list)
-	d.t.BlockList = list
+	list, ok := dbapi.GetBlockList(index)
+	if ok {
+		reverseBlockList(&list)
+		d.t.BlockList = list
+	}
 }
 
 func updateTxs(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Txs from index %d", util.IntToString(index))
-	list := dbapi.GetTxList(index)
-	reverseTxList(&list)
-	d.t.TxList = list
+	list, ok := dbapi.GetTxList(index)
+	if ok {
+		reverseTxList(&list)
+		d.t.TxList = list
+	}
 }
 
 func reverseBlockList(list *[config.ListSize]*types.StoreBlock) {

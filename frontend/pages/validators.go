@@ -20,8 +20,8 @@ type ValidatorsView struct {
 func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 	v := new(components.ValidatorContents)
 	address := router.GetNamedVar(home)["id"]
-	validator := dbapi.GetValidator(address)
-	if validator == nil {
+	validator, ok := dbapi.GetValidator(address)
+	if validator == nil || !ok {
 		log.Errorf("Validator unavailable")
 		return elem.Div(
 			elem.Main(vecty.Text("Validator not available")),

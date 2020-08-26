@@ -68,14 +68,29 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 }
 
 func updateHeight(t *rpc.TendermintInfo) {
-	dispatcher.Dispatch(&actions.BlocksHeightUpdate{
-		Height: dbapi.GetBlockHeight(),
-	})
-	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
-	t.TotalEntities = int(dbapi.GetEntityHeight())
-	t.TotalProcesses = int(dbapi.GetProcessHeight())
-	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())
+	newVal, ok := dbapi.GetBlockHeight()
+	if ok {
+		t.TotalBlocks = int(newVal - 1)
+		dispatcher.Dispatch(&actions.BlocksHeightUpdate{
+			Height: int64(newVal),
+		})
+	}
+	newVal, ok = dbapi.GetTxHeight()
+	if ok {
+		t.TotalTxs = int(newVal - 1)
+	}
+	newVal, ok = dbapi.GetEntityHeight()
+	if ok {
+		t.TotalEntities = int(newVal)
+	}
+	newVal, ok = dbapi.GetProcessHeight()
+	if ok {
+		t.TotalProcesses = int(newVal)
+	}
+	newVal, ok = dbapi.GetEnvelopeHeight()
+	if ok {
+		t.TotalEnvelopes = int(newVal)
+	}
 }
 
 func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
@@ -123,10 +138,9 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 
 func updateHomeBlocks(d *DashboardView, index int) {
 	fmt.Println("Getting blocks from index " + util.IntToString(index))
-	list := dbapi.GetBlockList(index)
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
+	list, ok := dbapi.GetBlockList(index)
+	if ok {
+		reverseBlockList(&list)
+		d.t.BlockList = list
 	}
-	d.t.BlockList = list
 }

@@ -202,11 +202,7 @@ func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 
 func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
-	d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
-	if d.process.EnvelopeHeight > 0 {
-		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-	}
+	updateProcessesDashboard(d, processID)
 	vecty.Rerender(d)
 	for {
 		select {
@@ -216,11 +212,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
-			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
-			if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
-				updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-			}
+			updateProcessesDashboard(d, processID)
 			vecty.Rerender(d)
 		case i := <-d.refreshCh:
 		loop:
@@ -234,7 +226,10 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 			}
 			d.envelopeIndex = i
 			oldEnvelopes := d.process.EnvelopeHeight
-			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
+			newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
+			if ok {
+				d.process.EnvelopeHeight = int(newVal)
+			}
 			if i < 1 {
 				oldEnvelopes = d.process.EnvelopeHeight
 			}
@@ -246,9 +241,22 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 	}
 }
 
+func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
+	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
+	if ok {
+		d.process.EnvelopeHeight = int(newVal)
+	}
+	if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
+		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+	}
+}
+
 func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
 	log.Infof("Getting envelopes from index %d", util.IntToString(index))
-	list := dbapi.GetEnvelopeListByProcess(index, d.processID)
-	reverseEnvelopeList(&list)
-	d.process.EnvelopeList = list
+	list, ok := dbapi.GetEnvelopeListByProcess(index, d.processID)
+	if ok {
+		reverseEnvelopeList(&list)
+		d.process.EnvelopeList = list
+	}
 }

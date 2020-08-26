@@ -31,87 +31,87 @@ func request(url string) ([]byte, bool) {
 	return body, true
 }
 
-func getHeight(url string) int64 {
+func getHeight(url string) (int64, bool) {
 	body, ok := request(url)
 	if !ok {
-		return 0
+		return 0, false
 	}
 	var height types.Height
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &height)
 		util.ErrPrint(err)
 	}
-	return height.GetHeight()
+	return height.GetHeight(), true
 }
 
-func getHeightMap(url string) map[string]int64 {
+func getHeightMap(url string) (map[string]int64, bool) {
 	body, ok := request(url)
 	if !ok {
-		return map[string]int64{}
+		return map[string]int64{}, false
 	}
 	var heightMap types.HeightMap
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &heightMap)
 		util.ErrPrint(err)
 	}
-	return heightMap.GetHeights()
+	return heightMap.GetHeights(), true
 }
 
 //GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
-func GetProcessEnvelopeHeight(process string) int64 {
+func GetProcessEnvelopeHeight(process string) (int64, bool) {
 	return getHeight("/db/envprocheight/?process=" + process)
 }
 
 //GetProcessEnvelopeHeightMap returns the entire map of process envelope heights
-func GetProcessEnvelopeHeightMap() map[string]int64 {
+func GetProcessEnvelopeHeightMap() (map[string]int64, bool) {
 	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeHeightMapKey)
 }
 
 //GetEnvelopeHeight returns the latest envelope height stored by the database
-func GetEnvelopeHeight() int64 {
+func GetEnvelopeHeight() (int64, bool) {
 	return getHeight("/db/height/?key=" + config.LatestEnvelopeHeightKey)
 }
 
 //GetProcessHeight returns the latest process height stored by the database
-func GetProcessHeight() int64 {
+func GetProcessHeight() (int64, bool) {
 	return getHeight("/db/height/?key=" + config.LatestProcessHeight)
 }
 
 //GetEntityHeight returns the latest envelope height stored by the database
-func GetEntityHeight() int64 {
+func GetEntityHeight() (int64, bool) {
 	return getHeight("/db/height/?key=" + config.LatestEntityHeight)
 }
 
 //GetEntityProcessHeight returns the number of processes belonging to a
-func GetEntityProcessHeight(entity string) int64 {
+func GetEntityProcessHeight(entity string) (int64, bool) {
 	return getHeight("/db/entityprocheight/?entity=" + entity)
 }
 
 //GetEntityProcessHeightMap returns the entire map of entity process heights
-func GetEntityProcessHeightMap() map[string]int64 {
+func GetEntityProcessHeightMap() (map[string]int64, bool) {
 	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessHeightMapKey)
 }
 
 //GetBlockHeight returns the latest block height stored by the database
-func GetBlockHeight() int64 {
+func GetBlockHeight() (int64, bool) {
 	return getHeight("/db/height/?key=" + config.LatestBlockHeightKey)
 }
 
 //GetTxHeight returns the latest tx height stored by the database
-func GetTxHeight() int64 {
+func GetTxHeight() (int64, bool) {
 	return getHeight("db/height/?key=" + config.LatestTxHeightKey)
 }
 
 //GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
-func GetValidatorBlockHeight(proposer string) int64 {
+func GetValidatorBlockHeight(proposer string) (int64, bool) {
 	return getHeight("/db/numblocksvalidator/?proposer=" + proposer)
 }
 
 //GetBlockList returns a list of blocks from the database
-func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
+func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 	body, ok := request("/db/listblocks/?from=" + util.IntToString(i))
 	if !ok {
-		return [config.ListSize]*types.StoreBlock{}
+		return [config.ListSize]*types.StoreBlock{}, false
 	}
 	var rawBlockList types.ItemList
 	err := proto.Unmarshal(body, &rawBlockList)
@@ -125,17 +125,17 @@ func GetBlockList(i int) [config.ListSize]*types.StoreBlock {
 			util.ErrPrint(err)
 		}
 	}
-	return blockList
+	return blockList, true
 }
 
 //GetBlockListByValidator returns a list of blocks with given proposer from the database
-func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.StoreBlock {
+func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.StoreBlock, bool) {
 	if i < config.ListSize {
 		i = config.ListSize
 	}
 	body, ok := request("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
 	if !ok {
-		return [config.ListSize]*types.StoreBlock{}
+		return [config.ListSize]*types.StoreBlock{}, false
 	}
 	var rawBlockList types.ItemList
 	err := proto.Unmarshal(body, &rawBlockList)
@@ -149,26 +149,26 @@ func GetBlockListByValidator(i int, proposer []byte) [config.ListSize]*types.Sto
 			util.ErrPrint(err)
 		}
 	}
-	return blockList
+	return blockList, true
 }
 
 //GetBlock returns a single block from the database
-func GetBlock(i int64) *types.StoreBlock {
+func GetBlock(i int64) (*types.StoreBlock, bool) {
 	body, ok := request("/db/block/?height=" + util.IntToString(i))
 	if !ok {
-		return &types.StoreBlock{}
+		return &types.StoreBlock{}, false
 	}
 	var block types.StoreBlock
 	err := proto.Unmarshal(body, &block)
 	util.ErrPrint(err)
-	return &block
+	return &block, true
 }
 
 //GetTxList returns a list of transactions from the database
-func GetTxList(from int) [config.ListSize]*types.SendTx {
+func GetTxList(from int) ([config.ListSize]*types.SendTx, bool) {
 	body, ok := request("/db/listtxs/?from=" + util.IntToString(from))
 	if !ok {
-		return [config.ListSize]*types.SendTx{}
+		return [config.ListSize]*types.SendTx{}, false
 	}
 	var rawTxList types.ItemList
 	err := proto.Unmarshal(body, &rawTxList)
@@ -182,40 +182,40 @@ func GetTxList(from int) [config.ListSize]*types.SendTx {
 			txList[i] = &tx
 		}
 	}
-	return txList
+	return txList, true
 }
 
 //GetTx returns a transaction from the database
-func GetTx(height int64) *types.SendTx {
+func GetTx(height int64) (*types.SendTx, bool) {
 	body, ok := request("/db/tx/?id=" + util.IntToString(height))
 	if !ok {
-		return &types.SendTx{}
+		return &types.SendTx{}, false
 	}
 	var tx types.SendTx
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &tx)
 		util.ErrPrint(err)
 	}
-	return &tx
+	return &tx, true
 }
 
 //GetValidator returns a single validator from the database
-func GetValidator(address string) *types.Validator {
+func GetValidator(address string) (*types.Validator, bool) {
 	body, ok := request("/db/validator/?id=" + address)
 	if !ok {
-		return &types.Validator{}
+		return &types.Validator{}, false
 	}
 	var validator types.Validator
 	err := proto.Unmarshal(body, &validator)
 	util.ErrPrint(err)
-	return &validator
+	return &validator, true
 }
 
 //GetEnvelopeList returns a list of envelopes from the database
-func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
+func GetEnvelopeList(i int) ([config.ListSize]*types.Envelope, bool) {
 	body, ok := request("/db/listenvelopes/?from=" + util.IntToString(i))
 	if !ok {
-		return [config.ListSize]*types.Envelope{}
+		return [config.ListSize]*types.Envelope{}, false
 	}
 	var rawEnvList types.ItemList
 	err := proto.Unmarshal(body, &rawEnvList)
@@ -229,26 +229,26 @@ func GetEnvelopeList(i int) [config.ListSize]*types.Envelope {
 			util.ErrPrint(err)
 		}
 	}
-	return envList
+	return envList, true
 }
 
 //GetEnvelope gets a single envelope by global height
-func GetEnvelope(height int64) *types.Envelope {
+func GetEnvelope(height int64) (*types.Envelope, bool) {
 	body, ok := request("/db/envelope/?height=" + util.IntToString(height))
 	if !ok {
-		return &types.Envelope{}
+		return &types.Envelope{}, false
 	}
 	envelope := new(types.Envelope)
 	err := proto.Unmarshal(body, envelope)
 	util.ErrPrint(err)
-	return envelope
+	return envelope, true
 }
 
 //GetEnvelopeListByProcess returns a list of envelopes by process
-func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Envelope {
+func GetEnvelopeListByProcess(i int, process string) ([config.ListSize]*types.Envelope, bool) {
 	body, ok := request("/db/listenvelopesprocess/?from=" + util.IntToString(i) + "&process=" + process)
 	if !ok {
-		return [config.ListSize]*types.Envelope{}
+		return [config.ListSize]*types.Envelope{}, false
 	}
 	var rawEnvList types.ItemList
 	err := proto.Unmarshal(body, &rawEnvList)
@@ -262,14 +262,14 @@ func GetEnvelopeListByProcess(i int, process string) [config.ListSize]*types.Env
 			util.ErrPrint(err)
 		}
 	}
-	return envList
+	return envList, true
 }
 
 //GetEntityList returns a list of entities from the database
-func GetEntityList(i int) [config.ListSize]string {
+func GetEntityList(i int) ([config.ListSize]string, bool) {
 	body, ok := request("/db/listentities/?from=" + util.IntToString(i))
 	if !ok {
-		return [config.ListSize]string{}
+		return [config.ListSize]string{}, false
 	}
 	var rawEntityList types.ItemList
 	err := proto.Unmarshal(body, &rawEntityList)
@@ -282,14 +282,14 @@ func GetEntityList(i int) [config.ListSize]string {
 			util.ErrPrint(err)
 		}
 	}
-	return entityList
+	return entityList, true
 }
 
 //GetProcessList returns a list of entities from the database
-func GetProcessList(i int) [config.ListSize]string {
+func GetProcessList(i int) ([config.ListSize]string, bool) {
 	body, ok := request("/db/listprocesses/?from=" + util.IntToString(i))
 	if !ok {
-		return [config.ListSize]string{}
+		return [config.ListSize]string{}, false
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
@@ -302,14 +302,14 @@ func GetProcessList(i int) [config.ListSize]string {
 			util.ErrPrint(err)
 		}
 	}
-	return processList
+	return processList, true
 }
 
 //GetProcessListByEntity returns a list of processes by entity
-func GetProcessListByEntity(i int, entity string) [config.ListSize]string {
+func GetProcessListByEntity(i int, entity string) ([config.ListSize]string, bool) {
 	body, ok := request("/db/listprocessesbyentity/?from=" + util.IntToString(i) + "&entity=" + entity)
 	if !ok {
-		return [config.ListSize]string{}
+		return [config.ListSize]string{}, false
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
@@ -321,5 +321,5 @@ func GetProcessListByEntity(i int, entity string) [config.ListSize]string {
 			envList[i] = envelope
 		}
 	}
-	return envList
+	return envList, true
 }

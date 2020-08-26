@@ -115,7 +115,6 @@ func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 
 func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-
 	updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))
 	vecty.Rerender(d)
 	for {
@@ -140,7 +139,8 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 			}
 			d.processIndex = i
 			oldProcesses := d.entity.ProcessCount
-			d.entity.ProcessCount = int(dbapi.GetEntityProcessHeight(entityID))
+			newHeight, _ := dbapi.GetEntityProcessHeight(entityID)
+			d.entity.ProcessCount = int(newHeight)
 			if i < 1 {
 				oldProcesses = d.entity.ProcessCount
 			}
@@ -151,13 +151,21 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	d.entity.ProcessCount = int(dbapi.GetEntityProcessHeight(d.entityID))
+	newCount, ok := dbapi.GetEntityProcessHeight(d.entityID)
+	if ok {
+		d.entity.ProcessCount = int(newCount)
+	}
 	if d.entity.ProcessCount > 0 && !d.disableProcessesUpdate {
 		log.Infof("Getting processes from entity %s, index %d", d.entityID, util.IntToString(index))
-		list := dbapi.GetProcessListByEntity(index, d.entityID)
-		reverseIDList(&list)
-		d.entity.ProcessIDs = list
-		d.entity.EnvelopeHeights = dbapi.GetProcessEnvelopeHeightMap()
+		list, ok := dbapi.GetProcessListByEntity(index, d.entityID)
+		if ok {
+			reverseIDList(&list)
+			d.entity.ProcessIDs = list
+		}
+		newMap, ok := dbapi.GetProcessEnvelopeHeightMap()
+		if ok {
+			d.entity.EnvelopeHeights = newMap
+		}
 		client.UpdateAuxEntityInfo(d.gwClient, d.entity)
 	}
 }

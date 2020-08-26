@@ -2,6 +2,7 @@ package pages
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
@@ -25,16 +26,19 @@ type TxsView struct {
 func (home *TxsView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	tx := dbapi.GetTx(height)
+	tx, ok := dbapi.GetTx(height)
 	// Get block which houses tx
-	if tx == nil {
+	if tx == nil || !ok {
 		log.Errorf("Tx unavailable")
 		return elem.Div(
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}
-	block := dbapi.GetBlock(tx.Store.Height)
-	tm, err := ptypes.Timestamp(block.GetTime())
+	block, ok := dbapi.GetBlock(tx.Store.Height)
+	var tm time.Time
+	if ok {
+		tm, err = ptypes.Timestamp(block.GetTime())
+	}
 	util.ErrPrint(err)
 	return components.Container(
 		elem.Section(

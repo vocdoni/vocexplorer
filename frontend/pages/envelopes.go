@@ -29,8 +29,8 @@ type EnvelopesView struct {
 func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	envelope := dbapi.GetEnvelope(height)
-	if envelope == nil || types.EnvelopeIsEmpty(envelope) {
+	envelope, ok := dbapi.GetEnvelope(height)
+	if envelope == nil || types.EnvelopeIsEmpty(envelope) || !ok {
 		log.Errorf("Envelope unavailable")
 		return elem.Div(
 			elem.Main(vecty.Text("Envelope not available")),

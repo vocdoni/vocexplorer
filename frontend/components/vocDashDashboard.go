@@ -135,7 +135,10 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			}
 			d.entityIndex = i
 			oldEntities := d.vc.EntityCount
-			d.vc.EntityCount = int(dbapi.GetEntityHeight())
+			newVal, ok := dbapi.GetEntityHeight()
+			if ok {
+				d.vc.EntityCount = int(newVal)
+			}
 			if i < 1 {
 				oldEntities = d.vc.EntityCount
 			}
@@ -156,7 +159,10 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			}
 			d.processIndex = i
 			oldProcesses := d.vc.ProcessCount
-			d.vc.ProcessCount = int(dbapi.GetProcessHeight())
+			newVal, ok := dbapi.GetProcessHeight()
+			if ok {
+				d.vc.ProcessCount = int(newVal)
+			}
 			if i < 1 {
 				oldProcesses = d.vc.ProcessCount
 			}
@@ -177,7 +183,10 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			}
 			d.envelopeIndex = i
 			oldEnvelopes := d.vc.EnvelopeHeight
-			d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
+			newVal, ok := dbapi.GetEnvelopeHeight()
+			if ok {
+				d.vc.EnvelopeHeight = int(newVal)
+			}
 			if i < 1 {
 				oldEnvelopes = d.vc.EnvelopeHeight
 			}
@@ -205,31 +214,52 @@ func updateVocdash(d *VocDashDashboardView) {
 
 func updateEnvelopes(d *VocDashDashboardView, index int) {
 	log.Infof("Getting envelopes from index %d", util.IntToString(index))
-	list := dbapi.GetEnvelopeList(index)
-	reverseEnvelopeList(&list)
-	d.vc.EnvelopeList = list
+	list, ok := dbapi.GetEnvelopeList(index)
+	if ok {
+		reverseEnvelopeList(&list)
+		d.vc.EnvelopeList = list
+	}
 }
 
 func updateEntities(d *VocDashDashboardView, index int) {
 	log.Infof("Getting entities from index %d", util.IntToString(index))
-	list := dbapi.GetEntityList(index)
-	reverseIDList(&list)
-	d.vc.EntityIDs = list
+	list, ok := dbapi.GetEntityList(index)
+	if ok {
+		reverseIDList(&list)
+		d.vc.EntityIDs = list
+	}
 }
 
 func updateProcesses(d *VocDashDashboardView, index int) {
 	log.Infof("Getting processes from index %d", util.IntToString(index))
-	list := dbapi.GetProcessList(index)
-	reverseIDList(&list)
-	d.vc.ProcessIDs = list
-	d.vc.EnvelopeHeights = dbapi.GetProcessEnvelopeHeightMap()
-	d.vc.ProcessHeights = dbapi.GetEntityProcessHeightMap()
+	list, ok := dbapi.GetProcessList(index)
+	if ok {
+		reverseIDList(&list)
+		d.vc.ProcessIDs = list
+	}
+	newVal, ok := dbapi.GetProcessEnvelopeHeightMap()
+	if ok {
+		d.vc.EnvelopeHeights = newVal
+	}
+	newVal, ok = dbapi.GetEntityProcessHeightMap()
+	if ok {
+		d.vc.ProcessHeights = newVal
+	}
 }
 
 func updateHeights(d *VocDashDashboardView) {
-	d.vc.EnvelopeHeight = int(dbapi.GetEnvelopeHeight())
-	d.vc.EntityCount = int(dbapi.GetEntityHeight())
-	d.vc.ProcessCount = int(dbapi.GetProcessHeight())
+	newVal, ok := dbapi.GetEnvelopeHeight()
+	if ok {
+		d.vc.EnvelopeHeight = int(newVal)
+	}
+	newVal, ok = dbapi.GetEntityHeight()
+	if ok {
+		d.vc.EntityCount = int(newVal)
+	}
+	newVal, ok = dbapi.GetProcessHeight()
+	if ok {
+		d.vc.ProcessCount = int(newVal)
+	}
 }
 
 func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
