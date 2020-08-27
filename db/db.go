@@ -256,7 +256,8 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 		util.ErrPrint(err)
 		util.ErrPrint(err)
 		batch.Put(txHashKey, txVal)
-		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.GetTxHeight()))
+		//Write height:tx hash
+		txHeightKey := append([]byte(config.TxHeightPrefix), util.EncodeInt(txStore.GetTxHeight())...)
 		batch.Put(txHeightKey, tx.Hash())
 		if i == 0 {
 			blockHeight = txRes.Height
