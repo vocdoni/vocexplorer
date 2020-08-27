@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//Ping pings the web server
 func Ping() bool {
 	c := &http.Client{
 		Timeout: 1 * time.Second,
@@ -118,6 +119,11 @@ func GetValidatorBlockHeight(proposer string) (int64, bool) {
 	return getHeight("/db/numblocksvalidator/?proposer=" + proposer)
 }
 
+//GetValidatorCount returns the latest validator count stored by the database
+func GetValidatorCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestValidatorHeightKey)
+}
+
 //GetBlockList returns a list of blocks from the database
 func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 	body, ok := request("/db/listblocks/?from=" + util.IntToString(i))
@@ -161,6 +167,27 @@ func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.St
 		}
 	}
 	return blockList, true
+}
+
+//GetValidatorList returns a list of validators from the database
+func GetValidatorList(i int) ([config.ListSize]*types.Validator, bool) {
+	body, ok := request("/db/listvalidators/?from=" + util.IntToString(i))
+	if !ok {
+		return [config.ListSize]*types.Validator{}, false
+	}
+	var rawValidatorList types.ItemList
+	err := proto.Unmarshal(body, &rawValidatorList)
+	util.ErrPrint(err)
+	var validatorList [config.ListSize]*types.Validator
+	for i, rawVal := range rawValidatorList.GetItems() {
+		if len(rawVal) > 0 {
+			var validator types.Validator
+			err = proto.Unmarshal(rawVal, &validator)
+			validatorList[i] = &validator
+			util.ErrPrint(err)
+		}
+	}
+	return validatorList, true
 }
 
 //GetBlock returns a single block from the database

@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//PingHandler responds to a ping
 func PingHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
@@ -319,6 +320,15 @@ func ListProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *h
 // ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
 func ListProcessesByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return buildListItemsByParent(db, "entity", config.EntityProcessHeightMapKey, config.ProcessByEntityPrefix, config.ProcessIDPrefix, true)
+}
+
+// ListValidatorsHandler writes a list of validators from 'from'
+func ListValidatorsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildListItemsHandler(db,
+		config.ValidatorHeightPrefix,
+		func(key []byte) ([]byte, error) {
+			return db.Get(append([]byte(config.ValidatorPrefix), key...))
+		})
 }
 
 // ListBlocksHandler writes a list of blocks by height

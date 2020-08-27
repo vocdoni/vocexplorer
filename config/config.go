@@ -55,6 +55,8 @@ const (
 	BlockByValidatorPrefix = "10"
 	//ProcessByEntityPrefix is the key prefix for process heights by entity process height
 	ProcessByEntityPrefix = "11"
+	//ValidatorHeightPrefix is the key prefix for validator IDs by height
+	ValidatorHeightPrefix = "12"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored

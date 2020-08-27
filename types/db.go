@@ -23,3 +23,11 @@ func EnvelopeIsEmpty(e *Envelope) bool {
 	}
 	return false
 }
+
+//ValidatorIsEmpty returns true if validator is empty
+func ValidatorIsEmpty(v *Validator) bool {
+	if len(v.GetAddress()) == 0 && v.GetHeight().GetHeight() == 0 {
+		return true
+	}
+	return false
+}

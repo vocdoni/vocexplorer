@@ -57,7 +57,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 	for {
 		updateBlockList(d, tClient)
 		// Update validators less frequently than blocks
-		if i%20 == 0 {
+		if i%40 == 0 {
 			updateValidatorList(d, tClient)
 		}
 		updateEntityList(d, gwClient)
@@ -69,8 +69,9 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
+	latestValidatorHeight := getHeight(d, config.LatestValidatorHeightKey, 0)
 	batch := d.NewBatch()
-	fetchValidators(latestBlockHeight.GetHeight(), c, batch)
+	fetchValidators(latestBlockHeight.GetHeight(), latestValidatorHeight.GetHeight(), c, batch)
 	util.ErrPrint(batch.Write())
 }
 
@@ -180,7 +181,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 }
 
-func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
+func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
 	resultValidators, err := c.Validators(&blockHeight, page, 100)
@@ -190,22 +191,34 @@ func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 		moreValidators, err := c.Validators(&blockHeight, page, maxPerPage)
 		util.ErrPrint(err)
 
-		if len(resultValidators.Validators) > 0 {
+		if len(moreValidators.Validators) > 0 {
 			resultValidators.Validators = append(resultValidators.Validators, moreValidators.Validators...)
 		}
 		page++
 	}
 	// Cast each validator as storage struct, marshal, write to batch
-	for _, validator := range resultValidators.Validators {
+	for i, validator := range resultValidators.Validators {
+		if i < int(validatorCount) {
+			continue
+		}
+		validatorCount++
 		var storeValidator types.Validator
 		storeValidator.Address = validator.Address
+		storeValidator.Height = &types.Height{Height: validatorCount}
 		storeValidator.ProposerPriority = validator.ProposerPriority
 		storeValidator.VotingPower = validator.VotingPower
 		storeValidator.PubKey = validator.PubKey.Bytes()
 		encValidator, err := proto.Marshal(&storeValidator)
 		util.ErrPrint(err)
+		// Write id:validator
 		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
+		// Write height:id
+		batch.Put(append([]byte(config.ValidatorHeightPrefix), []byte(util.IntToString(storeValidator.Height.GetHeight()))...), validator.Address)
 	}
+	// Write latest validator height
+	rawHeight, err := proto.Marshal(&types.Height{Height: validatorCount})
+	util.ErrPrint(err)
+	batch.Put([]byte(config.LatestValidatorHeightKey), rawHeight)
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
@@ -458,9 +471,7 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 			continue
 		}
 		val, err := d.Get(key)
-		if err != nil {
-			log.Error(err)
-		}
+		util.ErrPrint(err)
 		hashList = append(hashList, val)
 		height--
 	}

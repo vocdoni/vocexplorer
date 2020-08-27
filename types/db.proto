@@ -51,6 +51,7 @@ message Validator {
     bytes PubKey = 2;
     int64 VotingPower = 3;
     int64 ProposerPriority = 4;
+    Height height = 5;
 }
 
 message HeightMap {

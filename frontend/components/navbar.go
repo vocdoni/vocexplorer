@@ -83,6 +83,15 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						elem.Anchor(
 							vecty.Markup(
 								vecty.Class("nav-link"),
+								vecty.Attribute("href", "/validators"),
+							),
+							vecty.Text("Validators"),
+						),
+					),
+					elem.ListItem(
+						elem.Anchor(
+							vecty.Markup(
+								vecty.Class("nav-link"),
 								vecty.Attribute("href", "/stats"),
 							),
 							vecty.Text("Stats"),
