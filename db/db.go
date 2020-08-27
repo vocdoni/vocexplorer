@@ -223,7 +223,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 		// Write id:validator
 		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
 		// Write height:id
-		batch.Put(append([]byte(config.ValidatorHeightPrefix), []byte(util.IntToString(storeValidator.Height.GetHeight()))...), validator.Address)
+		batch.Put(append([]byte(config.ValidatorHeightPrefix), util.EncodeInt(storeValidator.Height.GetHeight())...), validator.Address)
 	}
 	// Write latest validator height
 	rawHeight, err := proto.Marshal(&types.Height{Height: validatorCount})
@@ -320,10 +320,10 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 	// Signal to next block that I have been assigned a validator block height
 	close(nextHeight)
 
-	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
+	blockHeightKey := append([]byte(config.BlockHeightPrefix), util.EncodeInt(block.GetHeight())...)
 	blockHashKey := append([]byte(config.BlockHashPrefix), block.GetHash()...)
 	validatorHeightKey := append([]byte(config.BlockByValidatorPrefix), block.GetProposer()...)
-	validatorHeightKey = append(validatorHeightKey, []byte(util.IntToString(height))...)
+	validatorHeightKey = append(validatorHeightKey, util.EncodeInt(height)...)
 	hashValue := block.GetHash()
 
 	// Thread-safe batch operations
@@ -355,7 +355,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
 	i := 0
 	entity := ""
 	for i, entity = range newEntities {
-		heightKey := append([]byte(config.EntityIDPrefix), []byte(util.IntToString(int(localEntityHeight)+i))...)
+		heightKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
 		rawEntity, err := hex.DecodeString(util.StripHexString(entity))
 		if util.ErrPrint(err) {
 			break
@@ -457,12 +457,12 @@ func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap 
 		heightMapMutex.Unlock()
 
 		// Write Height:PID
-		processKey := append([]byte(config.ProcessIDPrefix), []byte(util.IntToString(globalHeight))...)
+		processKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight)...)
 		batch.Put(processKey, rawProcess)
 
 		// Write Entity|LocalHeight:ProcessHeight
 		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
-		entityProcessKey = append(entityProcessKey, []byte(util.IntToString(int(localHeight)))...)
+		entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight))...)
 		storeHeight := &types.Height{Height: int64(globalHeight)}
 		rawStoreHeight, err := proto.Marshal(storeHeight)
 		util.ErrPrint(err)
@@ -477,7 +477,7 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 	}
 	var hashList [][]byte
 	for ; max > 0 && height >= 0; max-- {
-		heightKey := []byte(util.IntToString(height))
+		heightKey := util.EncodeInt(height)
 		key := append(prefix, heightKey...)
 		has, err := d.Has(key)
 		if !has || util.ErrPrint(err) {
@@ -625,7 +625,7 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		// Write globalHeight:package
 		rawEnvelope, err := proto.Marshal(&votePackage)
 		util.ErrPrint(err)
-		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(globalHeight))...)
+		packageKey := append([]byte(config.EnvPackagePrefix), util.EncodeInt(globalHeight)...)
 		batch.Put(packageKey, rawEnvelope)
 
 		// Write nullifier:globalHeight
@@ -638,7 +638,7 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		batch.Put(nullifierKey, rawHeight)
 
 		// Write pid|heightbyPID:globalHeight
-		heightBytes := []byte(util.IntToString(procHeight))
+		heightBytes := util.EncodeInt(procHeight)
 		PIDBytes, err := hex.DecodeString(util.StripHexString(votePackage.ProcessID))
 		util.ErrPrint(err)
 		heightKey := append([]byte(config.EnvPIDPrefix), PIDBytes...)
