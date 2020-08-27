@@ -97,9 +97,13 @@ func updateValidatorBlocks(contents *ValidatorContents, i int) {
 	} else {
 		contents.serverConnected = true
 	}
-	newVal, ok := dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
 	if ok {
-		contents.BlockList = newVal
+		contents.ValidatorBlocks = int(newVal) - 1
+	}
+	newList, ok := dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	if ok {
+		contents.BlockList = newList
 	}
 	reverseBlockList(&contents.BlockList)
 }

@@ -127,9 +127,19 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
 	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
+	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
+	nextHeight := make(chan struct{})
+	myHeight := make(chan struct{})
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, &txsList[i], valMap, valMapMutex)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
+		if i == 0 {
+			//Signal to the first block to start
+			close(myHeight)
+		}
+		myHeight = nextHeight
+		nextHeight = make(chan struct{})
 	}
+
 	num := 0
 	if i > 0 {
 		// Sync: wait here for all goroutines to complete
@@ -259,7 +269,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 	complete <- struct{}{}
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete chan<- struct{}, txs *tmtypes.Txs, valMap *types.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *types.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
@@ -296,6 +306,8 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 		log.Error(err)
 	}
 
+	// Wait for myHeight channel to close, this means fetchBlock for previous block has been assigned a validator block height
+	<-myHeight
 	// Update height of validator block belongs to
 	valMapMutex.Lock()
 	height, ok := valMap.Heights[util.HexToString(block.Proposer)]
@@ -305,6 +317,8 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	height++
 	valMap.Heights[util.HexToString(block.Proposer)] = height
 	valMapMutex.Unlock()
+	// Signal to next block that I have been assigned a validator block height
+	close(nextHeight)
 
 	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
 	blockHashKey := append([]byte(config.BlockHashPrefix), block.GetHash()...)
