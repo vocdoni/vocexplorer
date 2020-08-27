@@ -3,6 +3,11 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	router "marwan.io/vecty-router"
 )
 
 // NavBar renders the navigation bar
@@ -66,6 +71,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 							),
 							vecty.Text("Processes & Entities"),
 						),
+						// Link("/vocdash", "Processes & Entities"),
 					),
 					elem.ListItem(
 						vecty.Markup(
@@ -101,5 +107,22 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 				&SearchBar{},
 			),
 		),
+	)
+}
+
+// Link renders a link which, when clicks, signals a redirect
+func Link(route, text string) *vecty.HTML {
+	return elem.Anchor(
+		vecty.Markup(
+			prop.Href(route),
+			vecty.Class("nav-link"),
+			event.Click(
+				func(e *vecty.Event) {
+					dispatcher.Dispatch(&actions.SignalRedirect{})
+					router.Redirect(route)
+				},
+			).PreventDefault(),
+		),
+		vecty.Text(text),
 	)
 }

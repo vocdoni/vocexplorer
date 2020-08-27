@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -24,7 +25,6 @@ type DashboardView struct {
 	serverConnected  bool
 	blockIndex       int
 	gwClient         *client.Client
-	quitCh           chan struct{}
 	t                *rpc.TendermintInfo
 	tClient          *http.HTTP
 	vc               *client.VochainInfo
@@ -62,12 +62,11 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	DashboardView.gwClient = gwClient
 	DashboardView.t = t
 	DashboardView.vc = vc
-	DashboardView.quitCh = make(chan struct{})
 	DashboardView.blockIndex = 0
 	DashboardView.serverConnected = true
 	DashboardView.gatewayConnected = true
 	BeforeUnload(func() {
-		close(DashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderDashboard(DashboardView, cancel, cfg)
 	return DashboardView
@@ -105,11 +104,11 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
 			d.gwClient.Close()
 			//cancel()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateHomeDashboardInfo(d)

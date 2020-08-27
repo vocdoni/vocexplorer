@@ -11,7 +11,9 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -26,7 +28,6 @@ type VocDashDashboardView struct {
 	envelopeIndex          int
 	entityIndex            int
 	processIndex           int
-	quitCh                 chan struct{}
 	disableEnvelopesUpdate bool
 	disableEntitiesUpdate  bool
 	disableProcessesUpdate bool
@@ -94,7 +95,6 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	}
 	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
-	VocDashDashboardView.quitCh = make(chan struct{})
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
 	VocDashDashboardView.refreshProcesses = make(chan int, 50)
 	VocDashDashboardView.refreshEntities = make(chan int, 50)
@@ -105,9 +105,8 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
 	VocDashDashboardView.serverConnected = true
 	VocDashDashboardView.gatewayConnected = true
-
 	BeforeUnload(func() {
-		close(VocDashDashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
 	return VocDashDashboardView
@@ -121,10 +120,10 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
 			d.gwClient.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateVocdash(d)

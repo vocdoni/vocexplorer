@@ -9,7 +9,10 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -24,7 +27,6 @@ type BlockTxsDashboardView struct {
 	blockRefresh        chan int
 	disableBlocksUpdate bool
 	disableTxsUpdate    bool
-	quitCh              chan struct{}
 	t                   *rpc.TendermintInfo
 	tClient             *http.HTTP
 	txIndex             int
@@ -70,7 +72,6 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 	}
 	BlockTxsDashboardView.tClient = tClient
 	BlockTxsDashboardView.t = t
-	BlockTxsDashboardView.quitCh = make(chan struct{})
 	BlockTxsDashboardView.blockRefresh = make(chan int, 50)
 	BlockTxsDashboardView.txRefresh = make(chan int, 50)
 	BlockTxsDashboardView.blockIndex = 0
@@ -80,7 +81,7 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 	BlockTxsDashboardView.gatewayConnected = true
 	BlockTxsDashboardView.serverConnected = true
 	BeforeUnload(func() {
-		close(BlockTxsDashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderBlockTxsDashboard(BlockTxsDashboardView, cfg)
 	return BlockTxsDashboardView
@@ -92,9 +93,10 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
+			// d.tClient.Quit()
 			ticker.Stop()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateBlockTxsDashboard(d)

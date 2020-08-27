@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -27,7 +28,6 @@ type EntitiesDashboardView struct {
 	entityID               string
 	processIndex           int
 	disableProcessesUpdate bool
-	quitCh                 chan struct{}
 	refreshCh              chan int
 }
 
@@ -110,12 +110,11 @@ func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	EntitiesDashboardView.gwClient = gwClient
 	EntitiesDashboardView.entity = entity
 	EntitiesDashboardView.entityID = entityID
-	EntitiesDashboardView.quitCh = make(chan struct{})
 	EntitiesDashboardView.refreshCh = make(chan int, 50)
 	EntitiesDashboardView.serverConnected = true
 	EntitiesDashboardView.gatewayConnected = true
 	BeforeUnload(func() {
-		close(EntitiesDashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, cancel, entityID, cfg)
 	return EntitiesDashboardView
@@ -127,10 +126,10 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
 			d.gwClient.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))
