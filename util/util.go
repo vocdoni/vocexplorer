@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -57,6 +58,37 @@ func IntToString(val interface{}) string {
 		return strconv.Itoa(int(i))
 	}
 	return ""
+}
+
+// EncodeInt encodes an integer to a byte array
+func EncodeInt(val interface{}) []byte {
+	var val64 int64
+	buf := make([]byte, binary.MaxVarintLen64)
+	if i, ok := val.(int64); ok {
+		val64 = int64(i)
+		goto encode
+	}
+	if i, ok := val.(int32); ok {
+		val64 = int64(i)
+		goto encode
+	}
+	if i, ok := val.(uint64); ok {
+		val64 = int64(i)
+		goto encode
+	}
+	if i, ok := val.(uint32); ok {
+		val64 = int64(i)
+		goto encode
+	}
+	if i, ok := val.(int); ok {
+		val64 = int64(i)
+		goto encode
+	} else {
+		log.Error("Cannot encode value: type is not integer")
+	}
+encode:
+	binary.PutVarint(buf, val64)
+	return buf
 }
 
 // Min returns the min of two ints

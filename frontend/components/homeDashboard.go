@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -33,7 +32,6 @@ type DashboardView struct {
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	log.Println(dash.gatewayConnected)
 	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),

@@ -113,7 +113,7 @@ func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string, getIt
 			http.Error(w, "Requested item does not exist", http.StatusInternalServerError)
 			return
 		}
-		itemKey := append([]byte(key), []byte(util.IntToString(height))...)
+		itemKey := append([]byte(key), util.EncodeInt(height)...)
 		rawItem, err := db.Get(itemKey)
 		if err != nil {
 			log.Error(err)
@@ -216,7 +216,7 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 				height := new(types.Height)
 				util.ErrPrint(proto.Unmarshal(rawKey, height))
 				log.Debugf("Getting item from height %d", height.GetHeight())
-				rawPackage, err = db.Get(append([]byte(itemPrefix), []byte(util.IntToString(height.GetHeight()))...))
+				rawPackage, err = db.Get(append([]byte(itemPrefix), util.EncodeInt(height.GetHeight())...))
 			} else {
 				rawPackage, err = db.Get(append([]byte(itemPrefix), rawKey...))
 			}
