@@ -9,7 +9,7 @@ import (
 
 	"github.com/gopherjs/vecty"
 
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
@@ -21,16 +21,16 @@ import (
 //go:generate env GOARCH=wasm GOOS=js go build -o ../static/main.wasm
 
 func main() {
-	cfg := initFrontend()
+	initFrontend()
 	components.BeforeUnload(func() {
 		fmt.Println("Unloading page")
 		store.GatewayClient.Close()
 	})
 	vecty.SetTitle("Vochain Block Explorer")
-	vecty.RenderBody(&Body{Cfg: cfg})
+	vecty.RenderBody(&Body{})
 }
 
-func initFrontend() *config.Cfg {
+func initFrontend() {
 	var cfg *config.Cfg
 	resp, err := http.Get("/config")
 	util.ErrPrint(err)
@@ -40,14 +40,14 @@ func initFrontend() *config.Cfg {
 		err = json.Unmarshal(body, &cfg)
 		util.ErrPrint(err)
 	}
-	dispatcher.Dispatch(&actions.TendermintClientInit{
-		Host: cfg.TendermintHost,
-	})
-	dispatcher.Dispatch(&actions.VochainClientInit{
-		Host: cfg.GatewayHost,
-	})
-	store.Vochain = new(client.VochainInfo)
-	store.Entities.PagChannel = make(chan int, 50)
-	store.Processes.PagChannel = make(chan int, 50)
-	return cfg
+	dispatcher.Dispatch(&actions.StoreConfig{Config: *cfg})
+	initClients()
+}
+
+func initClients() {
+	dispatcher.Dispatch(&actions.TendermintClientInit{})
+	dispatcher.Dispatch(&actions.GatewayClientInit{})
+	if store.GatewayClient == nil || store.TendermintClient == nil {
+		log.Error("Cannot connect to blockchain clients")
+	}
 }

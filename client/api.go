@@ -14,6 +14,13 @@ import (
 	"nhooyr.io/websocket"
 )
 
+// Client holds an API websocket client. From unreleased go-dvote/client
+type Client struct {
+	Addr string
+	Conn *websocket.Conn
+	Ctx  context.Context
+}
+
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*Client, context.CancelFunc) {
 	// Init Gateway client
@@ -98,35 +105,35 @@ func (c *Client) GetProcessKeys(pid string) (*Pkeys, error) {
 }
 
 // GetGatewayInfo gets gateway info
-func (c *Client) GetGatewayInfo() ([]string, int32, bool, int32, error) {
+func (c *Client) GetGatewayInfo() ([]string, int32, bool, error) {
 	var req MetaRequest
 	req.Method = "getGatewayInfo"
 	req.Timestamp = int32(time.Now().Unix())
 
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, false, 0, err
+		return nil, 0, false, err
 	}
 	if !resp.Ok {
-		return nil, 0, false, 0, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, false, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.APIList, resp.Health, resp.Ok, resp.Timestamp, nil
+	return resp.APIList, resp.Health, resp.Ok, nil
 }
 
 // GetBlockStatus gets latest block status for blockchain
-func (c *Client) GetBlockStatus() (*[5]int32, int32, int64, bool, error) {
+func (c *Client) GetBlockStatus() (*[5]int32, int32, int64, error) {
 	var req MetaRequest
 	req.Method = "getBlockStatus"
 	req.Timestamp = int32(time.Now().Unix())
 
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, 0, false, err
+		return nil, 0, 0, err
 	}
 	if !resp.Ok {
-		return nil, 0, 0, false, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, 0, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, resp.Ok, nil
+	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, nil
 }
 
 // GetFinalProcessList gets list of finished processes on the Vochain

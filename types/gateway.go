@@ -1,21 +1,10 @@
-package client
+package types
 
 import (
-	"context"
 	"encoding/json"
-
-	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/types"
-	"nhooyr.io/websocket"
 )
 
-// Client holds an API websocket client. From unreleased go-dvote/client
-type Client struct {
-	Addr string
-	Conn *websocket.Conn
-	Ctx  context.Context
-}
-
+// Pkeys is the set of cryptographic keys for a process
 type Pkeys struct {
 	Pub  []Key
 	Priv []Key
@@ -64,6 +53,7 @@ type ResponseMessage struct {
 	Signature string `json:"signature"`
 }
 
+// Key is a cryptographic key
 type Key struct {
 	Idx int    `json:"idx"`
 	Key string `json:"key"`
@@ -108,57 +98,4 @@ type MetaResponse struct {
 	EncryptionPrivKeys   []Key      `json:"encryptionPrivKeys,omitempty"`
 	RevealKeys           []Key      `json:"revealKeys,omitempty"`
 	EncryptionPublicKeys []Key      `json:"encryptionPubKeys,omitempty"`
-}
-
-// VochainInfo holds info about vochain as a whole
-type VochainInfo struct {
-	APIList         []string
-	BlockTime       *[5]int32
-	BlockTimeStamp  int32
-	Entities        []EntityInfo
-	EntityCount     int
-	EntityIDs       [config.ListSize]string
-	EnvelopeHeight  int
-	EnvelopeHeights map[string]int64
-	ProcessHeights  map[string]int64
-	EnvelopeList    [config.ListSize]*types.Envelope
-	Health          int32
-	Height          int64
-	Ok              bool
-	ProcessCount    int
-	ProcessIDs      [config.ListSize]string
-	ProcessResults  map[string]ProcessInfo
-	Processes       []ProcessInfo
-	Timestamp       int32
-}
-
-// EntityInfo holds info about one vochain entity
-type EntityInfo struct {
-	EnvelopeHeights map[string]int64
-	ProcessIDs      [config.ListSize]string
-	ProcessTypes    map[string]ProcessInfo
-	ProcessCount    int
-}
-
-// EnvelopeInfo holds info about one vochain envelope
-type EnvelopeInfo struct {
-	BlockTimeStamp int32
-	Height         int64
-	Payload        string
-	Registered     bool
-}
-
-// ProcessInfo holds info about one vochain process
-type ProcessInfo struct {
-	ProcessType string
-	State       string
-}
-
-// FullProcessInfo holds info about one vochain process, including votes and results
-type FullProcessInfo struct {
-	EnvelopeList   [config.ListSize]*types.Envelope
-	EnvelopeHeight int
-	ProcessType    string
-	Results        [][]uint32
-	State          string
 }

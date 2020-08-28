@@ -1,9 +1,9 @@
 package actions
 
+//TendermintClientInit is the action to initialize the global tendermint rpc client
 type TendermintClientInit struct {
-	Host string
 }
 
-type VochainClientInit struct {
-	Host string
+//GatewayClientInit is the action to initialize the global gateway websockets client
+type GatewayClientInit struct {
 }
