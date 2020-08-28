@@ -15,10 +15,6 @@ var (
 	// CurrentBlockHeight stores the latest known block height
 	CurrentBlockHeight int64
 
-	// Blockchain clients
-	Tendermint *http.HTTP
-	Vochain    *client.Client
-
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
 
@@ -27,8 +23,12 @@ var (
 
 	// GatewayClient is the global gateway client
 	GatewayClient *client.Client
+	// Vochain holds the vochain information
+	Vochain *client.VochainInfo
 	// TendermintClient is the global tendermint client
 	TendermintClient *http.HTTP
+	// Tendermint holds the tendermint information
+	Tendermint *rpc.TendermintInfo
 
 	// Processes stores the current processes information
 	Processes struct {
@@ -59,10 +59,10 @@ func init() {
 func onAction(action interface{}) {
 	switch a := action.(type) {
 	case *actions.TendermintClientInit:
-		Tendermint = rpc.StartClient(a.Host)
+		TendermintClient = rpc.StartClient(a.Host)
 
 	case *actions.VochainClientInit:
-		Vochain, _ = client.InitGateway(a.Host)
+		GatewayClient, _ = client.InitGateway(a.Host)
 
 	case *actions.BlocksTabChange:
 		BlockTabActive = a.Tab
@@ -77,7 +77,7 @@ func onAction(action interface{}) {
 		RedirectChan <- struct{}{}
 
 	default:
-		return // don't fire listeners
+		// return // don't fire listeners
 	}
 
 	Listeners.Fire()

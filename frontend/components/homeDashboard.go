@@ -28,7 +28,7 @@ type DashboardView struct {
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && store.Vochain != nil && store.Tendermint != nil && dash.t != nil && dash.vc != nil {
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil && dash.t != nil && dash.vc != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),
 			renderServerConnectionBanner(dash.serverConnected),
@@ -102,7 +102,7 @@ func updateAndRenderDashboard(d *DashboardView, cfg *config.Cfg) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	if !rpc.Ping(store.Tendermint) || store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
+	if !rpc.Ping(store.TendermintClient) || store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -112,8 +112,8 @@ func updateHomeDashboardInfo(d *DashboardView) {
 	} else {
 		d.serverConnected = true
 	}
-	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
-	client.UpdateDashboardInfo(store.Vochain, d.vc)
+	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
+	client.UpdateDashboardInfo(store.GatewayClient, d.vc)
 	updateHeight(d.t)
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 }

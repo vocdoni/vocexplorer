@@ -98,7 +98,7 @@ func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	if !rpc.Ping(store.Tendermint) {
+	if !rpc.Ping(store.TendermintClient) {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -109,7 +109,7 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 		d.serverConnected = true
 	}
 	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
+	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
 	newVal, ok := dbapi.GetValidatorCount()
 	if ok {
 		d.totalValidators = int(newVal)

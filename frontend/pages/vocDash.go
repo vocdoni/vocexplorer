@@ -2,7 +2,6 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -17,7 +16,6 @@ type VocDashView struct {
 // Render renders the VocDashView component
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	dash := new(components.VocDashDashboardView)
-	dash.Vc = new(client.VochainInfo)
 	// dash.QuitCh = make(chan struct{})
 	dash.RefreshEnvelopes = make(chan int, 50)
 	dash.RefreshProcesses = make(chan int, 50)
@@ -29,6 +27,10 @@ func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	dash.GatewayConnected = true
 	rendered := false
 	dash.Rendered = &rendered
+	store.Listeners.Add(dash, func() {
+		// dash.Vc = store.Vochain
+		vecty.Rerender(dash)
+	})
 	go components.UpdateAndRenderVocDashDashboard(dash, home.Cfg)
 	return dash
 	// return components.InitVocDashDashboardView(vc, dash, home.Cfg)

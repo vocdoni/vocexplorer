@@ -137,7 +137,7 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 }
 
 func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
-	if !rpc.Ping(store.Tendermint) {
+	if !rpc.Ping(store.TendermintClient) {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -148,7 +148,7 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 		d.serverConnected = true
 	}
 	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
+	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
 	if !d.disableBlocksUpdate {
 		updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
 	}

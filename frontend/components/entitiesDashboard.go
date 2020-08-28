@@ -146,7 +146,7 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string,
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	if store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
+	if store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -171,6 +171,6 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 		if ok {
 			d.entity.EnvelopeHeights = newMap
 		}
-		client.UpdateAuxEntityInfo(store.Vochain, d.entity)
+		client.UpdateAuxEntityInfo(store.GatewayClient, d.entity)
 	}
 }

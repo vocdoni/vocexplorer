@@ -9,6 +9,7 @@ import (
 
 	"github.com/gopherjs/vecty"
 
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
@@ -23,7 +24,7 @@ func main() {
 	cfg := initFrontend()
 	components.BeforeUnload(func() {
 		fmt.Println("Unloading page")
-		store.Vochain.Close()
+		store.GatewayClient.Close()
 	})
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{Cfg: cfg})
@@ -45,6 +46,7 @@ func initFrontend() *config.Cfg {
 	dispatcher.Dispatch(&actions.VochainClientInit{
 		Host: cfg.GatewayHost,
 	})
+	store.Vochain = new(client.VochainInfo)
 	store.Entities.PagChannel = make(chan int, 50)
 	store.Processes.PagChannel = make(chan int, 50)
 	return cfg

@@ -24,7 +24,7 @@ type BlockView struct {
 func (home *BlockView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	block := rpc.GetBlock(store.Tendermint, height)
+	block := rpc.GetBlock(store.TendermintClient, height)
 	if block == nil {
 		log.Errorf("Block unavailable")
 		return elem.Div(

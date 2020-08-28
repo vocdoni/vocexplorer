@@ -240,7 +240,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, processID stri
 }
 
 func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
-	if store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
+	if store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -250,7 +250,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
 	} else {
 		d.serverConnected = true
 	}
-	client.UpdateProcessesDashboardInfo(store.Vochain, d.process, processID)
+	client.UpdateProcessesDashboardInfo(store.GatewayClient, d.process, processID)
 	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
 	if ok {
 		d.process.EnvelopeHeight = int(newVal)
