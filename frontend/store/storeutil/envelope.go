@@ -7,7 +7,7 @@ import (
 
 // Envelopes stores the current envelopes information
 type Envelopes struct {
-	EnvelopeList   [config.ListSize]*types.Envelope
-	EnvelopeHeight int
-	Pagination     PageStore
+	EnvelopeList  [config.ListSize]*types.Envelope
+	EnvelopeCount int
+	Pagination    PageStore
 }

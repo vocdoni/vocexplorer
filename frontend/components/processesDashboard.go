@@ -14,6 +14,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -250,7 +251,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
 	} else {
 		d.serverConnected = true
 	}
-	client.UpdateProcessesDashboardInfo(store.GatewayClient, d.process, processID)
+	update.ProcessesDashboardInfo(store.GatewayClient, d.process, processID)
 	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
 	if ok {
 		d.process.EnvelopeHeight = int(newVal)

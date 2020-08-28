@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -113,7 +114,7 @@ func updateHomeDashboardInfo(d *DashboardView) {
 		d.serverConnected = true
 	}
 	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
-	client.UpdateDashboardInfo(store.GatewayClient, d.vc)
+	update.DashboardInfo(store.GatewayClient, d.vc)
 	updateHeight(d.t)
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 }

@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -171,6 +172,6 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 		if ok {
 			d.entity.EnvelopeHeights = newMap
 		}
-		client.UpdateAuxEntityInfo(store.GatewayClient, d.entity)
+		update.AuxEntityInfo(store.GatewayClient, d.entity)
 	}
 }

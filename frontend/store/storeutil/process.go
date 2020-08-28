@@ -7,11 +7,12 @@ import (
 
 // Processes stores the current processes information
 type Processes struct {
-	ProcessCount    int
-	ProcessIDs      [config.ListSize]string
-	ProcessResults  map[string]Process
-	Pagination      PageStore
-	EnvelopeHeights map[string]int64
+	CurrentProcessID string
+	ProcessCount     int
+	ProcessIDs       [config.ListSize]string
+	ProcessResults   map[string]Process
+	Pagination       PageStore
+	EnvelopeHeights  map[string]int64
 }
 
 // Process holds info about one vochain process, including votes and results

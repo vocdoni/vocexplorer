@@ -1,23 +1,25 @@
-package client
+package update
 
 import (
 	"strings"
 
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// UpdateDashboardInfo calls gateway apis, updates info needed for dashboard page
-func UpdateDashboardInfo(c *client.Client) {
-	UpdateGatewayInfo(c)
-	UpdateBlockStatus(c)
-	UpdateCounts(c)
+// DashboardInfo calls gateway apis, updates info needed for dashboard page
+func DashboardInfo(c *client.Client) {
+	GatewayInfo(c)
+	BlockStatus(c)
+	Counts(c)
 }
 
-// UpdateCounts calls gateway apis, updates total number of processes and entities
-func UpdateCounts(c *client.Client) {
+// Counts calls gateway apis, updates total number of processes and entities
+func Counts(c *client.Client) {
 	procs, err := c.GetProcessCount()
 	util.ErrPrint(err)
 	entities, err := c.GetEntityCount()
@@ -27,8 +29,8 @@ func UpdateCounts(c *client.Client) {
 
 }
 
-// UpdateGatewayInfo calls gateway api, updates gateway health info
-func UpdateGatewayInfo(c *client.Client) {
+// GatewayInfo calls gateway api, updates gateway health info
+func GatewayInfo(c *client.Client) {
 	apiList, health, ok, err := c.GetGatewayInfo()
 	util.ErrPrint(err)
 	store.Stats.APIList = apiList
@@ -36,8 +38,8 @@ func UpdateGatewayInfo(c *client.Client) {
 	store.Stats.Health = health
 }
 
-// UpdateBlockStatus calls gateway api, updates blockchain statistics
-func UpdateBlockStatus(c *client.Client) {
+// BlockStatus calls gateway api, updates blockchain statistics
+func BlockStatus(c *client.Client) {
 	blockTime, blockTimeStamp, height, err := c.GetBlockStatus()
 	util.ErrPrint(err)
 	store.Stats.BlockTime = blockTime
@@ -52,59 +54,54 @@ func GetIDs(IDList *[]string, c *client.Client, getList func() ([]string, error)
 	util.ErrPrint(err)
 }
 
-// UpdateProcessResults updates auxilary info for all currently displayed process id's
-func UpdateProcessResults(c *client.Client) {
-	if store.Processes.ProcessResults == nil {
-		store.Processes.ProcessResults = make(map[string]storeutil.Process)
-	}
-	if store.Processes.EnvelopeHeights == nil {
-		store.Processes.EnvelopeHeights = make(map[string]int64)
-	}
+// ProcessResults updates auxilary info for all currently displayed process id's
+func ProcessResults() {
 	for _, ID := range store.Processes.ProcessIDs {
 		if ID != "" {
 			if _, ok := store.Processes.ProcessResults[ID]; !ok {
-				t, st, res, err := c.GetProcessResults(strings.ToLower(ID))
+				t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
 				if !util.ErrPrint(err) {
-					store.Processes.ProcessResults[ID] = storeutil.Process{
-						ProcessType: t,
-						State:       st,
-						Results:     res}
+					dispatcher.Dispatch(&actions.SetProcessContents{
+						ID: ID,
+						Process: storeutil.Process{
+							ProcessType: t,
+							State:       st,
+							Results:     res},
+					})
 				}
 			}
 		}
 	}
 }
 
-// UpdateProcessesDashboardInfo updates process info to include status and recent envelopes
-func UpdateProcessesDashboardInfo(c *client.Client, process *storeutil.Process, processID string) {
-	if process == nil {
-		process = new(storeutil.Process)
-	}
-	t, st, res, err := c.GetProcessResults(processID)
+// CurrentProcessResults updates current process information
+func CurrentProcessResults() {
+	t, st, res, err := store.GatewayClient.GetProcessResults(store.Processes.CurrentProcessID)
 	if !util.ErrPrint(err) {
-		process.ProcessType = t
-		process.Results = res
-		process.State = st
+		dispatcher.Dispatch(&actions.SetProcessContents{
+			ID: store.Processes.CurrentProcessID,
+			Process: storeutil.Process{
+				ProcessType: t,
+				State:       st,
+				Results:     res},
+		})
 	}
 }
 
-// UpdateAuxEntityInfo updates process info map to include all currently displayed process IDs
-func UpdateAuxEntityInfo(c *client.Client, e *storeutil.Entity) {
-	if e.Processes == nil {
-		e.Processes = make(map[string]storeutil.Process)
-	}
-	if e.EnvelopeHeights == nil {
-		e.EnvelopeHeights = make(map[string]int64)
-	}
+// EntityProcessResults ensures the given entity's processes' results are all stored
+func EntityProcessResults(c *client.Client, e *storeutil.Entity) {
 	for _, ID := range e.ProcessIDs {
 		if ID != "" {
-			if _, ok := e.Processes[ID]; !ok {
+			if _, ok := store.Processes.ProcessResults[ID]; !ok {
 				t, st, res, err := c.GetProcessResults(strings.ToLower(ID))
 				if !util.ErrPrint(err) {
-					e.Processes[ID] = storeutil.Process{
-						ProcessType: t,
-						State:       st,
-						Results:     res}
+					dispatcher.Dispatch(&actions.SetProcessContents{
+						ID: store.Processes.CurrentProcessID,
+						Process: storeutil.Process{
+							ProcessType: t,
+							State:       st,
+							Results:     res},
+					})
 				}
 			}
 		}
