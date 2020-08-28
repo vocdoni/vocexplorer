@@ -50,10 +50,12 @@ func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
 						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "),
-						elem.Anchor(
-							vecty.Markup(vecty.Class("hash")),
-							vecty.Markup(vecty.Attribute("href", "/processes/"+util.StripHexString(envelope.GetProcessID()))),
-							vecty.Text(util.StripHexString(envelope.GetProcessID())),
+						router.Link(
+							"/processes/"+util.StripHexString(envelope.GetProcessID()),
+							util.StripHexString(envelope.GetProcessID()),
+							router.LinkOptions{
+								Class: "hash",
+							},
 						),
 					),
 					elem.Div(
