@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +11,9 @@ import (
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -31,6 +34,10 @@ func main() {
 	})
 	dispatcher.Dispatch(&actions.VochainClientInit{
 		Host: cfg.GatewayHost,
+	})
+	components.BeforeUnload(func() {
+		fmt.Println("Unloading page")
+		store.Vochain.Close()
 	})
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{Cfg: cfg})

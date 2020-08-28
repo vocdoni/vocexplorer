@@ -107,9 +107,6 @@ func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	EntitiesDashboardView.refreshCh = make(chan int, 50)
 	EntitiesDashboardView.serverConnected = true
 	EntitiesDashboardView.gatewayConnected = true
-	BeforeUnload(func() {
-		close(EntitiesDashboardView.quitCh)
-	})
 	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, entityID, cfg)
 	return EntitiesDashboardView
 }
@@ -122,7 +119,6 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string,
 		select {
 		case <-d.quitCh:
 			ticker.Stop()
-			// store.Vochain.Close()
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:

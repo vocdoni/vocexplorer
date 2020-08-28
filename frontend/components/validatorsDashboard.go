@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -24,7 +24,6 @@ type ValidatorsDashboardView struct {
 	validatorRefresh chan int
 	disableUpdate    bool
 	quitCh           chan struct{}
-	tClient          *http.HTTP
 	t                *rpc.TendermintInfo
 }
 
@@ -47,12 +46,6 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 
 // InitValidatorsDashboardView initializes the Validators dashboard view
 func InitValidatorsDashboardView(t *rpc.TendermintInfo, dash *ValidatorsDashboardView, cfg *config.Cfg) *ValidatorsDashboardView {
-	// Init tendermint client
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	if tClient == nil {
-		return dash
-	}
-	dash.tClient = tClient
 	dash.t = t
 	dash.quitCh = make(chan struct{})
 	dash.validatorRefresh = make(chan int, 50)
@@ -103,7 +96,7 @@ func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	if !rpc.Ping(d.tClient) {
+	if !rpc.Ping(store.Tendermint) {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -114,7 +107,7 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 		d.serverConnected = true
 	}
 	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
 	newVal, ok := dbapi.GetValidatorCount()
 	if ok {
 		d.totalValidators = int(newVal)
