@@ -214,6 +214,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 		select {
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
+			cancel()
 			ticker.Stop()
 			d.gwClient.Close()
 			return

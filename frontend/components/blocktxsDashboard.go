@@ -95,7 +95,6 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 		select {
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
-			// d.tClient.Quit()
 			ticker.Stop()
 			return
 		case <-ticker.C:

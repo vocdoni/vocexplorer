@@ -71,7 +71,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 							),
 							vecty.Text("Processes & Entities"),
 						),
-						// Link("/vocdash", "Processes & Entities"),
+						Link("/vocdash", "Processes & Entities"),
 					),
 					elem.ListItem(
 						vecty.Markup(
@@ -95,13 +95,14 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						),
 					),
 					elem.ListItem(
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/stats"),
-							),
-							vecty.Text("Stats"),
-						),
+						Link("/stats", "Stats"),
+						// elem.Anchor(
+						// 	vecty.Markup(
+						// 		vecty.Class("nav-link"),
+						// 		vecty.Attribute("href", "/stats"),
+						// 	),
+						// 	vecty.Text("Stats"),
+						// ),
 					),
 				),
 				&SearchBar{},

@@ -106,9 +106,9 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 		select {
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
+			cancel()
 			ticker.Stop()
 			d.gwClient.Close()
-			//cancel()
 			return
 		case <-ticker.C:
 			updateHomeDashboardInfo(d)

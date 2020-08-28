@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -34,11 +33,13 @@ type VocDashDashboardView struct {
 	refreshEnvelopes       chan int
 	refreshEntities        chan int
 	refreshProcesses       chan int
+	rendered               *bool
 	vc                     *client.VochainInfo
 }
 
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
+	*dash.rendered = true
 	if dash != nil && dash.gwClient != nil && dash.vc != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),
@@ -89,10 +90,11 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 
 // InitVocDashDashboardView initializes the vocdash page
 func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return VocDashDashboardView
-	}
+	// gwClient, cancel := client.InitGateway(cfg.GatewayHost)
+	// if gwClient == nil {
+	// 	return VocDashDashboardView
+	// }
+	gwClient := store.GatewayClient
 	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
@@ -105,15 +107,22 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
 	VocDashDashboardView.serverConnected = true
 	VocDashDashboardView.gatewayConnected = true
+	rendered := false
+	VocDashDashboardView.rendered = &rendered
 	BeforeUnload(func() {
 		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
-	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
+	// go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
+	go updateAndRenderVocDashDashboard(VocDashDashboardView, cfg)
 	return VocDashDashboardView
 }
 
-func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+// func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+	for d != nil && !*d.rendered {
+		fmt.Println("Not rendered yet")
+	}
 	updateVocdash(d)
 	vecty.Rerender(d)
 	time.Sleep(250 * time.Millisecond)
@@ -123,7 +132,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
 			ticker.Stop()
-			d.gwClient.Close()
+			// d.gwClient.Close()
 			return
 		case <-ticker.C:
 			updateVocdash(d)

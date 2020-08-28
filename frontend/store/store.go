@@ -1,6 +1,8 @@
 package store
 
 import (
+	"github.com/tendermint/tendermint/rpc/client/http"
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
@@ -17,6 +19,11 @@ var (
 
 	// RedirectChan is the channel which signals a page redirect
 	RedirectChan chan struct{}
+
+	// GatewayClient is the global gateway client
+	GatewayClient *client.Client
+	// TendermintClient is the global tendermint client
+	TendermintClient *http.HTTP
 
 	// Processes stores the current processes information
 	Processes struct {
@@ -39,7 +46,7 @@ func init() {
 	BlockTabActive = "transactions"
 	Processes.Tab = "results"
 	Entities.Tab = "processes"
-	RedirectChan = make(chan struct{}, 1)
+	RedirectChan = make(chan struct{}, 100)
 
 	dispatcher.Register(onAction)
 }

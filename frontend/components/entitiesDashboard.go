@@ -128,6 +128,7 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 		select {
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
+			cancel()
 			ticker.Stop()
 			d.gwClient.Close()
 			return
