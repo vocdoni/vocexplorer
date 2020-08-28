@@ -18,7 +18,7 @@ type VocDashView struct {
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	dash := new(components.VocDashDashboardView)
 	dash.Vc = new(client.VochainInfo)
-	dash.QuitCh = make(chan struct{})
+	// dash.QuitCh = make(chan struct{})
 	dash.RefreshEnvelopes = make(chan int, 50)
 	dash.RefreshProcesses = make(chan int, 50)
 	dash.RefreshEntities = make(chan int, 50)

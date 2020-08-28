@@ -3,6 +3,10 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	router "marwan.io/vecty-router"
 )
 
@@ -19,9 +23,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("container-fluid")),
-			router.Link("/", "Vochain Explorer", router.LinkOptions{
-				Class: "navbar-brand",
-			}),
+			Link("/", "Vochain Explorer", "navbar-brand"),
 			elem.Button(
 				vecty.Markup(
 					vecty.Class("navbar-toggler"),
@@ -44,48 +46,58 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "active"),
 						),
-						router.Link("/", "Home", router.LinkOptions{
-							Class: "nav-link",
-						}),
+						Link("/", "Home", "nav-link"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						router.Link("/vocdash", "Processes & Entities", router.LinkOptions{
-							Class: "nav-link",
-						}),
+						Link("/vocdash", "Processes & Entities", "nav-link"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						router.Link("/blocktxs", "Blocks & Transactions", router.LinkOptions{
-							Class: "nav-link",
-						}),
+						Link("/blocktxs", "Blocks & Transactions", "nav-link"),
 					),
 					elem.ListItem(
-						router.Link(
-							"/validators",
-							"Validators",
-							router.LinkOptions{
-								Class: "nav-link",
-							},
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
 						),
+						Link("/validators", "Validators", "nav-link"),
 					),
 					elem.ListItem(
-						router.Link("/blocks", "Blocks", router.LinkOptions{
-							Class: "nav-link",
-						}),
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						Link("/blocks", "Blocks", "nav-link"),
 					),
 					elem.ListItem(
-						router.Link("/stats", "Stats", router.LinkOptions{
-							Class: "nav-link",
-						}),
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						Link("/stats", "Stats", "nav-link"),
 					),
 				),
 				&SearchBar{},
 			),
 		),
+	)
+}
+
+// Link renders a link which, when clicks, signals a redirect
+func Link(route, text, class string) *vecty.HTML {
+	return elem.Anchor(
+		vecty.Markup(
+			prop.Href(route),
+			vecty.Class(class),
+			event.Click(
+				func(e *vecty.Event) {
+					dispatcher.Dispatch(&actions.SignalRedirect{})
+					router.Redirect(route)
+				},
+			).PreventDefault(),
+		),
+		vecty.Text(text),
 	)
 }

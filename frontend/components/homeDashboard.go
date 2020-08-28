@@ -22,7 +22,6 @@ type DashboardView struct {
 	gatewayConnected bool
 	serverConnected  bool
 	blockIndex       int
-	quitCh           chan struct{}
 	t                *rpc.TendermintInfo
 	vc               *client.VochainInfo
 }
@@ -49,12 +48,11 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
 	DashboardView.t = t
 	DashboardView.vc = vc
-	DashboardView.quitCh = make(chan struct{})
 	DashboardView.blockIndex = 0
 	DashboardView.serverConnected = true
 	DashboardView.gatewayConnected = true
 	BeforeUnload(func() {
-		close(DashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderDashboard(DashboardView, cfg)
 	return DashboardView
@@ -92,11 +90,9 @@ func updateAndRenderDashboard(d *DashboardView, cfg *config.Cfg) {
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			// store.Vochain.Close()
-			//cancel()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateHomeDashboardInfo(d)

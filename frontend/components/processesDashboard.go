@@ -12,6 +12,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -25,7 +26,6 @@ type ProcessesDashboardView struct {
 	processID              string
 	envelopeIndex          int
 	disableEnvelopesUpdate bool
-	quitCh                 chan struct{}
 	refreshCh              chan int
 }
 
@@ -191,10 +191,9 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
 	ProcessesDashboardView.process = process
 	ProcessesDashboardView.processID = processID
-	ProcessesDashboardView.quitCh = make(chan struct{})
 	ProcessesDashboardView.refreshCh = make(chan int, 50)
 	BeforeUnload(func() {
-		close(ProcessesDashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderProcessesDashboard(ProcessesDashboardView, processID, cfg)
 	return ProcessesDashboardView
@@ -206,10 +205,9 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, processID stri
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			// store.Vochain.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateProcessesDashboard(d, processID)

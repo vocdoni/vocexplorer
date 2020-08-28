@@ -8,7 +8,9 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -24,7 +26,6 @@ type BlockTxsDashboardView struct {
 	blockRefresh        chan int
 	disableBlocksUpdate bool
 	disableTxsUpdate    bool
-	quitCh              chan struct{}
 	t                   *rpc.TendermintInfo
 	txIndex             int
 	txRefresh           chan int
@@ -63,7 +64,6 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 // InitBlockTxsDashboardView initializes the blocks & transactions view (to be splitted)
 func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *BlockTxsDashboardView, cfg *config.Cfg) *BlockTxsDashboardView {
 	BlockTxsDashboardView.t = t
-	BlockTxsDashboardView.quitCh = make(chan struct{})
 	BlockTxsDashboardView.blockRefresh = make(chan int, 50)
 	BlockTxsDashboardView.txRefresh = make(chan int, 50)
 	BlockTxsDashboardView.blockIndex = 0
@@ -73,7 +73,7 @@ func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *Blo
 	BlockTxsDashboardView.gatewayConnected = true
 	BlockTxsDashboardView.serverConnected = true
 	BeforeUnload(func() {
-		close(BlockTxsDashboardView.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderBlockTxsDashboard(BlockTxsDashboardView, cfg)
 	return BlockTxsDashboardView
@@ -85,9 +85,9 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateBlockTxsDashboard(d)

@@ -25,7 +25,6 @@ type EntitiesDashboardView struct {
 	entityID               string
 	processIndex           int
 	disableProcessesUpdate bool
-	quitCh                 chan struct{}
 	refreshCh              chan int
 }
 
@@ -103,7 +102,6 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
 	EntitiesDashboardView.entity = entity
 	EntitiesDashboardView.entityID = entityID
-	EntitiesDashboardView.quitCh = make(chan struct{})
 	EntitiesDashboardView.refreshCh = make(chan int, 50)
 	EntitiesDashboardView.serverConnected = true
 	EntitiesDashboardView.gatewayConnected = true
@@ -117,9 +115,9 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string,
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))

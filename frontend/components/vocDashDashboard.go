@@ -24,7 +24,6 @@ type VocDashDashboardView struct {
 	EnvelopeIndex          int
 	EntityIndex            int
 	ProcessIndex           int
-	QuitCh                 chan struct{}
 	DisableEnvelopesUpdate bool
 	DisableEntitiesUpdate  bool
 	DisableProcessesUpdate bool
@@ -118,10 +117,9 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView, cfg *config.Cfg) {
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.QuitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			// store.Vochain.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateVocdash(d)

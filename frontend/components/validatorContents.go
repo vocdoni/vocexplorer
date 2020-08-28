@@ -8,6 +8,9 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -22,7 +25,6 @@ type ValidatorContents struct {
 	disableBlocksUpdate bool
 	CurrentBlock        int
 	CurrentPage         int
-	quitCh              chan struct{}
 	blockRefresh        chan int
 	Cfg                 *config.Cfg
 }
@@ -44,11 +46,13 @@ func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator,
 	if ok {
 		v.ValidatorBlocks = int(newVal)
 	}
-	v.quitCh = make(chan struct{})
 	v.blockRefresh = make(chan int, 50)
 	v.disableBlocksUpdate = false
 	v.CurrentBlock = 0
 	v.serverConnected = true
+	BeforeUnload(func() {
+		dispatcher.Dispatch(&actions.SignalRedirect{})
+	})
 	go v.updateBlocks()
 	return v
 }
@@ -80,6 +84,10 @@ func (contents *ValidatorContents) updateBlocks() {
 			}
 			updateValidatorBlocks(contents, oldBlocks-contents.CurrentBlock)
 			vecty.Rerender(contents)
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
+			ticker.Stop()
+			return
 		case <-ticker.C:
 			if !contents.disableBlocksUpdate {
 				updateValidatorBlocks(contents, contents.ValidatorBlocks-contents.CurrentBlock)

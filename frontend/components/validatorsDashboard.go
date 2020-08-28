@@ -1,12 +1,15 @@
 package components
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -23,7 +26,6 @@ type ValidatorsDashboardView struct {
 	validatorIndex   int
 	validatorRefresh chan int
 	disableUpdate    bool
-	quitCh           chan struct{}
 	t                *rpc.TendermintInfo
 }
 
@@ -47,13 +49,12 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 // InitValidatorsDashboardView initializes the Validators dashboard view
 func InitValidatorsDashboardView(t *rpc.TendermintInfo, dash *ValidatorsDashboardView, cfg *config.Cfg) *ValidatorsDashboardView {
 	dash.t = t
-	dash.quitCh = make(chan struct{})
 	dash.validatorRefresh = make(chan int, 50)
 	dash.validatorIndex = 0
 	dash.disableUpdate = false
 	dash.serverConnected = true
 	BeforeUnload(func() {
-		close(dash.quitCh)
+		dispatcher.Dispatch(&actions.SignalRedirect{})
 	})
 	go updateAndRenderValidatorsDashboard(dash, cfg)
 	return dash
@@ -65,7 +66,8 @@ func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.
 	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
 			return
 		case <-ticker.C:
