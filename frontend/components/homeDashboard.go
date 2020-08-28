@@ -1,18 +1,17 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -23,23 +22,20 @@ type DashboardView struct {
 	gatewayConnected bool
 	serverConnected  bool
 	blockIndex       int
-	gwClient         *client.Client
 	quitCh           chan struct{}
 	t                *rpc.TendermintInfo
-	tClient          *http.HTTP
 	vc               *client.VochainInfo
 }
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
+	if dash != nil && store.Vochain != nil && store.Tendermint != nil && dash.t != nil && dash.vc != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),
 			renderServerConnectionBanner(dash.serverConnected),
 			&StatsView{
-				t:        dash.t,
-				vc:       dash.vc,
-				gwClient: dash.gwClient,
+				t:  dash.t,
+				vc: dash.vc,
 			},
 		)
 	}
@@ -51,15 +47,6 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 
 // InitDashboardView returns the home dashboard components
 func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
-	// Init tendermint client
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	// Init Gateway client
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil || tClient == nil {
-		return DashboardView
-	}
-	DashboardView.tClient = tClient
-	DashboardView.gwClient = gwClient
 	DashboardView.t = t
 	DashboardView.vc = vc
 	DashboardView.quitCh = make(chan struct{})
@@ -69,7 +56,7 @@ func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardV
 	BeforeUnload(func() {
 		close(DashboardView.quitCh)
 	})
-	go updateAndRenderDashboard(DashboardView, cancel, cfg)
+	go updateAndRenderDashboard(DashboardView, cfg)
 	return DashboardView
 }
 
@@ -99,7 +86,7 @@ func updateHeight(t *rpc.TendermintInfo) {
 	}
 }
 
-func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+func updateAndRenderDashboard(d *DashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	updateHomeDashboardInfo(d)
 	vecty.Rerender(d)
@@ -107,7 +94,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 		select {
 		case <-d.quitCh:
 			ticker.Stop()
-			d.gwClient.Close()
+			// store.Vochain.Close()
 			//cancel()
 			fmt.Println("Gateway connection closed")
 			return
@@ -119,7 +106,7 @@ func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	if !rpc.Ping(d.tClient) || d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+	if !rpc.Ping(store.Tendermint) || store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -129,8 +116,8 @@ func updateHomeDashboardInfo(d *DashboardView) {
 	} else {
 		d.serverConnected = true
 	}
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	client.UpdateDashboardInfo(d.gwClient, d.vc)
+	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
+	client.UpdateDashboardInfo(store.Vochain, d.vc)
 	updateHeight(d.t)
 	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
 }

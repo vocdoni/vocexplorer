@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -22,7 +21,6 @@ type VocDashDashboardView struct {
 	vecty.Core
 	gatewayConnected       bool
 	serverConnected        bool
-	gwClient               *client.Client
 	envelopeIndex          int
 	entityIndex            int
 	processIndex           int
@@ -38,7 +36,7 @@ type VocDashDashboardView struct {
 
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.vc != nil {
+	if dash != nil && store.Vochain != nil && dash.vc != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),
 			renderServerConnectionBanner(dash.serverConnected),
@@ -88,11 +86,6 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 
 // InitVocDashDashboardView initializes the vocdash page
 func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return VocDashDashboardView
-	}
-	VocDashDashboardView.gwClient = gwClient
 	VocDashDashboardView.vc = vc
 	VocDashDashboardView.quitCh = make(chan struct{})
 	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
@@ -109,11 +102,11 @@ func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocD
 	BeforeUnload(func() {
 		close(VocDashDashboardView.quitCh)
 	})
-	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
+	go updateAndRenderVocDashDashboard(VocDashDashboardView, cfg)
 	return VocDashDashboardView
 }
 
-func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
+func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	updateVocdash(d)
 	vecty.Rerender(d)
@@ -123,7 +116,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 		select {
 		case <-d.quitCh:
 			ticker.Stop()
-			d.gwClient.Close()
+			// store.Vochain.Close()
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
@@ -174,7 +167,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 			}
 			if d.vc.ProcessCount > 0 {
 				updateProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
-				client.UpdateProcessResults(d.gwClient, d.vc)
+				client.UpdateProcessResults(store.Vochain, d.vc)
 			}
 			vecty.Rerender(d)
 		case i := <-d.refreshEnvelopes:
@@ -205,7 +198,7 @@ func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.Can
 }
 
 func updateVocdash(d *VocDashDashboardView) {
-	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+	if store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -224,7 +217,7 @@ func updateVocdash(d *VocDashDashboardView) {
 	}
 	if !d.disableProcessesUpdate {
 		updateProcesses(d, util.Max(d.vc.ProcessCount-d.processIndex, config.ListSize))
-		client.UpdateProcessResults(d.gwClient, d.vc)
+		client.UpdateProcessResults(store.Vochain, d.vc)
 	}
 }
 

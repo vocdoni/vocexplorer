@@ -16,6 +16,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	router "marwan.io/vecty-router"
 )
 
 // TxList is the tx list component
@@ -123,11 +124,10 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					vecty.Text(
 						fmt.Sprintf("%s transaction on block ", humanize.Ordinal(int(tx.Store.Index+1))),
 					),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
-						),
-						vecty.Text(util.IntToString(tx.Store.Height)),
+					router.Link(
+						"/blocks/"+util.IntToString(tx.Store.Height),
+						util.IntToString(tx.Store.Height),
+						router.LinkOptions{},
 					),
 				),
 				elem.Div(
@@ -138,9 +138,7 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
 						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", "/db/txhash/?hash="+util.HexToString(tx.GetHash())),
-							),
+							vecty.Markup(vecty.Attribute("href", "/db/txhash/?hash="+util.HexToString(tx.GetHash()))),
 							vecty.Text(util.HexToString(tx.GetHash())),
 						),
 					),

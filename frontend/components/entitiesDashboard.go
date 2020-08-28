@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -22,7 +21,6 @@ type EntitiesDashboardView struct {
 	vecty.Core
 	gatewayConnected       bool
 	serverConnected        bool
-	gwClient               *client.Client
 	entity                 *client.EntityInfo
 	entityID               string
 	processIndex           int
@@ -48,7 +46,7 @@ func (e *EntitiesTab) store() string {
 
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash == nil || dash.gwClient == nil || dash.entity == nil {
+	if dash == nil || store.Vochain == nil || dash.entity == nil {
 		return Container(&bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Connecting to blockchain client",
@@ -103,11 +101,6 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 
 // InitEntitiesDashboardView initializes the entities dashboard view
 func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return EntitiesDashboardView
-	}
-	EntitiesDashboardView.gwClient = gwClient
 	EntitiesDashboardView.entity = entity
 	EntitiesDashboardView.entityID = entityID
 	EntitiesDashboardView.quitCh = make(chan struct{})
@@ -117,11 +110,11 @@ func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView 
 	BeforeUnload(func() {
 		close(EntitiesDashboardView.quitCh)
 	})
-	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, cancel, entityID, cfg)
+	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, entityID, cfg)
 	return EntitiesDashboardView
 }
 
-func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string, cfg *config.Cfg) {
+func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))
 	vecty.Rerender(d)
@@ -129,7 +122,7 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 		select {
 		case <-d.quitCh:
 			ticker.Stop()
-			d.gwClient.Close()
+			// store.Vochain.Close()
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
@@ -159,7 +152,7 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.C
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+	if store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -184,6 +177,6 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 		if ok {
 			d.entity.EnvelopeHeights = newMap
 		}
-		client.UpdateAuxEntityInfo(d.gwClient, d.entity)
+		client.UpdateAuxEntityInfo(store.Vochain, d.entity)
 	}
 }

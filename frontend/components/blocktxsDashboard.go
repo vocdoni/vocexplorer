@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -26,14 +26,13 @@ type BlockTxsDashboardView struct {
 	disableTxsUpdate    bool
 	quitCh              chan struct{}
 	t                   *rpc.TendermintInfo
-	tClient             *http.HTTP
 	txIndex             int
 	txRefresh           chan int
 }
 
 // Render renders the BlockTxsDashboardView component
 func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.tClient != nil && dash.t != nil && dash.t.ResultStatus != nil {
+	if dash != nil && store.Tendermint != nil && dash.t != nil && dash.t.ResultStatus != nil {
 		return Container(
 			renderGatewayConnectionBanner(dash.gatewayConnected),
 			renderServerConnectionBanner(dash.serverConnected),
@@ -63,12 +62,6 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 
 // InitBlockTxsDashboardView initializes the blocks & transactions view (to be splitted)
 func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *BlockTxsDashboardView, cfg *config.Cfg) *BlockTxsDashboardView {
-	// Init tendermint client
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	if tClient == nil {
-		return BlockTxsDashboardView
-	}
-	BlockTxsDashboardView.tClient = tClient
 	BlockTxsDashboardView.t = t
 	BlockTxsDashboardView.quitCh = make(chan struct{})
 	BlockTxsDashboardView.blockRefresh = make(chan int, 50)
@@ -144,7 +137,7 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 }
 
 func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
-	if !rpc.Ping(d.tClient) {
+	if !rpc.Ping(store.Tendermint) {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -155,7 +148,7 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 		d.serverConnected = true
 	}
 	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
+	rpc.UpdateTendermintInfo(store.Tendermint, d.t)
 	if !d.disableBlocksUpdate {
 		updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
 	}

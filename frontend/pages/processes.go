@@ -19,5 +19,4 @@ func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 	process := new(client.FullProcessInfo)
 	dash := new(components.ProcessesDashboardView)
 	return components.InitProcessesDashboardView(process, dash, router.GetNamedVar(home)["id"], home.Cfg)
-
 }

@@ -5,15 +5,15 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
 )
 
 // StatsView renders the stats pane
 type StatsView struct {
 	vecty.Core
-	t        *rpc.TendermintInfo
-	vc       *client.VochainInfo
-	gwClient *client.Client
+	t  *rpc.TendermintInfo
+	vc *client.VochainInfo
 }
 
 // Render renders the StatsView component
@@ -22,7 +22,7 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 		return elem.Section(
 			vecty.Markup(
 				event.BeforeUnload(func(i *vecty.Event) {
-					b.gwClient.Close()
+					store.Vochain.Close()
 				}),
 			),
 			&Jumbotron{

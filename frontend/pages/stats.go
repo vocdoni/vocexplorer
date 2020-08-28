@@ -16,6 +16,10 @@ type Stats struct {
 
 // Render renders the Stats component
 func (stats *Stats) Render() vecty.ComponentOrHTML {
+	return stats.Component()
+}
+
+func (s *Stats) Component() vecty.ComponentOrHTML {
 	return components.Container(
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
@@ -23,6 +27,9 @@ func (stats *Stats) Render() vecty.ComponentOrHTML {
 					elem.Heading3(
 						vecty.Text("Stats"),
 					),
+					// &components.BlockchainInfo{
+					// 	T: b.t,
+					// },
 					vecty.Text("Most stats will be moved here :)"),
 				},
 			}),

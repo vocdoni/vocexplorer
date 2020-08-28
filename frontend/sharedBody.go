@@ -25,11 +25,14 @@ func (b Body) Render() vecty.ComponentOrHTML {
 		router.NewRoute("/entities/{id}", &pages.EntitiesView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/envelopes/{id}", &pages.EnvelopesView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/blocktxs", &pages.BlockTxsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocks/{id}", &pages.BlocksView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/blocks", &pages.BlockView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/blocks/{id}", &pages.BlockView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/txs/{id}", &pages.TxsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/stats", &pages.Stats{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators/{id}", &pages.ValidatorsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators", &pages.ValidatorsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
+		// Note that this handler only works for router.Link and router.Redirect accesses.
+		// Directly accessing a non-existant route won't be handled by this.
 		router.NotFoundHandler(&notFound{}),
 	)
 }

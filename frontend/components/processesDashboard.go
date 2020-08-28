@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -22,7 +21,6 @@ type ProcessesDashboardView struct {
 	vecty.Core
 	gatewayConnected       bool
 	serverConnected        bool
-	gwClient               *client.Client
 	process                *client.FullProcessInfo
 	processID              string
 	envelopeIndex          int
@@ -33,7 +31,7 @@ type ProcessesDashboardView struct {
 
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash == nil || dash.gwClient == nil || dash.process == nil {
+	if dash == nil || store.Vochain == nil || dash.process == nil {
 		return &bootstrap.Alert{
 			Contents: "Connecting to blockchain clients",
 			Type:     "warning",
@@ -191,11 +189,6 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 
 // InitProcessesDashboardView initializes the processes dashboard view
 func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return ProcessesDashboardView
-	}
-	ProcessesDashboardView.gwClient = gwClient
 	ProcessesDashboardView.process = process
 	ProcessesDashboardView.processID = processID
 	ProcessesDashboardView.quitCh = make(chan struct{})
@@ -203,11 +196,11 @@ func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashbo
 	BeforeUnload(func() {
 		close(ProcessesDashboardView.quitCh)
 	})
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel, processID, cfg)
+	go updateAndRenderProcessesDashboard(ProcessesDashboardView, processID, cfg)
 	return ProcessesDashboardView
 }
 
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
+func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, processID string, cfg *config.Cfg) {
 	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
 	updateProcessesDashboard(d, processID)
 	vecty.Rerender(d)
@@ -215,7 +208,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 		select {
 		case <-d.quitCh:
 			ticker.Stop()
-			d.gwClient.Close()
+			// store.Vochain.Close()
 			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
@@ -249,7 +242,7 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context
 }
 
 func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
-	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
+	if store.Vochain.Conn.Ping(store.Vochain.Ctx) != nil {
 		d.gatewayConnected = false
 	} else {
 		d.gatewayConnected = true
@@ -259,7 +252,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
 	} else {
 		d.serverConnected = true
 	}
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
+	client.UpdateProcessesDashboardInfo(store.Vochain, d.process, processID)
 	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
 	if ok {
 		d.process.EnvelopeHeight = int(newVal)

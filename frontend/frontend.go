@@ -9,6 +9,8 @@ import (
 	"github.com/gopherjs/vecty"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -24,6 +26,12 @@ func main() {
 		err = json.Unmarshal(body, &cfg)
 		util.ErrPrint(err)
 	}
+	dispatcher.Dispatch(&actions.TendermintClientInit{
+		Host: cfg.TendermintHost,
+	})
+	dispatcher.Dispatch(&actions.VochainClientInit{
+		Host: cfg.GatewayHost,
+	})
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{Cfg: cfg})
 }

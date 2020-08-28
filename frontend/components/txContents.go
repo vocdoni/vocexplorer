@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	router "marwan.io/vecty-router"
 )
 
 // TxContents renders tx contents
@@ -111,11 +112,10 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
 				vecty.If(
 					hasBlock,
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
-						),
-						vecty.Text(util.IntToString(tx.Store.Height)),
+					router.Link(
+						"/blocks/"+util.IntToString(tx.Store.Height),
+						util.IntToString(tx.Store.Height),
+						router.LinkOptions{},
 					),
 				),
 				vecty.If(
@@ -153,11 +153,10 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				entityID != "",
 				elem.Div(
 					vecty.Text("Belongs to entity "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/entities/"+entityID),
-						),
-						vecty.Text(entityID),
+					router.Link(
+						"/entities/"+entityID,
+						entityID,
+						router.LinkOptions{},
 					),
 				),
 			),
@@ -165,11 +164,10 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				processID != "",
 				elem.Div(
 					vecty.Text("Belongs to process "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/processes/"+processID),
-						),
-						vecty.Text(processID),
+					router.Link(
+						"/processes/"+processID,
+						processID,
+						router.LinkOptions{},
 					),
 				),
 			),

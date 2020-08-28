@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	router "marwan.io/vecty-router"
 )
 
 // EntityListView renders the entity list pane
@@ -79,6 +80,13 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 							vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+ID)),
 							vecty.Text("Entity Manager Page"),
 						),
+						router.Link(
+							"/entities/"+ID,
+							ID,
+							router.LinkOptions{
+								Class: "hash",
+							},
+						),
 					),
 				),
 			),
@@ -86,10 +94,12 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						elem.Anchor(
-							vecty.Markup(vecty.Class("hash")),
-							vecty.Markup(vecty.Attribute("href", "/entities/"+ID)),
-							vecty.Text(ID),
+						router.Link(
+							"/entities/"+ID,
+							ID,
+							router.LinkOptions{
+								Class: "hash",
+							},
 						),
 					),
 					elem.Div(

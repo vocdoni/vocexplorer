@@ -3,6 +3,7 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	router "marwan.io/vecty-router"
 )
 
 // NavBar renders the navigation bar
@@ -18,13 +19,9 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("container-fluid")),
-			elem.Anchor(
-				vecty.Markup(
-					vecty.Attribute("href", "/"),
-					vecty.Class("navbar-brand"),
-				),
-				vecty.Text("Vochain Explorer"),
-			),
+			router.Link("/", "Vochain Explorer", router.LinkOptions{
+				Class: "navbar-brand",
+			}),
 			elem.Button(
 				vecty.Markup(
 					vecty.Class("navbar-toggler"),
@@ -47,55 +44,44 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "active"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/"),
-							),
-							vecty.Text("Home"),
-						),
+						router.Link("/", "Home", router.LinkOptions{
+							Class: "nav-link",
+						}),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/vocdash"),
-							),
-							vecty.Text("Processes & Entities"),
-						),
+						router.Link("/vocdash", "Processes & Entities", router.LinkOptions{
+							Class: "nav-link",
+						}),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/blocktxs"),
-							),
-							vecty.Text("Blocks & Transactions"),
+						router.Link("/blocktxs", "Blocks & Transactions", router.LinkOptions{
+							Class: "nav-link",
+						}),
+					),
+					elem.ListItem(
+						router.Link(
+							"/validators",
+							"Validators",
+							router.LinkOptions{
+								Class: "nav-link",
+							},
 						),
 					),
 					elem.ListItem(
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/validators"),
-							),
-							vecty.Text("Validators"),
-						),
+						router.Link("/blocks", "Blocks", router.LinkOptions{
+							Class: "nav-link",
+						}),
 					),
 					elem.ListItem(
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/stats"),
-							),
-							vecty.Text("Stats"),
-						),
+						router.Link("/stats", "Stats", router.LinkOptions{
+							Class: "nav-link",
+						}),
 					),
 				),
 				&SearchBar{},

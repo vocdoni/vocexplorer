@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	router "marwan.io/vecty-router"
 )
 
 // EnvelopeList renders the envelope list pane
@@ -93,12 +94,12 @@ func renderEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/envelopes/"+util.IntToString(envelope.GetGlobalHeight())),
-					),
-					vecty.Text(util.IntToString(envelope.GetGlobalHeight())),
+				router.Link(
+					"/envelopes/"+util.IntToString(envelope.GetGlobalHeight()),
+					util.IntToString(envelope.GetGlobalHeight()),
+					router.LinkOptions{
+						Class: "nav-link",
+					},
 				),
 			),
 			elem.Div(

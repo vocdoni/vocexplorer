@@ -14,6 +14,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	router "marwan.io/vecty-router"
 )
 
 // BlockContents renders block contents
@@ -42,9 +43,10 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 					bootstrap.Card(bootstrap.CardParams{
 						Header: elem.Heading4(vecty.Text("Validator")),
 						Body: elem.Div(
-							elem.Anchor(
-								vecty.Markup(vecty.Attribute("href", "/validators/"+c.Block.ValidatorsHash.String())),
-								vecty.Text(c.Block.ValidatorsHash.String()),
+							router.Link(
+								"/validators/"+c.Block.ValidatorsHash.String(),
+								c.Block.ValidatorsHash.String(),
+								router.LinkOptions{},
 							),
 						),
 						ClassNames: []string{"validator"},
@@ -104,11 +106,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Parent hash"),
 			),
 			elem.Description(
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", fmt.Sprintf("/blocks/%d", block.Header.Height-1)),
-					),
-					vecty.Text(block.Header.LastBlockID.Hash.String()),
+				router.Link(
+					fmt.Sprintf("/blocks/%d", block.Header.Height-1),
+					block.Header.LastBlockID.Hash.String(),
+					router.LinkOptions{},
 				),
 			),
 			elem.DefinitionTerm(
@@ -116,11 +117,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Proposer Address"),
 			),
 			elem.Description(
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", "/validators/"+block.ProposerAddress.String()),
-					),
-					vecty.Text(block.ProposerAddress.String()),
+				router.Link(
+					"/validators/"+block.ProposerAddress.String(),
+					block.ProposerAddress.String(),
+					router.LinkOptions{},
 				),
 			),
 		),
@@ -193,9 +193,7 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Text("\tHash: "),
 				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash())),
-					),
+					vecty.Markup(vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash()))),
 					vecty.Text(fmt.Sprintf("%X", tx.Hash())),
 				),
 				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
