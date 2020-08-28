@@ -20,6 +20,16 @@ import (
 //go:generate env GOARCH=wasm GOOS=js go build -o ../static/main.wasm
 
 func main() {
+	cfg := initFrontend()
+	components.BeforeUnload(func() {
+		fmt.Println("Unloading page")
+		store.Vochain.Close()
+	})
+	vecty.SetTitle("Vochain Block Explorer")
+	vecty.RenderBody(&Body{Cfg: cfg})
+}
+
+func initFrontend() *config.Cfg {
 	var cfg *config.Cfg
 	resp, err := http.Get("/config")
 	util.ErrPrint(err)
@@ -35,10 +45,7 @@ func main() {
 	dispatcher.Dispatch(&actions.VochainClientInit{
 		Host: cfg.GatewayHost,
 	})
-	components.BeforeUnload(func() {
-		fmt.Println("Unloading page")
-		store.Vochain.Close()
-	})
-	vecty.SetTitle("Vochain Block Explorer")
-	vecty.RenderBody(&Body{Cfg: cfg})
+	store.Entities.PagChannel = make(chan int, 50)
+	store.Processes.PagChannel = make(chan int, 50)
+	return cfg
 }
