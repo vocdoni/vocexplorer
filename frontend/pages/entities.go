@@ -6,6 +6,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	router "marwan.io/vecty-router"
 )
 
@@ -19,5 +20,9 @@ type EntitiesView struct {
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
 	dash := new(components.EntitiesDashboardView)
 	dispatcher.Dispatch(&actions.SetCurrentEntityID{EntityID: router.GetNamedVar(home)["id"]})
+	store.Listeners.Add(dash, func() {
+		vecty.Rerender(dash)
+	})
+	go components.UpdateAndRenderEntitiesDashboard(dash)
 	return dash
 }

@@ -42,10 +42,10 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	}
 }
 
-func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+// UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
+func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateBlockTxsDashboard(d)
-	vecty.Rerender(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -54,7 +54,6 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 			return
 		case <-ticker.C:
 			updateBlockTxsDashboard(d)
-			vecty.Rerender(d)
 		case i := <-store.Blocks.Pagination.PagChannel:
 		blockloop:
 			for {
@@ -73,8 +72,6 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 				oldBlocks = store.Blocks.Count
 			}
 			updateBlocks(d, util.Max(oldBlocks-d.blockIndex, config.ListSize))
-
-			vecty.Rerender(d)
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -93,8 +90,6 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 				oldTxs = store.Transactions.Count
 			}
 			updateTxs(d, util.Max(oldTxs-d.txIndex, config.ListSize))
-
-			vecty.Rerender(d)
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	router "marwan.io/vecty-router"
 )
 
@@ -34,5 +35,9 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 		)
 	}
 	dash := new(components.ValidatorsDashboardView)
+	store.Listeners.Add(dash, func() {
+		vecty.Rerender(dash)
+	})
+	go components.UpdateAndRenderValidatorsDashboard(dash)
 	return dash
 }

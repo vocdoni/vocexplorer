@@ -65,8 +65,8 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 }
 
 // UpdateAndRenderVocDashDashboard continuously updates the information needed by the vocdash dashboard
-func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateVocdash(d)
 	for {
 		select {

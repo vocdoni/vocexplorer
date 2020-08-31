@@ -37,8 +37,9 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	}
 }
 
-func updateAndRenderDashboard(d *DashboardView, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+// UpdateAndRenderHomeDashboard keeps the home dashboard data up to date
+func UpdateAndRenderHomeDashboard(d *DashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateHomeDashboardInfo(d)
 	vecty.Rerender(d)
 	for {

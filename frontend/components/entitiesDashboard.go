@@ -90,8 +90,9 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 	}
 }
 
-func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+// UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
+func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
 	vecty.Rerender(d)
 	for {
@@ -115,7 +116,7 @@ func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, entityID string,
 			}
 			d.processIndex = i
 			oldProcesses := store.Entities.Count
-			newHeight, _ := api.GetEntityProcessHeight(entityID)
+			newHeight, _ := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
 			dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newHeight)})
 			if i < 1 {
 				oldProcesses = store.Entities.Count

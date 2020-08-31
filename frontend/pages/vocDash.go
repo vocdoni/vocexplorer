@@ -19,6 +19,6 @@ func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	store.Listeners.Add(dash, func() {
 		vecty.Rerender(dash)
 	})
-	go components.UpdateAndRenderVocDashDashboard(dash, home.Cfg)
+	go components.UpdateAndRenderVocDashDashboard(dash)
 	return dash
 }

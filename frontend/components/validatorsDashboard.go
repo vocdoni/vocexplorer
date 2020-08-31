@@ -35,8 +35,9 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+// UpdateAndRenderValidatorsDashboard keeps the validators data up to date
+func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateValidatorsDashboard(d)
 	vecty.Rerender(d)
 	for {

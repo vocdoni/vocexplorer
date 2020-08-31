@@ -6,6 +6,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	router "marwan.io/vecty-router"
 )
 
@@ -19,6 +20,9 @@ type ProcessesView struct {
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 	dash := new(components.ProcessesDashboardView)
 	dispatcher.Dispatch(&actions.SetCurrentProcessID{ID: router.GetNamedVar(home)["id"]})
+	store.Listeners.Add(dash, func() {
+		vecty.Rerender(dash)
+	})
 	go components.UpdateAndRenderProcessesDashboard(dash)
 	return dash
 }
