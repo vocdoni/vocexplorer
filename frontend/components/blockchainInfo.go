@@ -18,7 +18,7 @@ type BlockchainInfo struct {
 //Render renders the BlockchainInfo component
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
-	if store.Stats.ResultStatus == nil {
+	if store.Stats.ResultStatus == nil || store.Stats.Genesis == nil {
 		return &bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Waiting for blocks data",
@@ -49,7 +49,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						elem.TableRow(
 							elem.TableHeader(vecty.Text("Block Height")),
 							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.CurrentBlockHeight),
+								p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight),
 							)),
 						),
 						elem.TableRow(

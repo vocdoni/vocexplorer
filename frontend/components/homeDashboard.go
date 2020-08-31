@@ -39,7 +39,7 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderHomeDashboard keeps the home dashboard data up to date
 func UpdateAndRenderHomeDashboard(d *DashboardView) {
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(util.Max(store.Config.RefreshTime, 1)) * time.Second)
 	updateHomeDashboardInfo(d)
 	vecty.Rerender(d)
 	for {
@@ -62,7 +62,7 @@ func updateHomeDashboardInfo(d *DashboardView) {
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)
 	actions.UpdateCounts()
-	updateHomeBlocks(d, util.Max(store.Stats.MaxBlockSize-d.blockIndex, config.HomeWidgetBlocksListSize))
+	updateHomeBlocks(d, util.Max(store.Blocks.Count-d.blockIndex-1, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
-	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
@@ -24,10 +22,10 @@ import (
 
 func main() {
 	initFrontend()
-	components.BeforeUnload(func() {
-		fmt.Println("Unloading page")
-		store.GatewayClient.Close()
-	})
+	// components.BeforeUnload(func() {
+	// 	fmt.Println("Unloading page")
+	// 	store.GatewayClient.Close()
+	// })
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{})
 }
@@ -42,15 +40,27 @@ func initFrontend() {
 		err = json.Unmarshal(body, &cfg)
 		util.ErrPrint(err)
 	}
+	// Init clients with cfg so we don't have to wait for it to store
+	initClients(cfg)
 	dispatcher.Dispatch(&actions.StoreConfig{Config: *cfg})
-	initClients()
+	if cfg == nil {
+		log.Fatal("Unable to get application configuraion")
+	}
+	// Wait for store.Config to populate
+	i := 0
+	for ; store.Config.GatewayHost == "" && store.Config.GatewaySocket == "" && store.Config.RefreshTime == 0; i++ {
+		if i > 50 {
+			log.Fatal("Config could not be stored")
+		}
+	}
 }
 
-func initClients() {
-	dispatcher.Dispatch(&actions.TendermintClientInit{Client: rpcinit.StartClient(store.Config.TendermintHost)})
-	gw, _ := api.InitGateway(store.Config.GatewayHost + store.Config.GatewaySocket)
-	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
-	if store.GatewayClient == nil || store.TendermintClient == nil {
+func initClients(cfg *config.Cfg) {
+	tm := rpcinit.StartClient(cfg.TendermintHost)
+	gw, _ := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+	if tm == nil || gw == nil {
 		log.Error("Cannot connect to blockchain clients")
 	}
+	dispatcher.Dispatch(&actions.TendermintClientInit{Client: tm})
+	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
 }
