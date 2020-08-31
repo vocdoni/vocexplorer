@@ -8,7 +8,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 )
 
-// Blocks is a pretty page for all our blockchain statistics
+// BlocksView is a pretty page for all our blockchain statistics
 type BlocksView struct {
 	vecty.Core
 	Cfg *config.Cfg
@@ -19,7 +19,8 @@ func (stats *BlocksView) Render() vecty.ComponentOrHTML {
 	return stats.Component()
 }
 
-func (s *BlocksView) Component() vecty.ComponentOrHTML {
+// Component generates the actual BlocksView component
+func (stats *BlocksView) Component() vecty.ComponentOrHTML {
 	return components.Container(
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{

@@ -2,6 +2,7 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
@@ -19,7 +20,7 @@ type SetProcessIDs struct {
 
 // SetProcessCount is the action to set the process count
 type SetProcessCount struct {
-	ProcessCount int
+	Count int
 }
 
 // SetEnvelopeHeights is the action to set the envelope heights map
@@ -31,6 +32,42 @@ type SetEnvelopeHeights struct {
 type SetProcessContents struct {
 	Process storeutil.Process
 	ID      string
+}
+
+// SetProcessKeys is the action to set the keys for a single process
+type SetProcessKeys struct {
+	Keys *api.Pkeys
+	ID   string
+}
+
+// DisableProcessUpdate is the action to set the disable update status for processes
+type DisableProcessUpdate struct {
+	Disabled bool
+}
+
+// SetProcessState is the action to set the current process state
+type SetProcessState struct {
+	State string
+}
+
+// SetProcessType is the action to set the current process type
+type SetProcessType struct {
+	Type string
+}
+
+// SetCurrentProcessEnvelopeHeight is the action to set the current process' envelope height
+type SetCurrentProcessEnvelopeHeight struct {
+	Height int
+}
+
+// SetCurrentProcess is the action to set the current process
+type SetCurrentProcess struct {
+	Process storeutil.Process
+}
+
+// SetCurrentProcessID is the action to set the current process ID
+type SetCurrentProcessID struct {
+	ID string
 }
 
 // On initialization, register actions
@@ -48,13 +85,34 @@ func processActions(action interface{}) {
 		store.Processes.Pagination.Tab = a.Tab
 
 	case *SetProcessCount:
-		store.Processes.ProcessCount = a.ProcessCount
+		store.Processes.Count = a.Count
 
 	case *SetEnvelopeHeights:
 		store.Processes.EnvelopeHeights = a.EnvelopeHeights
 
 	case *SetProcessContents:
 		store.Processes.ProcessResults[a.ID] = a.Process
+
+	case *SetProcessKeys:
+		store.Processes.ProcessKeys[a.ID] = a.Keys
+
+	case *DisableProcessUpdate:
+		store.Processes.Pagination.DisableUpdate = a.Disabled
+
+	case *SetProcessState:
+		store.Processes.CurrentProcess.State = a.State
+
+	case *SetProcessType:
+		store.Processes.CurrentProcess.ProcessType = a.Type
+
+	case *SetCurrentProcessEnvelopeHeight:
+		store.Processes.CurrentProcess.EnvelopeCount = a.Height
+
+	case *SetCurrentProcess:
+		store.Processes.CurrentProcess = a.Process
+
+	case *SetCurrentProcessID:
+		store.Processes.CurrentProcessID = a.ID
 
 	default:
 		return // don't fire listeners

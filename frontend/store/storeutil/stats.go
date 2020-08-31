@@ -13,7 +13,6 @@ type Stats struct {
 	BlockTimeStamp int32
 	Health         int32
 	Height         int64
-	ChainID        int
 	MaxBlockSize   int
 	Genesis        *tmtypes.GenesisDoc
 	ResultStatus   *coretypes.ResultStatus

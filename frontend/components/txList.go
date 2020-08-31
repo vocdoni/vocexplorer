@@ -12,8 +12,10 @@ import (
 	"github.com/gopherjs/vecty/prop"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
@@ -22,26 +24,23 @@ import (
 // TxList is the tx list component
 type TxList struct {
 	vecty.Core
-	currentPage   int
-	disableUpdate *bool
-	refreshCh     chan int
-	t             *rpc.TendermintInfo
+	currentPage int
 }
 
 // Render renders the tx list component
 func (b *TxList) Render() vecty.ComponentOrHTML {
-	if b.t != nil && b.t.ResultStatus != nil {
+	if store.Stats.ResultStatus != nil {
 		p := &Pagination{
-			TotalPages:      int(b.t.TotalTxs) / config.ListSize,
-			TotalItems:      &b.t.TotalTxs,
+			TotalPages:      int(store.Transactions.Count) / config.ListSize,
+			TotalItems:      &store.Transactions.Count,
 			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			RefreshCh:       store.Transactions.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Transactions.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderTxs(p, b.t, index)
+			return renderTxs(p, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -50,11 +49,11 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableTransactionsUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableTransactionsUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -78,15 +77,15 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("Waiting for txchain info..."))
 }
 
-func renderTxs(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
+func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
 
 	empty := p.ListSize
 	for i := p.ListSize - 1; i >= 0; i-- {
-		if types.TxIsEmpty(t.TxList[i]) {
+		if types.TxIsEmpty(store.Transactions.Transactions[i]) {
 			empty--
 		} else {
-			tx := t.TxList[i]
+			tx := store.Transactions.Transactions[i]
 			txList = append(txList, renderTx(tx))
 		}
 	}

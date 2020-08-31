@@ -7,8 +7,8 @@ import (
 	"github.com/gopherjs/vecty"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -20,63 +20,26 @@ import (
 // BlockTxsDashboardView renders the dashboard landing page
 type BlockTxsDashboardView struct {
 	vecty.Core
-	gatewayConnected    bool
-	serverConnected     bool
-	blockIndex          int
-	blockRefresh        chan int
-	disableBlocksUpdate bool
-	disableTxsUpdate    bool
-	t                   *rpc.TendermintInfo
-	txIndex             int
-	txRefresh           chan int
+	blockIndex int
+	txIndex    int
 }
 
 // Render renders the BlockTxsDashboardView component
 func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && store.Tendermint != nil && dash.t != nil && dash.t.ResultStatus != nil {
+	if dash != nil && len(store.Blocks.Blocks) > 0 {
 		return Container(
-			renderGatewayConnectionBanner(dash.gatewayConnected),
-			renderServerConnectionBanner(dash.serverConnected),
-			&LatestBlocksWidget{
-				T: dash.t,
-			},
-			&BlockList{
-				t:             dash.t,
-				refreshCh:     dash.blockRefresh,
-				disableUpdate: &dash.disableBlocksUpdate,
-			},
-			&TxList{
-				t:             dash.t,
-				refreshCh:     dash.txRefresh,
-				disableUpdate: &dash.disableTxsUpdate,
-			},
-			&BlockchainInfo{
-				T: dash.t,
-			},
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
+			&LatestBlocksWidget{},
+			&BlockList{},
+			&TxList{},
+			&BlockchainInfo{},
 		)
 	}
 	return &bootstrap.Alert{
 		Contents: "Connecting to blockchain clients",
 		Type:     "warning",
 	}
-}
-
-// InitBlockTxsDashboardView initializes the blocks & transactions view (to be splitted)
-func InitBlockTxsDashboardView(t *rpc.TendermintInfo, BlockTxsDashboardView *BlockTxsDashboardView, cfg *config.Cfg) *BlockTxsDashboardView {
-	BlockTxsDashboardView.t = t
-	BlockTxsDashboardView.blockRefresh = make(chan int, 50)
-	BlockTxsDashboardView.txRefresh = make(chan int, 50)
-	BlockTxsDashboardView.blockIndex = 0
-	BlockTxsDashboardView.txIndex = 0
-	BlockTxsDashboardView.disableBlocksUpdate = false
-	BlockTxsDashboardView.disableTxsUpdate = false
-	BlockTxsDashboardView.gatewayConnected = true
-	BlockTxsDashboardView.serverConnected = true
-	BeforeUnload(func() {
-		dispatcher.Dispatch(&actions.SignalRedirect{})
-	})
-	go updateAndRenderBlockTxsDashboard(BlockTxsDashboardView, cfg)
-	return BlockTxsDashboardView
 }
 
 func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg) {
@@ -92,42 +55,42 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 		case <-ticker.C:
 			updateBlockTxsDashboard(d)
 			vecty.Rerender(d)
-		case i := <-d.blockRefresh:
+		case i := <-store.Blocks.Pagination.PagChannel:
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.blockRefresh:
+				case i = <-store.Blocks.Pagination.PagChannel:
 				default:
 					break blockloop
 				}
 			}
 			d.blockIndex = i
-			oldBlocks := d.t.TotalBlocks
-			newHeight, _ := dbapi.GetBlockHeight()
-			d.t.TotalBlocks = int(newHeight) - 1
+			oldBlocks := store.Blocks.Count
+			newHeight, _ := api.GetBlockHeight()
+			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
 			if i < 1 {
-				oldBlocks = d.t.TotalBlocks
+				oldBlocks = store.Blocks.Count
 			}
 			updateBlocks(d, util.Max(oldBlocks-d.blockIndex, config.ListSize))
 
 			vecty.Rerender(d)
-		case i := <-d.txRefresh:
+		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.txRefresh:
+				case i = <-store.Transactions.Pagination.PagChannel:
 				default:
 					break txloop
 				}
 			}
 			d.txIndex = i
-			oldTxs := d.t.TotalTxs
-			newHeight, _ := dbapi.GetTxHeight()
-			d.t.TotalTxs = int(newHeight) - 1
+			oldTxs := store.Transactions.Count
+			newHeight, _ := api.GetTxHeight()
+			dispatcher.Dispatch(&actions.SetTransactionCount{Count: int(newHeight) - 1})
 			if i < 1 {
-				oldTxs = d.t.TotalTxs
+				oldTxs = store.Transactions.Count
 			}
 			updateTxs(d, util.Max(oldTxs-d.txIndex, config.ListSize))
 
@@ -137,41 +100,35 @@ func updateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView, cfg *config.Cfg)
 }
 
 func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
-	if !rpc.Ping(store.TendermintClient) {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
+
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	actions.UpdateCounts()
+	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	if !store.Blocks.Pagination.DisableUpdate {
+		updateBlocks(d, util.Max(store.Blocks.Count-d.blockIndex, config.ListSize))
 	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
-	}
-	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
-	if !d.disableBlocksUpdate {
-		updateBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.ListSize))
-	}
-	if !d.disableTxsUpdate {
-		updateTxs(d, util.Max(d.t.TotalTxs-d.txIndex, config.ListSize))
+	if !store.Transactions.Pagination.DisableUpdate {
+		updateTxs(d, util.Max(store.Transactions.Count-d.txIndex, config.ListSize))
 	}
 }
 
 func updateBlocks(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Blocks from index %d", util.IntToString(index))
-	list, ok := dbapi.GetBlockList(index)
+	list, ok := api.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)
-		d.t.BlockList = list
+		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 	}
 }
 
 func updateTxs(d *BlockTxsDashboardView, index int) {
 	log.Infof("Getting Txs from index %d", util.IntToString(index))
-	list, ok := dbapi.GetTxList(index)
+	list, ok := api.GetTxList(index)
 	if ok {
 		reverseTxList(&list)
-		d.t.TxList = list
+		dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: list})
 	}
 }
 

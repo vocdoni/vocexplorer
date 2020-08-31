@@ -12,9 +12,11 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -45,8 +47,9 @@ func initFrontend() {
 }
 
 func initClients() {
-	dispatcher.Dispatch(&actions.TendermintClientInit{})
-	dispatcher.Dispatch(&actions.GatewayClientInit{})
+	dispatcher.Dispatch(&actions.TendermintClientInit{Client: rpcinit.StartClient(store.Config.TendermintHost)})
+	gw, _ := api.InitGateway(store.Config.GatewayHost + store.Config.GatewaySocket)
+	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
 	if store.GatewayClient == nil || store.TendermintClient == nil {
 		log.Error("Cannot connect to blockchain clients")
 	}

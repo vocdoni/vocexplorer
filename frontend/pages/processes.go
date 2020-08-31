@@ -2,9 +2,10 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	router "marwan.io/vecty-router"
 )
 
@@ -16,7 +17,8 @@ type ProcessesView struct {
 
 // Render renders the ProcessesView component
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
-	process := new(client.FullProcessInfo)
 	dash := new(components.ProcessesDashboardView)
-	return components.InitProcessesDashboardView(process, dash, router.GetNamedVar(home)["id"], home.Cfg)
+	dispatcher.Dispatch(&actions.SetCurrentProcessID{ID: router.GetNamedVar(home)["id"]})
+	go components.UpdateAndRenderProcessesDashboard(dash)
+	return dash
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/gopherjs/vecty"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
@@ -19,45 +19,20 @@ import (
 // ValidatorsDashboardView renders the validators list dashboard
 type ValidatorsDashboardView struct {
 	vecty.Core
-	totalValidators  int
-	validatorList    [config.ListSize]*types.Validator
-	serverConnected  bool
-	gatewayConnected bool
-	validatorIndex   int
-	validatorRefresh chan int
-	disableUpdate    bool
-	t                *rpc.TendermintInfo
+	ValidatorIndex int
 }
 
 // Render renders the ValidatorsDashboardView component
 func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 	return Container(
-		renderGatewayConnectionBanner(dash.gatewayConnected),
-		renderServerConnectionBanner(dash.serverConnected),
-		&ValidatorList{
-			totalValidators: &dash.totalValidators,
-			validatorList:   &dash.validatorList,
-			refreshCh:       dash.validatorRefresh,
-			disableUpdate:   &dash.disableUpdate,
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		&ValidatorListView{
+			refreshCh:     store.Validators.Pagination.PagChannel,
+			disableUpdate: &store.Validators.Pagination.DisableUpdate,
 		},
-		&BlockchainInfo{
-			T: dash.t,
-		},
+		&BlockchainInfo{},
 	)
-}
-
-// InitValidatorsDashboardView initializes the Validators dashboard view
-func InitValidatorsDashboardView(t *rpc.TendermintInfo, dash *ValidatorsDashboardView, cfg *config.Cfg) *ValidatorsDashboardView {
-	dash.t = t
-	dash.validatorRefresh = make(chan int, 50)
-	dash.validatorIndex = 0
-	dash.disableUpdate = false
-	dash.serverConnected = true
-	BeforeUnload(func() {
-		dispatcher.Dispatch(&actions.SignalRedirect{})
-	})
-	go updateAndRenderValidatorsDashboard(dash, cfg)
-	return dash
 }
 
 func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.Cfg) {
@@ -73,24 +48,24 @@ func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.
 		case <-ticker.C:
 			updateValidatorsDashboard(d)
 			vecty.Rerender(d)
-		case i := <-d.validatorRefresh:
+		case i := <-store.Validators.Pagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.validatorRefresh:
+				case i = <-store.Validators.Pagination.PagChannel:
 				default:
 					break loop
 				}
 			}
-			d.validatorIndex = i
-			oldValidators := d.totalValidators
-			newHeight, _ := dbapi.GetValidatorCount()
-			d.totalValidators = int(newHeight) - 1
+			d.ValidatorIndex = i
+			oldValidators := store.Validators.Count
+			newHeight, _ := api.GetValidatorCount()
+			dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight) - 1})
 			if i < 1 {
-				oldValidators = d.totalValidators
+				oldValidators = store.Validators.Count
 			}
-			updateValidators(d, util.Max(oldValidators-d.validatorIndex, config.ListSize))
+			updateValidators(d, util.Max(oldValidators-d.ValidatorIndex, config.ListSize))
 
 			vecty.Rerender(d)
 		}
@@ -98,33 +73,21 @@ func updateAndRenderValidatorsDashboard(d *ValidatorsDashboardView, cfg *config.
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	if !rpc.Ping(store.TendermintClient) {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
-	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
-	}
-	updateHeight(d.t)
-	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
-	newVal, ok := dbapi.GetValidatorCount()
-	if ok {
-		d.totalValidators = int(newVal)
-	}
-	if !d.disableUpdate {
-		updateValidators(d, util.Max(d.totalValidators-d.validatorIndex, config.ListSize))
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	actions.UpdateCounts()
+	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	if !store.Validators.Pagination.DisableUpdate {
+		updateValidators(d, util.Max(store.Validators.Count-d.ValidatorIndex, config.ListSize))
 	}
 }
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
 	log.Infof("Getting Blocks from index %d", util.IntToString(index))
-	list, ok := dbapi.GetValidatorList(index)
+	list, ok := api.GetValidatorList(index)
 	if ok {
 		reverseValidatorList(&list)
-		d.validatorList = list
+		dispatcher.Dispatch(&actions.SetValidatorList{List: list})
 	}
 }
 

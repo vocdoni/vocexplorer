@@ -7,7 +7,7 @@ import (
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
-	Pagination PageStore
-	TxCount    int
-	TxList     [config.ListSize]*types.SendTx
+	Count        int
+	Pagination   PageStore
+	Transactions [config.ListSize]*types.SendTx
 }

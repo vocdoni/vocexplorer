@@ -14,8 +14,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ValidatorList is the validator list component
-type ValidatorList struct {
+// ValidatorListView is the validator list component
+type ValidatorListView struct {
 	vecty.Core
 	currentPage     int
 	disableUpdate   *bool
@@ -25,7 +25,7 @@ type ValidatorList struct {
 }
 
 // Render renders the validator list component
-func (b *ValidatorList) Render() vecty.ComponentOrHTML {
+func (b *ValidatorListView) Render() vecty.ComponentOrHTML {
 	if len(b.validatorList) > 0 {
 		p := &Pagination{
 			TotalPages:      int(*b.totalValidators) / config.ListSize,

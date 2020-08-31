@@ -5,10 +5,9 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -20,68 +19,21 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	gatewayConnected bool
-	serverConnected  bool
-	blockIndex       int
-	t                *rpc.TendermintInfo
-	vc               *client.VochainInfo
+	blockIndex int
 }
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil && dash.t != nil && dash.vc != nil {
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
-			renderGatewayConnectionBanner(dash.gatewayConnected),
-			renderServerConnectionBanner(dash.serverConnected),
-			&StatsView{
-				t:  dash.t,
-				vc: dash.vc,
-			},
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
+			&StatsView{},
 		)
 	}
 	return &bootstrap.Alert{
 		Contents: "Connecting to blockchain clients",
 		Type:     "warning",
-	}
-}
-
-// InitDashboardView returns the home dashboard components
-func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
-	DashboardView.t = t
-	DashboardView.vc = vc
-	DashboardView.blockIndex = 0
-	DashboardView.serverConnected = true
-	DashboardView.gatewayConnected = true
-	BeforeUnload(func() {
-		dispatcher.Dispatch(&actions.SignalRedirect{})
-	})
-	go updateAndRenderDashboard(DashboardView, cfg)
-	return DashboardView
-}
-
-func updateHeight(t *rpc.TendermintInfo) {
-	newVal, ok := dbapi.GetBlockHeight()
-	if ok {
-		t.TotalBlocks = int(newVal - 1)
-		dispatcher.Dispatch(&actions.BlocksHeightUpdate{
-			Height: int64(newVal),
-		})
-	}
-	newVal, ok = dbapi.GetTxHeight()
-	if ok {
-		t.TotalTxs = int(newVal - 1)
-	}
-	newVal, ok = dbapi.GetEntityHeight()
-	if ok {
-		t.TotalEntities = int(newVal)
-	}
-	newVal, ok = dbapi.GetProcessHeight()
-	if ok {
-		t.TotalProcesses = int(newVal)
-	}
-	newVal, ok = dbapi.GetEnvelopeHeight()
-	if ok {
-		t.TotalEnvelopes = int(newVal)
 	}
 }
 
@@ -103,27 +55,20 @@ func updateAndRenderDashboard(d *DashboardView, cfg *config.Cfg) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	if !rpc.Ping(store.TendermintClient) || store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
-	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
-	}
-	rpc.UpdateTendermintInfo(store.TendermintClient, d.t)
-	update.DashboardInfo(store.GatewayClient, d.vc)
-	updateHeight(d.t)
-	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	update.DashboardInfo(store.GatewayClient)
+	actions.UpdateCounts()
+	updateHomeBlocks(d, util.Max(store.Stats.MaxBlockSize-d.blockIndex, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {
 	fmt.Println("Getting blocks from index " + util.IntToString(index))
-	list, ok := dbapi.GetBlockList(index)
+	list, ok := api.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)
-		d.t.BlockList = list
+		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 	}
 }

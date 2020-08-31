@@ -5,9 +5,8 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	router "marwan.io/vecty-router"
 )
 
@@ -23,7 +22,7 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 	// If there is an ID to look for, render individual validator page
 	if ok && address != "" {
 		v := new(components.ValidatorContents)
-		validator, ok := dbapi.GetValidator(address)
+		validator, ok := api.GetValidator(address)
 		if validator == nil || !ok {
 			log.Errorf("Validator unavailable")
 			return elem.Div(
@@ -34,7 +33,6 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 			components.InitValidatorContentsView(v, validator, home.Cfg),
 		)
 	}
-	t := new(rpc.TendermintInfo)
 	dash := new(components.ValidatorsDashboardView)
-	return components.InitValidatorsDashboardView(t, dash, home.Cfg)
+	return dash
 }

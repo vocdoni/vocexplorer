@@ -9,8 +9,10 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
@@ -19,26 +21,23 @@ import (
 // EnvelopeList renders the envelope list pane
 type EnvelopeList struct {
 	vecty.Core
-	currentPage   int
-	disableUpdate *bool
-	refreshCh     chan int
-	vochain       *client.VochainInfo
+	currentPage int
 }
 
 // Render renders the EnvelopeList component
 func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
-	if b.vochain != nil && b.vochain.EnvelopeHeight > 0 {
+	if store.Envelopes.Count > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.vochain.EnvelopeHeight) / config.ListSize,
-			TotalItems:      &b.vochain.EnvelopeHeight,
+			TotalPages:      int(store.Envelopes.Count) / config.ListSize,
+			TotalItems:      &store.Envelopes.Count,
 			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			RefreshCh:       store.Envelopes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Envelopes.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderEnvelopes(p, b.vochain, index)
+			return renderEnvelopes(p, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -47,11 +46,11 @@ func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableEnvelopeUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableEnvelopeUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -61,21 +60,18 @@ func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
 		}
 		return p
 	}
-	if b.vochain.EnvelopeHeight < 1 {
-		return elem.Div(vecty.Text("No envelopes available"))
-	}
-	return elem.Div(vecty.Text("Waiting for envelopes..."))
+	return elem.Div(vecty.Text("No envelopes available"))
 }
 
-func renderEnvelopes(p *Pagination, vochain *client.VochainInfo, index int) vecty.ComponentOrHTML {
+func renderEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	var EnvelopeList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(vochain.EnvelopeList) - 1; i >= len(vochain.EnvelopeList)-p.ListSize; i-- {
-		if types.EnvelopeIsEmpty(vochain.EnvelopeList[i]) {
+	for i := len(store.Envelopes.Envelopes) - 1; i >= len(store.Envelopes.Envelopes)-p.ListSize; i-- {
+		if types.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
 			empty--
 		} else {
-			envelope := vochain.EnvelopeList[i]
+			envelope := store.Envelopes.Envelopes[i]
 			EnvelopeList = append(EnvelopeList, renderEnvelope(envelope))
 		}
 	}

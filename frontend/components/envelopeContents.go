@@ -8,7 +8,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -16,7 +16,6 @@ import (
 // EnvelopeContents renders envelope contents
 type EnvelopeContents struct {
 	vecty.Core
-	Envelope         *types.Envelope
 	DecryptionStatus string
 	DisplayPackage   bool
 	VotePackage      *dvotetypes.VotePackage
@@ -25,20 +24,20 @@ type EnvelopeContents struct {
 // Render renders the EnvelopeContents component
 func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	return elem.Main(
-		renderEnvelopeHeader(contents.Envelope),
+		renderEnvelopeHeader(),
 		vecty.Text(contents.DecryptionStatus),
 		contents.renderVotePackage(),
 	)
 }
 
-func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
+func renderEnvelopeHeader() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
 				router.Link(
-					"/envelopes/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetGlobalHeight()),
+					"/envelopes/"+util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
+					util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
 					router.LinkOptions{
 						Class: "nav-link",
 					},
@@ -49,10 +48,10 @@ func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "),
+						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight()))+" envelope on process "),
 						router.Link(
-							"/processes/"+util.StripHexString(envelope.GetProcessID()),
-							util.StripHexString(envelope.GetProcessID()),
+							"/processes/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
+							util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							router.LinkOptions{
 								Class: "hash",
 							},
@@ -65,7 +64,7 @@ func renderEnvelopeHeader(envelope *types.Envelope) vecty.ComponentOrHTML {
 						),
 						elem.Div(
 							vecty.Markup(vecty.Class("dd")),
-							vecty.Text(envelope.GetNullifier()),
+							vecty.Text(store.Envelopes.CurrentEnvelope.GetNullifier()),
 						),
 					),
 				),

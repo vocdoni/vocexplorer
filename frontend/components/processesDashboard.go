@@ -7,10 +7,9 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -21,36 +20,28 @@ import (
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
-	gatewayConnected       bool
-	serverConnected        bool
-	process                *client.FullProcessInfo
-	processID              string
-	envelopeIndex          int
-	disableEnvelopesUpdate bool
-	refreshCh              chan int
+	envelopeIndex int
 }
 
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash == nil || store.Vochain == nil || dash.process == nil {
+	if dash == nil || store.GatewayClient == nil {
 		return &bootstrap.Alert{
 			Contents: "Connecting to blockchain clients",
 			Type:     "warning",
 		}
 	}
 
-	t := dash.process.ProcessType
-	if t == "" {
-		t = "unknown"
+	if store.Processes.CurrentProcess.ProcessType == "" {
+		dispatcher.Dispatch(&actions.SetProcessType{Type: "unknown"})
 	}
-	st := dash.process.State
-	if st == "" {
-		st = "unknown"
+	if store.Processes.CurrentProcess.State == "" {
+		dispatcher.Dispatch(&actions.SetProcessState{State: "unknown"})
 	}
 
 	return Container(
-		renderGatewayConnectionBanner(dash.gatewayConnected),
-		renderServerConnectionBanner(dash.serverConnected),
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
@@ -77,35 +68,26 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 
 //ProcessDetails renders the details of a process
 func (dash *ProcessesDashboardView) ProcessDetails() vecty.List {
-	t := dash.process.ProcessType
-	if t == "" {
-		t = "unknown"
-	}
-	st := dash.process.State
-	if st == "" {
-		st = "unknown"
-	}
-
 	return vecty.List{
 		elem.Heading1(
 			vecty.Text("Process details"),
 		),
-		elem.Heading2(vecty.Text(dash.processID)),
+		elem.Heading2(vecty.Text(store.Processes.CurrentProcessID)),
 		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
-				vecty.Markup(vecty.Class("badge", st)),
-				vecty.Text(st),
+				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcess.State)),
+				vecty.Text(store.Processes.CurrentProcess.State),
 			),
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(
 			elem.DefinitionTerm(vecty.Text("Process type")),
-			elem.Description(vecty.Text(t)),
+			elem.Description(vecty.Text(store.Processes.CurrentProcess.ProcessType)),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(st)),
+			elem.Description(vecty.Text(store.Processes.CurrentProcess.State)),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
-			elem.Description(vecty.Text(util.IntToString(dash.process.EnvelopeHeight))),
+			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcess.EnvelopeCount))),
 		),
 	}
 }
@@ -122,7 +104,7 @@ func (p *ProcessTab) dispatch() interface{} {
 }
 
 func (p *ProcessTab) store() string {
-	return store.Processes.Tab
+	return store.Processes.Pagination.Tab
 }
 
 //ProcessTabs renders the tabs for a process
@@ -146,12 +128,8 @@ func (dash *ProcessesDashboardView) ProcessTabs() vecty.List {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(results, renderResults(dash.process.Results)),
-			TabContents(envelopes, &ProcessesEnvelopeListView{
-				process:       dash.process,
-				refreshCh:     dash.refreshCh,
-				disableUpdate: &dash.disableEnvelopesUpdate,
-			}),
+			TabContents(results, renderResults(store.Processes.CurrentProcess.Results)),
+			TabContents(envelopes, &ProcessesEnvelopeListView{}),
 		),
 	}
 }
@@ -188,22 +166,10 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	)
 }
 
-// InitProcessesDashboardView initializes the processes dashboard view
-func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
-	ProcessesDashboardView.process = process
-	ProcessesDashboardView.processID = processID
-	ProcessesDashboardView.refreshCh = make(chan int, 50)
-	BeforeUnload(func() {
-		dispatcher.Dispatch(&actions.SignalRedirect{})
-	})
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView, processID, cfg)
-	return ProcessesDashboardView
-}
-
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, processID string, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	updateProcessesDashboard(d, processID)
-	vecty.Rerender(d)
+// UpdateAndRenderProcessesDashboard keeps the data for the processes dashboard up-to-date
+func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	updateProcessesDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -211,61 +177,53 @@ func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, processID stri
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateProcessesDashboard(d, processID)
-			vecty.Rerender(d)
-		case i := <-d.refreshCh:
+			updateProcessesDashboard(d)
+		case i := <-store.Processes.Pagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshCh:
+				case i = <-store.Processes.Pagination.PagChannel:
 				default:
 					break loop
 				}
 			}
 			d.envelopeIndex = i
-			oldEnvelopes := d.process.EnvelopeHeight
-			newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
+			oldEnvelopes := store.Processes.CurrentProcess.EnvelopeCount
+			newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
 			if ok {
-				d.process.EnvelopeHeight = int(newVal)
+				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 			}
 			if i < 1 {
-				oldEnvelopes = d.process.EnvelopeHeight
+				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
 			}
-			if d.process.EnvelopeHeight > 0 {
+			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
 				updateProcessEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
 			}
-			vecty.Rerender(d)
 		}
 	}
 }
 
-func updateProcessesDashboard(d *ProcessesDashboardView, processID string) {
-	if store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
-	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
-	}
-	update.ProcessesDashboardInfo(store.GatewayClient, d.process, processID)
-	newVal, ok := dbapi.GetProcessEnvelopeHeight(processID)
+func updateProcessesDashboard(d *ProcessesDashboardView) {
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	update.CurrentProcessResults()
+	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
 	if ok {
-		d.process.EnvelopeHeight = int(newVal)
+		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
-	if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
-		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
+	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-d.envelopeIndex, config.ListSize))
 	}
 }
 
 func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
 	log.Infof("Getting envelopes from index %d", util.IntToString(index))
-	list, ok := dbapi.GetEnvelopeListByProcess(index, d.processID)
+	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcessID)
 	if ok {
 		reverseEnvelopeList(&list)
-		d.process.EnvelopeList = list
+		dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: list})
 	}
 }

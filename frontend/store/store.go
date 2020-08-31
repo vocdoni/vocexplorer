@@ -2,8 +2,8 @@ package store
 
 import (
 	"github.com/tendermint/tendermint/rpc/client/http"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
 
@@ -22,7 +22,7 @@ var (
 	RedirectChan chan struct{}
 
 	// GatewayClient is the global gateway client
-	GatewayClient *client.Client
+	GatewayClient *api.GatewayClient
 	// TendermintClient is the global tendermint client
 	TendermintClient *http.HTTP
 
@@ -70,11 +70,6 @@ func init() {
 
 // func onAction(action interface{}) {
 // 	switch a := action.(type) {
-// 	case *actions.TendermintClientInit:
-// 		TendermintClient = rpcinit.StartClient(Config.TendermintHost)
-
-// 	case *actions.GatewayClientInit:
-// 		GatewayClient, _ = client.InitGateway(Config.GatewayHost)
 
 // 	case *actions.BlocksTabChange:
 // 		BlockTabActive = a.Tab
@@ -90,12 +85,6 @@ func init() {
 
 // 	case *actions.StoreConfig:
 // 		Config = a.Config
-
-// 	case *actions.GatewayConnected:
-// 		GatewayConnected = a.Connected
-
-// 	case *actions.ServerConnected:
-// 		ServerConnected = a.Connected
 
 // 	default:
 // 		return // don't fire listeners

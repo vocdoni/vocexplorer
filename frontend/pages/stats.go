@@ -19,7 +19,8 @@ func (stats *Stats) Render() vecty.ComponentOrHTML {
 	return stats.Component()
 }
 
-func (s *Stats) Component() vecty.ComponentOrHTML {
+// Component returns the stats component
+func (stats *Stats) Component() vecty.ComponentOrHTML {
 	return components.Container(
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
@@ -27,9 +28,7 @@ func (s *Stats) Component() vecty.ComponentOrHTML {
 					elem.Heading3(
 						vecty.Text("Stats"),
 					),
-					// &components.BlockchainInfo{
-					// 	T: b.t,
-					// },
+					&components.BlockchainInfo{},
 					vecty.Text("Most stats will be moved here :)"),
 				},
 			}),

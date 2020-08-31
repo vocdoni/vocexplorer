@@ -9,7 +9,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -26,7 +26,7 @@ type TxsView struct {
 func (home *TxsView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	tx, ok := dbapi.GetTx(height)
+	tx, ok := api.GetTx(height)
 	// Get block which houses tx
 	if tx == nil || !ok {
 		log.Errorf("Tx unavailable")
@@ -34,7 +34,7 @@ func (home *TxsView) Render() vecty.ComponentOrHTML {
 			elem.Main(vecty.Text("Tx not available")),
 		)
 	}
-	block, ok := dbapi.GetBlock(tx.Store.Height)
+	block, ok := api.GetBlock(tx.Store.Height)
 	var tm time.Time
 	if ok {
 		tm, err = ptypes.Timestamp(block.GetTime())

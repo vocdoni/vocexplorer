@@ -3,35 +3,23 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // StatsView renders the stats pane
 type StatsView struct {
 	vecty.Core
-	t  *rpc.TendermintInfo
-	vc *client.VochainInfo
 }
 
 // Render renders the StatsView component
 func (b *StatsView) Render() vecty.ComponentOrHTML {
-	if b.t != nil && b.vc != nil {
+	if store.Stats.ResultStatus != nil || len(store.Stats.APIList) > 0 || store.Stats.Genesis != nil {
 		return elem.Section(
-			&Jumbotron{
-				vc: b.vc,
-				t:  b.t,
-			},
+			&Jumbotron{},
 			Container(
-				&LatestBlocksWidget{
-					T: b.t,
-				},
-				&BlockchainInfo{
-					T: b.t,
-				},
-				&AverageBlockTimes{
-					VC: b.vc,
-				},
+				&LatestBlocksWidget{},
+				&BlockchainInfo{},
+				&AverageBlockTimes{},
 			),
 		)
 	}

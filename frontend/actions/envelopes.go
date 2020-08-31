@@ -14,7 +14,17 @@ type SetEnvelopeList struct {
 
 // SetEnvelopeCount is the action to set the Envelope count
 type SetEnvelopeCount struct {
-	EnvelopeCount int
+	Count int
+}
+
+// SetCurrentEnvelope is the action to set the current envelope
+type SetCurrentEnvelope struct {
+	Envelope *types.Envelope
+}
+
+// DisableEnvelopeUpdate is the action to set the disable update status for envelopes
+type DisableEnvelopeUpdate struct {
+	Disabled bool
 }
 
 // On initialization, register actions
@@ -26,10 +36,16 @@ func init() {
 func envelopeActions(action interface{}) {
 	switch a := action.(type) {
 	case *SetEnvelopeList:
-		store.Envelopes.EnvelopeList = a.EnvelopeList
+		store.Envelopes.Envelopes = a.EnvelopeList
 
 	case *SetEnvelopeCount:
-		store.Envelopes.EnvelopeCount = a.EnvelopeCount
+		store.Envelopes.Count = a.Count
+
+	case *SetCurrentEnvelope:
+		store.Envelopes.CurrentEnvelope = a.Envelope
+
+	case *DisableEnvelopeUpdate:
+		store.Envelopes.Pagination.DisableUpdate = a.Disabled
 
 	default:
 		return // don't fire listeners

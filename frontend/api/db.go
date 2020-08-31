@@ -1,4 +1,4 @@
-package dbapi
+package api
 
 import (
 	"fmt"

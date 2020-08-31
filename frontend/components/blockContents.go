@@ -7,7 +7,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -20,9 +19,6 @@ import (
 // BlockContents renders block contents
 type BlockContents struct {
 	vecty.Core
-	Block *tmtypes.Block
-	Hash  tmbytes.HexBytes
-	// BlockDetails vecty.ComponentOrHTML
 }
 
 // Render renders the BlockContents component
@@ -35,7 +31,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body: BlockView(c.Block),
+						Body: BlockView(store.Blocks.CurrentBlock.Block),
 					}),
 				),
 				elem.Div(
@@ -44,8 +40,8 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 						Header: elem.Heading4(vecty.Text("Validator")),
 						Body: elem.Div(
 							router.Link(
-								"/validators/"+c.Block.ValidatorsHash.String(),
-								c.Block.ValidatorsHash.String(),
+								"/validators/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
+								store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
 								router.LinkOptions{},
 							),
 						),
@@ -172,10 +168,10 @@ func (c *BlockContents) BlockDetails() vecty.List {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(transactions, preformattedBlockTransactions(c.Block)),
-			TabContents(header, preformattedBlockHeader(c.Block)),
-			TabContents(evidence, preformattedBlockEvidence(c.Block)),
-			TabContents(lastCommit, preformattedBlockLastCommit(c.Block)),
+			TabContents(transactions, preformattedBlockTransactions(store.Blocks.CurrentBlock.Block)),
+			TabContents(header, preformattedBlockHeader(store.Blocks.CurrentBlock.Block)),
+			TabContents(evidence, preformattedBlockEvidence(store.Blocks.CurrentBlock.Block)),
+			TabContents(lastCommit, preformattedBlockLastCommit(store.Blocks.CurrentBlock.Block)),
 		),
 	}
 }

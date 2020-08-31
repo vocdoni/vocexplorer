@@ -2,9 +2,10 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	router "marwan.io/vecty-router"
 )
 
@@ -16,7 +17,7 @@ type EntitiesView struct {
 
 // Render renders the EntitiesView component
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
-	entity := new(client.EntityInfo)
 	dash := new(components.EntitiesDashboardView)
-	return components.InitEntitiesDashboardView(entity, dash, router.GetNamedVar(home)["id"], home.Cfg)
+	dispatcher.Dispatch(&actions.SetCurrentEntityID{EntityID: router.GetNamedVar(home)["id"]})
+	return dash
 }

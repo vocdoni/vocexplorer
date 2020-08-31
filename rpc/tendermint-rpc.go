@@ -3,7 +3,8 @@ package rpc
 import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -16,8 +17,8 @@ func Ping(c *http.HTTP) bool {
 	return true
 }
 
-//UpdateTendermintInfo updates the tendermint info
-func UpdateTendermintInfo(c *http.HTTP) {
+//UpdateBlockchainStatus updates the tendermint info
+func UpdateBlockchainStatus(c *http.HTTP) {
 	GetHealth(c)
 	GetGenesis(c)
 }
@@ -26,7 +27,7 @@ func UpdateTendermintInfo(c *http.HTTP) {
 func GetHealth(c *http.HTTP) {
 	status, err := c.Status()
 	if !util.ErrPrint(err) {
-		store.Stats.ResultStatus = status
+		dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
 	}
 }
 
@@ -34,7 +35,7 @@ func GetHealth(c *http.HTTP) {
 func GetGenesis(c *http.HTTP) {
 	result, err := c.Genesis()
 	if !util.ErrPrint(err) {
-		store.Stats.Genesis = result.Genesis
+		dispatcher.Dispatch(&actions.SetGenesis{Genesis: result.Genesis})
 	}
 }
 

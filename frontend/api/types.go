@@ -1,8 +1,14 @@
-package types
+package api
 
 import (
 	"encoding/json"
 )
+
+// Key is a cryptographic key
+type Key struct {
+	Idx int    `json:"idx"`
+	Key string `json:"key"`
+}
 
 // Pkeys is the set of cryptographic keys for a process
 type Pkeys struct {
@@ -51,12 +57,6 @@ type ResponseMessage struct {
 
 	ID        string `json:"id"`
 	Signature string `json:"signature"`
-}
-
-// Key is a cryptographic key
-type Key struct {
-	Idx int    `json:"idx"`
-	Key string `json:"key"`
 }
 
 // MetaResponse holds a gateway api response, from go-dvote/types

@@ -7,8 +7,8 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
@@ -32,7 +32,7 @@ type ValidatorContents struct {
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	return Container(
-		renderServerConnectionBanner(contents.serverConnected),
+		renderServerConnectionBanner(),
 		contents.renderValidatorHeader(),
 		contents.renderValidatorBlockList(),
 	)
@@ -42,7 +42,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator, cfg *config.Cfg) *ValidatorContents {
 	v.Validator = validator
 	v.Cfg = cfg
-	newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address))
+	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(validator.Address))
 	if ok {
 		v.ValidatorBlocks = int(newVal)
 	}
@@ -75,7 +75,7 @@ func (contents *ValidatorContents) updateBlocks() {
 			}
 			contents.CurrentBlock = i
 			oldBlocks := contents.ValidatorBlocks
-			newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
+			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
 			if ok {
 				contents.ValidatorBlocks = int(newVal) - 1
 			}
@@ -100,16 +100,16 @@ func (contents *ValidatorContents) updateBlocks() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	if !dbapi.Ping() {
+	if !api.Ping() {
 		contents.serverConnected = false
 	} else {
 		contents.serverConnected = true
 	}
-	newVal, ok := dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
+	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))
 	if ok {
 		contents.ValidatorBlocks = int(newVal) - 1
 	}
-	newList, ok := dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
+	newList, ok := api.GetBlockListByValidator(i, contents.Validator.GetAddress())
 	if ok {
 		contents.BlockList = newList
 	}

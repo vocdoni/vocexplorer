@@ -3,8 +3,8 @@ package update
 import (
 	"strings"
 
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
@@ -12,25 +12,25 @@ import (
 )
 
 // DashboardInfo calls gateway apis, updates info needed for dashboard page
-func DashboardInfo(c *client.Client) {
+func DashboardInfo(c *api.GatewayClient) {
 	GatewayInfo(c)
 	BlockStatus(c)
 	Counts(c)
 }
 
 // Counts calls gateway apis, updates total number of processes and entities
-func Counts(c *client.Client) {
+func Counts(c *api.GatewayClient) {
 	procs, err := c.GetProcessCount()
 	util.ErrPrint(err)
 	entities, err := c.GetEntityCount()
 	util.ErrPrint(err)
-	store.Processes.ProcessCount = int(procs)
-	store.Entities.EntityCount = int(entities)
+	store.Processes.Count = int(procs)
+	store.Entities.Count = int(entities)
 
 }
 
 // GatewayInfo calls gateway api, updates gateway health info
-func GatewayInfo(c *client.Client) {
+func GatewayInfo(c *api.GatewayClient) {
 	apiList, health, ok, err := c.GetGatewayInfo()
 	util.ErrPrint(err)
 	store.Stats.APIList = apiList
@@ -39,7 +39,7 @@ func GatewayInfo(c *client.Client) {
 }
 
 // BlockStatus calls gateway api, updates blockchain statistics
-func BlockStatus(c *client.Client) {
+func BlockStatus(c *api.GatewayClient) {
 	blockTime, blockTimeStamp, height, err := c.GetBlockStatus()
 	util.ErrPrint(err)
 	store.Stats.BlockTime = blockTime
@@ -48,7 +48,7 @@ func BlockStatus(c *client.Client) {
 }
 
 // GetIDs gets ids
-func GetIDs(IDList *[]string, c *client.Client, getList func() ([]string, error)) {
+func GetIDs(IDList *[]string, c *api.GatewayClient, getList func() ([]string, error)) {
 	var err error
 	*IDList, err = getList()
 	util.ErrPrint(err)
@@ -78,8 +78,7 @@ func ProcessResults() {
 func CurrentProcessResults() {
 	t, st, res, err := store.GatewayClient.GetProcessResults(store.Processes.CurrentProcessID)
 	if !util.ErrPrint(err) {
-		dispatcher.Dispatch(&actions.SetProcessContents{
-			ID: store.Processes.CurrentProcessID,
+		dispatcher.Dispatch(&actions.SetCurrentProcess{
 			Process: storeutil.Process{
 				ProcessType: t,
 				State:       st,
@@ -89,11 +88,11 @@ func CurrentProcessResults() {
 }
 
 // EntityProcessResults ensures the given entity's processes' results are all stored
-func EntityProcessResults(c *client.Client, e *storeutil.Entity) {
+func EntityProcessResults(e *storeutil.Entity) {
 	for _, ID := range e.ProcessIDs {
 		if ID != "" {
 			if _, ok := store.Processes.ProcessResults[ID]; !ok {
-				t, st, res, err := c.GetProcessResults(strings.ToLower(ID))
+				t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
 				if !util.ErrPrint(err) {
 					dispatcher.Dispatch(&actions.SetProcessContents{
 						ID: store.Processes.CurrentProcessID,
