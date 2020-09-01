@@ -33,5 +33,5 @@ func (home *BlockView) Render() vecty.ComponentOrHTML {
 			elem.Main(vecty.Text("Block not available")),
 		)
 	}
-	return &components.BlockContents{}
+	return elem.Div(&components.BlockContents{})
 }

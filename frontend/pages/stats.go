@@ -21,7 +21,6 @@ func (stats *Stats) Render() vecty.ComponentOrHTML {
 
 // Component returns the stats component
 func (stats *Stats) Component() vecty.ComponentOrHTML {
-	// var dash components.StatsDashboardView
 	dash := new(components.StatsDashboardView)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
