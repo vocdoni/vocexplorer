@@ -36,7 +36,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 		return Container(
 			renderGatewayConnectionBanner(),
 			renderServerConnectionBanner(),
-			&LatestBlocksWidget{},
+			// &LatestBlocksWidget{},
 			&BlockList{},
 			&TxList{},
 			&BlockchainInfo{},

@@ -33,10 +33,7 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 	return Container(
 		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
-		&ValidatorListView{
-			refreshCh:     store.Validators.Pagination.PagChannel,
-			disableUpdate: &store.Validators.Pagination.DisableUpdate,
-		},
+		&ValidatorListView{},
 		&BlockchainInfo{},
 	)
 }
