@@ -37,6 +37,7 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderValidatorsDashboard keeps the validators data up to date
 func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
+	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateValidatorsDashboard(d)
 	vecty.Rerender(d)
@@ -74,7 +75,7 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 	actions.UpdateCounts()
 	rpc.UpdateBlockchainStatus(store.TendermintClient)

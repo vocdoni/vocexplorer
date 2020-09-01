@@ -168,6 +168,7 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 
 // UpdateAndRenderProcessesDashboard keeps the data for the processes dashboard up-to-date
 func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
+	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateProcessesDashboard(d)
 	for {
@@ -206,9 +207,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 
 func updateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
-
 	update.CurrentProcessResults()
 	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
 	if ok {

@@ -13,7 +13,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -92,6 +91,7 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 
 // UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
 func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
+	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
 	vecty.Rerender(d)
@@ -128,7 +128,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 
 	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)

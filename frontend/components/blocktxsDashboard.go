@@ -44,6 +44,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
 func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
+	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateBlockTxsDashboard(d)
 	for {
@@ -95,8 +96,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 }
 
 func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: rpc.Ping(store.TendermintClient)})
-
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 
 	actions.UpdateCounts()

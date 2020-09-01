@@ -28,7 +28,7 @@ type VocDashDashboardView struct {
 
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient.IsRunning() {
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
 			renderGatewayConnectionBanner(),
 			renderServerConnectionBanner(),
@@ -66,6 +66,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderVocDashDashboard continuously updates the information needed by the vocdash dashboard
 func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
+	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateVocdash(d)
 	for {
@@ -149,17 +150,9 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 }
 
 func updateVocdash(d *VocDashDashboardView) {
-	if store.GatewayClient.Conn.Ping(store.GatewayClient.Ctx) != nil {
-		dispatcher.Dispatch(&actions.GatewayConnected{Connected: false})
-	} else {
-		dispatcher.Dispatch(&actions.GatewayConnected{Connected: true})
-	}
-	if !api.Ping() {
-		dispatcher.Dispatch(&actions.ServerConnected{Connected: false})
-	} else {
-		dispatcher.Dispatch(&actions.ServerConnected{Connected: true})
-	}
-	updateHeights(d)
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
 		updateEnvelopes(d, util.Max(store.Envelopes.Count-d.EnvelopeIndex, config.ListSize))
 	}
@@ -204,21 +197,6 @@ func updateProcesses(d *VocDashDashboardView, index int) {
 	newVal, ok = api.GetEntityProcessHeightMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
-	}
-}
-
-func updateHeights(d *VocDashDashboardView) {
-	newVal, ok := api.GetEnvelopeHeight()
-	if ok {
-		dispatcher.Dispatch(&actions.SetEnvelopeCount{Count: int(newVal)})
-	}
-	newVal, ok = api.GetEntityHeight()
-	if ok {
-		dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
-	}
-	newVal, ok = api.GetProcessHeight()
-	if ok {
-		dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
 	}
 }
 
