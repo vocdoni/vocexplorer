@@ -6,7 +6,6 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -21,9 +20,16 @@ import (
 // VocDashDashboardView renders the processes dashboard page
 type VocDashDashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered      bool
 	EntityIndex   int
 	EnvelopeIndex int
 	ProcessIndex  int
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *VocDashDashboardView) Mount() {
+	dash.Rendered = true
 }
 
 // Render renders the VocDashDashboardView component
@@ -58,10 +64,12 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 			),
 		)
 	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
-	}
+	return elem.Div(
+		&bootstrap.Alert{
+			Contents: "Connecting to blockchain clients",
+			Type:     "warning",
+		},
+	)
 }
 
 // UpdateAndRenderVocDashDashboard continuously updates the information needed by the vocdash dashboard
@@ -166,7 +174,7 @@ func updateVocdash(d *VocDashDashboardView) {
 }
 
 func updateEnvelopes(d *VocDashDashboardView, index int) {
-	log.Infof("Getting envelopes from index %d", util.IntToString(index))
+	fmt.Printf("Getting envelopes from index %d\n", index)
 	list, ok := api.GetEnvelopeList(index)
 	if ok {
 		reverseEnvelopeList(&list)
@@ -175,7 +183,7 @@ func updateEnvelopes(d *VocDashDashboardView, index int) {
 }
 
 func updateEntities(d *VocDashDashboardView, index int) {
-	log.Infof("Getting entities from index %d", util.IntToString(index))
+	fmt.Printf("Getting entities from index %d\n", index)
 	list, ok := api.GetEntityList(index)
 	if ok {
 		reverseIDList(&list)
@@ -184,7 +192,7 @@ func updateEntities(d *VocDashDashboardView, index int) {
 }
 
 func updateProcesses(d *VocDashDashboardView, index int) {
-	log.Infof("Getting processes from index %d", util.IntToString(index))
+	fmt.Printf("Getting processes from index %d\n", index)
 	list, ok := api.GetProcessList(index)
 	if ok {
 		reverseIDList(&list)

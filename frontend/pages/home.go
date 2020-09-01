@@ -16,8 +16,12 @@ type HomeView struct {
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
 	dash := new(components.DashboardView)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderHomeDashboard(dash)
 	return dash

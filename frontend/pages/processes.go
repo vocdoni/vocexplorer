@@ -20,8 +20,12 @@ type ProcessesView struct {
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 	dash := new(components.ProcessesDashboardView)
 	dispatcher.Dispatch(&actions.SetCurrentProcessID{ID: router.GetNamedVar(home)["id"]})
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderProcessesDashboard(dash)
 	return dash

@@ -20,8 +20,12 @@ type EntitiesView struct {
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
 	dash := new(components.EntitiesDashboardView)
 	dispatcher.Dispatch(&actions.SetCurrentEntityID{EntityID: router.GetNamedVar(home)["id"]})
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderEntitiesDashboard(dash)
 	return dash

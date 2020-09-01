@@ -6,7 +6,6 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -20,7 +19,14 @@ import (
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered      bool
 	envelopeIndex int
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *ProcessesDashboardView) Mount() {
+	dash.Rendered = true
 }
 
 // Render renders the ProcessesDashboardView component
@@ -219,7 +225,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
-	log.Infof("Getting envelopes from index %d", util.IntToString(index))
+	fmt.Printf("Getting envelopes from index %d\n", index)
 	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcessID)
 	if ok {
 		reverseEnvelopeList(&list)

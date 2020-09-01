@@ -6,7 +6,6 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -20,12 +19,19 @@ import (
 // EntitiesDashboardView renders the entities dashboard page
 type EntitiesDashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered     bool
 	processIndex int
 }
 
 //EntitiesTab is the tab component for entities
 type EntitiesTab struct {
 	*Tab
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *EntitiesDashboardView) Mount() {
+	dash.Rendered = true
 }
 
 func (e *EntitiesTab) dispatch() interface{} {
@@ -136,7 +142,7 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 		dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newCount)})
 	}
 	if store.Entities.Count > 0 && !store.Entities.Pagination.DisableUpdate {
-		log.Infof("Getting processes from entity %s, index %d", store.Entities.CurrentEntityID, util.IntToString(index))
+		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {
 			reverseIDList(&list)

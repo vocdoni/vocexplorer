@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -19,7 +18,14 @@ import (
 // ValidatorsDashboardView renders the validators list dashboard
 type ValidatorsDashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered       bool
 	ValidatorIndex int
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *ValidatorsDashboardView) Mount() {
+	dash.Rendered = true
 }
 
 // Render renders the ValidatorsDashboardView component
@@ -85,7 +91,7 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 }
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
-	log.Infof("Getting Blocks from index %d", util.IntToString(index))
+	fmt.Printf("Getting Blocks from index %d\n", index)
 	list, ok := api.GetValidatorList(index)
 	if ok {
 		reverseValidatorList(&list)

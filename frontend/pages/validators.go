@@ -35,8 +35,12 @@ func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 		)
 	}
 	dash := new(components.ValidatorsDashboardView)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderValidatorsDashboard(dash)
 	return dash

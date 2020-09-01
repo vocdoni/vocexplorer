@@ -16,8 +16,12 @@ type VocDashView struct {
 // Render renders the VocDashView component
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
 	dash := new(components.VocDashDashboardView)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderVocDashDashboard(dash)
 	return dash

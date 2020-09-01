@@ -25,6 +25,7 @@ type ProcessListView struct {
 
 // Render renders the ProcessListView component
 func (b *ProcessListView) Render() vecty.ComponentOrHTML {
+	fmt.Println(store.Processes.Count)
 	if store.Processes.Count > 0 {
 		p := &Pagination{
 			TotalPages:      int(store.Processes.Count) / config.ListSize,

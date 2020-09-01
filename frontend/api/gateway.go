@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"strings"
 
 	"context"
 	"encoding/json"
@@ -27,7 +28,7 @@ type GatewayClient struct {
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
-	log.Infof("connecting to " + host)
+	fmt.Printf("connecting to %s\n", host)
 	gwClient, cancel, err := New(host)
 	if util.ErrPrint(err) {
 		for i := 0; i < 10; i++ {
@@ -55,6 +56,9 @@ func New(addr string) (*GatewayClient, context.CancelFunc, error) {
 
 // PingGateway pings the gateway host
 func PingGateway(host string) bool {
+	if strings.HasPrefix(host, "ws://") {
+		host = host[5:]
+	}
 	pingClient := http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -366,7 +370,7 @@ func (c *GatewayClient) Request(req MetaRequest) (*MetaResponse, error) {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 	for respOuter.ID != reqOuter.ID {
-		fmt.Printf("%s: %v", method, "request ID doesn't match\n")
+		fmt.Printf("%s: %v\n", method, "request ID doesn't match\n")
 		// Try to read & trash one more message so client can catch up
 		_, message, err := c.Conn.Read(ctx)
 		if err != nil {

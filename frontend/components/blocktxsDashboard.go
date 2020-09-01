@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -20,8 +19,15 @@ import (
 // BlockTxsDashboardView renders the dashboard landing page
 type BlockTxsDashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered   bool
 	blockIndex int
 	txIndex    int
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *BlockTxsDashboardView) Mount() {
+	dash.Rendered = true
 }
 
 // Render renders the BlockTxsDashboardView component
@@ -110,7 +116,7 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 }
 
 func updateBlocks(d *BlockTxsDashboardView, index int) {
-	log.Infof("Getting Blocks from index %d", util.IntToString(index))
+	fmt.Printf("Getting Blocks from index %d\n", index)
 	list, ok := api.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)
@@ -119,7 +125,7 @@ func updateBlocks(d *BlockTxsDashboardView, index int) {
 }
 
 func updateTxs(d *BlockTxsDashboardView, index int) {
-	log.Infof("Getting Txs from index %d", util.IntToString(index))
+	fmt.Printf("Getting Txs from index %d\n", index)
 	list, ok := api.GetTxList(index)
 	if ok {
 		reverseTxList(&list)

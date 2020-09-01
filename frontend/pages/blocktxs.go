@@ -16,8 +16,12 @@ type BlockTxsView struct {
 // Render renders the BlockTxsView component
 func (bv *BlockTxsView) Render() vecty.ComponentOrHTML {
 	dash := new(components.BlockTxsDashboardView)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
 	store.Listeners.Add(dash, func() {
-		vecty.Rerender(dash)
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
 	})
 	go components.UpdateAndRenderBlockTxsDashboard(dash)
 	return dash

@@ -19,7 +19,14 @@ import (
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered   bool
 	blockIndex int
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *DashboardView) Mount() {
+	dash.Rendered = true
 }
 
 // Render renders the DashboardView component
