@@ -87,6 +87,9 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 
 // Link renders a link which, when clicks, signals a redirect
 func Link(route, text, class string) *vecty.HTML {
+	if class == "" {
+		class = "nav-link"
+	}
 	return elem.Anchor(
 		vecty.Markup(
 			prop.Href(route),

@@ -61,6 +61,7 @@ func init() {
 	Validators.Pagination.PagChannel = make(chan int, 50)
 
 	Processes.ProcessResults = make(map[string]storeutil.Process)
+	Processes.ProcessKeys = make(map[string]*api.Pkeys)
 	Processes.EnvelopeHeights = make(map[string]int64)
 	Entities.ProcessHeights = make(map[string]int64)
 

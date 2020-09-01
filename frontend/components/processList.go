@@ -14,7 +14,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	router "marwan.io/vecty-router"
 )
 
 // ProcessListView renders the process list pane
@@ -108,9 +107,10 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						router.Link("/processes/"+ID, ID, router.LinkOptions{
-							Class: "hash",
-						}),
+						Link("/processes/"+ID,
+							ID,
+							"hash",
+						),
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("envelopes")),

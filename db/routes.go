@@ -376,7 +376,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		froms, ok := r.URL.Query()["from"]
 		if !ok || len(froms[0]) < 1 {
 			log.Errorf("Url Param 'from' is missing")
-			http.Error(w, "Url Param 'from' missing", 400)
+			http.Error(w, "Url Param 'from' missing", http.StatusNotFound)
 			return
 		}
 		from, err := strconv.Atoi(froms[0])
@@ -384,7 +384,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
-			http.Error(w, "No txs available", 404)
+			http.Error(w, "No txs available", http.StatusNotFound)
 			return
 		}
 		var rawTxs types.ItemList
@@ -416,22 +416,28 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 		ids, ok := r.URL.Query()["id"]
 		if !ok || len(ids[0]) < 1 {
 			log.Errorf("Url Param 'id' is missing")
-			http.Error(w, "Url Param 'id' missing", 400)
+			http.Error(w, "Url Param 'id' missing", http.StatusNotFound)
 			return
 		}
-		id := ids[0]
-		key := []byte(config.TxHeightPrefix + id)
+		height, err := strconv.Atoi(ids[0])
+		util.ErrPrint(err)
+		id := util.EncodeInt(height)
+		key := append([]byte(config.TxHeightPrefix), id...)
 		hash, err := db.Get(key)
 		if err != nil {
 			log.Error(err)
+			http.Error(w, "Unable to get tx hash", http.StatusNotFound)
+			return
 		}
 		raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to get raw tx", http.StatusNotFound)
+			return
+		}
 
 		var tx types.StoreTx
 		err = proto.Unmarshal(raw, &tx)
-		util.ErrPrint(err)
-		height, err := strconv.Atoi(id)
 		util.ErrPrint(err)
 
 		send := types.SendTx{
@@ -446,90 +452,95 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// TxHashRedirectHandler redirects to the tx corresponding to given height key
-func TxHashRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// TxHeightFromHashHandler indirects the given tx hash
+func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["hash"]
 		if !ok || len(ids[0]) < 1 {
 			log.Errorf("Url Param 'id' is missing")
-			http.Error(w, "Url Param 'id' missing", 400)
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Url Param 'id' missing", http.StatusNotFound)
 			return
 		}
 		id := ids[0]
 		hash, err := hex.DecodeString(id)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			log.Errorf("Cannot decode tx hash")
+			http.Error(w, "Tx hash invalid", http.StatusNotFound)
 			return
 		}
 		key := append([]byte(config.TxHashPrefix), hash...)
 		has, err := db.Has(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			log.Errorf("Tx Height not found")
+			http.Error(w, "Tx hash invalid", http.StatusNotFound)
 			return
 		}
 		if !has {
 			log.Errorf("Tx hash key not found")
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Tx hash key not found", http.StatusNotFound)
 			return
 		}
 		raw, err := db.Get(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Tx hash not found", http.StatusNotFound)
 			return
 		}
 
 		var tx types.StoreTx
 		err = proto.Unmarshal(raw, &tx)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Unable to get tx", http.StatusNotFound)
 			return
 		}
-
-		http.Redirect(w, r, "/txs/"+util.IntToString(tx.TxHeight), http.StatusPermanentRedirect)
+		height := &types.Height{Height: tx.GetHeight()}
+		rawHeight, err := proto.Marshal(height)
+		if util.ErrPrint(err) {
+			http.Error(w, "Tx height invalid", http.StatusNotFound)
+			return
+		}
+		w.Write(rawHeight)
 	}
 }
 
-// EnvelopeNullifierRedirectHandler redirects to the envelope corresponding to given nullifier
-func EnvelopeNullifierRedirectHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+// EnvelopeHeightFromNullifierHandler returns the height of the corresponding envelope nullifier
+func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["nullifier"]
 		if !ok || len(ids[0]) < 1 {
 			log.Errorf("Url Param 'nullifier' is missing")
-			http.Error(w, "Url Param 'nullifier' missing", 400)
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Url Param 'nullifier' missing", http.StatusNotFound)
 			return
 		}
 		id := ids[0]
 		hash, err := hex.DecodeString(id)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Unable to decode nullifier", http.StatusNotFound)
 			return
 		}
 		key := append([]byte(config.EnvNullifierPrefix), hash...)
 		has, err := db.Has(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Unable to get envelope height", http.StatusNotFound)
 			return
 		}
 		if !has {
-			log.Errorf("Nullifier key not found")
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			log.Errorf("Envelope nullifier does not exist")
+			http.Error(w, "Envelope nullifier does not exist", http.StatusNotFound)
 			return
 		}
 		raw, err := db.Get(key)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Unable to get envelope key", http.StatusNotFound)
 			return
 		}
 
 		var height types.Height
 		err = proto.Unmarshal(raw, &height)
 		if util.ErrPrint(err) {
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusFound)
+			http.Error(w, "Unable to unmarshal height", http.StatusNotFound)
 			return
 		}
+		w.Write(raw)
 
-		http.Redirect(w, r, "/envelopes/"+util.IntToString(height.GetHeight()), http.StatusPermanentRedirect)
 	}
 }

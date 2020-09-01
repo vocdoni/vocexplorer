@@ -10,7 +10,6 @@ import (
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	router "marwan.io/vecty-router"
 )
 
 // EnvelopeContents renders envelope contents
@@ -35,12 +34,10 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				router.Link(
+				Link(
 					"/envelopes/"+util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
 					util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
-					router.LinkOptions{
-						Class: "nav-link",
-					},
+					"nav-link",
 				),
 			),
 			elem.Div(
@@ -49,12 +46,10 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
 						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight()))+" envelope on process "),
-						router.Link(
+						Link(
 							"/processes/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
-							router.LinkOptions{
-								Class: "hash",
-							},
+							"hash",
 						),
 					),
 					elem.Div(

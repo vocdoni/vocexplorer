@@ -10,10 +10,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	router "marwan.io/vecty-router"
 )
 
 // BlockContents renders block contents
@@ -39,10 +39,10 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 					bootstrap.Card(bootstrap.CardParams{
 						Header: elem.Heading4(vecty.Text("Validator")),
 						Body: elem.Div(
-							router.Link(
+							Link(
 								"/validators/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
 								store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
-								router.LinkOptions{},
+								"",
 							),
 						),
 						ClassNames: []string{"validator"},
@@ -102,10 +102,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Parent hash"),
 			),
 			elem.Description(
-				router.Link(
+				Link(
 					fmt.Sprintf("/blocks/%d", block.Header.Height-1),
 					block.Header.LastBlockID.Hash.String(),
-					router.LinkOptions{},
+					"",
 				),
 			),
 			elem.DefinitionTerm(
@@ -113,10 +113,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Proposer Address"),
 			),
 			elem.Description(
-				router.Link(
+				Link(
 					"/validators/"+block.ProposerAddress.String(),
 					block.ProposerAddress.String(),
-					router.LinkOptions{},
+					"",
 				),
 			),
 		),
@@ -184,13 +184,16 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 		numTx++
 		err := json.Unmarshal(tx, &rawTx)
 		util.ErrPrint(err)
+		hashString := fmt.Sprintf("%X", tx.Hash())
+		txHeight, _ := api.GetTxHeightFromHash(hashString)
 		data = append(
 			data,
 			elem.Div(
 				vecty.Text("\tHash: "),
-				elem.Anchor(
-					vecty.Markup(vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash()))),
-					vecty.Text(fmt.Sprintf("%X", tx.Hash())),
+				Link(
+					"/txs/"+util.IntToString(txHeight),
+					hashString,
+					"",
 				),
 				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
 			),

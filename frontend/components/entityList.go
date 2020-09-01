@@ -13,7 +13,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	router "marwan.io/vecty-router"
 )
 
 // EntityListView renders the entity list pane
@@ -83,12 +82,10 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						router.Link(
+						Link(
 							"/entities/"+ID,
 							ID,
-							router.LinkOptions{
-								Class: "hash",
-							},
+							"hash",
 						),
 					),
 					elem.Div(

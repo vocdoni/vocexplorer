@@ -10,10 +10,10 @@ import (
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	router "marwan.io/vecty-router"
 )
 
 // TxContents renders tx contents
@@ -101,6 +101,11 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	entityID = util.StripHexString(entityID)
 	processID = util.StripHexString(processID)
 	nullifier = util.StripHexString(nullifier)
+	var ok bool
+	var envelopeHeight int64
+	if nullifier != "" {
+		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
+	}
 
 	accordionName := "accordionTx"
 
@@ -112,10 +117,10 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
 				vecty.If(
 					hasBlock,
-					router.Link(
+					Link(
 						"/blocks/"+util.IntToString(tx.Store.Height),
 						util.IntToString(tx.Store.Height),
-						router.LinkOptions{},
+						"",
 					),
 				),
 				vecty.If(
@@ -153,10 +158,10 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				entityID != "",
 				elem.Div(
 					vecty.Text("Belongs to entity "),
-					router.Link(
+					Link(
 						"/entities/"+entityID,
 						entityID,
-						router.LinkOptions{},
+						"",
 					),
 				),
 			),
@@ -164,22 +169,21 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				processID != "",
 				elem.Div(
 					vecty.Text("Belongs to process "),
-					router.Link(
+					Link(
 						"/processes/"+processID,
 						processID,
-						router.LinkOptions{},
+						"",
 					),
 				),
 			),
 			vecty.If(
-				nullifier != "" && rawTx.Type == "vote",
+				nullifier != "" && rawTx.Type == "vote" && ok,
 				elem.Div(
 					vecty.Text("Contains vote envelope "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/db/envelopenullifier/?nullifier="+nullifier),
-						),
-						vecty.Text(nullifier),
+					Link(
+						"/envelopes/"+util.IntToString(envelopeHeight),
+						nullifier,
+						"",
 					),
 				),
 			),

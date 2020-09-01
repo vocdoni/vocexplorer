@@ -22,10 +22,6 @@ import (
 
 func main() {
 	initFrontend()
-	// components.BeforeUnload(func() {
-	// 	fmt.Println("Unloading page")
-	// 	store.GatewayClient.Close()
-	// })
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{})
 }

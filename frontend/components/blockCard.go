@@ -13,7 +13,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	router "marwan.io/vecty-router"
 )
 
 //BlockCard renders a single block card
@@ -26,10 +25,10 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	}
 	p := message.NewPrinter(language.English)
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: router.Link(
+		Header: Link(
 			"/blocks/"+util.IntToString(block.GetHeight()),
 			"#"+util.IntToString(block.GetHeight()),
-			router.LinkOptions{},
+			"",
 		),
 		Body: vecty.List{
 			elem.Div(
@@ -60,10 +59,10 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Text("Proposer Address"),
 				),
 				elem.Div(
-					router.Link(
+					Link(
 						"/validators/"+util.HexToString(block.GetProposer()),
 						util.HexToString(block.GetProposer()),
-						router.LinkOptions{},
+						"",
 					),
 				),
 			),

@@ -115,7 +115,9 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		if err != nil {
 			log.Error(err)
 		}
-		gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		if status != nil {
+			gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		}
 	}
 
 	batch := d.NewBatch()

@@ -22,6 +22,21 @@ type DisableValidatorUpdate struct {
 	Disabled bool
 }
 
+// SetCurrentValidator is the action to set the currently displayed validator
+type SetCurrentValidator struct {
+	Validator *types.Validator
+}
+
+// SetCurrentValidatorBlockCount is the action to set the currently displayed validator's block count
+type SetCurrentValidatorBlockCount struct {
+	Count int
+}
+
+// SetCurrentValidatorBlockList is the action to set the list of blocks belonging to the current validator
+type SetCurrentValidatorBlockList struct {
+	BlockList [config.ListSize]*types.StoreBlock
+}
+
 // On initialization, register actions
 func init() {
 	dispatcher.Register(validatorActions)
@@ -38,6 +53,15 @@ func validatorActions(action interface{}) {
 
 	case *DisableValidatorUpdate:
 		store.Validators.Pagination.DisableUpdate = a.Disabled
+
+	case *SetCurrentValidator:
+		store.Validators.CurrentValidator = a.Validator
+
+	case *SetCurrentValidatorBlockCount:
+		store.Validators.CurrentBlockCount = a.Count
+
+	case *SetCurrentValidatorBlockList:
+		store.Validators.CurrentBlockList = a.BlockList
 
 	default:
 		return // don't fire listeners
