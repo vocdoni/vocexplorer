@@ -2,10 +2,9 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // Stats is a pretty page for all our blockchain statistics
@@ -21,17 +20,14 @@ func (stats *Stats) Render() vecty.ComponentOrHTML {
 
 // Component returns the stats component
 func (stats *Stats) Component() vecty.ComponentOrHTML {
-	return components.Container(
-		elem.Section(
-			bootstrap.Card(bootstrap.CardParams{
-				Body: vecty.List{
-					elem.Heading3(
-						vecty.Text("Stats"),
-					),
-					&components.BlockchainInfo{},
-					vecty.Text("Most stats will be moved here :)"),
-				},
-			}),
-		),
-	)
+	dash := new(components.StatsDashboardView)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	store.Listeners.Add(dash, func() {
+		if dash.Rendered {
+			vecty.Rerender(dash)
+		}
+	})
+	go components.UpdateAndRenderStatsDashboard(dash)
+	return dash
 }
