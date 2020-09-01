@@ -17,6 +17,20 @@ type SetGenesis struct {
 	Genesis *tmtypes.GenesisDoc
 }
 
+//SetGatewayInfo is the action to set the gateway statistic info
+type SetGatewayInfo struct {
+	APIList []string
+	Ok      bool
+	Health  int32
+}
+
+//SetBlockStatus is the action to set the latest block status
+type SetBlockStatus struct {
+	BlockTime      *[5]int32
+	BlockTimeStamp int32
+	Height         int64
+}
+
 // On initialization, register actions
 func init() {
 	dispatcher.Register(statsActions)
@@ -30,6 +44,16 @@ func statsActions(action interface{}) {
 
 	case *SetGenesis:
 		store.Stats.Genesis = a.Genesis
+
+	case *SetGatewayInfo:
+		store.Stats.APIList = a.APIList
+		store.Stats.Ok = a.Ok
+		store.Stats.Health = a.Health
+
+	case *SetBlockStatus:
+		store.Stats.BlockTime = a.BlockTime
+		store.Stats.BlockTimeStamp = a.BlockTimeStamp
+		store.Stats.Height = a.Height
 
 	default:
 		return // don't fire listeners

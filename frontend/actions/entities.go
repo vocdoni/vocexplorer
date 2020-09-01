@@ -43,7 +43,7 @@ type DisableEntityUpdate struct {
 
 // On initialization, register actions
 func init() {
-	dispatcher.Register(envelopeActions)
+	dispatcher.Register(entityActions)
 }
 
 // entityActions is the handler for all entity-related store actions

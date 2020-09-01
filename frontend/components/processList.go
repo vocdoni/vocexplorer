@@ -25,7 +25,6 @@ type ProcessListView struct {
 
 // Render renders the ProcessListView component
 func (b *ProcessListView) Render() vecty.ComponentOrHTML {
-	fmt.Println(store.Processes.Count)
 	if store.Processes.Count > 0 {
 		p := &Pagination{
 			TotalPages:      int(store.Processes.Count) / config.ListSize,
@@ -64,7 +63,30 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(ID string, hok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+	if !ok {
+		return elem.Div(
+			vecty.Markup(vecty.Class("tile", "empty")),
+			elem.Div(
+				vecty.Markup(vecty.Class("tile-body")),
+				elem.Div(
+					vecty.Markup(vecty.Class("type")),
+					elem.Div(
+						elem.Span(
+							vecty.Markup(vecty.Class("title")),
+							vecty.Text("Loading process..."),
+						),
+					),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("details")),
+					elem.Div(
+						vecty.Text("(date?)"),
+					),
+				),
+			),
+		)
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", info.State)),
 		elem.Div(
@@ -115,23 +137,12 @@ func renderProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
 	for _, ID := range store.Processes.ProcessIDs {
 		if ID != "" {
-			height, hok := store.Processes.EnvelopeHeights[ID]
+			height, _ := store.Processes.EnvelopeHeights[ID]
 			info, iok := store.Processes.ProcessResults[ID]
-
-			if !iok {
-				elemList = append(
-					elemList,
-					elem.Div(
-						vecty.Markup(vecty.Class("loading")),
-						vecty.Text("Loading process info..."),
-					),
-				)
-				continue
-			}
 
 			elemList = append(
 				elemList,
-				ProcessBlock(ID, hok, height, info),
+				ProcessBlock(ID, iok, height, info),
 			)
 		}
 	}

@@ -72,7 +72,7 @@ type SetCurrentProcessID struct {
 
 // On initialization, register actions
 func init() {
-	dispatcher.Register(envelopeActions)
+	dispatcher.Register(processActions)
 }
 
 // processActions is the handler for all process-related store actions

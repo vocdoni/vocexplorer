@@ -15,7 +15,7 @@ import (
 func DashboardInfo(c *api.GatewayClient) {
 	GatewayInfo(c)
 	BlockStatus(c)
-	Counts(c)
+	// Counts(c)
 }
 
 // Counts calls gateway apis, updates total number of processes and entities
@@ -33,18 +33,23 @@ func Counts(c *api.GatewayClient) {
 func GatewayInfo(c *api.GatewayClient) {
 	apiList, health, ok, err := c.GetGatewayInfo()
 	util.ErrPrint(err)
-	store.Stats.APIList = apiList
-	store.Stats.Ok = ok
-	store.Stats.Health = health
+	dispatcher.Dispatch(&actions.SetGatewayInfo{
+		APIList: apiList,
+		Ok:      ok,
+		Health:  health,
+	})
 }
 
 // BlockStatus calls gateway api, updates blockchain statistics
 func BlockStatus(c *api.GatewayClient) {
 	blockTime, blockTimeStamp, height, err := c.GetBlockStatus()
 	util.ErrPrint(err)
-	store.Stats.BlockTime = blockTime
-	store.Stats.BlockTimeStamp = blockTimeStamp
-	store.Stats.Height = height
+	dispatcher.Dispatch(&actions.SetBlockStatus{
+		BlockTime:      blockTime,
+		BlockTimeStamp: blockTimeStamp,
+		Height:         height,
+	})
+
 }
 
 // GetIDs gets ids

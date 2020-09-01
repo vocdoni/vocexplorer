@@ -76,13 +76,6 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 							vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+ID)),
 							vecty.Text("Entity Manager Page"),
 						),
-						router.Link(
-							"/entities/"+ID,
-							ID,
-							router.LinkOptions{
-								Class: "hash",
-							},
-						),
 					),
 				),
 			),
