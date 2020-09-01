@@ -40,7 +40,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 						Header: elem.Heading4(vecty.Text("Validator")),
 						Body: elem.Div(
 							Link(
-								"/validators/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
+								"/validator/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
 								store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
 								"",
 							),
@@ -103,7 +103,7 @@ func BlockView(block *tmtypes.Block) vecty.List {
 			),
 			elem.Description(
 				Link(
-					fmt.Sprintf("/blocks/%d", block.Header.Height-1),
+					fmt.Sprintf("/block/%d", block.Header.Height-1),
 					block.Header.LastBlockID.Hash.String(),
 					"",
 				),
@@ -114,7 +114,7 @@ func BlockView(block *tmtypes.Block) vecty.List {
 			),
 			elem.Description(
 				Link(
-					"/validators/"+block.ProposerAddress.String(),
+					"/validator/"+block.ProposerAddress.String(),
 					block.ProposerAddress.String(),
 					"",
 				),
@@ -191,7 +191,7 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Text("\tHash: "),
 				Link(
-					"/txs/"+util.IntToString(txHeight),
+					"/tx/"+util.IntToString(txHeight),
 					hashString,
 					"",
 				),

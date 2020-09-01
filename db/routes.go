@@ -105,7 +105,10 @@ func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string, getIt
 			return
 		}
 		height, err := strconv.Atoi(heights[0])
-		util.ErrPrint(err)
+		if util.ErrPrint(err) {
+			http.Error(w, "Cannot decode height", http.StatusInternalServerError)
+			return
+		}
 
 		envHeight := getHeight(db, heightKey, 0)
 		if height > int(envHeight.GetHeight()) {

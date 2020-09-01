@@ -22,7 +22,7 @@ type EntityProcessListView struct {
 
 //Render renders the EntityProcessListView component
 func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
-	if store.Entities.CurrentEntity != nil && store.Entities.CurrentEntity.ProcessCount > 0 {
+	if store.Entities.CurrentEntity.ProcessCount > 0 {
 		p := &Pagination{
 			TotalPages:      int(store.Entities.CurrentEntity.ProcessCount) / config.ListSize,
 			TotalItems:      &store.Entities.CurrentEntity.ProcessCount,

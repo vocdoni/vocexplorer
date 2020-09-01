@@ -12,7 +12,7 @@ import (
 func ValidatorCard(validator *types.Validator) vecty.ComponentOrHTML {
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
-			"/validators/"+util.HexToString(validator.GetAddress()),
+			"/validator/"+util.HexToString(validator.GetAddress()),
 			"#"+util.IntToString(validator.GetHeight().GetHeight()),
 			"",
 		),

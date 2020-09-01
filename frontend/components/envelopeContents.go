@@ -35,7 +35,7 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
 				Link(
-					"/envelopes/"+util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
+					"/envelope/"+util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
 					util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
 					"nav-link",
 				),
@@ -47,7 +47,7 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight()))+" envelope on process "),
 						Link(
-							"/processes/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
+							"/process/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							"hash",
 						),

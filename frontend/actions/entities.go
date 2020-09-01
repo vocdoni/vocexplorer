@@ -26,6 +26,11 @@ type SetEntityCount struct {
 	Count int
 }
 
+// SetEntityProcessCount is the action to set the current entity's process count
+type SetEntityProcessCount struct {
+	Count int
+}
+
 // SetProcessHeights is the action to set the entity count
 type SetProcessHeights struct {
 	ProcessHeights map[string]int64
@@ -69,6 +74,10 @@ func entityActions(action interface{}) {
 
 	case *DisableEntityUpdate:
 		store.Entities.Pagination.DisableUpdate = a.Disabled
+
+	case *SetEntityProcessCount:
+		store.Entities.CurrentEntity.ProcessCount = a.Count
+
 	default:
 		return // don't fire listeners
 	}

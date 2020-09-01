@@ -93,7 +93,7 @@ func CurrentProcessResults() {
 }
 
 // EntityProcessResults ensures the given entity's processes' results are all stored
-func EntityProcessResults(e *storeutil.Entity) {
+func EntityProcessResults(e storeutil.Entity) {
 	for _, ID := range e.ProcessIDs {
 		if ID != "" {
 			if _, ok := store.Processes.ProcessResults[ID]; !ok {

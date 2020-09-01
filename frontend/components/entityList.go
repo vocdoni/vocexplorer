@@ -83,7 +83,7 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						Link(
-							"/entities/"+ID,
+							"/entity/"+ID,
 							ID,
 							"hash",
 						),

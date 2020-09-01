@@ -107,7 +107,7 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						Link("/processes/"+ID,
+						Link("/process/"+ID,
 							ID,
 							"hash",
 						),

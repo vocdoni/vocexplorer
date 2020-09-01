@@ -7,7 +7,7 @@ import (
 // Entities stores the current entities information
 type Entities struct {
 	Count           int
-	CurrentEntity   *Entity
+	CurrentEntity   Entity
 	CurrentEntityID string
 	EntityIDs       [config.ListSize]string
 	Pagination      PageStore

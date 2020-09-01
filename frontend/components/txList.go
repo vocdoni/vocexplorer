@@ -123,7 +123,7 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 						fmt.Sprintf("%s transaction on block ", humanize.Ordinal(int(tx.Store.Index+1))),
 					),
 					Link(
-						"/blocks/"+util.IntToString(tx.Store.Height),
+						"/block/"+util.IntToString(tx.Store.Height),
 						util.IntToString(tx.Store.Height),
 						"",
 					),
@@ -136,7 +136,7 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
 						Link(
-							"/txs/"+util.IntToString(tx.Store.TxHeight),
+							"/tx/"+util.IntToString(tx.Store.TxHeight),
 							util.HexToString(tx.GetHash()),
 							"",
 						),

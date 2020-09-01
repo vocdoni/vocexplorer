@@ -19,15 +19,15 @@ func (b Body) Render() vecty.ComponentOrHTML {
 	return components.SectionMain(
 		router.NewRoute("/", &pages.HomeView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/vocdash", &pages.VocDashView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/processes/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/entities/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/envelopes/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/process/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/entity/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{Rendered: false}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/blocktxs", &pages.BlockTxsView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocks", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocks/{id}", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/txs/{id}", &pages.TxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		// router.NewRoute("/blocks", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/block/{id}", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/tx/{id}", &pages.TxsView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/stats", &pages.Stats{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/validators/{id}", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/validator/{id}", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
 		// Note that this handler only works for router.Link and router.Redirect accesses.
 		// Directly accessing a non-existant route won't be handled by this.

@@ -10,7 +10,6 @@ import (
 	"gitlab.com/vocdoni/go-dvote/crypto/nacl"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
@@ -24,11 +23,23 @@ import (
 // EnvelopesView renders the Envelopes page
 type EnvelopesView struct {
 	vecty.Core
-	Cfg *config.Cfg
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount triggers when EnvelopesView renders
+func (home *EnvelopesView) Mount() {
+	if !home.Rendered {
+		home.Rendered = true
+		vecty.Rerender(home)
+	}
 }
 
 // Render renders the EnvelopesView component
 func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
+	if !home.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
 	envelope, ok := api.GetEnvelope(height)

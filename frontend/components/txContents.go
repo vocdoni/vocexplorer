@@ -118,7 +118,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				vecty.If(
 					hasBlock,
 					Link(
-						"/blocks/"+util.IntToString(tx.Store.Height),
+						"/block/"+util.IntToString(tx.Store.Height),
 						util.IntToString(tx.Store.Height),
 						"",
 					),
@@ -159,7 +159,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				elem.Div(
 					vecty.Text("Belongs to entity "),
 					Link(
-						"/entities/"+entityID,
+						"/entity/"+entityID,
 						entityID,
 						"",
 					),
@@ -170,7 +170,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				elem.Div(
 					vecty.Text("Belongs to process "),
 					Link(
-						"/processes/"+processID,
+						"/process/"+processID,
 						processID,
 						"",
 					),
@@ -181,7 +181,7 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				elem.Div(
 					vecty.Text("Contains vote envelope "),
 					Link(
-						"/envelopes/"+util.IntToString(envelopeHeight),
+						"/envelope/"+util.IntToString(envelopeHeight),
 						nullifier,
 						"",
 					),

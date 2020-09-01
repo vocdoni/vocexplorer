@@ -26,7 +26,7 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	p := message.NewPrinter(language.English)
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
-			"/blocks/"+util.IntToString(block.GetHeight()),
+			"/block/"+util.IntToString(block.GetHeight()),
 			"#"+util.IntToString(block.GetHeight()),
 			"",
 		),
@@ -60,7 +60,7 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 				),
 				elem.Div(
 					Link(
-						"/validators/"+util.HexToString(block.GetProposer()),
+						"/validator/"+util.HexToString(block.GetProposer()),
 						util.HexToString(block.GetProposer()),
 						"",
 					),

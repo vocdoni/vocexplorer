@@ -46,7 +46,7 @@ func (e *EntitiesTab) store() string {
 
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash == nil || store.GatewayClient == nil || store.Entities.CurrentEntity == nil {
+	if dash == nil || store.GatewayClient == nil {
 		return Container(&bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Connecting to blockchain client",
@@ -139,7 +139,7 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 
 	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
 	if ok {
-		dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newCount)})
+		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
 	if store.Entities.Count > 0 && !store.Entities.Pagination.DisableUpdate {
 		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
