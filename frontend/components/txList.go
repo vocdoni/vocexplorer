@@ -74,7 +74,7 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 			}),
 		)
 	}
-	return elem.Div(vecty.Text("Waiting for txchain info..."))
+	return elem.Div(vecty.Text("Waiting for blockchain info..."))
 }
 
 func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
