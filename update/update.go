@@ -93,14 +93,14 @@ func CurrentProcessResults() {
 }
 
 // EntityProcessResults ensures the given entity's processes' results are all stored
-func EntityProcessResults(e storeutil.Entity) {
-	for _, ID := range e.ProcessIDs {
+func EntityProcessResults() {
+	for _, ID := range store.Entities.CurrentEntity.ProcessIDs {
 		if ID != "" {
 			if _, ok := store.Processes.ProcessResults[ID]; !ok {
 				t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
 				if !util.ErrPrint(err) {
 					dispatcher.Dispatch(&actions.SetProcessContents{
-						ID: store.Processes.CurrentProcessID,
+						ID: ID,
 						Process: storeutil.Process{
 							ProcessType: t,
 							State:       st,

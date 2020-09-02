@@ -31,7 +31,10 @@ type EntitiesTab struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *EntitiesDashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 func (e *EntitiesTab) dispatch() interface{} {
@@ -100,7 +103,6 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
-	vecty.Rerender(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -109,7 +111,6 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			return
 		case <-ticker.C:
 			updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
-			vecty.Rerender(d)
 		case i := <-store.Entities.Pagination.PagChannel:
 		loop:
 			for {
@@ -128,7 +129,6 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 				oldProcesses = store.Entities.Count
 			}
 			updateEntityProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
-			vecty.Rerender(d)
 		}
 	}
 }
@@ -141,7 +141,7 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
-	if store.Entities.Count > 0 && !store.Entities.Pagination.DisableUpdate {
+	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.Pagination.DisableUpdate {
 		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {
@@ -152,6 +152,6 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 		if ok {
 			dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
 		}
-		update.EntityProcessResults(store.Entities.CurrentEntity)
+		update.EntityProcessResults()
 	}
 }
