@@ -3,6 +3,11 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"github.com/gopherjs/vecty/event"
+	"github.com/gopherjs/vecty/prop"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	router "marwan.io/vecty-router"
 )
 
 // NavBar renders the navigation bar
@@ -18,13 +23,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("container-fluid")),
-			elem.Anchor(
-				vecty.Markup(
-					vecty.Attribute("href", "/"),
-					vecty.Class("navbar-brand"),
-				),
-				vecty.Text("Vochain Explorer"),
-			),
+			Link("/", "Vochain Explorer", "navbar-brand"),
 			elem.Button(
 				vecty.Markup(
 					vecty.Class("navbar-toggler"),
@@ -47,59 +46,61 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "active"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/"),
-							),
-							vecty.Text("Home"),
-						),
+						Link("/", "Home", "nav-link"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/vocdash"),
-							),
-							vecty.Text("Processes & Entities"),
-						),
+						Link("/vocdash", "Processes & Entities", "nav-link"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/blocktxs"),
-							),
-							vecty.Text("Blocks & Transactions"),
-						),
+						Link("/blocktxs", "Blocks & Transactions", "nav-link"),
 					),
 					elem.ListItem(
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/validators"),
-							),
-							vecty.Text("Validators"),
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
 						),
+						Link("/validators", "Validators", "nav-link"),
 					),
+					// elem.ListItem(
+					// 	vecty.Markup(
+					// 		vecty.Class("nav-item", "dropdown"),
+					// 	),
+					// 	Link("/blocks", "Blocks", "nav-link"),
+					// ),
 					elem.ListItem(
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Class("nav-link"),
-								vecty.Attribute("href", "/stats"),
-							),
-							vecty.Text("Stats"),
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
 						),
+						Link("/stats", "Stats", "nav-link"),
 					),
 				),
-				&SearchBar{},
+				// &SearchBar{},
 			),
 		),
+	)
+}
+
+// Link renders a link which, when clicks, signals a redirect
+func Link(route, text, class string) *vecty.HTML {
+	if class == "" {
+		class = "nav-link"
+	}
+	return elem.Anchor(
+		vecty.Markup(
+			prop.Href(route),
+			vecty.Class(class),
+			event.Click(
+				func(e *vecty.Event) {
+					dispatcher.Dispatch(&actions.SignalRedirect{})
+					router.Redirect(route)
+				},
+			).PreventDefault(),
+		),
+		vecty.Text(text),
 	)
 }

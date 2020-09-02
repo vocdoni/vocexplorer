@@ -6,14 +6,13 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
 //LatestBlocksWidget is a component for a widget of recent blocks
 type LatestBlocksWidget struct {
 	vecty.Core
-	T *rpc.TendermintInfo
 }
 
 //Render renders the LatestBlocksWidget component
@@ -22,13 +21,13 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	max := 4
-	for i := len(b.T.BlockList) - 1; i >= len(b.T.BlockList)-max; i-- {
-		if types.BlockIsEmpty(b.T.BlockList[i]) {
+	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-max; i-- {
+		if types.BlockIsEmpty(store.Blocks.Blocks[i]) {
 			continue
 		}
 		blockList = append(blockList, elem.Div(
 			vecty.Markup(vecty.Class("card-deck-col")),
-			BlockCard(b.T.BlockList[i]),
+			BlockCard(store.Blocks.Blocks[i]),
 		))
 	}
 	if len(blockList) == 0 {

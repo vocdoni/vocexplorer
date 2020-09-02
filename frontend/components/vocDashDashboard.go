@@ -1,56 +1,51 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // VocDashDashboardView renders the processes dashboard page
 type VocDashDashboardView struct {
 	vecty.Core
-	gatewayConnected       bool
-	serverConnected        bool
-	gwClient               *client.Client
-	envelopeIndex          int
-	entityIndex            int
-	processIndex           int
-	quitCh                 chan struct{}
-	disableEnvelopesUpdate bool
-	disableEntitiesUpdate  bool
-	disableProcessesUpdate bool
-	refreshEnvelopes       chan int
-	refreshEntities        chan int
-	refreshProcesses       chan int
-	vc                     *client.VochainInfo
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *VocDashDashboardView) Mount() {
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.vc != nil {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
-			renderGatewayConnectionBanner(dash.gatewayConnected),
-			renderServerConnectionBanner(dash.serverConnected),
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading2(vecty.Text("Processes")),
-						&ProcessListView{
-							vochain:       dash.vc,
-							refreshCh:     dash.refreshProcesses,
-							disableUpdate: &dash.disableProcessesUpdate,
-						},
+						&ProcessListView{},
 					},
 				}),
 			),
@@ -58,11 +53,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading2(vecty.Text("Entities")),
-						&EntityListView{
-							vochain:       dash.vc,
-							refreshCh:     dash.refreshEntities,
-							disableUpdate: &dash.disableEntitiesUpdate,
-						},
+						&EntityListView{},
 					},
 				}),
 			),
@@ -70,211 +61,154 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading2(vecty.Text("Envelopes")),
-						&EnvelopeList{
-							vochain:       dash.vc,
-							refreshCh:     dash.refreshEnvelopes,
-							disableUpdate: &dash.disableEnvelopesUpdate,
-						},
+						&EnvelopeList{},
 					},
 				}),
 			),
 		)
 	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
-	}
+	return elem.Div(
+		&bootstrap.Alert{
+			Contents: "Connecting to blockchain clients",
+			Type:     "warning",
+		},
+	)
 }
 
-// InitVocDashDashboardView initializes the vocdash page
-func InitVocDashDashboardView(vc *client.VochainInfo, VocDashDashboardView *VocDashDashboardView, cfg *config.Cfg) *VocDashDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return VocDashDashboardView
-	}
-	VocDashDashboardView.gwClient = gwClient
-	VocDashDashboardView.vc = vc
-	VocDashDashboardView.quitCh = make(chan struct{})
-	VocDashDashboardView.refreshEnvelopes = make(chan int, 50)
-	VocDashDashboardView.refreshProcesses = make(chan int, 50)
-	VocDashDashboardView.refreshEntities = make(chan int, 50)
-	VocDashDashboardView.disableEnvelopesUpdate = false
-	store.Entities.PagChannel = make(chan int, 50)
-	store.Processes.PagChannel = make(chan int, 50)
-	VocDashDashboardView.refreshEntities = store.Entities.PagChannel
-	VocDashDashboardView.refreshProcesses = store.Processes.PagChannel
-	VocDashDashboardView.serverConnected = true
-	VocDashDashboardView.gatewayConnected = true
+// UpdateAndRenderVocDashDashboard continuously updates the information needed by the vocdash dashboard
+func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
+	actions.EnableUpdates()
 
-	BeforeUnload(func() {
-		close(VocDashDashboardView.quitCh)
-	})
-	go updateAndRenderVocDashDashboard(VocDashDashboardView, cancel, cfg)
-	return VocDashDashboardView
-}
-
-func updateAndRenderVocDashDashboard(d *VocDashDashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateVocdash(d)
-	vecty.Rerender(d)
-	time.Sleep(250 * time.Millisecond)
-	vecty.Rerender(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			d.gwClient.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
 			updateVocdash(d)
-			vecty.Rerender(d)
-		case i := <-d.refreshEntities:
+		case i := <-store.Entities.Pagination.PagChannel:
 		entityLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshEntities:
+				case i = <-store.Entities.Pagination.PagChannel:
 				default:
 					break entityLoop
 				}
 			}
-			d.entityIndex = i
-			oldEntities := d.vc.EntityCount
-			newVal, ok := dbapi.GetEntityHeight()
+			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
+			oldEntities := store.Entities.Count
+			newVal, ok := api.GetEntityHeight()
 			if ok {
-				d.vc.EntityCount = int(newVal)
+				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
 			if i < 1 {
-				oldEntities = d.vc.EntityCount
+				oldEntities = store.Entities.Count
 			}
-			if d.vc.EntityCount > 0 {
-				updateEntities(d, util.Max(oldEntities-d.entityIndex-1, config.ListSize-1))
+			if store.Entities.Count > 0 {
+				updateEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index-1, config.ListSize-1))
 			}
-			vecty.Rerender(d)
-		case i := <-d.refreshProcesses:
+		case i := <-store.Processes.Pagination.PagChannel:
 		processLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshProcesses:
+				case i = <-store.Processes.Pagination.PagChannel:
 				default:
 					break processLoop
 
 				}
 			}
-			d.processIndex = i
-			oldProcesses := d.vc.ProcessCount
-			newVal, ok := dbapi.GetProcessHeight()
+			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
+			oldProcesses := store.Processes.Count
+			newVal, ok := api.GetProcessHeight()
 			if ok {
-				d.vc.ProcessCount = int(newVal)
+				dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
 			}
 			if i < 1 {
-				oldProcesses = d.vc.ProcessCount
+				oldProcesses = store.Processes.Count
 			}
-			if d.vc.ProcessCount > 0 {
-				updateProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
-				client.UpdateProcessResults(d.gwClient, d.vc)
+			if store.Processes.Count > 0 {
+				updateProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, config.ListSize))
+				update.ProcessResults()
 			}
-			vecty.Rerender(d)
-		case i := <-d.refreshEnvelopes:
+		case i := <-store.Envelopes.Pagination.PagChannel:
 		envelopeLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshEnvelopes:
+				case i = <-store.Envelopes.Pagination.PagChannel:
 				default:
 					break envelopeLoop
 				}
 			}
-			d.envelopeIndex = i
-			oldEnvelopes := d.vc.EnvelopeHeight
-			newVal, ok := dbapi.GetEnvelopeHeight()
+			dispatcher.Dispatch(&actions.EnvelopesIndexChange{Index: i})
+			oldEnvelopes := store.Envelopes.Count
+			newVal, ok := api.GetEnvelopeHeight()
 			if ok {
-				d.vc.EnvelopeHeight = int(newVal)
+				dispatcher.Dispatch(&actions.SetEnvelopeCount{Count: int(newVal)})
 			}
 			if i < 1 {
-				oldEnvelopes = d.vc.EnvelopeHeight
+				oldEnvelopes = store.Envelopes.Count
 			}
-			if d.vc.EnvelopeHeight > 0 {
-				updateEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
+			if store.Envelopes.Count > 0 {
+				updateEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, config.ListSize))
 			}
-			vecty.Rerender(d)
 		}
 	}
 }
 
 func updateVocdash(d *VocDashDashboardView) {
-	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	actions.UpdateCounts()
+	if !store.Envelopes.Pagination.DisableUpdate {
+		updateEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, config.ListSize))
 	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
+	if !store.Entities.Pagination.DisableUpdate {
+		updateEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index-1, config.ListSize-1))
 	}
-	updateHeights(d)
-	if !d.disableEnvelopesUpdate {
-		updateEnvelopes(d, util.Max(d.vc.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-	}
-	if !d.disableEntitiesUpdate {
-		updateEntities(d, util.Max(d.vc.EntityCount-d.entityIndex-1, config.ListSize-1))
-	}
-	if !d.disableProcessesUpdate {
-		updateProcesses(d, util.Max(d.vc.ProcessCount-d.processIndex, config.ListSize))
-		client.UpdateProcessResults(d.gwClient, d.vc)
+	if !store.Processes.Pagination.DisableUpdate {
+		updateProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, config.ListSize))
+		update.ProcessResults()
 	}
 }
 
 func updateEnvelopes(d *VocDashDashboardView, index int) {
-	log.Infof("Getting envelopes from index %d", util.IntToString(index))
-	list, ok := dbapi.GetEnvelopeList(index)
+	fmt.Printf("Getting envelopes from index %d\n", index)
+	list, ok := api.GetEnvelopeList(index)
 	if ok {
 		reverseEnvelopeList(&list)
-		d.vc.EnvelopeList = list
+		dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: list})
 	}
 }
 
 func updateEntities(d *VocDashDashboardView, index int) {
-	log.Infof("Getting entities from index %d", util.IntToString(index))
-	list, ok := dbapi.GetEntityList(index)
+	fmt.Printf("Getting entities from index %d\n", index)
+	list, ok := api.GetEntityList(index)
 	if ok {
 		reverseIDList(&list)
-		d.vc.EntityIDs = list
+		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 	}
 }
 
 func updateProcesses(d *VocDashDashboardView, index int) {
-	log.Infof("Getting processes from index %d", util.IntToString(index))
-	list, ok := dbapi.GetProcessList(index)
+	fmt.Printf("Getting processes from index %d\n", index)
+	list, ok := api.GetProcessList(index)
 	if ok {
 		reverseIDList(&list)
-		d.vc.ProcessIDs = list
+		dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
 	}
-	newVal, ok := dbapi.GetProcessEnvelopeHeightMap()
+	newVal, ok := api.GetProcessEnvelopeHeightMap()
 	if ok {
-		d.vc.EnvelopeHeights = newVal
+		dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newVal})
 	}
-	newVal, ok = dbapi.GetEntityProcessHeightMap()
+	newVal, ok = api.GetEntityProcessHeightMap()
 	if ok {
-		d.vc.ProcessHeights = newVal
-	}
-}
-
-func updateHeights(d *VocDashDashboardView) {
-	newVal, ok := dbapi.GetEnvelopeHeight()
-	if ok {
-		d.vc.EnvelopeHeight = int(newVal)
-	}
-	newVal, ok = dbapi.GetEntityHeight()
-	if ok {
-		d.vc.EntityCount = int(newVal)
-	}
-	newVal, ok = dbapi.GetProcessHeight()
-	if ok {
-		d.vc.ProcessCount = int(newVal)
+		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
 	}
 }
 

@@ -5,16 +5,13 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //Jumbotron is a component for an info banner of statistics
 type Jumbotron struct {
 	vecty.Core
-	t  *rpc.TendermintInfo
-	vc *client.VochainInfo
 }
 
 //JumboStatTitle renders the jumbotron statistic title
@@ -38,27 +35,27 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 	colMarkup := vecty.Markup(vecty.Class("col-xs-12", "col-sm-4", "mb-2", "mb-sm-0"))
 	var items vecty.List
 
-	if b.vc.BlockTime != nil && b.vc.BlockTime[0] > 0 {
+	if store.Stats.BlockTime != nil && store.Stats.BlockTime[0] > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Average block time"),
-			JumboStatValue(fmt.Sprintf("%ss", util.MsToSecondsString(b.vc.BlockTime[0]))),
+			JumboStatValue(fmt.Sprintf("%ss", util.MsToSecondsString(store.Stats.BlockTime[0]))),
 		))
 	}
 
-	if b.vc.ProcessCount > 0 {
+	if store.Processes.Count > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total processes"),
-			JumboStatValue(util.IntToString(b.vc.ProcessCount)),
+			JumboStatValue(util.IntToString(store.Processes.Count)),
 		))
 	}
 
-	if b.vc.EntityCount > 0 {
+	if store.Entities.Count > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Total entities"),
-			JumboStatValue(util.IntToString(b.vc.EntityCount)),
+			JumboStatValue(util.IntToString(store.Entities.Count)),
 		))
 	}
 

@@ -1,4 +1,4 @@
-package dbapi
+package api
 
 import (
 	"fmt"
@@ -237,6 +237,18 @@ func GetTx(height int64) (*types.SendTx, bool) {
 	return &tx, true
 }
 
+//GetTxHeightFromHash finds the height corresponding to a given tx hash
+func GetTxHeightFromHash(hash string) (int64, bool) {
+	body, ok := request("/db/txhash/?hash=" + hash)
+	if !ok {
+		return 0, false
+	}
+	var height types.Height
+	err := proto.Unmarshal(body, &height)
+	util.ErrPrint(err)
+	return height.GetHeight(), true
+}
+
 //GetValidator returns a single validator from the database
 func GetValidator(address string) (*types.Validator, bool) {
 	body, ok := request("/db/validator/?id=" + address)
@@ -280,6 +292,18 @@ func GetEnvelope(height int64) (*types.Envelope, bool) {
 	err := proto.Unmarshal(body, envelope)
 	util.ErrPrint(err)
 	return envelope, true
+}
+
+//GetEnvelopeHeightFromNullifier finds the height corresponding to a given envelope nullifier
+func GetEnvelopeHeightFromNullifier(hash string) (int64, bool) {
+	body, ok := request("/db/envelopenullifier/?nullifier=" + hash)
+	if !ok {
+		return 0, false
+	}
+	var height types.Height
+	err := proto.Unmarshal(body, &height)
+	util.ErrPrint(err)
+	return height.GetHeight(), true
 }
 
 //GetEnvelopeListByProcess returns a list of envelopes by process

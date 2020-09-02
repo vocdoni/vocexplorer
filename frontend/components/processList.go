@@ -8,34 +8,33 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessListView renders the process list pane
 type ProcessListView struct {
 	vecty.Core
-	currentPage   int
-	vochain       *client.VochainInfo
-	disableUpdate *bool
-	refreshCh     chan int
 }
 
 // Render renders the ProcessListView component
 func (b *ProcessListView) Render() vecty.ComponentOrHTML {
-	if b.vochain != nil && b.vochain.ProcessCount > 0 {
+	if store.Processes.Count > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.vochain.ProcessCount) / config.ListSize,
-			TotalItems:      &b.vochain.ProcessCount,
-			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			TotalPages:      int(store.Processes.Count) / config.ListSize,
+			TotalItems:      &store.Processes.Count,
+			CurrentPage:     &store.Processes.Pagination.CurrentPage,
+			RefreshCh:       store.Processes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return elem.Div(renderProcessItems(b.vochain.ProcessIDs, b.vochain.EnvelopeHeights, b.vochain.ProcessResults)...)
+			return elem.Div(renderProcessItems()...)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -44,11 +43,11 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -58,14 +57,34 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 		}
 		return p
 	}
-	if b.vochain.ProcessCount < 1 {
-		return elem.Div(vecty.Text("No processes available"))
-	}
-	return elem.Div(vecty.Text("Waiting for processes..."))
+	return elem.Div(vecty.Text("No processes available"))
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) vecty.ComponentOrHTML {
+func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+	if !ok {
+		return elem.Div(
+			vecty.Markup(vecty.Class("tile", "empty")),
+			elem.Div(
+				vecty.Markup(vecty.Class("tile-body")),
+				elem.Div(
+					vecty.Markup(vecty.Class("type")),
+					elem.Div(
+						elem.Span(
+							vecty.Markup(vecty.Class("title")),
+							vecty.Text("Loading process..."),
+						),
+					),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("details")),
+					elem.Div(
+						vecty.Text("(date?)"),
+					),
+				),
+			),
+		)
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", info.State)),
 		elem.Div(
@@ -87,10 +106,9 @@ func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) ve
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						elem.Anchor(
-							vecty.Markup(vecty.Class("hash")),
-							vecty.Markup(vecty.Attribute("href", "/processes/"+ID)),
-							vecty.Text(ID),
+						Link("/process/"+ID,
+							ID,
+							"hash",
 						),
 					),
 					elem.Div(
@@ -111,30 +129,19 @@ func ProcessBlock(ID string, hok bool, height int64, info client.ProcessInfo) ve
 	)
 }
 
-func renderProcessItems(IDs [config.ListSize]string, heights map[string]int64, procs map[string]client.ProcessInfo) []vecty.MarkupOrChild {
-	if len(IDs) == 0 {
+func renderProcessItems() []vecty.MarkupOrChild {
+	if len(store.Processes.ProcessIDs) == 0 {
 		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
 	}
 	var elemList []vecty.MarkupOrChild
-	for _, ID := range IDs {
+	for _, ID := range store.Processes.ProcessIDs {
 		if ID != "" {
-			height, hok := heights[ID]
-			info, iok := procs[ID]
-
-			if !iok {
-				elemList = append(
-					elemList,
-					elem.Div(
-						vecty.Markup(vecty.Class("loading")),
-						vecty.Text("Loading process info..."),
-					),
-				)
-				continue
-			}
+			height, _ := store.Processes.EnvelopeHeights[ID]
+			info, iok := store.Processes.ProcessResults[ID]
 
 			elemList = append(
 				elemList,
-				ProcessBlock(ID, hok, height, info),
+				ProcessBlock(ID, iok, height, info),
 			)
 		}
 	}

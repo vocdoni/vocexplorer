@@ -4,6 +4,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 //ConnectedBanner is the component to display a banner if server is disconnected
@@ -22,16 +23,16 @@ func (b *ConnectedBanner) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func renderGatewayConnectionBanner(conn bool) vecty.ComponentOrHTML {
-	if !conn {
+func renderGatewayConnectionBanner() vecty.ComponentOrHTML {
+	if !store.GatewayConnected {
 		return &ConnectedBanner{
 			connection: "blockchain Gateway",
 		}
 	}
 	return nil
 }
-func renderServerConnectionBanner(conn bool) vecty.ComponentOrHTML {
-	if !conn {
+func renderServerConnectionBanner() vecty.ComponentOrHTML {
+	if !store.ServerConnected {
 		return &ConnectedBanner{
 			connection: "web server",
 		}

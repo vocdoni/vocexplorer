@@ -25,11 +25,10 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	}
 	p := message.NewPrinter(language.English)
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: elem.Anchor(
-			vecty.Markup(
-				vecty.Attribute("href", "/blocks/"+util.IntToString(block.GetHeight())),
-			),
-			vecty.Text("#"+util.IntToString(block.GetHeight())),
+		Header: Link(
+			"/block/"+util.IntToString(block.GetHeight()),
+			"#"+util.IntToString(block.GetHeight()),
+			"",
 		),
 		Body: vecty.List{
 			elem.Div(
@@ -60,11 +59,10 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Text("Proposer Address"),
 				),
 				elem.Div(
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/validators/"+util.HexToString(block.GetProposer())),
-						),
-						vecty.Text(util.HexToString(block.GetProposer())),
+					Link(
+						"/validator/"+util.HexToString(block.GetProposer()),
+						util.HexToString(block.GetProposer()),
+						"",
 					),
 				),
 			),

@@ -11,11 +11,10 @@ import (
 //ValidatorCard renders a single validator card
 func ValidatorCard(validator *types.Validator) vecty.ComponentOrHTML {
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: elem.Anchor(
-			vecty.Markup(
-				vecty.Attribute("href", "/validators/"+util.HexToString(validator.GetAddress())),
-			),
-			vecty.Text("#"+util.IntToString(validator.GetHeight().GetHeight())),
+		Header: Link(
+			"/validator/"+util.HexToString(validator.GetAddress()),
+			"#"+util.IntToString(validator.GetHeight().GetHeight()),
+			"",
 		),
 		Body: vecty.List{
 			elem.Div(

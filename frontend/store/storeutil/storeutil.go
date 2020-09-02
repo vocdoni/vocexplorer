@@ -32,6 +32,14 @@ func (r *ListenerRegistry) Remove(key interface{}) {
 	delete(r.listeners, key)
 }
 
+// Has returns true if the listener registry has a listener with the given key
+func (r *ListenerRegistry) Has(key interface{}) bool {
+	if _, ok := r.listeners[key]; ok {
+		return true
+	}
+	return false
+}
+
 // Fire invokes all listeners in the registry.
 func (r *ListenerRegistry) Fire() {
 	for _, l := range r.listeners {

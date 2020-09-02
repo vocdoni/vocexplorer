@@ -127,11 +127,11 @@ func main() {
 		sub := strings.Split(cfg.Global.GatewayHost, ":")
 		port := "9090"
 		if len(sub) < 1 {
-			port = sub[1]
+			port = sub[1][:4]
 		}
-		cfg.Global.GatewayHost = "ws://localhost:" + port + cfg.Global.GatewaySocket
+		cfg.Global.GatewayHost = "ws://localhost:" + port
 	} else {
-		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + cfg.Global.GatewaySocket
+		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost
 	}
 
 	//Convert host url to localhost if using internal docker network

@@ -9,8 +9,11 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -18,26 +21,22 @@ import (
 // ProcessesEnvelopeListView renders the envelope list pane
 type ProcessesEnvelopeListView struct {
 	vecty.Core
-	currentPage   int
-	disableUpdate *bool
-	refreshCh     chan int
-	process       *client.FullProcessInfo
 }
 
 // Render renders the EnvelopeListView component
 func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
-	if b.process != nil && b.process.EnvelopeHeight > 0 {
+	if store.Processes.CurrentProcess.EnvelopeCount > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.process.EnvelopeHeight) / config.ListSize,
-			TotalItems:      &b.process.EnvelopeHeight,
-			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			TotalPages:      int(store.Processes.CurrentProcess.EnvelopeCount) / config.ListSize,
+			TotalItems:      &store.Processes.CurrentProcess.EnvelopeCount,
+			CurrentPage:     &store.Processes.EnvelopesPage,
+			RefreshCh:       store.Processes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderProcessEnvelopes(p, b.process, index)
+			return renderProcessEnvelopes(p, store.Processes.CurrentProcess, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -46,11 +45,11 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -66,24 +65,21 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			p,
 		)
 	}
-	if b.process.EnvelopeHeight < 1 {
-		return elem.Preformatted(
-			vecty.Markup(vecty.Class("empty")),
-			vecty.Text("This process has no envelopes"),
-		)
-	}
-	return elem.Div(vecty.Text("Waiting for envelopes..."))
+	return elem.Preformatted(
+		vecty.Markup(vecty.Class("empty")),
+		vecty.Text("This process has no envelopes"),
+	)
 }
 
-func renderProcessEnvelopes(p *Pagination, process *client.FullProcessInfo, index int) vecty.ComponentOrHTML {
+func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int) vecty.ComponentOrHTML {
 	var EnvelopeList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(process.EnvelopeList) - 1; i >= len(process.EnvelopeList)-p.ListSize; i-- {
-		if types.EnvelopeIsEmpty(process.EnvelopeList[i]) {
+	for i := len(process.Envelopes) - 1; i >= len(process.Envelopes)-p.ListSize; i-- {
+		if types.EnvelopeIsEmpty(process.Envelopes[i]) {
 			empty--
 		} else {
-			envelope := process.EnvelopeList[i]
+			envelope := process.Envelopes[i]
 			EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
 		}
 	}
@@ -102,12 +98,10 @@ func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Class("nav-link"),
-						vecty.Attribute("href", "/envelopes/"+util.IntToString(envelope.GetGlobalHeight())),
-					),
-					vecty.Text(util.IntToString(envelope.GetProcessHeight())),
+				Link(
+					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
+					util.IntToString(envelope.GetProcessHeight()),
+					"nav-link",
 				),
 			),
 			elem.Div(
@@ -132,55 +126,3 @@ func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 		),
 	)
 }
-
-// func renderEnvelopeList(b *EnvelopeListView) vecty.ComponentOrHTML {
-// 	return elem.Div(
-// 		elem.Button(
-// 			vecty.Text("prev"),
-// 			vecty.Markup(
-// 				event.Click(func(e *vecty.Event) {
-// 					b.envelopesIndex--
-// 					vecty.Rerender(b)
-// 				}),
-// 				vecty.MarkupIf(
-// 					b.envelopesIndex > 0,
-// 					prop.Disabled(false),
-// 				),
-// 				vecty.MarkupIf(
-// 					b.envelopesIndex < 1,
-// 					prop.Disabled(true),
-// 				),
-// 			),
-// 		),
-// 		elem.Button(vecty.Text("next"),
-// 			vecty.Markup(
-// 				event.Click(func(e *vecty.Event) {
-// 					b.envelopesIndex++
-// 					vecty.Rerender(b)
-// 				}),
-// 				vecty.MarkupIf(
-// 					(b.envelopesIndex+1)*config.ListSize < b.numEnvelopes,
-// 					prop.Disabled(false),
-// 				),
-// 				vecty.MarkupIf(
-// 					(b.envelopesIndex+1)*config.ListSize >= b.numEnvelopes,
-// 					prop.Disabled(true),
-// 				),
-// 			),
-// 		),
-// 		elem.UnorderedList(
-// 			renderEnvelopeItems(b.envelopeIDs)...,
-// 		),
-// 	)
-// }
-
-// func renderEnvelopeItems(slice []string) []vecty.MarkupOrChild {
-// 	if len(slice) == 0 {
-// 		return []vecty.MarkupOrChild{vecty.Text("No valid envelopes")}
-// 	}
-// 	var elemList []vecty.MarkupOrChild
-// 	for _, term := range slice {
-// 		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
-// 	}
-// 	return elemList
-// }

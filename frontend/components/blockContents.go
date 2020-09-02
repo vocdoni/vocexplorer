@@ -7,25 +7,50 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // BlockContents renders block contents
 type BlockContents struct {
 	vecty.Core
-	Block *tmtypes.Block
-	Hash  tmbytes.HexBytes
-	// BlockDetails vecty.ComponentOrHTML
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount triggers when BlockContents renders
+func (c *BlockContents) Mount() {
+	if !c.Rendered {
+		c.Rendered = true
+		vecty.Rerender(c)
+	}
 }
 
 // Render renders the BlockContents component
 func (c *BlockContents) Render() vecty.ComponentOrHTML {
+	if !c.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if store.Blocks.CurrentBlock == nil {
+		return Container(
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading3(
+							vecty.Text("Block does not exist"),
+						),
+					},
+				}),
+			),
+		)
+	}
 	return Container(
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view")),
@@ -34,7 +59,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body: BlockView(c.Block),
+						Body: BlockView(store.Blocks.CurrentBlock.Block),
 					}),
 				),
 				elem.Div(
@@ -42,9 +67,10 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 					bootstrap.Card(bootstrap.CardParams{
 						Header: elem.Heading4(vecty.Text("Validator")),
 						Body: elem.Div(
-							elem.Anchor(
-								vecty.Markup(vecty.Attribute("href", "/validators/"+c.Block.ValidatorsHash.String())),
-								vecty.Text(c.Block.ValidatorsHash.String()),
+							Link(
+								"/validator/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
+								store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
+								"",
 							),
 						),
 						ClassNames: []string{"validator"},
@@ -66,6 +92,24 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 			),
 		),
 	)
+}
+
+// UpdateAndRenderBlockContents keeps the block contents up to date
+func UpdateAndRenderBlockContents(d *BlockContents) {
+	actions.EnableUpdates()
+	// Fetch block contents
+	block := rpc.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
+	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
+	var rawTx dvotetypes.Tx
+	var txHeights []int64
+	for _, tx := range store.Blocks.CurrentBlock.Block.Data.Txs {
+		err := json.Unmarshal(tx, &rawTx)
+		util.ErrPrint(err)
+		hashString := fmt.Sprintf("%X", tx.Hash())
+		txHeight, _ := api.GetTxHeightFromHash(hashString)
+		txHeights = append(txHeights, txHeight)
+	}
+	dispatcher.Dispatch(&actions.SetCurrentBlockTxHeights{Heights: txHeights})
 }
 
 //BlockView renders a single block card
@@ -104,11 +148,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Parent hash"),
 			),
 			elem.Description(
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", fmt.Sprintf("/blocks/%d", block.Header.Height-1)),
-					),
-					vecty.Text(block.Header.LastBlockID.Hash.String()),
+				Link(
+					fmt.Sprintf("/block/%d", block.Header.Height-1),
+					block.Header.LastBlockID.Hash.String(),
+					"",
 				),
 			),
 			elem.DefinitionTerm(
@@ -116,11 +159,10 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Proposer Address"),
 			),
 			elem.Description(
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", "/validators/"+block.ProposerAddress.String()),
-					),
-					vecty.Text(block.ProposerAddress.String()),
+				Link(
+					"/validator/"+block.ProposerAddress.String(),
+					block.ProposerAddress.String(),
+					"",
 				),
 			),
 		),
@@ -133,7 +175,7 @@ type BlockTab struct {
 }
 
 func (b *BlockTab) store() string {
-	return store.BlockTabActive
+	return store.Blocks.Pagination.Tab
 }
 func (b *BlockTab) dispatch() interface{} {
 	return &actions.BlocksTabChange{
@@ -172,10 +214,10 @@ func (c *BlockContents) BlockDetails() vecty.List {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(transactions, preformattedBlockTransactions(c.Block)),
-			TabContents(header, preformattedBlockHeader(c.Block)),
-			TabContents(evidence, preformattedBlockEvidence(c.Block)),
-			TabContents(lastCommit, preformattedBlockLastCommit(c.Block)),
+			TabContents(transactions, preformattedBlockTransactions(store.Blocks.CurrentBlock.Block)),
+			TabContents(header, preformattedBlockHeader(store.Blocks.CurrentBlock.Block)),
+			TabContents(evidence, preformattedBlockEvidence(store.Blocks.CurrentBlock.Block)),
+			TabContents(lastCommit, preformattedBlockLastCommit(store.Blocks.CurrentBlock.Block)),
 		),
 	}
 }
@@ -183,21 +225,29 @@ func (c *BlockContents) BlockDetails() vecty.List {
 func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	numTx := 0
+	var txHeight int64
 	data := []vecty.MarkupOrChild{vecty.Text("Transactions: [\n")}
-	for _, tx := range block.Data.Txs {
+	for i, tx := range block.Data.Txs {
 		numTx++
 		err := json.Unmarshal(tx, &rawTx)
 		util.ErrPrint(err)
+		hashString := fmt.Sprintf("%X", tx.Hash())
+		var hashElement vecty.ComponentOrHTML
+		if len(store.Blocks.CurrentBlockTxHeights) > i {
+			txHeight = store.Blocks.CurrentBlockTxHeights[i]
+			hashElement = Link(
+				"/tx/"+util.IntToString(txHeight),
+				hashString,
+				"",
+			)
+		} else {
+			hashElement = elem.Div(vecty.Markup(vecty.Class("nav-link")), vecty.Text(hashString))
+		}
 		data = append(
 			data,
 			elem.Div(
 				vecty.Text("\tHash: "),
-				elem.Anchor(
-					vecty.Markup(
-						vecty.Attribute("href", fmt.Sprintf("/db/txhash/?hash=%X", tx.Hash())),
-					),
-					vecty.Text(fmt.Sprintf("%X", tx.Hash())),
-				),
+				hashElement,
 				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
 			),
 		)

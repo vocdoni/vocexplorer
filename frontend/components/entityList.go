@@ -8,34 +8,32 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntityListView renders the entity list pane
 type EntityListView struct {
 	vecty.Core
-	currentPage   int
-	disableUpdate *bool
-	refreshCh     chan int
-	vochain       *client.VochainInfo
 }
 
 // Render renders the EntityListView component
 func (b *EntityListView) Render() vecty.ComponentOrHTML {
-	if b.vochain != nil && b.vochain.EntityCount > 0 {
+	if store.Entities.Count > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.vochain.EntityCount) / config.ListSize,
-			TotalItems:      &b.vochain.EntityCount,
-			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			TotalPages:      int(store.Entities.Count) / config.ListSize,
+			TotalItems:      &store.Entities.Count,
+			CurrentPage:     &store.Entities.Pagination.CurrentPage,
+			RefreshCh:       store.Entities.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Entities.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return elem.Div(renderEntityItems(b.vochain.EntityIDs, b.vochain.ProcessHeights)...)
+			return elem.Div(renderEntityItems()...)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -44,11 +42,11 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableEntityUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableEntityUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -58,10 +56,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 		}
 		return p
 	}
-	if b.vochain.EntityCount < 1 {
-		return elem.Div(vecty.Text("No entities available"))
-	}
-	return elem.Div(vecty.Text("Waiting for entities..."))
+	return elem.Div(vecty.Text("No entities available"))
 }
 
 //EntityBlock renders a single entity card
@@ -86,10 +81,10 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						elem.Anchor(
-							vecty.Markup(vecty.Class("hash")),
-							vecty.Markup(vecty.Attribute("href", "/entities/"+ID)),
-							vecty.Text(ID),
+						Link(
+							"/entity/"+ID,
+							ID,
+							"hash",
 						),
 					),
 					elem.Div(
@@ -110,14 +105,14 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 	)
 }
 
-func renderEntityItems(slice [config.ListSize]string, heights map[string]int64) []vecty.MarkupOrChild {
-	if len(slice) == 0 {
+func renderEntityItems() []vecty.MarkupOrChild {
+	if len(store.Entities.EntityIDs) == 0 {
 		return []vecty.MarkupOrChild{vecty.Text("No valid entities")}
 	}
 	var elemList []vecty.MarkupOrChild
-	for _, ID := range slice {
+	for _, ID := range store.Entities.EntityIDs {
 		if ID != "" {
-			height, hok := heights[ID]
+			height, hok := store.Entities.ProcessHeights[ID]
 			if !hok {
 				height = 0
 			}

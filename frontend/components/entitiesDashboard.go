@@ -1,39 +1,39 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntitiesDashboardView renders the entities dashboard page
 type EntitiesDashboardView struct {
 	vecty.Core
-	gatewayConnected       bool
-	serverConnected        bool
-	gwClient               *client.Client
-	entity                 *client.EntityInfo
-	entityID               string
-	processIndex           int
-	disableProcessesUpdate bool
-	quitCh                 chan struct{}
-	refreshCh              chan int
+	vecty.Mounter
+	Rendered bool
 }
 
 //EntitiesTab is the tab component for entities
 type EntitiesTab struct {
 	*Tab
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *EntitiesDashboardView) Mount() {
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 func (e *EntitiesTab) dispatch() interface{} {
@@ -43,12 +43,15 @@ func (e *EntitiesTab) dispatch() interface{} {
 }
 
 func (e *EntitiesTab) store() string {
-	return store.Entities.Tab
+	return store.Entities.Pagination.Tab
 }
 
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash == nil || dash.gwClient == nil || dash.entity == nil {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if dash == nil || store.GatewayClient == nil {
 		return Container(&bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Connecting to blockchain client",
@@ -56,8 +59,8 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
-		renderGatewayConnectionBanner(dash.gatewayConnected),
-		renderServerConnectionBanner(dash.serverConnected),
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
@@ -75,11 +78,7 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("col-12")),
 				bootstrap.Card(bootstrap.CardParams{
-					Body: &EntityProcessListView{
-						entity:        dash.entity,
-						refreshCh:     dash.refreshCh,
-						disableUpdate: &dash.disableProcessesUpdate,
-					},
+					Body: &EntityProcessListView{},
 				}),
 			),
 		),
@@ -92,98 +91,71 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 		elem.Heading1(
 			vecty.Text("Entity details"),
 		),
-		elem.Heading2(vecty.Text(dash.entityID)),
+		elem.Heading2(vecty.Text(store.Entities.CurrentEntityID)),
 		elem.Anchor(
 			vecty.Markup(vecty.Class("hash")),
-			vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+dash.entityID)),
+			vecty.Markup(vecty.Attribute("href", "https://manage.vocdoni.net/entities/#/0x"+store.Entities.CurrentEntityID)),
 			vecty.Text("Entity Manager Page"),
 		),
 	}
 }
 
-// InitEntitiesDashboardView initializes the entities dashboard view
-func InitEntitiesDashboardView(entity *client.EntityInfo, EntitiesDashboardView *EntitiesDashboardView, entityID string, cfg *config.Cfg) *EntitiesDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return EntitiesDashboardView
-	}
-	EntitiesDashboardView.gwClient = gwClient
-	EntitiesDashboardView.entity = entity
-	EntitiesDashboardView.entityID = entityID
-	EntitiesDashboardView.quitCh = make(chan struct{})
-	EntitiesDashboardView.refreshCh = make(chan int, 50)
-	EntitiesDashboardView.serverConnected = true
-	EntitiesDashboardView.gatewayConnected = true
-	BeforeUnload(func() {
-		close(EntitiesDashboardView.quitCh)
-	})
-	go updateAndRenderEntitiesDashboard(EntitiesDashboardView, cancel, entityID, cfg)
-	return EntitiesDashboardView
-}
-
-func updateAndRenderEntitiesDashboard(d *EntitiesDashboardView, cancel context.CancelFunc, entityID string, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))
-	vecty.Rerender(d)
+// UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
+func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
+	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
+	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	updateEntityProcesses(d, util.Max(store.Entities.Count-store.Entities.ProcessesIndex, config.ListSize))
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			d.gwClient.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			updateEntityProcesses(d, util.Max(d.entity.ProcessCount-d.processIndex, config.ListSize))
-			vecty.Rerender(d)
-		case i := <-d.refreshCh:
+			updateEntityProcesses(d, util.Max(store.Entities.Count-store.Entities.ProcessesIndex, config.ListSize))
+		case i := <-store.Entities.Pagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshCh:
+				case i = <-store.Entities.Pagination.PagChannel:
 				default:
 					break loop
 				}
 			}
-			d.processIndex = i
-			oldProcesses := d.entity.ProcessCount
-			newHeight, _ := dbapi.GetEntityProcessHeight(entityID)
-			d.entity.ProcessCount = int(newHeight)
+			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
+			oldProcesses := store.Entities.Count
+			newHeight, _ := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+			dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newHeight)})
 			if i < 1 {
-				oldProcesses = d.entity.ProcessCount
+				oldProcesses = store.Entities.Count
 			}
-			updateEntityProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
-			vecty.Rerender(d)
+			updateEntityProcesses(d, util.Max(oldProcesses-store.Entities.ProcessesIndex, config.ListSize))
 		}
 	}
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	if d.gwClient.Conn.Ping(d.gwClient.Ctx) != nil {
-		d.gatewayConnected = false
-	} else {
-		d.gatewayConnected = true
-	}
-	if !dbapi.Ping() {
-		d.serverConnected = false
-	} else {
-		d.serverConnected = true
-	}
-	newCount, ok := dbapi.GetEntityProcessHeight(d.entityID)
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
 	if ok {
-		d.entity.ProcessCount = int(newCount)
+		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
-	if d.entity.ProcessCount > 0 && !d.disableProcessesUpdate {
-		log.Infof("Getting processes from entity %s, index %d", d.entityID, util.IntToString(index))
-		list, ok := dbapi.GetProcessListByEntity(index, d.entityID)
+	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.Pagination.DisableUpdate {
+		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
+		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {
 			reverseIDList(&list)
-			d.entity.ProcessIDs = list
+			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
 		}
-		newMap, ok := dbapi.GetProcessEnvelopeHeightMap()
+		newMap, ok := api.GetProcessEnvelopeHeightMap()
 		if ok {
-			d.entity.EnvelopeHeights = newMap
+			dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
 		}
-		client.UpdateAuxEntityInfo(d.gwClient, d.entity)
+		update.EntityProcessResults()
 	}
 }

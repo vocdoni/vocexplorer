@@ -1,7 +1,11 @@
-package client
+package api
 
 import (
+	"io"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"strings"
 
 	"context"
 	"encoding/json"
@@ -14,10 +18,17 @@ import (
 	"nhooyr.io/websocket"
 )
 
+// GatewayClient holds an API websocket api.
+type GatewayClient struct {
+	Addr string
+	Conn *websocket.Conn
+	Ctx  context.Context
+}
+
 // InitGateway initializes a connection with the gateway
-func InitGateway(host string) (*Client, context.CancelFunc) {
+func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
-	log.Infof("connecting to " + host)
+	fmt.Printf("connecting to %s\n", host)
 	gwClient, cancel, err := New(host)
 	if util.ErrPrint(err) {
 		for i := 0; i < 10; i++ {
@@ -34,19 +45,51 @@ func InitGateway(host string) (*Client, context.CancelFunc) {
 }
 
 // New starts a connection with the given endpoint address. From unreleased go-dvote/client
-func New(addr string) (*Client, context.CancelFunc, error) {
+func New(addr string) (*GatewayClient, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	conn, _, err := websocket.Dial(ctx, addr, nil)
 	if err != nil {
 		return nil, cancel, err
 	}
-	return &Client{Addr: addr, Conn: conn, Ctx: ctx}, cancel, nil
+	return &GatewayClient{Addr: addr, Conn: conn, Ctx: ctx}, cancel, nil
+}
+
+// PingGateway pings the gateway host
+func PingGateway(host string) bool {
+	if strings.HasPrefix(host, "ws://") {
+		host = host[5:]
+	}
+	pingClient := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	for i := 0; ; i++ {
+		if i > 10 {
+			return false
+		}
+		resp, err := pingClient.Get("http://" + host + "/ping")
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+		if err != nil {
+			log.Debug(err.Error())
+			time.Sleep(time.Second)
+			continue
+		}
+		if string(body) != "pong" {
+			log.Warn("Gateway ping not yet available")
+		} else {
+			return true
+		}
+	}
 }
 
 // VochainInfo requests
 
 // GetEntityCount gets number of entities
-func (c *Client) GetEntityCount() (int64, error) {
+func (c *GatewayClient) GetEntityCount() (int64, error) {
 	var req MetaRequest
 	req.Method = "getScrutinizerEntityCount"
 	req.Timestamp = int32(time.Now().Unix())
@@ -62,7 +105,7 @@ func (c *Client) GetEntityCount() (int64, error) {
 }
 
 // GetProcessCount gets number of processes
-func (c *Client) GetProcessCount() (int64, error) {
+func (c *GatewayClient) GetProcessCount() (int64, error) {
 	var req MetaRequest
 	req.Method = "getProcessCount"
 	req.Timestamp = int32(time.Now().Unix())
@@ -78,7 +121,7 @@ func (c *Client) GetProcessCount() (int64, error) {
 }
 
 // GetProcessKeys gets process keys
-func (c *Client) GetProcessKeys(pid string) (*Pkeys, error) {
+func (c *GatewayClient) GetProcessKeys(pid string) (*Pkeys, error) {
 	var req MetaRequest
 	req.Method = "getProcessKeys"
 	req.ProcessID = pid
@@ -98,39 +141,39 @@ func (c *Client) GetProcessKeys(pid string) (*Pkeys, error) {
 }
 
 // GetGatewayInfo gets gateway info
-func (c *Client) GetGatewayInfo() ([]string, int32, bool, int32, error) {
+func (c *GatewayClient) GetGatewayInfo() ([]string, int32, bool, error) {
 	var req MetaRequest
 	req.Method = "getGatewayInfo"
 	req.Timestamp = int32(time.Now().Unix())
 
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, false, 0, err
+		return nil, 0, false, err
 	}
 	if !resp.Ok {
-		return nil, 0, false, 0, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, false, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.APIList, resp.Health, resp.Ok, resp.Timestamp, nil
+	return resp.APIList, resp.Health, resp.Ok, nil
 }
 
 // GetBlockStatus gets latest block status for blockchain
-func (c *Client) GetBlockStatus() (*[5]int32, int32, int64, bool, error) {
+func (c *GatewayClient) GetBlockStatus() (*[5]int32, int32, int64, error) {
 	var req MetaRequest
 	req.Method = "getBlockStatus"
 	req.Timestamp = int32(time.Now().Unix())
 
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, 0, false, err
+		return nil, 0, 0, err
 	}
 	if !resp.Ok {
-		return nil, 0, 0, false, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, 0, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, resp.Ok, nil
+	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, nil
 }
 
 // GetFinalProcessList gets list of finished processes on the Vochain
-func (c *Client) GetFinalProcessList(from int64) ([]string, error) {
+func (c *GatewayClient) GetFinalProcessList(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcListResults"
 	req.Timestamp = int32(time.Now().Unix())
@@ -148,7 +191,7 @@ func (c *Client) GetFinalProcessList(from int64) ([]string, error) {
 }
 
 // GetLiveProcessList gets list of live processes on the Vochain
-func (c *Client) GetLiveProcessList(from int64) ([]string, error) {
+func (c *GatewayClient) GetLiveProcessList(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcListLiveResults"
 	req.Timestamp = int32(time.Now().Unix())
@@ -166,7 +209,7 @@ func (c *Client) GetLiveProcessList(from int64) ([]string, error) {
 }
 
 // GetScrutinizerEntities gets list of entities indexed by the scrutinizer on the Vochain
-func (c *Client) GetScrutinizerEntities(from int64) ([]string, error) {
+func (c *GatewayClient) GetScrutinizerEntities(from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getScrutinizerEntities"
 	req.Timestamp = int32(time.Now().Unix())
@@ -186,7 +229,7 @@ func (c *Client) GetScrutinizerEntities(from int64) ([]string, error) {
 // EntityInfo requests
 
 // GetProcessList gets list of processes for a given entity, starting at from
-func (c *Client) GetProcessList(entityID string, from int64) ([]string, error) {
+func (c *GatewayClient) GetProcessList(entityID string, from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcessList"
 	req.Timestamp = int32(time.Now().Unix())
@@ -207,7 +250,7 @@ func (c *Client) GetProcessList(entityID string, from int64) ([]string, error) {
 // ProcessInfo requests
 
 // GetEnvelopeHeight gets number of envelopes in a given process
-func (c *Client) GetEnvelopeHeight(processID string) (int64, error) {
+func (c *GatewayClient) GetEnvelopeHeight(processID string) (int64, error) {
 	var req MetaRequest
 	req.Method = "getEnvelopeHeight"
 	req.ProcessID = processID
@@ -222,7 +265,7 @@ func (c *Client) GetEnvelopeHeight(processID string) (int64, error) {
 }
 
 // GetEnvelopeList gets list of envelopes in a given process, starting at from
-func (c *Client) GetEnvelopeList(processID string, from int64) ([]string, error) {
+func (c *GatewayClient) GetEnvelopeList(processID string, from int64) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = processID
@@ -239,7 +282,7 @@ func (c *Client) GetEnvelopeList(processID string, from int64) ([]string, error)
 }
 
 // GetProcessResults gets the results of a given process
-func (c *Client) GetProcessResults(processID string) (string, string, [][]uint32, error) {
+func (c *GatewayClient) GetProcessResults(processID string) (string, string, [][]uint32, error) {
 	var req MetaRequest
 	req.Method = "getResults"
 	req.ProcessID = processID
@@ -256,7 +299,7 @@ func (c *Client) GetProcessResults(processID string) (string, string, [][]uint32
 // EnvelopeInfo requests
 
 // GetEnvelopeStatus gets status of given envelope
-func (c *Client) GetEnvelopeStatus(nullifier, processID string) (bool, error) {
+func (c *GatewayClient) GetEnvelopeStatus(nullifier, processID string) (bool, error) {
 	var req MetaRequest
 	req.Method = "getEnvelopeStatus"
 	req.ProcessID = processID
@@ -272,7 +315,7 @@ func (c *Client) GetEnvelopeStatus(nullifier, processID string) (bool, error) {
 }
 
 // GetEnvelope gets contents of given envelope
-func (c *Client) GetEnvelope(processID, nullifier string) (string, error) {
+func (c *GatewayClient) GetEnvelope(processID, nullifier string) (string, error) {
 	var req MetaRequest
 	req.Method = "getEnvelope"
 	req.Timestamp = int32(time.Now().Unix())
@@ -292,7 +335,7 @@ func (c *Client) GetEnvelope(processID, nullifier string) (string, error) {
 //___________________________________________________________________________
 
 // Request makes a request to the previously connected endpoint
-func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
+func (c *GatewayClient) Request(req MetaRequest) (*MetaResponse, error) {
 	method := req.Method
 	req.Timestamp = int32(time.Now().Unix())
 	reqInner, err := json.Marshal(req)
@@ -327,7 +370,7 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 	for respOuter.ID != reqOuter.ID {
-		fmt.Printf("%s: %v", method, "request ID doesn't match\n")
+		fmt.Printf("%s: %v\n", method, "request ID doesn't match\n")
 		// Try to read & trash one more message so client can catch up
 		_, message, err := c.Conn.Read(ctx)
 		if err != nil {
@@ -348,7 +391,7 @@ func (c *Client) Request(req MetaRequest) (*MetaResponse, error) {
 }
 
 // Close closes given websocket connection
-func (c *Client) Close() {
+func (c *GatewayClient) Close() {
 	err := c.Conn.Close(websocket.StatusNormalClosure, "")
 	if !util.ErrPrint(err) {
 		fmt.Println("Closed websocket connection")

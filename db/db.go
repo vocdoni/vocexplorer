@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,9 +16,10 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/vochain"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
@@ -39,7 +37,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 	// Init tendermint client
 	tClient, up := StartTendermint(tmHost)
 	if !up {
-		log.Warn("Cannot connect to tendermint client. Running as detached database")
+		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
 	log.Debugf("Connected to " + tmHost)
@@ -47,7 +45,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 	// Init gateway client
 	gwClient, cancel, up := startGateway(gwHost, gwSocket)
 	if !up {
-		log.Warn("Cannot connect to gateway client. Running as detached database")
+		log.Warn("Cannot connect to gateway api. Running as detached database")
 		return
 	}
 	defer (*cancel)()
@@ -117,7 +115,9 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		if err != nil {
 			log.Error(err)
 		}
-		gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		if status != nil {
+			gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		}
 	}
 
 	batch := d.NewBatch()
@@ -336,7 +336,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 	(*batch).Put(validatorHeightKey, hashValue)
 }
 
-func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
+func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
 	// gatewayEntityHeight, err := c.GetEntityCount()
 	// util.ErrPrint(err)
@@ -386,7 +386,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *client.Client) {
 	batch.Write()
 }
 
-func updateProcessList(d *dvotedb.BadgerDB, c *client.Client) {
+func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localProcessHeight := getHeight(d, config.LatestProcessHeight, 0).GetHeight()
 	gatewayProcessHeight, err := c.GetProcessCount()
 	util.ErrPrint(err)
@@ -434,7 +434,7 @@ func updateProcessList(d *dvotedb.BadgerDB, c *client.Client) {
 	batch.Write()
 }
 
-func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *client.Client, complete chan struct{}) {
+func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, complete chan struct{}) {
 	defer func() {
 		complete <- struct{}{}
 	}()
@@ -493,36 +493,8 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 	return hashList
 }
 
-func pingGateway(host string) bool {
-	pingClient := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	for i := 0; ; i++ {
-		if i > 10 {
-			return false
-		}
-		resp, err := pingClient.Get("http://" + host + "/ping")
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(time.Second)
-			continue
-		}
-		if string(body) != "pong" {
-			log.Warn("Gateway ping not yet available")
-		} else {
-			return true
-		}
-	}
-}
-
-func startGateway(host, socket string) (*client.Client, *context.CancelFunc, bool) {
-	ping := pingGateway(host)
+func startGateway(host, socket string) (*api.GatewayClient, *context.CancelFunc, bool) {
+	ping := api.PingGateway(host)
 	if !ping {
 		log.Warn("Gateway Client is not running. Running as detached database")
 		return nil, nil, false
@@ -531,7 +503,7 @@ func startGateway(host, socket string) (*client.Client, *context.CancelFunc, boo
 		if i > 20 {
 			return nil, nil, false
 		}
-		gwClient, cancel := client.InitGateway("http://" + host + socket)
+		gwClient, cancel := api.InitGateway("http://" + host + socket)
 		if gwClient == nil {
 			time.Sleep(5 * time.Second)
 			continue
@@ -547,7 +519,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 		if i > 20 {
 			return nil, false
 		}
-		tmClient := rpc.StartClient("http://" + host)
+		tmClient := rpcinit.StartClient("http://" + host)
 		if tmClient == nil {
 			time.Sleep(1 * time.Second)
 			continue

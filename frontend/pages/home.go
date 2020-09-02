@@ -2,10 +2,10 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // HomeView renders the Home landing page
@@ -16,9 +16,16 @@ type HomeView struct {
 
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
-	t := new(rpc.TendermintInfo)
-	vc := new(client.VochainInfo)
 	dash := new(components.DashboardView)
-	return components.InitDashboardView(t, vc, dash, home.Cfg)
-
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	if !store.Listeners.Has(dash) {
+		store.Listeners.Add(dash, func() {
+			if dash.Rendered {
+				vecty.Rerender(dash)
+			}
+		})
+	}
+	go components.UpdateAndRenderHomeDashboard(dash)
+	return elem.Div(dash)
 }

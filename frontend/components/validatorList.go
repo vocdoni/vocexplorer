@@ -9,35 +9,33 @@ import (
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ValidatorList is the validator list component
-type ValidatorList struct {
+// ValidatorListView is the validator list component
+type ValidatorListView struct {
 	vecty.Core
-	currentPage     int
-	disableUpdate   *bool
-	refreshCh       chan int
-	totalValidators *int
-	validatorList   *[config.ListSize]*types.Validator
 }
 
 // Render renders the validator list component
-func (b *ValidatorList) Render() vecty.ComponentOrHTML {
-	if len(b.validatorList) > 0 {
+func (b *ValidatorListView) Render() vecty.ComponentOrHTML {
+	if store.Validators.Count > 0 {
 		p := &Pagination{
-			TotalPages:      int(*b.totalValidators) / config.ListSize,
-			TotalItems:      b.totalValidators,
-			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			TotalPages:      int(store.Validators.Count) / config.ListSize,
+			TotalItems:      &store.Validators.Count,
+			CurrentPage:     &store.Validators.Pagination.CurrentPage,
+			RefreshCh:       store.Validators.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderValidators(p, *b.validatorList, index)
+			return renderValidators(p, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -46,11 +44,11 @@ func (b *ValidatorList) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableValidatorUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableValidatorUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -74,16 +72,16 @@ func (b *ValidatorList) Render() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
 }
 
-func renderValidators(p *Pagination, validatorList [config.ListSize]*types.Validator, index int) vecty.ComponentOrHTML {
+func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 	var validatorElems []vecty.MarkupOrChild
 
-	for i := len(validatorList) - 1; i >= len(validatorList)-p.ListSize; i-- {
-		if types.ValidatorIsEmpty(validatorList[i]) {
+	for i := len(store.Validators.Validators) - 1; i >= len(store.Validators.Validators)-p.ListSize; i-- {
+		if types.ValidatorIsEmpty(store.Validators.Validators[i]) {
 			continue
 		}
 		validatorElems = append(validatorElems, elem.Div(
 			vecty.Markup(vecty.Class("paginated-card")),
-			ValidatorCard(validatorList[i]),
+			ValidatorCard(store.Validators.Validators[i]),
 		))
 	}
 	if len(validatorElems) == 0 {

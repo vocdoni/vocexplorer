@@ -5,12 +5,18 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -18,24 +24,57 @@ import (
 // TxContents renders tx contents
 type TxContents struct {
 	vecty.Core
-	HasBlock bool
-	Time     time.Time
-	Tx       *types.SendTx
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount triggers when TxContents renders
+func (contents *TxContents) Mount() {
+	if !contents.Rendered {
+		contents.Rendered = true
+		vecty.Rerender(contents)
+	}
 }
 
 // Render renders the TxContents component
 func (contents *TxContents) Render() vecty.ComponentOrHTML {
-	return renderFullTx(contents.Tx, contents.Time, contents.HasBlock)
+	if !contents.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if store.Transactions.CurrentTransaction == nil {
+		return Container(
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading3(
+							vecty.Text("Transaction does not exist"),
+						),
+					},
+				}),
+			),
+		)
+	}
+	return contents.renderFullTx()
 }
 
-//TODO: link to envelope. Possibly store envelope nullifier/height in tx
+// UpdateAndRenderTxContents keeps the transaction contents up to date
+func UpdateAndRenderTxContents(d *TxContents) {
+	actions.EnableUpdates()
+	// Fetch transaction contents
+	tx, ok := api.GetTx(store.Transactions.CurrentTransactionHeight)
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
+	}
+	// Set block associated with transaction
+	block, ok := api.GetBlock(store.Transactions.CurrentTransaction.Store.Height)
+	if ok {
+		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
+	}
 
-func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.ComponentOrHTML {
 	var txResult coretypes.ResultTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
 	util.ErrPrint(err)
-	result, err := json.MarshalIndent(txResult, "", "\t")
-	util.ErrPrint(err)
+
 	var rawTx dvotetypes.Tx
 	err = json.Unmarshal(tx.Store.Tx, &rawTx)
 	util.ErrPrint(err)
@@ -43,6 +82,11 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	var processID string
 	var nullifier string
 	var entityID string
+	var tm time.Time
+	if !types.BlockIsEmpty(store.Transactions.CurrentBlock) {
+		tm, err = ptypes.Timestamp(store.Transactions.CurrentBlock.GetTime())
+		util.ErrPrint(err)
+	}
 
 	switch rawTx.Type {
 	case "vote":
@@ -100,27 +144,77 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 	entityID = util.StripHexString(entityID)
 	processID = util.StripHexString(processID)
 	nullifier = util.StripHexString(nullifier)
+	var envelopeHeight int64
+	if nullifier != "" {
+		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
+	}
+	var metadata []byte
+	if len(txResult.Hash.Bytes()) > 0 && txResult.Height > 0 && len(txResult.Tx.Hash()) > 0 {
+		metadata, err = json.MarshalIndent(txResult, "", "\t")
+		util.ErrPrint(err)
+	}
+	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
+		Transaction: &storeutil.DecodedTransaction{
+			Metadata:       metadata,
+			RawTxContents:  txContents,
+			RawTx:          rawTx,
+			Time:           tm,
+			EnvelopeHeight: envelopeHeight,
+			ProcessID:      processID,
+			EntityID:       entityID,
+			Nullifier:      nullifier,
+		},
+	})
+}
+
+//TODO: link to envelope. Possibly store envelope nullifier/height in tx
+
+func (contents *TxContents) renderFullTx() vecty.ComponentOrHTML {
 
 	accordionName := "accordionTx"
 
+	if store.Transactions.CurrentDecodedTransaction == nil {
+		return bootstrap.Card(bootstrap.CardParams{
+			Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
+			Body: elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
+					vecty.If(
+						!types.BlockIsEmpty(store.Transactions.CurrentBlock),
+						Link(
+							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+							util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+							"",
+						),
+					),
+					vecty.If(
+						types.BlockIsEmpty(store.Transactions.CurrentBlock),
+						vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
+					),
+				),
+			),
+		},
+		)
+	}
+
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: vecty.Text("Transaction " + util.IntToString(tx.Store.TxHeight)),
+		Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
 		Body: elem.Div(
 			elem.Div(
 				vecty.Markup(vecty.Class("dt")),
-				vecty.Text(humanize.Ordinal(int(tx.Store.Index+1))+" transaction on block "),
+				vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
 				vecty.If(
-					hasBlock,
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/blocks/"+util.IntToString(tx.Store.Height)),
-						),
-						vecty.Text(util.IntToString(tx.Store.Height)),
+					!types.BlockIsEmpty(store.Transactions.CurrentBlock),
+					Link(
+						"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+						util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+						"",
 					),
 				),
 				vecty.If(
-					!hasBlock,
-					vecty.Text(util.IntToString(tx.Store.Height)+" (block not yet available)"),
+					types.BlockIsEmpty(store.Transactions.CurrentBlock),
+					vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
 				),
 			),
 			elem.Div(
@@ -130,12 +224,12 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(util.HexToString(tx.GetHash())),
+					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.GetHash())),
 				),
 				vecty.If(
-					!tm.IsZero(),
+					!store.Transactions.CurrentDecodedTransaction.Time.IsZero(),
 					elem.Div(
-						vecty.Text(humanize.Time(tm)),
+						vecty.Text(humanize.Time(store.Transactions.CurrentDecodedTransaction.Time)),
 					),
 				),
 			),
@@ -146,49 +240,52 @@ func renderFullTx(tx *types.SendTx, tm time.Time, hasBlock bool) vecty.Component
 				),
 				elem.Div(
 					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(rawTx.Type),
+					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
 				),
 			),
 			vecty.If(
-				entityID != "",
+				store.Transactions.CurrentDecodedTransaction.EntityID != "",
 				elem.Div(
 					vecty.Text("Belongs to entity "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/entities/"+entityID),
-						),
-						vecty.Text(entityID),
+					Link(
+						"/entity/"+store.Transactions.CurrentDecodedTransaction.EntityID,
+						store.Transactions.CurrentDecodedTransaction.EntityID,
+						"",
 					),
 				),
 			),
 			vecty.If(
-				processID != "",
+				store.Transactions.CurrentDecodedTransaction.ProcessID != "",
 				elem.Div(
 					vecty.Text("Belongs to process "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/processes/"+processID),
-						),
-						vecty.Text(processID),
+					Link(
+						"/process/"+store.Transactions.CurrentDecodedTransaction.ProcessID,
+						store.Transactions.CurrentDecodedTransaction.ProcessID,
+						"",
 					),
 				),
 			),
 			vecty.If(
-				nullifier != "" && rawTx.Type == "vote",
+				store.Transactions.CurrentDecodedTransaction.Nullifier != "" && store.Transactions.CurrentDecodedTransaction.RawTx.Type == "vote",
 				elem.Div(
 					vecty.Text("Contains vote envelope "),
-					elem.Anchor(
-						vecty.Markup(
-							vecty.Attribute("href", "/db/envelopenullifier/?nullifier="+nullifier),
-						),
-						vecty.Text(nullifier),
+					Link(
+						"/envelope/"+util.IntToString(store.Transactions.CurrentDecodedTransaction.EnvelopeHeight),
+						store.Transactions.CurrentDecodedTransaction.Nullifier,
+						"",
 					),
 				),
 			),
 			elem.Div(
 				vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-				renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(txContents)))),
-				renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(result)))),
+				vecty.If(
+					len(store.Transactions.CurrentDecodedTransaction.RawTxContents) > 0,
+					renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.RawTxContents)))),
+				),
+				vecty.If(
+					len(store.Transactions.CurrentDecodedTransaction.Metadata) > 0,
+					renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.Metadata)))),
+				),
 			),
 		),
 	})
