@@ -28,6 +28,11 @@ type SetCurrentBlock struct {
 	Block *coretypes.ResultBlock
 }
 
+// SetCurrentBlockHeight is the action to set the current block height
+type SetCurrentBlockHeight struct {
+	Height int64
+}
+
 // DisableBlockUpdate is the action to set the disable update status for blocks
 type DisableBlockUpdate struct {
 	Disabled bool
@@ -52,6 +57,9 @@ func blockActions(action interface{}) {
 
 	case *SetCurrentBlock:
 		store.Blocks.CurrentBlock = a.Block
+
+	case *SetCurrentBlockHeight:
+		store.Blocks.CurrentBlockHeight = a.Height
 
 	case *DisableBlockUpdate:
 		store.Blocks.Pagination.DisableUpdate = a.Disabled

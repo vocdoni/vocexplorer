@@ -12,17 +12,45 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // BlockContents renders block contents
 type BlockContents struct {
 	vecty.Core
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount triggers when BlockContents renders
+func (c *BlockContents) Mount() {
+	if !c.Rendered {
+		c.Rendered = true
+		vecty.Rerender(c)
+	}
 }
 
 // Render renders the BlockContents component
 func (c *BlockContents) Render() vecty.ComponentOrHTML {
+	if !c.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if store.Blocks.CurrentBlock == nil {
+		return Container(
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading3(
+							vecty.Text("Block does not exist"),
+						),
+					},
+				}),
+			),
+		)
+	}
 	return Container(
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view")),
@@ -64,6 +92,14 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 			),
 		),
 	)
+}
+
+// UpdateAndRenderBlockContents keeps the block contents up to date
+func UpdateAndRenderBlockContents(d *BlockContents) {
+	actions.EnableUpdates()
+	// Fetch block contents
+	block := rpc.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
+	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 }
 
 //BlockView renders a single block card

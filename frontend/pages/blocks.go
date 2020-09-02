@@ -5,14 +5,10 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -20,39 +16,23 @@ import (
 // BlocksView is a pretty page for all our blockchain statistics
 type BlocksView struct {
 	vecty.Core
-	Cfg *config.Cfg
 }
 
 // Render renders the Blocks component
 func (home *BlocksView) Render() vecty.ComponentOrHTML {
-	return home.Component()
-}
-
-// Component generates the actual BlocksView component
-func (home *BlocksView) Component() vecty.ComponentOrHTML {
-	id, ok := router.GetNamedVar(home)["id"]
-	if !ok {
-		return components.Container(
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading3(
-							vecty.Text("Block does not exist"),
-						),
-					},
-				}),
-			),
-		)
-	}
-	height, err := strconv.ParseInt(id, 0, 64)
+	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	block := rpc.GetBlock(store.TendermintClient, height)
-	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
-	if store.Blocks.CurrentBlock == nil {
-		log.Errorf("Block unavailable")
-		return elem.Div(
-			elem.Main(vecty.Text("Block not available")),
-		)
+	dispatcher.Dispatch(&actions.SetCurrentBlockHeight{Height: height})
+	dash := new(components.BlockContents)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	if !store.Listeners.Has(dash) {
+		store.Listeners.Add(dash, func() {
+			if dash.Rendered {
+				vecty.Rerender(dash)
+			}
+		})
 	}
-	return elem.Div(&components.BlockContents{})
+	go components.UpdateAndRenderBlockContents(dash)
+	return elem.Div(dash)
 }

@@ -8,8 +8,9 @@ import (
 
 // Blocks stores all data abotu blockchain blocks
 type Blocks struct {
-	Blocks       [config.ListSize]*types.StoreBlock
-	Count        int
-	CurrentBlock *coretypes.ResultBlock
-	Pagination   PageStore
+	Blocks             [config.ListSize]*types.StoreBlock
+	Count              int
+	CurrentBlock       *coretypes.ResultBlock
+	CurrentBlockHeight int64
+	Pagination         PageStore
 }
