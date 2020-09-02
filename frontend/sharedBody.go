@@ -21,7 +21,7 @@ func (b Body) Render() vecty.ComponentOrHTML {
 		router.NewRoute("/vocdash", &pages.VocDashView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/process/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/entity/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{Rendered: false}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/blocktxs", &pages.BlockTxsView{}, router.NewRouteOpts{ExactMatch: true}),
 		// router.NewRoute("/blocks", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/block/{id}", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),

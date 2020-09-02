@@ -22,6 +22,11 @@ type SetCurrentEnvelope struct {
 	Envelope *types.Envelope
 }
 
+// SetCurrentEnvelopeHeight is the action to set the current envelope height
+type SetCurrentEnvelopeHeight struct {
+	Height int64
+}
+
 // DisableEnvelopeUpdate is the action to set the disable update status for envelopes
 type DisableEnvelopeUpdate struct {
 	Disabled bool
@@ -43,6 +48,9 @@ func envelopeActions(action interface{}) {
 
 	case *SetCurrentEnvelope:
 		store.Envelopes.CurrentEnvelope = a.Envelope
+
+	case *SetCurrentEnvelopeHeight:
+		store.Envelopes.CurrentEnvelopeHeight = a.Height
 
 	case *DisableEnvelopeUpdate:
 		store.Envelopes.Pagination.DisableUpdate = a.Disabled

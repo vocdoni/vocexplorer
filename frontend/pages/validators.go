@@ -21,15 +21,7 @@ type ValidatorsView struct {
 func (home *ValidatorsView) Render() vecty.ComponentOrHTML {
 	address, ok := router.GetNamedVar(home)["id"]
 	// If there is an ID to look for, render individual validator page
-	if ok {
-		// validator, ok := api.GetValidator(address)
-		// if validator == nil || !ok {
-		// 	log.Errorf("Validator unavailable")
-		// 	return elem.Div(
-		// 		elem.Main(vecty.Text("Validator not available")),
-		// 	)
-		// }
-		// dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
+	if ok && address != "" {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorID{ID: address})
 		dash := new(components.ValidatorContents)
 		dash.Rendered = false

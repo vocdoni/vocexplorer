@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gopherjs/vecty"
-
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -52,10 +52,19 @@ func initFrontend() {
 }
 
 func initClients(cfg *config.Cfg) {
-	tm := rpcinit.StartClient(cfg.TendermintHost)
-	gw, _ := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
-	if tm == nil || gw == nil {
-		log.Error("Cannot connect to blockchain clients")
+	var tm *tmhttp.HTTP
+	var gw *api.GatewayClient
+	for i := 0; i < 5 && tm == nil; i++ {
+		tm = rpcinit.StartClient(cfg.TendermintHost)
+	}
+	if tm == nil {
+		log.Error("Cannot connect to tendermint api")
+	}
+	for i := 0; i < 5 && gw == nil; i++ {
+		gw, _ = api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+	}
+	if gw == nil {
+		log.Error("Cannot connect to gateway api")
 	}
 	dispatcher.Dispatch(&actions.TendermintClientInit{Client: tm})
 	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
