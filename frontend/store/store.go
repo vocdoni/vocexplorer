@@ -10,8 +10,6 @@ import (
 var (
 	// Config stores the application configuration
 	Config config.Cfg
-	// BlockTabActive stores the current active block tab
-	BlockTabActive string
 	// CurrentBlockHeight stores the latest known block height
 	CurrentBlockHeight int64
 
@@ -48,7 +46,7 @@ var (
 )
 
 func init() {
-	BlockTabActive = "transactions"
+	Blocks.Pagination.Tab = "transactions"
 	Processes.Pagination.Tab = "results"
 	Entities.Pagination.Tab = "processes"
 

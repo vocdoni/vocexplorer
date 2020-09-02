@@ -175,7 +175,7 @@ type BlockTab struct {
 }
 
 func (b *BlockTab) store() string {
-	return store.BlockTabActive
+	return store.Blocks.Pagination.Tab
 }
 func (b *BlockTab) dispatch() interface{} {
 	return &actions.BlocksTabChange{
