@@ -229,6 +229,6 @@ func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
 	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcessID)
 	if ok {
 		reverseEnvelopeList(&list)
-		dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: list})
+		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})
 	}
 }

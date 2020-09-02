@@ -6,6 +6,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
 // ProcessesTabChange is the action to change processes tabs
@@ -70,6 +71,11 @@ type SetCurrentProcessID struct {
 	ID string
 }
 
+// SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
+type SetCurrentProcessEnvelopes struct {
+	EnvelopeList [config.ListSize]*types.Envelope
+}
+
 // On initialization, register actions
 func init() {
 	dispatcher.Register(processActions)
@@ -113,6 +119,9 @@ func processActions(action interface{}) {
 
 	case *SetCurrentProcessID:
 		store.Processes.CurrentProcessID = a.ID
+
+	case *SetCurrentProcessEnvelopes:
+		store.Processes.CurrentProcess.Envelopes = a.EnvelopeList
 
 	default:
 		return // don't fire listeners
