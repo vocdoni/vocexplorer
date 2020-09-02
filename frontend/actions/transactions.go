@@ -4,6 +4,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
@@ -22,6 +23,26 @@ type DisableTransactionsUpdate struct {
 	Disabled bool
 }
 
+// SetCurrentTransactionHeight is the action to set the height of the current transaction
+type SetCurrentTransactionHeight struct {
+	Height int64
+}
+
+// SetCurrentTransaction is the action to set the current transaction
+type SetCurrentTransaction struct {
+	Transaction *types.SendTx
+}
+
+// SetTransactionBlock is the action to set the block associated with the current transaction
+type SetTransactionBlock struct {
+	Block *types.StoreBlock
+}
+
+// SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction
+type SetCurrentDecodedTransaction struct {
+	Transaction *storeutil.DecodedTransaction
+}
+
 // On initialization, register actions
 func init() {
 	dispatcher.Register(transactionActions)
@@ -38,6 +59,18 @@ func transactionActions(action interface{}) {
 
 	case *DisableTransactionsUpdate:
 		store.Transactions.Pagination.DisableUpdate = a.Disabled
+
+	case *SetCurrentTransactionHeight:
+		store.Transactions.CurrentTransactionHeight = a.Height
+
+	case *SetCurrentTransaction:
+		store.Transactions.CurrentTransaction = a.Transaction
+
+	case *SetTransactionBlock:
+		store.Transactions.CurrentBlock = a.Block
+
+	case *SetCurrentDecodedTransaction:
+		store.Transactions.CurrentDecodedTransaction = a.Transaction
 
 	default:
 		return // don't fire listeners
