@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -22,11 +23,17 @@ type StatsDashboardView struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *StatsDashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the StatsDashboardView component
 func (dash *StatsDashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	if dash != nil {
 		return Container(
 			renderGatewayConnectionBanner(),

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -26,11 +27,17 @@ type DashboardView struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *DashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
 			renderGatewayConnectionBanner(),
@@ -49,7 +56,6 @@ func UpdateAndRenderHomeDashboard(d *DashboardView) {
 	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(util.Max(store.Config.RefreshTime, 1)) * time.Second)
 	updateHomeDashboardInfo(d)
-	vecty.Rerender(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -58,7 +64,6 @@ func UpdateAndRenderHomeDashboard(d *DashboardView) {
 			return
 		case <-ticker.C:
 			updateHomeDashboardInfo(d)
-			vecty.Rerender(d)
 		}
 	}
 }

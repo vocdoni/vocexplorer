@@ -18,13 +18,25 @@ import (
 // ValidatorContents renders validator contents
 type ValidatorContents struct {
 	vecty.Core
+	vecty.Mounter
 	CurrentBlock int
 	CurrentPage  int
 	Rendered     bool
 }
 
+// Mount triggers when ValidatorContents renders
+func (contents *ValidatorContents) Mount() {
+	if !contents.Rendered {
+		contents.Rendered = true
+		vecty.Rerender(contents)
+	}
+}
+
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
+	if !contents.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	return Container(
 		renderServerConnectionBanner(),
 		contents.renderValidatorHeader(),
@@ -40,7 +52,6 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
 	}
 	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
-	vecty.Rerender(contents)
 	for {
 		select {
 		case i := <-store.Validators.Pagination.PagChannel:
@@ -63,7 +74,6 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 				oldBlocks = store.Validators.CurrentBlockCount
 			}
 			updateValidatorBlocks(contents, oldBlocks-contents.CurrentBlock)
-			vecty.Rerender(contents)
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
 			ticker.Stop()
@@ -72,7 +82,6 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			if !store.Validators.Pagination.DisableUpdate {
 				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
 			}
-			vecty.Rerender(contents)
 		}
 
 	}

@@ -26,11 +26,17 @@ type ProcessesDashboardView struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *ProcessesDashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	if dash == nil || store.GatewayClient == nil {
 		return &bootstrap.Alert{
 			Contents: "Connecting to blockchain clients",

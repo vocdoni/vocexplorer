@@ -29,11 +29,17 @@ type VocDashDashboardView struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *VocDashDashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
 			renderGatewayConnectionBanner(),

@@ -49,6 +49,9 @@ func (e *EntitiesTab) store() string {
 
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	if dash == nil || store.GatewayClient == nil {
 		return Container(&bootstrap.Alert{
 			Type:     "warning",

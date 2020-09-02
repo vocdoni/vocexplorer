@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -25,11 +26,17 @@ type ValidatorsDashboardView struct {
 
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *ValidatorsDashboardView) Mount() {
-	dash.Rendered = true
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the ValidatorsDashboardView component
 func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
 	return Container(
 		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
@@ -43,7 +50,6 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 	actions.EnableUpdates()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateValidatorsDashboard(d)
-	vecty.Rerender(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -52,7 +58,6 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 			return
 		case <-ticker.C:
 			updateValidatorsDashboard(d)
-			vecty.Rerender(d)
 		case i := <-store.Validators.Pagination.PagChannel:
 		loop:
 			for {
@@ -71,8 +76,6 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 				oldValidators = store.Validators.Count
 			}
 			updateValidators(d, util.Max(oldValidators-d.ValidatorIndex, config.ListSize))
-
-			vecty.Rerender(d)
 		}
 	}
 }
