@@ -23,7 +23,6 @@ import (
 // TxList is the tx list component
 type TxList struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the tx list component
@@ -32,7 +31,7 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Transactions.Count) / config.ListSize,
 			TotalItems:      &store.Transactions.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Transactions.Pagination.CurrentPage,
 			RefreshCh:       store.Transactions.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Transactions.Pagination.DisableUpdate,

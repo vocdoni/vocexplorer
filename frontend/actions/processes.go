@@ -14,6 +14,16 @@ type ProcessesIndexChange struct {
 	Index int
 }
 
+// ProcessEnvelopesIndexChange is the action to set the pagination index for the current process' envelope list
+type ProcessEnvelopesIndexChange struct {
+	Index int
+}
+
+// ProcessEnvelopesPageChange is the action to set the pagination page for the current process' envelope list
+type ProcessEnvelopesPageChange struct {
+	Index int
+}
+
 // ProcessesTabChange is the action to change processes tabs
 type ProcessesTabChange struct {
 	Tab string
@@ -91,6 +101,12 @@ func processActions(action interface{}) {
 	switch a := action.(type) {
 	case *ProcessesIndexChange:
 		store.Processes.Pagination.Index = a.Index
+
+	case *ProcessEnvelopesIndexChange:
+		store.Processes.EnvelopesIndex = a.Index
+
+	case *ProcessEnvelopesPageChange:
+		store.Processes.EnvelopesPage = a.Index
 
 	case *SetProcessIDs:
 		store.Processes.ProcessIDs = a.ProcessIDs

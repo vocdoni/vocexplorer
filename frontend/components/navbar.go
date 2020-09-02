@@ -66,12 +66,12 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						),
 						Link("/validators", "Validators", "nav-link"),
 					),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
-						),
-						Link("/blocks", "Blocks", "nav-link"),
-					),
+					// elem.ListItem(
+					// 	vecty.Markup(
+					// 		vecty.Class("nav-item", "dropdown"),
+					// 	),
+					// 	Link("/blocks", "Blocks", "nav-link"),
+					// ),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),

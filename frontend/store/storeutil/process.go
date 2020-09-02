@@ -11,6 +11,8 @@ type Processes struct {
 	CurrentProcessID string
 	CurrentProcess   Process
 	Count            int
+	EnvelopesIndex   int
+	EnvelopesPage    int
 	ProcessIDs       [config.ListSize]string
 	ProcessResults   map[string]Process
 	ProcessKeys      map[string]*api.Pkeys

@@ -20,7 +20,6 @@ import (
 // ValidatorListView is the validator list component
 type ValidatorListView struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the validator list component
@@ -29,7 +28,7 @@ func (b *ValidatorListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Validators.Count) / config.ListSize,
 			TotalItems:      &store.Validators.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Validators.Pagination.CurrentPage,
 			RefreshCh:       store.Validators.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,

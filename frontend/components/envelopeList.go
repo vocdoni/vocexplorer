@@ -20,7 +20,6 @@ import (
 // EnvelopeList renders the envelope list pane
 type EnvelopeList struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the EnvelopeList component
@@ -29,7 +28,7 @@ func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Envelopes.Count) / config.ListSize,
 			TotalItems:      &store.Envelopes.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Envelopes.Pagination.CurrentPage,
 			RefreshCh:       store.Envelopes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Envelopes.Pagination.DisableUpdate,

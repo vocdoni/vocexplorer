@@ -11,6 +11,16 @@ type EntitiesIndexChange struct {
 	Index int
 }
 
+// EntityProcessesIndexChange is the action to set the pagination index for the current entity's process list
+type EntityProcessesIndexChange struct {
+	Index int
+}
+
+// EntityProcessesPageChange is the action to set the pagination page for the current entity's process list
+type EntityProcessesPageChange struct {
+	Index int
+}
+
 // EntitiesTabChange is the action to change entities tabs
 type EntitiesTabChange struct {
 	Tab string
@@ -61,6 +71,12 @@ func entityActions(action interface{}) {
 	switch a := action.(type) {
 	case *EntitiesIndexChange:
 		store.Entities.Pagination.Index = a.Index
+
+	case *EntityProcessesIndexChange:
+		store.Entities.ProcessesIndex = a.Index
+
+	case *EntityProcessesPageChange:
+		store.Entities.ProcessesPage = a.Index
 
 	case *SetEntityIDs:
 		store.Entities.EntityIDs = a.EntityIDs

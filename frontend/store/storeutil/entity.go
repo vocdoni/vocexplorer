@@ -11,6 +11,8 @@ type Entities struct {
 	CurrentEntityID string
 	EntityIDs       [config.ListSize]string
 	Pagination      PageStore
+	ProcessesIndex  int
+	ProcessesPage   int
 	ProcessHeights  map[string]int64
 }
 

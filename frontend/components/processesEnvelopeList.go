@@ -21,7 +21,6 @@ import (
 // ProcessesEnvelopeListView renders the envelope list pane
 type ProcessesEnvelopeListView struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the EnvelopeListView component
@@ -30,7 +29,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Processes.CurrentProcess.EnvelopeCount) / config.ListSize,
 			TotalItems:      &store.Processes.CurrentProcess.EnvelopeCount,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Processes.EnvelopesPage,
 			RefreshCh:       store.Processes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,

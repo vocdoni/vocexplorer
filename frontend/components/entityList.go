@@ -18,7 +18,6 @@ import (
 // EntityListView renders the entity list pane
 type EntityListView struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the EntityListView component
@@ -27,7 +26,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Entities.Count) / config.ListSize,
 			TotalItems:      &store.Entities.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Entities.Pagination.CurrentPage,
 			RefreshCh:       store.Entities.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Entities.Pagination.DisableUpdate,

@@ -78,7 +78,7 @@ func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateAndRenderVocDashDashboard continuously updates the information needed by the vocdash dashboard
 func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 	actions.EnableUpdates()
-	actions.ResetIndexes()
+
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateVocdash(d)
 	for {

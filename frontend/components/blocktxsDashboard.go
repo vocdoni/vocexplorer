@@ -56,7 +56,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
 func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.EnableUpdates()
-	actions.ResetIndexes()
+
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateBlockTxsDashboard(d)
 	for {

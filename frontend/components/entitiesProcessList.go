@@ -17,7 +17,6 @@ import (
 // EntityProcessListView renders the process list pane
 type EntityProcessListView struct {
 	vecty.Core
-	currentPage int
 }
 
 //Render renders the EntityProcessListView component
@@ -26,7 +25,7 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Entities.CurrentEntity.ProcessCount) / config.ListSize,
 			TotalItems:      &store.Entities.CurrentEntity.ProcessCount,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Entities.ProcessesPage,
 			RefreshCh:       store.Entities.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Entities.Pagination.DisableUpdate,

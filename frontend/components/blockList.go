@@ -20,7 +20,6 @@ import (
 // BlockList is the block list component
 type BlockList struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the block list component
@@ -29,7 +28,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Blocks.Count) / config.ListSize,
 			TotalItems:      &store.Blocks.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Blocks.Pagination.CurrentPage,
 			RefreshCh:       store.Blocks.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Blocks.Pagination.DisableUpdate,

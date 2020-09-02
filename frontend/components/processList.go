@@ -19,7 +19,6 @@ import (
 // ProcessListView renders the process list pane
 type ProcessListView struct {
 	vecty.Core
-	currentPage int
 }
 
 // Render renders the ProcessListView component
@@ -28,7 +27,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Processes.Count) / config.ListSize,
 			TotalItems:      &store.Processes.Count,
-			CurrentPage:     &b.currentPage,
+			CurrentPage:     &store.Processes.Pagination.CurrentPage,
 			RefreshCh:       store.Processes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
