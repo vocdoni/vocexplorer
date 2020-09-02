@@ -6,6 +6,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
+// EntitiesIndexChange is the action to set the pagination index
+type EntitiesIndexChange struct {
+	Index int
+}
+
 // EntitiesTabChange is the action to change entities tabs
 type EntitiesTabChange struct {
 	Tab string
@@ -54,6 +59,9 @@ func init() {
 // entityActions is the handler for all entity-related store actions
 func entityActions(action interface{}) {
 	switch a := action.(type) {
+	case *EntitiesIndexChange:
+		store.Entities.Pagination.Index = a.Index
+
 	case *SetEntityIDs:
 		store.Entities.EntityIDs = a.EntityIDs
 

@@ -20,8 +20,7 @@ import (
 type EntitiesDashboardView struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered     bool
-	processIndex int
+	Rendered bool
 }
 
 //EntitiesTab is the tab component for entities
@@ -104,8 +103,9 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 // UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
 func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 	actions.EnableUpdates()
+	actions.ResetIndexes()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
+	updateEntityProcesses(d, util.Max(store.Entities.Count-store.Processes.Pagination.Index, config.ListSize))
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -113,7 +113,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateEntityProcesses(d, util.Max(store.Entities.Count-d.processIndex, config.ListSize))
+			updateEntityProcesses(d, util.Max(store.Entities.Count-store.Processes.Pagination.Index, config.ListSize))
 		case i := <-store.Entities.Pagination.PagChannel:
 		loop:
 			for {
@@ -124,14 +124,14 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 					break loop
 				}
 			}
-			d.processIndex = i
+			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
 			oldProcesses := store.Entities.Count
 			newHeight, _ := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
 			dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newHeight)})
 			if i < 1 {
 				oldProcesses = store.Entities.Count
 			}
-			updateEntityProcesses(d, util.Max(oldProcesses-d.processIndex, config.ListSize))
+			updateEntityProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, config.ListSize))
 		}
 	}
 }

@@ -41,3 +41,13 @@ func EnableUpdates() {
 	dispatcher.Dispatch(&DisableTransactionsUpdate{Disabled: false})
 	dispatcher.Dispatch(&DisableValidatorUpdate{Disabled: false})
 }
+
+// ResetIndexes resets all pagination indexes
+func ResetIndexes() {
+	dispatcher.Dispatch(&ProcessesIndexChange{Index: 0})
+	dispatcher.Dispatch(&BlocksIndexChange{Index: 0})
+	dispatcher.Dispatch(&EntitiesIndexChange{Index: 0})
+	dispatcher.Dispatch(&EnvelopesIndexChange{Index: 0})
+	dispatcher.Dispatch(&TransactionsIndexChange{Index: 0})
+	dispatcher.Dispatch(&ValidatorsIndexChange{Index: 0})
+}

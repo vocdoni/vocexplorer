@@ -7,6 +7,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// ValidatorsIndexChange is the action to set the pagination index
+type ValidatorsIndexChange struct {
+	Index int
+}
+
 // SetValidatorList is the action to set the validator list
 type SetValidatorList struct {
 	List [config.ListSize]*types.Validator
@@ -50,6 +55,9 @@ func init() {
 // validatorActions is the handler for all validator-related store actions
 func validatorActions(action interface{}) {
 	switch a := action.(type) {
+	case *ValidatorsIndexChange:
+		store.Validators.Pagination.Index = a.Index
+
 	case *SetValidatorList:
 		store.Validators.Validators = a.List
 

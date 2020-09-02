@@ -5,5 +5,6 @@ type PageStore struct {
 	Tab           string
 	PagChannel    chan int
 	CurrentPage   int
+	Index         int
 	DisableUpdate bool
 }

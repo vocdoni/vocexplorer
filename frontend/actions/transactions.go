@@ -8,6 +8,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// TransactionsIndexChange is the action to set the pagination index
+type TransactionsIndexChange struct {
+	Index int
+}
+
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
 	TransactionList [config.ListSize]*types.SendTx
@@ -51,6 +56,9 @@ func init() {
 // transactionActions is the handler for all transaction-related store actions
 func transactionActions(action interface{}) {
 	switch a := action.(type) {
+	case *TransactionsIndexChange:
+		store.Transactions.Pagination.Index = a.Index
+
 	case *SetTransactionList:
 		store.Transactions.Transactions = a.TransactionList
 

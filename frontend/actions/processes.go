@@ -9,6 +9,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// ProcessesIndexChange is the action to set the pagination index
+type ProcessesIndexChange struct {
+	Index int
+}
+
 // ProcessesTabChange is the action to change processes tabs
 type ProcessesTabChange struct {
 	Tab string
@@ -84,6 +89,9 @@ func init() {
 // processActions is the handler for all process-related store actions
 func processActions(action interface{}) {
 	switch a := action.(type) {
+	case *ProcessesIndexChange:
+		store.Processes.Pagination.Index = a.Index
+
 	case *SetProcessIDs:
 		store.Processes.ProcessIDs = a.ProcessIDs
 

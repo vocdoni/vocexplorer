@@ -21,8 +21,7 @@ import (
 type DashboardView struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered   bool
-	blockIndex int
+	Rendered bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
@@ -75,7 +74,7 @@ func updateHomeDashboardInfo(d *DashboardView) {
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)
 	actions.UpdateCounts()
-	updateHomeBlocks(d, util.Max(store.Blocks.Count-d.blockIndex-1, config.HomeWidgetBlocksListSize))
+	updateHomeBlocks(d, util.Max(store.Blocks.Count-1, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {

@@ -8,6 +8,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// BlocksIndexChange is the action to set the pagination index
+type BlocksIndexChange struct {
+	Index int
+}
+
 // BlocksTabChange is the action to change the current blocks tab
 type BlocksTabChange struct {
 	Tab string
@@ -51,6 +56,9 @@ func init() {
 // blockActions is the handler for all block-related store actions
 func blockActions(action interface{}) {
 	switch a := action.(type) {
+	case *BlocksIndexChange:
+		store.Blocks.Pagination.Index = a.Index
+
 	case *BlocksTabChange:
 		store.Blocks.Pagination.Tab = a.Tab
 

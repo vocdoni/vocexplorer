@@ -7,6 +7,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// EnvelopesIndexChange is the action to set the pagination index
+type EnvelopesIndexChange struct {
+	Index int
+}
+
 // SetEnvelopeList is the action to set the envelope list
 type SetEnvelopeList struct {
 	EnvelopeList [config.ListSize]*types.Envelope
@@ -40,6 +45,9 @@ func init() {
 // envelopeActions is the handler for all envelope-related store actions
 func envelopeActions(action interface{}) {
 	switch a := action.(type) {
+	case *EnvelopesIndexChange:
+		store.Envelopes.Pagination.Index = a.Index
+
 	case *SetEnvelopeList:
 		store.Envelopes.Envelopes = a.EnvelopeList
 

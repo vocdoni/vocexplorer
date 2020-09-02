@@ -20,8 +20,7 @@ import (
 type ValidatorsDashboardView struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered       bool
-	ValidatorIndex int
+	Rendered bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
@@ -48,6 +47,7 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateAndRenderValidatorsDashboard keeps the validators data up to date
 func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 	actions.EnableUpdates()
+	actions.ResetIndexes()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateValidatorsDashboard(d)
 	for {
@@ -68,14 +68,14 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 					break loop
 				}
 			}
-			d.ValidatorIndex = i
+			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
 			oldValidators := store.Validators.Count
 			newHeight, _ := api.GetValidatorCount()
 			dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight) - 1})
 			if i < 1 {
 				oldValidators = store.Validators.Count
 			}
-			updateValidators(d, util.Max(oldValidators-d.ValidatorIndex, config.ListSize))
+			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, config.ListSize))
 		}
 	}
 }
@@ -86,7 +86,7 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 	actions.UpdateCounts()
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {
-		updateValidators(d, util.Max(store.Validators.Count-d.ValidatorIndex, config.ListSize))
+		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, config.ListSize))
 	}
 }
 

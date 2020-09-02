@@ -21,9 +21,7 @@ import (
 type BlockTxsDashboardView struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered   bool
-	blockIndex int
-	txIndex    int
+	Rendered bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
@@ -58,6 +56,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
 func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.EnableUpdates()
+	actions.ResetIndexes()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateBlockTxsDashboard(d)
 	for {
@@ -78,14 +77,14 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 					break blockloop
 				}
 			}
-			d.blockIndex = i
+			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			oldBlocks := store.Blocks.Count
 			newHeight, _ := api.GetBlockHeight()
 			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
 			if i < 1 {
 				oldBlocks = store.Blocks.Count
 			}
-			updateBlocks(d, util.Max(oldBlocks-d.blockIndex, config.ListSize))
+			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, config.ListSize))
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -96,14 +95,14 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 					break txloop
 				}
 			}
-			d.txIndex = i
+			dispatcher.Dispatch(&actions.TransactionsIndexChange{Index: i})
 			oldTxs := store.Transactions.Count
 			newHeight, _ := api.GetTxHeight()
 			dispatcher.Dispatch(&actions.SetTransactionCount{Count: int(newHeight) - 1})
 			if i < 1 {
 				oldTxs = store.Transactions.Count
 			}
-			updateTxs(d, util.Max(oldTxs-d.txIndex, config.ListSize))
+			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, config.ListSize))
 		}
 	}
 }
@@ -115,10 +114,10 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.UpdateCounts()
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	if !store.Blocks.Pagination.DisableUpdate {
-		updateBlocks(d, util.Max(store.Blocks.Count-d.blockIndex, config.ListSize))
+		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, config.ListSize))
 	}
 	if !store.Transactions.Pagination.DisableUpdate {
-		updateTxs(d, util.Max(store.Transactions.Count-d.txIndex, config.ListSize))
+		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, config.ListSize))
 	}
 }
 

@@ -232,21 +232,25 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 		err := json.Unmarshal(tx, &rawTx)
 		util.ErrPrint(err)
 		hashString := fmt.Sprintf("%X", tx.Hash())
+		var hashElement vecty.ComponentOrHTML
 		if len(store.Blocks.CurrentBlockTxHeights) > i {
 			txHeight = store.Blocks.CurrentBlockTxHeights[i]
-			data = append(
-				data,
-				elem.Div(
-					vecty.Text("\tHash: "),
-					Link(
-						"/tx/"+util.IntToString(txHeight),
-						hashString,
-						"",
-					),
-					vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
-				),
+			hashElement = Link(
+				"/tx/"+util.IntToString(txHeight),
+				hashString,
+				"",
 			)
+		} else {
+			hashElement = elem.Div(vecty.Markup(vecty.Class("nav-link")), vecty.Text(hashString))
 		}
+		data = append(
+			data,
+			elem.Div(
+				vecty.Text("\tHash: "),
+				hashElement,
+				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
+			),
+		)
 	}
 	data = append(data, vecty.Text("]"))
 	if numTx == 0 {
