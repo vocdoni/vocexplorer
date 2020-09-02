@@ -79,7 +79,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						Link("/stats", "Stats", "nav-link"),
 					),
 				),
-				&SearchBar{},
+				// &SearchBar{},
 			),
 		),
 	)
