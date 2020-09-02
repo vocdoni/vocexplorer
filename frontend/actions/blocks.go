@@ -33,6 +33,11 @@ type SetCurrentBlockHeight struct {
 	Height int64
 }
 
+// SetCurrentBlockTxHeights is the action to set the current block transaction height list
+type SetCurrentBlockTxHeights struct {
+	Heights []int64
+}
+
 // DisableBlockUpdate is the action to set the disable update status for blocks
 type DisableBlockUpdate struct {
 	Disabled bool
@@ -60,6 +65,9 @@ func blockActions(action interface{}) {
 
 	case *SetCurrentBlockHeight:
 		store.Blocks.CurrentBlockHeight = a.Height
+
+	case *SetCurrentBlockTxHeights:
+		store.Blocks.CurrentBlockTxHeights = a.Heights
 
 	case *DisableBlockUpdate:
 		store.Blocks.Pagination.DisableUpdate = a.Disabled

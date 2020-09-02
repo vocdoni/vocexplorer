@@ -100,6 +100,16 @@ func UpdateAndRenderBlockContents(d *BlockContents) {
 	// Fetch block contents
 	block := rpc.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
+	var rawTx dvotetypes.Tx
+	var txHeights []int64
+	for _, tx := range store.Blocks.CurrentBlock.Block.Data.Txs {
+		err := json.Unmarshal(tx, &rawTx)
+		util.ErrPrint(err)
+		hashString := fmt.Sprintf("%X", tx.Hash())
+		txHeight, _ := api.GetTxHeightFromHash(hashString)
+		txHeights = append(txHeights, txHeight)
+	}
+	dispatcher.Dispatch(&actions.SetCurrentBlockTxHeights{Heights: txHeights})
 }
 
 //BlockView renders a single block card
@@ -215,25 +225,28 @@ func (c *BlockContents) BlockDetails() vecty.List {
 func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	numTx := 0
+	var txHeight int64
 	data := []vecty.MarkupOrChild{vecty.Text("Transactions: [\n")}
-	for _, tx := range block.Data.Txs {
+	for i, tx := range block.Data.Txs {
 		numTx++
 		err := json.Unmarshal(tx, &rawTx)
 		util.ErrPrint(err)
 		hashString := fmt.Sprintf("%X", tx.Hash())
-		txHeight, _ := api.GetTxHeightFromHash(hashString)
-		data = append(
-			data,
-			elem.Div(
-				vecty.Text("\tHash: "),
-				Link(
-					"/tx/"+util.IntToString(txHeight),
-					hashString,
-					"",
+		if len(store.Blocks.CurrentBlockTxHeights) > i {
+			txHeight = store.Blocks.CurrentBlockTxHeights[i]
+			data = append(
+				data,
+				elem.Div(
+					vecty.Text("\tHash: "),
+					Link(
+						"/tx/"+util.IntToString(txHeight),
+						hashString,
+						"",
+					),
+					vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
 				),
-				vecty.Text(fmt.Sprintf(" (%d bytes) Type: %s, \n", len(tx), rawTx.Type)),
-			),
-		)
+			)
+		}
 	}
 	data = append(data, vecty.Text("]"))
 	if numTx == 0 {
