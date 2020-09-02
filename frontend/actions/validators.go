@@ -27,6 +27,11 @@ type SetCurrentValidator struct {
 	Validator *types.Validator
 }
 
+// SetCurrentValidatorID is the action to set the currently displayed validator ID
+type SetCurrentValidatorID struct {
+	ID string
+}
+
 // SetCurrentValidatorBlockCount is the action to set the currently displayed validator's block count
 type SetCurrentValidatorBlockCount struct {
 	Count int
@@ -56,6 +61,9 @@ func validatorActions(action interface{}) {
 
 	case *SetCurrentValidator:
 		store.Validators.CurrentValidator = a.Validator
+
+	case *SetCurrentValidatorID:
+		store.Validators.CurrentValidatorID = a.ID
 
 	case *SetCurrentValidatorBlockCount:
 		store.Validators.CurrentBlockCount = a.Count

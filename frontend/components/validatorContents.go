@@ -35,6 +35,10 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 // UpdateValidatorContents keeps the validator contents page up to date
 func (contents *ValidatorContents) UpdateValidatorContents() {
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
+	}
 	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
 	vecty.Rerender(contents)
 	for {

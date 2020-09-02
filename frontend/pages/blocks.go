@@ -37,9 +37,8 @@ func (home *BlocksView) Component() vecty.ComponentOrHTML {
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading3(
-							vecty.Text("Blocks"),
+							vecty.Text("Block does not exist"),
 						),
-						vecty.Text("Blocks list will be here"),
 					},
 				}),
 			),
@@ -47,7 +46,8 @@ func (home *BlocksView) Component() vecty.ComponentOrHTML {
 	}
 	height, err := strconv.ParseInt(id, 0, 64)
 	util.ErrPrint(err)
-	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: rpc.GetBlock(store.TendermintClient, height)})
+	block := rpc.GetBlock(store.TendermintClient, height)
+	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	if store.Blocks.CurrentBlock == nil {
 		log.Errorf("Block unavailable")
 		return elem.Div(

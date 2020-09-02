@@ -7,10 +7,11 @@ import (
 
 // Validators stores all data about blockchain validators
 type Validators struct {
-	Count             int
-	CurrentValidator  *types.Validator
-	CurrentBlockCount int
-	CurrentBlockList  [config.ListSize]*types.StoreBlock
-	Pagination        PageStore
-	Validators        [config.ListSize]*types.Validator
+	Count              int
+	CurrentValidatorID string
+	CurrentValidator   *types.Validator
+	CurrentBlockCount  int
+	CurrentBlockList   [config.ListSize]*types.StoreBlock
+	Pagination         PageStore
+	Validators         [config.ListSize]*types.Validator
 }
