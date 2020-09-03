@@ -34,7 +34,7 @@ func (dash *ProcessesDashboardView) Mount() {
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if dash == nil || store.GatewayClient == nil {
 		return &bootstrap.Alert{

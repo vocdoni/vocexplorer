@@ -40,7 +40,7 @@ func (contents *TxContents) Mount() {
 // Render renders the TxContents component
 func (t *TxContents) Render() vecty.ComponentOrHTML {
 	if !t.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if store.Transactions.CurrentTransaction == nil {
 		return Container(

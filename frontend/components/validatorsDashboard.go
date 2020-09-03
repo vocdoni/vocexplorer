@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -34,7 +33,7 @@ func (dash *ValidatorsDashboardView) Mount() {
 // Render renders the ValidatorsDashboardView component
 func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	return Container(
 		renderGatewayConnectionBanner(),

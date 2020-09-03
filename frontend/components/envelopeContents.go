@@ -40,7 +40,7 @@ func (contents *EnvelopeContents) Mount() {
 // Render renders the EnvelopeContents component
 func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if store.Envelopes.CurrentEnvelope == nil || types.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
 		return elem.Div(
