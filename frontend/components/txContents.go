@@ -2,6 +2,7 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
@@ -37,8 +38,8 @@ func (contents *TxContents) Mount() {
 }
 
 // Render renders the TxContents component
-func (contents *TxContents) Render() vecty.ComponentOrHTML {
-	if !contents.Rendered {
+func (t *TxContents) Render() vecty.ComponentOrHTML {
+	if !t.Rendered {
 		return LoadingBar()
 	}
 	if store.Transactions.CurrentTransaction == nil {
@@ -54,7 +55,179 @@ func (contents *TxContents) Render() vecty.ComponentOrHTML {
 			),
 		)
 	}
-	return contents.renderFullTx()
+	contents := vecty.List{
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view", "no-column")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: TransactionView(),
+					}),
+				),
+			),
+		),
+	}
+
+	if store.Transactions.CurrentDecodedTransaction != nil {
+		contents = append(contents, elem.Section(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: t.TransactionDetails(),
+				}),
+			),
+		))
+	}
+	return Container(contents)
+}
+
+//TransactionView renders a single transaction card with (most of) the tx information
+func TransactionView() vecty.List {
+	contents := vecty.List{
+		elem.Heading1(
+			vecty.Markup(vecty.Class("card-title")),
+			vecty.Text("Transaction details"),
+		),
+		elem.Heading2(
+			vecty.Text(fmt.Sprintf(
+				"Transaction height: %d",
+				store.Transactions.CurrentTransaction.Store.TxHeight,
+			)),
+		),
+	}
+
+	if store.Transactions.CurrentDecodedTransaction != nil {
+		contents = append(contents, vecty.List{
+			elem.Div(
+				vecty.Markup(vecty.Class("details")),
+				elem.Span(vecty.Text(fmt.Sprintf(
+					"%s (%s)",
+					humanize.Time(store.Transactions.CurrentDecodedTransaction.Time),
+					store.Transactions.CurrentDecodedTransaction.Time.Local().String(),
+				))),
+			),
+			elem.HorizontalRule(),
+			elem.DescriptionList(
+				elem.DefinitionTerm(
+					vecty.Text("Transaction Type"),
+				),
+				elem.Description(
+					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
+				),
+				vecty.If(
+					store.Transactions.CurrentDecodedTransaction.EntityID != "",
+					vecty.List{
+						elem.DefinitionTerm(
+							vecty.Text("Belongs to entity"),
+						),
+						elem.Description(
+							Link(
+								"/entity/"+store.Transactions.CurrentDecodedTransaction.EntityID,
+								store.Transactions.CurrentDecodedTransaction.EntityID,
+								"",
+							),
+						),
+					},
+				),
+				vecty.If(
+					store.Transactions.CurrentDecodedTransaction.ProcessID != "",
+					vecty.List{
+						elem.DefinitionTerm(
+							vecty.Text("Belongs to process"),
+						),
+						elem.Description(
+							Link(
+								"/process/"+store.Transactions.CurrentDecodedTransaction.ProcessID,
+								store.Transactions.CurrentDecodedTransaction.ProcessID,
+								"",
+							),
+						),
+					},
+				),
+				vecty.If(
+					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && store.Transactions.CurrentDecodedTransaction.RawTx.Type == "vote",
+					elem.DefinitionTerm(
+						vecty.Text("Contains vote envelope"),
+					),
+					elem.Description(
+						Link(
+							"/envelope/"+util.IntToString(store.Transactions.CurrentDecodedTransaction.EnvelopeHeight),
+							store.Transactions.CurrentDecodedTransaction.Nullifier,
+							"",
+						),
+					),
+				),
+			),
+		}...)
+	}
+
+	return contents
+}
+
+type TransactionTab struct {
+	*Tab
+}
+
+func (t *TransactionTab) store() string {
+	return store.Transactions.Pagination.Tab
+}
+func (t *TransactionTab) dispatch() interface{} {
+	return &actions.TransactionTabChange{
+		Tab: t.alias(),
+	}
+}
+
+func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
+	contents := &TransactionTab{&Tab{
+		Text:  "Contents",
+		Alias: "contents",
+	}}
+	metadata := &TransactionTab{&Tab{
+		Text:  "Metadata",
+		Alias: "metadata",
+	}}
+
+	return vecty.List{
+		elem.Navigation(
+			vecty.Markup(vecty.Class("tabs")),
+			elem.UnorderedList(
+				TabLink(t, contents),
+				TabLink(t, metadata),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("tabs-content")),
+			TabContents(contents, preformattedTransactionContents()),
+			TabContents(metadata, preformattedTransactionMetadata()),
+		),
+	}
+}
+
+func preformattedTransactionContents() vecty.ComponentOrHTML {
+	if len(store.Transactions.CurrentDecodedTransaction.RawTxContents) <= 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("Empty contents"),
+		)
+	}
+	return elem.Preformatted(elem.Code(
+		vecty.Text(string(store.Transactions.CurrentDecodedTransaction.RawTxContents)),
+	))
+}
+
+func preformattedTransactionMetadata() vecty.ComponentOrHTML {
+	if len(store.Transactions.CurrentDecodedTransaction.Metadata) <= 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("Empty metadata"),
+		)
+	}
+	return elem.Preformatted(elem.Code(
+		vecty.Text(string(store.Transactions.CurrentDecodedTransaction.Metadata)),
+	))
 }
 
 // UpdateAndRenderTxContents keeps the transaction contents up to date
