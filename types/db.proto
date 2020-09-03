@@ -33,6 +33,7 @@ message StoreTx {
     int64 TxHeight = 4;
     // Bytes-representation of rxresult. Could be nested resultTx struct
     bytes TxResult = 5;
+    string Nullifier = 6;
 }
 
 message SendTx {
@@ -50,6 +51,7 @@ message Validator {
     bytes PubKey = 2;
     int64 VotingPower = 3;
     int64 ProposerPriority = 4;
+    Height height = 5;
 }
 
 message HeightMap {

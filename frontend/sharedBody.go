@@ -4,7 +4,6 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/pages"
 	router "marwan.io/vecty-router"
@@ -13,22 +12,25 @@ import (
 // Body renders the <body> tag
 type Body struct {
 	vecty.Core
-	Cfg *config.Cfg
 }
 
 // Render body simply renders routes for application
 func (b Body) Render() vecty.ComponentOrHTML {
 	return components.SectionMain(
-		router.NewRoute("/", &pages.HomeView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/vocdash", &pages.VocDashView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/processes/{id}", &pages.ProcessesView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/entities/{id}", &pages.EntitiesView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/envelopes/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocktxs", &pages.BlockTxsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocks/{id}", &pages.BlocksView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/txs/{id}", &pages.TxsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/stats", &pages.Stats{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/validators/{id}", &pages.ValidatorsView{Cfg: b.Cfg}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/", &pages.HomeView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/vocdash", &pages.VocDashView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/process/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/entity/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/blocktxs", &pages.BlockTxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/blocks", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/block/{id}", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/tx/{id}", &pages.TxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/stats", &pages.Stats{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/validator/{id}", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/validators", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
+		// Note that this handler only works for router.Link and router.Redirect accesses.
+		// Directly accessing a non-existant route won't be handled by this.
 		router.NotFoundHandler(&notFound{}),
 	)
 }

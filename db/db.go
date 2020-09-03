@@ -1,11 +1,9 @@
 package db
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,7 +17,9 @@ import (
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
@@ -32,31 +32,34 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
+func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 
-	ping := pingGateway(gwHost)
-	if !ping {
-		log.Warn("Gateway Client is not running. Running as detached database")
-		return
-	}
 	// Init tendermint client
 	tClient, up := StartTendermint(tmHost)
 	if !up {
-		log.Warn("Cannot connect to tendermint client. Running as detached database")
+		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
-
 	log.Debugf("Connected to " + tmHost)
-	// defer (*cancel)()
+
+	// Init gateway client
+	gwClient, cancel, up := startGateway(gwHost, gwSocket)
+	if !up {
+		log.Warn("Cannot connect to gateway api. Running as detached database")
+		return
+	}
+	defer (*cancel)()
+	log.Debugf("Connected to " + gwHost)
+
 	i := 0
 	for {
 		updateBlockList(d, tClient)
 		// Update validators less frequently than blocks
-		if i%20 == 0 {
+		if i%40 == 0 {
 			updateValidatorList(d, tClient)
 		}
-		updateEntityList(d)
-		updateProcessList(d)
+		updateEntityList(d, gwClient)
+		updateProcessList(d, gwClient)
 		time.Sleep(config.DBWaitTime * time.Millisecond)
 		i++
 	}
@@ -64,8 +67,9 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, tmHost string) {
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
+	latestValidatorHeight := getHeight(d, config.LatestValidatorHeightKey, 0)
 	batch := d.NewBatch()
-	fetchValidators(latestBlockHeight.GetHeight(), c, batch)
+	fetchValidators(latestBlockHeight.GetHeight(), latestValidatorHeight.GetHeight(), c, batch)
 	util.ErrPrint(batch.Write())
 }
 
@@ -93,10 +97,10 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Get Height maps: stored in map object so each update isn't slow db-write/get
 	// Map of validator:num blocks
 	valMap := getHeightMap(d, config.ValidatorHeightMapKey)
-	valMapMutex := &sync.Mutex{}
+	valMapMutex := new(sync.Mutex)
 	// Map of pid:num envelopes
 	procEnvHeightMap := getHeightMap(d, config.ProcessEnvelopeHeightMapKey)
-	procEnvHeightMapMutex := &sync.Mutex{}
+	procEnvHeightMapMutex := new(sync.Mutex)
 
 	status, err := c.Status()
 	if err != nil {
@@ -111,7 +115,9 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		if err != nil {
 			log.Error(err)
 		}
-		gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		if status != nil {
+			gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		}
 	}
 
 	batch := d.NewBatch()
@@ -121,9 +127,19 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
 	txsList := make([]tmtypes.Txs, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
+	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
+	nextHeight := make(chan struct{})
+	myHeight := make(chan struct{})
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, &txsList[i], valMap, valMapMutex)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
+		if i == 0 {
+			//Signal to the first block to start
+			close(myHeight)
+		}
+		myHeight = nextHeight
+		nextHeight = make(chan struct{})
 	}
+
 	num := 0
 	if i > 0 {
 		// Sync: wait here for all goroutines to complete
@@ -175,7 +191,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 }
 
-func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
+func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
 	resultValidators, err := c.Validators(&blockHeight, page, 100)
@@ -185,22 +201,34 @@ func fetchValidators(blockHeight int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
 		moreValidators, err := c.Validators(&blockHeight, page, maxPerPage)
 		util.ErrPrint(err)
 
-		if len(resultValidators.Validators) > 0 {
+		if len(moreValidators.Validators) > 0 {
 			resultValidators.Validators = append(resultValidators.Validators, moreValidators.Validators...)
 		}
 		page++
 	}
 	// Cast each validator as storage struct, marshal, write to batch
-	for _, validator := range resultValidators.Validators {
+	for i, validator := range resultValidators.Validators {
+		if i < int(validatorCount) {
+			continue
+		}
+		validatorCount++
 		var storeValidator types.Validator
 		storeValidator.Address = validator.Address
+		storeValidator.Height = &types.Height{Height: validatorCount}
 		storeValidator.ProposerPriority = validator.ProposerPriority
 		storeValidator.VotingPower = validator.VotingPower
 		storeValidator.PubKey = validator.PubKey.Bytes()
 		encValidator, err := proto.Marshal(&storeValidator)
 		util.ErrPrint(err)
+		// Write id:validator
 		batch.Put(append([]byte(config.ValidatorPrefix), validator.Address...), encValidator)
+		// Write height:id
+		batch.Put(append([]byte(config.ValidatorHeightPrefix), util.EncodeInt(storeValidator.Height.GetHeight())...), validator.Address)
 	}
+	// Write latest validator height
+	rawHeight, err := proto.Marshal(&types.Height{Height: validatorCount})
+	util.ErrPrint(err)
+	batch.Put([]byte(config.LatestValidatorHeightKey), rawHeight)
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
@@ -222,12 +250,14 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 			TxResult: result,
 			Index:    txRes.Index,
 		}
-		storeEnvelope(txStore.Tx, envHeight, procHeightMap, procHeightMapMutex, batch)
+		// If voteTx, get envelope nullifier
+		txStore.Nullifier = storeEnvelope(txStore.Tx, envHeight, procHeightMap, procHeightMapMutex, batch)
 		txVal, err := proto.Marshal(&txStore)
 		util.ErrPrint(err)
 		util.ErrPrint(err)
 		batch.Put(txHashKey, txVal)
-		txHeightKey := []byte(config.TxHeightPrefix + util.IntToString(txStore.GetTxHeight()))
+		//Write height:tx hash
+		txHeightKey := append([]byte(config.TxHeightPrefix), util.EncodeInt(txStore.GetTxHeight())...)
 		batch.Put(txHeightKey, tx.Hash())
 		if i == 0 {
 			blockHeight = txRes.Height
@@ -240,7 +270,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvote
 	complete <- struct{}{}
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete chan<- struct{}, txs *tmtypes.Txs, valMap *types.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *types.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
@@ -277,6 +307,8 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 		log.Error(err)
 	}
 
+	// Wait for myHeight channel to close, this means fetchBlock for previous block has been assigned a validator block height
+	<-myHeight
 	// Update height of validator block belongs to
 	valMapMutex.Lock()
 	height, ok := valMap.Heights[util.HexToString(block.Proposer)]
@@ -286,11 +318,13 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	height++
 	valMap.Heights[util.HexToString(block.Proposer)] = height
 	valMapMutex.Unlock()
+	// Signal to next block that I have been assigned a validator block height
+	close(nextHeight)
 
-	blockHeightKey := append([]byte(config.BlockHeightPrefix), []byte(util.IntToString(block.GetHeight()))...)
+	blockHeightKey := append([]byte(config.BlockHeightPrefix), util.EncodeInt(block.GetHeight())...)
 	blockHashKey := append([]byte(config.BlockHashPrefix), block.GetHash()...)
 	validatorHeightKey := append([]byte(config.BlockByValidatorPrefix), block.GetProposer()...)
-	validatorHeightKey = append(validatorHeightKey, []byte(util.IntToString(height))...)
+	validatorHeightKey = append(validatorHeightKey, util.EncodeInt(height)...)
 	hashValue := block.GetHash()
 
 	// Thread-safe batch operations
@@ -302,12 +336,139 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete cha
 	(*batch).Put(validatorHeightKey, hashValue)
 }
 
-func updateEntityList(d *dvotedb.BadgerDB) {
+func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
+	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
+	// gatewayEntityHeight, err := c.GetEntityCount()
+	// util.ErrPrint(err)
+	// if localEntityHeight == gatewayEntityHeight {
+	if localEntityHeight > 0 {
+		return
+	}
+	newEntities, err := c.GetScrutinizerEntities(localEntityHeight)
+	if len(newEntities) < 1 {
+		log.Warn("No new entities fetched")
+		return
+	}
+	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
 
+	// write new entities to db
+	batch := d.NewBatch()
+	i := 0
+	entity := ""
+	for i, entity = range newEntities {
+		heightKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
+		rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+		if util.ErrPrint(err) {
+			break
+		}
+		batch.Put(heightKey, rawEntity)
+		log.Debugf("Stored entity %s height %d", entity, int(localEntityHeight)+i)
+		// Add new entity to height map with height of 0 so db will get new entity's processes
+		if _, ok := heightMap.GetHeights()[entity]; ok {
+			log.Error("Fetched entity already stored")
+		}
+		heightMap.Heights[entity] = 0
+	}
+
+	rawValMap, err := proto.Marshal(heightMap)
+	util.ErrPrint(err)
+	log.Debugf("Fetched %d new entities at height %d", len(newEntities), int(localEntityHeight)+i+1)
+
+	// Write entity height
+	encHeight := types.Height{Height: localEntityHeight + int64(i) + 1}
+	rawHeight, err := proto.Marshal(&encHeight)
+	util.ErrPrint(err)
+	heightKey := []byte(config.LatestEntityHeight)
+	batch.Put(heightKey, rawHeight)
+	// Write entity/process height map
+	heightMapKey := []byte(config.EntityProcessHeightMapKey)
+	batch.Put(heightMapKey, rawValMap)
+	batch.Write()
 }
 
-func updateProcessList(d *dvotedb.BadgerDB) {
+func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
+	localProcessHeight := getHeight(d, config.LatestProcessHeight, 0).GetHeight()
+	gatewayProcessHeight, err := c.GetProcessCount()
+	util.ErrPrint(err)
+	if localProcessHeight == gatewayProcessHeight {
+		return
+	}
 
+	// Get height map for list of entities, current heights stored
+	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
+	// Initialize concurrency helper variables
+	heightMapMutex := new(sync.Mutex)
+	requestMutex := new(sync.Mutex)
+	numNewProcesses := 0
+	complete := make(chan struct{}, len(heightMap.Heights))
+
+	batch := d.NewBatch()
+
+	for entity, height := range heightMap.Heights {
+		go fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
+		// fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
+	}
+	log.Debugf("Found %d stored entities", len(heightMap.Heights))
+
+	// Sync: wait here for all goroutines to complete
+	num := 0
+	for range complete {
+		if num >= len(heightMap.Heights)-1 {
+			break
+		}
+		num++
+	}
+	log.Debugf("Fetched %d new processes", numNewProcesses)
+
+	// Write updated entity process height map
+	rawHeightMap, err := proto.Marshal(heightMap)
+	util.ErrPrint(err)
+	heightMapKey := []byte(config.EntityProcessHeightMapKey)
+	batch.Put(heightMapKey, rawHeightMap)
+	// Write global process height
+	encHeight := types.Height{Height: localProcessHeight + int64(numNewProcesses)}
+	rawHeight, err := proto.Marshal(&encHeight)
+	util.ErrPrint(err)
+	heightKey := []byte(config.LatestProcessHeight)
+	batch.Put(heightKey, rawHeight)
+	batch.Write()
+}
+
+func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, complete chan struct{}) {
+	defer func() {
+		complete <- struct{}{}
+	}()
+	requestMutex.Lock()
+	newProcessList, err := c.GetProcessList(entity, height)
+	requestMutex.Unlock()
+	if util.ErrPrint(err) || len(newProcessList) < 1 {
+		return
+	}
+	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+	util.ErrPrint(err)
+	var process string
+	for _, process = range newProcessList {
+		rawProcess, err := hex.DecodeString(util.StripHexString(process))
+		util.ErrPrint(err)
+		heightMapMutex.Lock()
+		*numNew++
+		globalHeight := int(height) + *numNew
+		localHeight := heightMap.Heights[entity]
+		heightMap.Heights[entity]++
+		heightMapMutex.Unlock()
+
+		// Write Height:PID
+		processKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight)...)
+		batch.Put(processKey, rawProcess)
+
+		// Write Entity|LocalHeight:ProcessHeight
+		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
+		entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight))...)
+		storeHeight := &types.Height{Height: int64(globalHeight)}
+		rawStoreHeight, err := proto.Marshal(storeHeight)
+		util.ErrPrint(err)
+		batch.Put(entityProcessKey, rawStoreHeight)
+	}
 }
 
 // listItemsByHeight returns a list of items given integer keys
@@ -316,65 +477,41 @@ func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 		max = 64
 	}
 	var hashList [][]byte
-	for ; max > 0; max-- {
-		heightKey := []byte(util.IntToString(height))
+	for ; max > 0 && height >= 0; max-- {
+		heightKey := util.EncodeInt(height)
 		key := append(prefix, heightKey...)
 		has, err := d.Has(key)
 		if !has || util.ErrPrint(err) {
-			break
+			height--
+			continue
 		}
 		val, err := d.Get(key)
-		if err != nil {
-			log.Error(err)
-		}
+		util.ErrPrint(err)
 		hashList = append(hashList, val)
 		height--
 	}
 	return hashList
 }
 
-func pingGateway(host string) bool {
-	pingClient := http.Client{
-		Timeout: 5 * time.Second,
+func startGateway(host, socket string) (*api.GatewayClient, *context.CancelFunc, bool) {
+	ping := api.PingGateway(host)
+	if !ping {
+		log.Warn("Gateway Client is not running. Running as detached database")
+		return nil, nil, false
 	}
 	for i := 0; ; i++ {
-		if i > 10 {
-			return false
+		if i > 20 {
+			return nil, nil, false
 		}
-		resp, err := pingClient.Get("http://" + host + "/ping")
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(2 * time.Second)
+		gwClient, cancel := api.InitGateway("http://" + host + socket)
+		if gwClient == nil {
+			time.Sleep(5 * time.Second)
 			continue
-		}
-		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(time.Second)
-			continue
-		}
-		if string(body) != "pong" {
-			log.Warn("Gateway ping not yet available")
 		} else {
-			return true
+			return gwClient, &cancel, true
 		}
 	}
 }
-
-// func startGateway(host string) (*client.Client, *context.CancelFunc, bool) {
-// 	for i := 0; ; i++ {
-// 		if i > 20 {
-// 			return nil, nil, false
-// 		}
-// 		gwClient, cancel := client.InitGateway(host)
-// 		if gwClient == nil {
-// 			time.Sleep(5 * time.Second)
-// 			continue
-// 		} else {
-// 			return gwClient, &cancel, true
-// 		}
-// 	}
-// }
 
 //StartTendermint starts the tendermint client
 func StartTendermint(host string) (*tmhttp.HTTP, bool) {
@@ -382,7 +519,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 		if i > 20 {
 			return nil, false
 		}
-		tmClient := rpc.StartClient("http://" + host)
+		tmClient := rpcinit.StartClient("http://" + host)
 		if tmClient == nil {
 			time.Sleep(1 * time.Second)
 			continue
@@ -407,7 +544,7 @@ func getHeight(d *dvotedb.BadgerDB, key string, def int64) *types.Height {
 	return height
 }
 
-func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) {
+func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) string {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx, &rawTx)
 	util.ErrPrint(err)
@@ -461,7 +598,7 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		// Write globalHeight:package
 		rawEnvelope, err := proto.Marshal(&votePackage)
 		util.ErrPrint(err)
-		packageKey := append([]byte(config.EnvPackagePrefix), []byte(util.IntToString(globalHeight))...)
+		packageKey := append([]byte(config.EnvPackagePrefix), util.EncodeInt(globalHeight)...)
 		batch.Put(packageKey, rawEnvelope)
 
 		// Write nullifier:globalHeight
@@ -474,13 +611,14 @@ func storeEnvelope(tx tmtypes.Tx, height *types.Height, procHeightMap *types.Hei
 		batch.Put(nullifierKey, rawHeight)
 
 		// Write pid|heightbyPID:globalHeight
-		heightBytes := []byte(util.IntToString(procHeight))
+		heightBytes := util.EncodeInt(procHeight)
 		PIDBytes, err := hex.DecodeString(util.StripHexString(votePackage.ProcessID))
 		util.ErrPrint(err)
 		heightKey := append([]byte(config.EnvPIDPrefix), PIDBytes...)
 		heightKey = append(heightKey, heightBytes...)
 		batch.Put(heightKey, rawHeight)
 
-		log.Debugf("Stored envelope %s of process %s at height %d, process height %d", votePackage.Nullifier, votePackage.ProcessID, globalHeight, procHeight)
+		return votePackage.Nullifier
 	}
+	return ""
 }

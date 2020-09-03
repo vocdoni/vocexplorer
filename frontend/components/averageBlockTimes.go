@@ -3,19 +3,20 @@ package components
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
+//AverageBlockTimes is the component to display avg block times
 type AverageBlockTimes struct {
 	vecty.Core
-	VC *client.VochainInfo
 }
 
+//Render renders the AverageBlockTimes component
 func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 
-	if a.VC.BlockTime == nil {
+	if store.Stats.BlockTime == nil {
 		return &bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Waiting for blocks data",
@@ -32,7 +33,7 @@ func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 		4: "24h",
 	}
 
-	for k, bt := range a.VC.BlockTime {
+	for k, bt := range store.Stats.BlockTime {
 		if bt <= 0 {
 			continue
 		}

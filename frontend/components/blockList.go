@@ -9,8 +9,10 @@ import (
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -18,26 +20,22 @@ import (
 // BlockList is the block list component
 type BlockList struct {
 	vecty.Core
-	currentPage   int
-	disableUpdate *bool
-	refreshCh     chan int
-	t             *rpc.TendermintInfo
 }
 
 // Render renders the block list component
 func (b *BlockList) Render() vecty.ComponentOrHTML {
-	if b.t != nil && b.t.ResultStatus != nil {
+	if len(store.Blocks.Blocks) > 0 {
 		p := &Pagination{
-			TotalPages:      int(b.t.TotalBlocks) / config.ListSize,
-			TotalItems:      &b.t.TotalBlocks,
-			CurrentPage:     &b.currentPage,
-			RefreshCh:       b.refreshCh,
+			TotalPages:      int(store.Blocks.Count) / config.ListSize,
+			TotalItems:      &store.Blocks.Count,
+			CurrentPage:     &store.Blocks.Pagination.CurrentPage,
+			RefreshCh:       store.Blocks.Pagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   b.disableUpdate,
+			DisableUpdate:   &store.Blocks.Pagination.DisableUpdate,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderBlocks(p, b.t, index)
+			return renderBlocks(p, index)
 		}
 		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
@@ -46,11 +44,11 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 					index, err := strconv.Atoi(e.Target.Get("value").String())
 					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
 						*self.CurrentPage = 0
-						*b.disableUpdate = false
+						dispatcher.Dispatch(&actions.DisableBlockUpdate{Disabled: false})
 						self.RefreshCh <- *self.CurrentPage * config.ListSize
 					} else {
 						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						*b.disableUpdate = true
+						dispatcher.Dispatch(&actions.DisableBlockUpdate{Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					}
 					vecty.Rerender(self)
@@ -74,16 +72,16 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("Waiting for blockchain info..."))
 }
 
-func renderBlocks(p *Pagination, t *rpc.TendermintInfo, index int) vecty.ComponentOrHTML {
+func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
-	for i := len(t.BlockList) - 1; i >= len(t.BlockList)-p.ListSize; i-- {
-		if types.BlockIsEmpty(t.BlockList[i]) {
+	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-p.ListSize; i-- {
+		if types.BlockIsEmpty(store.Blocks.Blocks[i]) {
 			continue
 		}
 		blockList = append(blockList, elem.Div(
 			vecty.Markup(vecty.Class("paginated-card")),
-			BlockCard(t.BlockList[i]),
+			BlockCard(store.Blocks.Blocks[i]),
 		))
 	}
 	if len(blockList) == 0 {

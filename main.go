@@ -117,7 +117,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if !cfg.Detached {
-		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.TendermintHost)
+		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.GatewaySocket, cfg.Global.TendermintHost)
 	} else {
 		log.Infof("Running in detached mode")
 	}
@@ -127,11 +127,11 @@ func main() {
 		sub := strings.Split(cfg.Global.GatewayHost, ":")
 		port := "9090"
 		if len(sub) < 1 {
-			port = sub[1]
+			port = sub[1][:4]
 		}
-		cfg.Global.GatewayHost = "ws://localhost:" + port + cfg.Global.GatewaySocket
+		cfg.Global.GatewayHost = "ws://localhost:" + port
 	} else {
-		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost + cfg.Global.GatewaySocket
+		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost
 	}
 
 	//Convert host url to localhost if using internal docker network
@@ -157,7 +157,7 @@ func main() {
 	s := &http.Server{
 		Addr:           urlR.Host,
 		ReadTimeout:    20 * time.Second,
-		WriteTimeout:   20 * time.Second,
+		WriteTimeout:   40 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 

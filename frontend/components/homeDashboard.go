@@ -1,41 +1,48 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/tendermint/tendermint/rpc/client/http"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // DashboardView renders the dashboard landing page
 type DashboardView struct {
 	vecty.Core
-	blockIndex int
-	gwClient   *client.Client
-	quitCh     chan struct{}
-	refreshCh  chan int
-	t          *rpc.TendermintInfo
-	tClient    *http.HTTP
-	vc         *client.VochainInfo
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *DashboardView) Mount() {
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.tClient != nil && dash.t != nil && dash.vc != nil {
-		return &StatsView{
-			t:         dash.t,
-			vc:        dash.vc,
-			refreshCh: dash.refreshCh,
-			gwClient:  dash.gwClient,
-		}
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
+		return Container(
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
+			&StatsView{},
+		)
 	}
 	return &bootstrap.Alert{
 		Contents: "Connecting to blockchain clients",
@@ -43,84 +50,38 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	}
 }
 
-// InitDashboardView returns the home dashboard components
-func InitDashboardView(t *rpc.TendermintInfo, vc *client.VochainInfo, DashboardView *DashboardView, cfg *config.Cfg) *DashboardView {
-	// Init tendermint client
-	tClient := rpc.StartClient(cfg.TendermintHost)
-	// Init Gateway client
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil || tClient == nil {
-		return DashboardView
-	}
-	DashboardView.tClient = tClient
-	DashboardView.gwClient = gwClient
-	DashboardView.t = t
-	DashboardView.vc = vc
-	DashboardView.quitCh = make(chan struct{})
-	DashboardView.refreshCh = make(chan int, 50)
-	DashboardView.blockIndex = 0
-	BeforeUnload(func() {
-		close(DashboardView.quitCh)
-	})
-	go updateAndRenderDashboard(DashboardView, cancel, cfg)
-	return DashboardView
-}
-
-func updateHeight(t *rpc.TendermintInfo) {
-	t.TotalBlocks = int(dbapi.GetBlockHeight()) - 1
-	t.TotalTxs = int(dbapi.GetTxHeight() - 1)
-	t.TotalEnvelopes = int(dbapi.GetEnvelopeHeight())
-}
-
-func updateAndRenderDashboard(d *DashboardView, cancel context.CancelFunc, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	rpc.UpdateTendermintInfo(d.tClient, d.t)
-	client.UpdateDashboardInfo(d.gwClient, d.vc)
-	updateHeight(d.t)
-	updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-	vecty.Rerender(d)
+// UpdateAndRenderHomeDashboard keeps the home dashboard data up to date
+func UpdateAndRenderHomeDashboard(d *DashboardView) {
+	actions.EnableUpdates()
+	ticker := time.NewTicker(time.Duration(util.Max(store.Config.RefreshTime, 1)) * time.Second)
+	updateHomeDashboardInfo(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			d.gwClient.Close()
-			//cancel()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			rpc.UpdateTendermintInfo(d.tClient, d.t)
-			updateHeight(d.t)
-			updateHomeBlocks(d, util.Max(d.t.TotalBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-			client.UpdateDashboardInfo(d.gwClient, d.vc)
-			vecty.Rerender(d)
-		case i := <-d.refreshCh:
-		loop:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case i = <-d.refreshCh:
-				default:
-					break loop
-				}
-			}
-			d.blockIndex = i
-			oldBlocks := d.t.TotalBlocks
-			updateHeight(d.t)
-			if i < 1 {
-				oldBlocks = d.t.TotalBlocks
-			}
-			updateHomeBlocks(d, util.Max(oldBlocks-d.blockIndex, config.HomeWidgetBlocksListSize))
-			vecty.Rerender(d)
+			updateHomeDashboardInfo(d)
 		}
 	}
 }
 
+func updateHomeDashboardInfo(d *DashboardView) {
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	update.DashboardInfo(store.GatewayClient)
+	actions.UpdateCounts()
+	updateHomeBlocks(d, util.Max(store.Blocks.Count-1, config.HomeWidgetBlocksListSize))
+}
+
 func updateHomeBlocks(d *DashboardView, index int) {
 	fmt.Println("Getting blocks from index " + util.IntToString(index))
-	list := dbapi.GetBlockList(index)
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
+	list, ok := api.GetBlockList(index)
+	if ok {
+		reverseBlockList(&list)
+		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 	}
-	d.t.BlockList = list
 }

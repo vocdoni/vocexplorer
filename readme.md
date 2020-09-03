@@ -62,5 +62,13 @@ Options for `main.go`:
 - `--logLevel` `(string)`      log level <debug, info, warn, error> (default "error")
 - `--refreshTime` `(int)`      Number of seconds between each content refresh (default 5)
 - `--vochainHost` `(string)`   gateway API host to connect to (default "http://0.0.0.0:26657")
+- 
+#### Note: when updating to a new version of this program, you may need to refresh your data store:
+~~~
+rm -rf DBPATH
+~~~ 
+Where DBPATH by default is 
+`~/.vocexplorer/CHAIN_ID`
+and CHAIN_ID is the ID of the blockchain you're exploring, eg. `vocdoni-release-05`
 
 ----

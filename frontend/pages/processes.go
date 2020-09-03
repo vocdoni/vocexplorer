@@ -2,22 +2,32 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	router "marwan.io/vecty-router"
 )
 
 // ProcessesView renders the processes page
 type ProcessesView struct {
 	vecty.Core
-	Cfg *config.Cfg
 }
 
 // Render renders the ProcessesView component
 func (home *ProcessesView) Render() vecty.ComponentOrHTML {
-	process := new(client.FullProcessInfo)
 	dash := new(components.ProcessesDashboardView)
-	return components.InitProcessesDashboardView(process, dash, router.GetNamedVar(home)["id"], home.Cfg)
-
+	dispatcher.Dispatch(&actions.SetCurrentProcessID{ID: router.GetNamedVar(home)["id"]})
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	if !store.Listeners.Has(dash) {
+		store.Listeners.Add(dash, func() {
+			if dash.Rendered {
+				vecty.Rerender(dash)
+			}
+		})
+	}
+	go components.UpdateAndRenderProcessesDashboard(dash)
+	return elem.Div(dash)
 }

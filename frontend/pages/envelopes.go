@@ -1,17 +1,14 @@
 package pages
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"strconv"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -25,23 +22,17 @@ type EnvelopesView struct {
 func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	util.ErrPrint(err)
-	envelope := dbapi.GetEnvelope(height)
-	if envelope == nil || types.EnvelopeIsEmpty(envelope) {
-		log.Errorf("Envelope unavailable")
-		return elem.Div(
-			elem.Main(vecty.Text("Envelope not available")),
-		)
+	dispatcher.Dispatch(&actions.SetCurrentEnvelopeHeight{Height: height})
+	dash := new(components.EnvelopeContents)
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	if !store.Listeners.Has(dash) {
+		store.Listeners.Add(dash, func() {
+			if dash.Rendered {
+				vecty.Rerender(dash)
+			}
+		})
 	}
-	// Decode vote package
-	// TODO: decrypt vote package if necessary
-	packageBytes, err := base64.StdEncoding.DecodeString(envelope.GetPackage())
-	util.ErrPrint(err)
-	votePackage := new(dvotetypes.VotePackageStruct)
-	util.ErrPrint(json.Unmarshal(packageBytes, votePackage))
-	return elem.Div(
-		&components.EnvelopeContents{
-			Envelope:    envelope,
-			VotePackage: votePackage,
-		},
-	)
+	go components.UpdateAndRenderEnvelopesDashboard(dash)
+	return elem.Div(dash)
 }

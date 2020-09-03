@@ -2,9 +2,10 @@ package pages
 
 import (
 	"github.com/gopherjs/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // VocDashView renders the processes page
@@ -15,8 +16,16 @@ type VocDashView struct {
 
 // Render renders the VocDashView component
 func (home *VocDashView) Render() vecty.ComponentOrHTML {
-	vc := new(client.VochainInfo)
 	dash := new(components.VocDashDashboardView)
-	return components.InitVocDashDashboardView(vc, dash, home.Cfg)
-
+	dash.Rendered = false
+	// Ensure component rerender is only triggered once component has been rendered
+	if !store.Listeners.Has(dash) {
+		store.Listeners.Add(dash, func() {
+			if dash.Rendered {
+				vecty.Rerender(dash)
+			}
+		})
+	}
+	go components.UpdateAndRenderVocDashDashboard(dash)
+	return elem.Div(dash)
 }

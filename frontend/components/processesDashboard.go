@@ -1,71 +1,156 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessesDashboardView renders the processes dashboard page
 type ProcessesDashboardView struct {
 	vecty.Core
-	gwClient               *client.Client
-	process                *client.FullProcessInfo
-	processID              string
-	envelopeIndex          int
-	disableEnvelopesUpdate bool
-	quitCh                 chan struct{}
-	refreshCh              chan int
+	vecty.Mounter
+	Rendered bool
+}
+
+// Mount is called after the component renders to signal that it can be rerendered safely
+func (dash *ProcessesDashboardView) Mount() {
+	if !dash.Rendered {
+		dash.Rendered = true
+		vecty.Rerender(dash)
+	}
 }
 
 // Render renders the ProcessesDashboardView component
 func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
-	if dash != nil && dash.gwClient != nil && dash.process != nil {
-		t := dash.process.ProcessType
-		if t == "" {
-			t = "unknown"
-		}
-		st := dash.process.State
-		if st == "" {
-			t = "unknown"
-		}
-		return Container(
-			elem.Section(
-				elem.Heading4(vecty.Text(
-					fmt.Sprintf("Process %s", dash.processID),
-				)),
-				elem.Heading5(vecty.Text("Process type: "+t+", state: "+st)),
-				elem.Heading5(vecty.Text("Number of votes : "+util.IntToString(dash.process.EnvelopeHeight))),
-
-				renderResults(dash.process.Results),
-				vecty.Markup(vecty.Class("info-pane")),
-				&ProcessesEnvelopeListView{
-					process:       dash.process,
-					refreshCh:     dash.refreshCh,
-					disableUpdate: &dash.disableEnvelopesUpdate,
-				},
-			),
-		)
+	if !dash.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
 	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
+	if dash == nil || store.GatewayClient == nil {
+		return &bootstrap.Alert{
+			Contents: "Connecting to blockchain clients",
+			Type:     "warning",
+		}
+	}
+
+	if store.Processes.CurrentProcess.ProcessType == "" {
+		dispatcher.Dispatch(&actions.SetProcessType{Type: "unknown"})
+	}
+	if store.Processes.CurrentProcess.State == "" {
+		dispatcher.Dispatch(&actions.SetProcessState{State: "unknown"})
+	}
+
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view", "no-column")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: dash.ProcessDetails(),
+					}),
+				),
+			),
+		),
+		elem.Section(
+			vecty.Markup(vecty.Class("row")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: dash.ProcessTabs(),
+				}),
+			),
+		),
+	)
+}
+
+//ProcessDetails renders the details of a process
+func (dash *ProcessesDashboardView) ProcessDetails() vecty.List {
+	return vecty.List{
+		elem.Heading1(
+			vecty.Text("Process details"),
+		),
+		elem.Heading2(vecty.Text(store.Processes.CurrentProcessID)),
+		elem.Div(
+			vecty.Markup(vecty.Class("badges")),
+			elem.Span(
+				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcess.State)),
+				vecty.Text(store.Processes.CurrentProcess.State),
+			),
+		),
+		elem.HorizontalRule(),
+		elem.DescriptionList(
+			elem.DefinitionTerm(vecty.Text("Process type")),
+			elem.Description(vecty.Text(store.Processes.CurrentProcess.ProcessType)),
+			elem.DefinitionTerm(vecty.Text("State")),
+			elem.Description(vecty.Text(store.Processes.CurrentProcess.State)),
+			elem.DefinitionTerm(vecty.Text("Registered votes")),
+			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcess.EnvelopeCount))),
+		),
+	}
+}
+
+//ProcessTab is a single tab of a process page
+type ProcessTab struct {
+	*Tab
+}
+
+func (p *ProcessTab) dispatch() interface{} {
+	return &actions.ProcessesTabChange{
+		Tab: p.alias(),
+	}
+}
+
+func (p *ProcessTab) store() string {
+	return store.Processes.Pagination.Tab
+}
+
+//ProcessTabs renders the tabs for a process
+func (dash *ProcessesDashboardView) ProcessTabs() vecty.List {
+	results := &ProcessTab{&Tab{
+		Text:  "Results",
+		Alias: "results",
+	}}
+	envelopes := &ProcessTab{&Tab{
+		Text:  "Envelopes",
+		Alias: "envelopes",
+	}}
+
+	return vecty.List{
+		elem.Navigation(
+			vecty.Markup(vecty.Class("tabs")),
+			elem.UnorderedList(
+				TabLink(dash, results),
+				TabLink(dash, envelopes),
+			),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("tabs-content")),
+			TabContents(results, renderResults(store.Processes.CurrentProcess.Results)),
+			TabContents(envelopes, &ProcessesEnvelopeListView{}),
+		),
 	}
 }
 
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
-		return elem.Heading6(vecty.Text("No results yet"))
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("No results yet"),
+		)
 	}
 	var resultList []vecty.MarkupOrChild
 	var header []vecty.MarkupOrChild
@@ -92,80 +177,65 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	)
 }
 
-// InitProcessesDashboardView initializes the processes dashboard view
-func InitProcessesDashboardView(process *client.FullProcessInfo, ProcessesDashboardView *ProcessesDashboardView, processID string, cfg *config.Cfg) *ProcessesDashboardView {
-	gwClient, cancel := client.InitGateway(cfg.GatewayHost)
-	if gwClient == nil {
-		return ProcessesDashboardView
-	}
-	ProcessesDashboardView.gwClient = gwClient
-	ProcessesDashboardView.process = process
-	ProcessesDashboardView.processID = processID
-	ProcessesDashboardView.quitCh = make(chan struct{})
-	ProcessesDashboardView.refreshCh = make(chan int, 50)
-	BeforeUnload(func() {
-		close(ProcessesDashboardView.quitCh)
-	})
-	go updateAndRenderProcessesDashboard(ProcessesDashboardView, cancel, processID, cfg)
-	return ProcessesDashboardView
-}
-
-func updateAndRenderProcessesDashboard(d *ProcessesDashboardView, cancel context.CancelFunc, processID string, cfg *config.Cfg) {
-	ticker := time.NewTicker(time.Duration(cfg.RefreshTime) * time.Second)
-	client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
-	d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
-	if d.process.EnvelopeHeight > 0 {
-		updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-	}
-	vecty.Rerender(d)
+// UpdateAndRenderProcessesDashboard keeps the data for the processes dashboard up-to-date
+func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
+	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: 0})
+	dispatcher.Dispatch(&actions.ProcessEnvelopesPageChange{Index: 0})
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	updateProcessesDashboard(d)
 	for {
 		select {
-		case <-d.quitCh:
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
 			ticker.Stop()
-			d.gwClient.Close()
-			fmt.Println("Gateway connection closed")
 			return
 		case <-ticker.C:
-			client.UpdateProcessesDashboardInfo(d.gwClient, d.process, processID)
-			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
-			if !d.disableEnvelopesUpdate && d.process.EnvelopeHeight > 0 {
-				updateProcessEnvelopes(d, util.Max(d.process.EnvelopeHeight-d.envelopeIndex, config.ListSize))
-			}
-			vecty.Rerender(d)
-		case i := <-d.refreshCh:
+			updateProcessesDashboard(d)
+		case i := <-store.Processes.Pagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-d.refreshCh:
+				case i = <-store.Processes.Pagination.PagChannel:
 				default:
 					break loop
 				}
 			}
-			d.envelopeIndex = i
-			oldEnvelopes := d.process.EnvelopeHeight
-			d.process.EnvelopeHeight = int(dbapi.GetProcessEnvelopeHeight(processID))
+			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
+			oldEnvelopes := store.Processes.CurrentProcess.EnvelopeCount
+			newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+			if ok {
+				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
+			}
 			if i < 1 {
-				oldEnvelopes = d.process.EnvelopeHeight
+				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
 			}
-			if d.process.EnvelopeHeight > 0 {
-				updateProcessEnvelopes(d, util.Max(oldEnvelopes-d.envelopeIndex, config.ListSize))
+			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, config.ListSize))
 			}
-			vecty.Rerender(d)
 		}
 	}
 }
 
-func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
-	log.Infof("Getting envelopes from index %d", util.IntToString(index))
-	list := dbapi.GetEnvelopeListByProcess(index, d.processID)
-	reverseEnvelopeList(&list)
-	d.process.EnvelopeList = list
+func updateProcessesDashboard(d *ProcessesDashboardView) {
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	update.CurrentProcessResults()
+	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
+	}
+	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, config.ListSize))
+	}
 }
 
-func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
+func updateProcessEnvelopes(d *ProcessesDashboardView, index int) {
+	fmt.Printf("Getting envelopes from index %d\n", index)
+	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcessID)
+	if ok {
+		reverseEnvelopeList(&list)
+		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})
 	}
 }

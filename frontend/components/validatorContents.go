@@ -7,7 +7,10 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/dbapi"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/api"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -15,66 +18,70 @@ import (
 // ValidatorContents renders validator contents
 type ValidatorContents struct {
 	vecty.Core
-	Validator           *types.Validator
-	BlockList           [config.ListSize]*types.StoreBlock
-	ValidatorBlocks     int
-	disableBlocksUpdate bool
-	CurrentBlock        int
-	CurrentPage         int
-	quitCh              chan struct{}
-	blockRefresh        chan int
-	Cfg                 *config.Cfg
+	vecty.Mounter
+	CurrentBlock int
+	CurrentPage  int
+	Rendered     bool
+}
+
+// Mount triggers when ValidatorContents renders
+func (contents *ValidatorContents) Mount() {
+	if !contents.Rendered {
+		contents.Rendered = true
+		vecty.Rerender(contents)
+	}
 }
 
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
-	return elem.Main(
+	if !contents.Rendered {
+		return elem.Div(vecty.Text("Loading..."))
+	}
+	return Container(
+		renderServerConnectionBanner(),
 		contents.renderValidatorHeader(),
 		contents.renderValidatorBlockList(),
 	)
 }
 
-func InitValidatorContentsView(v *ValidatorContents, validator *types.Validator, cfg *config.Cfg) *ValidatorContents {
-	v.Validator = validator
-	v.Cfg = cfg
-	v.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(validator.Address)))
-	v.quitCh = make(chan struct{})
-	v.blockRefresh = make(chan int, 50)
-	v.disableBlocksUpdate = false
-	v.CurrentBlock = 0
-	go v.updateBlocks()
-	return v
-}
-
-func (contents *ValidatorContents) updateBlocks() {
-	ticker := time.NewTicker(time.Duration(contents.Cfg.RefreshTime) * time.Second)
-	updateValidatorBlocks(contents, contents.ValidatorBlocks-contents.CurrentBlock)
-	vecty.Rerender(contents)
+// UpdateValidatorContents keeps the validator contents page up to date
+func (contents *ValidatorContents) UpdateValidatorContents() {
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
+	}
+	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
 	for {
 		select {
-		case i := <-contents.blockRefresh:
+		case i := <-store.Validators.Pagination.PagChannel:
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-contents.blockRefresh:
+				case i = <-store.Validators.Pagination.PagChannel:
 				default:
 					break blockloop
 				}
 			}
 			contents.CurrentBlock = i
-			oldBlocks := contents.ValidatorBlocks
-			contents.ValidatorBlocks = int(dbapi.GetValidatorBlockHeight(util.HexToString(contents.Validator.Address))) - 1
+			oldBlocks := store.Validators.CurrentBlockCount
+			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+			if ok {
+				store.Validators.CurrentBlockCount = int(newVal) - 1
+			}
 			if i < 1 {
-				oldBlocks = contents.ValidatorBlocks
+				oldBlocks = store.Validators.CurrentBlockCount
 			}
 			updateValidatorBlocks(contents, oldBlocks-contents.CurrentBlock)
-			vecty.Rerender(contents)
+		case <-store.RedirectChan:
+			fmt.Println("Redirecting...")
+			ticker.Stop()
+			return
 		case <-ticker.C:
-			if !contents.disableBlocksUpdate {
-				updateValidatorBlocks(contents, contents.ValidatorBlocks-contents.CurrentBlock)
+			if !store.Validators.Pagination.DisableUpdate {
+				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
 			}
-			vecty.Rerender(contents)
 		}
 
 	}
@@ -82,8 +89,18 @@ func (contents *ValidatorContents) updateBlocks() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	contents.BlockList = dbapi.GetBlockListByValidator(i, contents.Validator.GetAddress())
-	reverseBlockList(&contents.BlockList)
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: util.Max(int(newVal)-1, 0)})
+	}
+	if newVal > 0 {
+		newList, ok := api.GetBlockListByValidator(i, store.Validators.CurrentValidator.GetAddress())
+		if ok {
+			reverseBlockList(&newList)
+			dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: newList})
+		}
+	}
 }
 
 func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML {
@@ -92,7 +109,7 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 			elem.Div(
 				elem.Heading2(
 					vecty.Markup(vecty.Class("card-header")),
-					vecty.Text("Validator Address "+util.HexToString(contents.Validator.GetAddress())),
+					vecty.Text("Validator Address "+util.HexToString(store.Validators.CurrentValidator.GetAddress())),
 				),
 			),
 			elem.Div(
@@ -104,7 +121,7 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(contents.ValidatorBlocks)),
+						vecty.Text(util.IntToString(store.Validators.CurrentBlockCount)),
 					),
 				),
 				elem.Div(
@@ -114,7 +131,7 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(contents.Validator.GetProposerPriority())),
+						vecty.Text(util.IntToString(store.Validators.CurrentValidator.GetProposerPriority())),
 					),
 				),
 				elem.Div(
@@ -124,7 +141,7 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(contents.Validator.GetVotingPower())),
+						vecty.Text(util.IntToString(store.Validators.CurrentValidator.GetVotingPower())),
 					),
 				),
 				elem.Div(
@@ -134,7 +151,7 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(contents.Validator.GetPubKey())),
+						vecty.Text(util.HexToString(store.Validators.CurrentValidator.GetPubKey())),
 					),
 				),
 			),
@@ -143,26 +160,29 @@ func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML
 }
 
 func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrHTML {
-	p := &Pagination{
-		TotalPages:      int(contents.ValidatorBlocks) / config.ListSize,
-		TotalItems:      &contents.ValidatorBlocks,
-		CurrentPage:     &contents.CurrentPage,
-		ListSize:        config.ListSize,
-		DisableUpdate:   &contents.disableBlocksUpdate,
-		RefreshCh:       contents.blockRefresh,
-		RenderSearchBar: false,
-	}
-	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-		return renderValidatorBlocks(contents.BlockList)
-	}
+	if store.Validators.CurrentBlockCount > 0 {
+		p := &Pagination{
+			TotalPages:      int(store.Validators.CurrentBlockCount) / config.ListSize,
+			TotalItems:      &store.Validators.CurrentBlockCount,
+			CurrentPage:     &contents.CurrentPage,
+			ListSize:        config.ListSize,
+			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
+			RefreshCh:       store.Validators.Pagination.PagChannel,
+			RenderSearchBar: false,
+		}
+		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
+			return renderValidatorBlocks(store.Validators.CurrentBlockList)
+		}
 
-	return elem.Div(
-		vecty.Markup(vecty.Class("recent-blocks")),
-		elem.Heading3(
-			vecty.Text("Blocks"),
-		),
-		p,
-	)
+		return elem.Div(
+			vecty.Markup(vecty.Class("recent-blocks")),
+			elem.Heading3(
+				vecty.Text("Blocks"),
+			),
+			p,
+		)
+	}
+	return elem.Div(elem.Heading5(vecty.Text("No blocks validated")))
 }
 
 func renderValidatorBlocks(blocks [config.ListSize]*types.StoreBlock) vecty.ComponentOrHTML {
