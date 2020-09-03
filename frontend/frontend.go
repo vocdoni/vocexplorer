@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gopherjs/vecty"
@@ -29,15 +27,9 @@ func initFrontend() {
 	if err != nil {
 		log.Error(err)
 	}
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&cfg)
 	if err != nil {
 		log.Error(err)
-	} else {
-		err = json.Unmarshal(body, &cfg)
-		if err != nil {
-			log.Error(err)
-		}
 	}
 	// Init clients with cfg so we don't have to wait for it to store
 	initClients(cfg)

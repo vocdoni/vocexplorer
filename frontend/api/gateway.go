@@ -1,7 +1,6 @@
 package api
 
 import (
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -74,7 +73,7 @@ func PingGateway(host string) bool {
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
+		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Debug(err.Error())
 			time.Sleep(time.Second)

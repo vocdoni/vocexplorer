@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -37,12 +35,12 @@ func request(url string) ([]byte, bool) {
 		return []byte{}, false
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if err != nil || resp.StatusCode != http.StatusOK {
-		if err != nil {
-			log.Error(err)
-		}
-		fmt.Println(string(body))
+	if resp.StatusCode != http.StatusOK {
+		return []byte{}, false
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
 		return []byte{}, false
 	}
 	return body, true
