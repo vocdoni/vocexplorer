@@ -30,10 +30,10 @@ type TxContents struct {
 }
 
 // Mount triggers when TxContents renders
-func (contents *TxContents) Mount() {
-	if !contents.Rendered {
-		contents.Rendered = true
-		vecty.Rerender(contents)
+func (t *TxContents) Mount() {
+	if !t.Rendered {
+		t.Rendered = true
+		vecty.Rerender(t)
 	}
 }
 
@@ -167,6 +167,7 @@ func TransactionView() vecty.List {
 	return contents
 }
 
+// TransactionTab records the current active tab for the transaction page
 type TransactionTab struct {
 	*Tab
 }
@@ -180,6 +181,7 @@ func (t *TransactionTab) dispatch() interface{} {
 	}
 }
 
+// TransactionDetails displays the transaction details pane for a single transaction
 func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
 	contents := &TransactionTab{&Tab{
 		Text:  "Contents",
@@ -342,8 +344,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 
 //TODO: link to envelope. Possibly store envelope nullifier/height in tx
 
-func (contents *TxContents) renderFullTx() vecty.ComponentOrHTML {
-
+func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 	accordionName := "accordionTx"
 
 	if store.Transactions.CurrentDecodedTransaction == nil {
