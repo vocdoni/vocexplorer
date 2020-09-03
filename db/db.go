@@ -112,13 +112,14 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Wait for new blocks to be available
 	for gwBlockHeight-latestBlockHeight.GetHeight() < 1 {
 		time.Sleep(500 * time.Millisecond)
-		status, err := c.Status()
-		if err != nil {
-			log.Error(err)
-		}
-		if status != nil {
-			gwBlockHeight = status.SyncInfo.LatestBlockHeight
-		}
+		return
+		// status, err := c.Status()
+		// if err != nil {
+		// 	log.Error(err)
+		// }
+		// if status != nil {
+		// 	gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		// }
 	}
 
 	batch := d.NewBatch()
@@ -341,7 +342,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
 	gatewayEntityHeight, err := c.GetEntityCount()
 	util.ErrPrint(err)
-	if localEntityHeight == gatewayEntityHeight {
+	if localEntityHeight >= gatewayEntityHeight {
 		return
 	}
 	latestKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight-1))...)
@@ -443,9 +444,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	defer func() {
 		complete <- struct{}{}
 	}()
-	if localHeight > 10 {
-		log.Infof("Entity: %s", entity)
-	}
+
 	var lastProcess []byte
 	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
 	// Get Entity|LocalHeight:ProcessHeight
@@ -462,8 +461,8 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 			globalHeight.Height = -1
 		}
 		// Get ProcessHeight:PID
-		processKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight.GetHeight()+1)...)
-		lastProcess, err = db.Get(processKey)
+		lastProcessKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight.GetHeight())...)
+		lastProcess, err = db.Get(lastProcessKey)
 		if err != nil {
 			log.Debugf("Process Key not found: %s", err.Error())
 			lastProcess = []byte{}
