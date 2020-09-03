@@ -132,7 +132,18 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			if i < 1 {
 				oldProcesses = store.Entities.Count
 			}
-			updateEntityProcesses(d, util.Max(oldProcesses-store.Entities.ProcessesIndex, config.ListSize))
+			index := util.Max(oldProcesses-store.Entities.ProcessesIndex, config.ListSize)
+			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
+			list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
+			if ok {
+				reverseIDList(&list)
+				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
+			}
+			newMap, ok := api.GetProcessEnvelopeHeightMap()
+			if ok {
+				dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
+			}
+			update.EntityProcessResults()
 		}
 	}
 }
