@@ -19,7 +19,7 @@ That's it!
 
 #### 1. Frontend
 
-On the commandline navigate into the directory `./frontend` and run `go generate`, that will create `main.wasm` file in `./static`.
+On the commandline navigate into the directory `./frontend` and run `env GOARCH=wasm GOOS=js go build -o ../static/main.wasm`, that will create `main.wasm` file in `./static`.
 
 #### 2. Static files
 

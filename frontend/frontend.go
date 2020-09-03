@@ -18,8 +18,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-//go:generate env GOARCH=wasm GOOS=js go build -o ../static/main.wasm
-
 func main() {
 	initFrontend()
 	vecty.SetTitle("Vochain Block Explorer")
