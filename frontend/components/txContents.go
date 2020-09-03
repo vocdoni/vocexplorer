@@ -181,11 +181,11 @@ func (t *TransactionTab) dispatch() interface{} {
 }
 
 func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
-	contents := &BlockTab{&Tab{
+	contents := &TransactionTab{&Tab{
 		Text:  "Contents",
 		Alias: "contents",
 	}}
-	metadata := &BlockTab{&Tab{
+	metadata := &TransactionTab{&Tab{
 		Text:  "Metadata",
 		Alias: "metadata",
 	}}
