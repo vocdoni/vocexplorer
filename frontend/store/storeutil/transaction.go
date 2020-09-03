@@ -17,6 +17,7 @@ type Transactions struct {
 	CurrentBlock              *types.StoreBlock
 	Pagination                PageStore
 	Transactions              [config.ListSize]*types.SendTx
+	ActiveTab                 string
 }
 
 // DecodedTransaction stores human-readable decoded transaction data
