@@ -3,9 +3,9 @@ package rpc
 import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // Ping pings the tendermint client and returns true if ok
@@ -26,7 +26,9 @@ func UpdateBlockchainStatus(c *http.HTTP) {
 // GetHealth calls the tendermint Health api
 func GetHealth(c *http.HTTP) {
 	status, err := c.Status()
-	if !util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
+	} else {
 		dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
 	}
 }
@@ -34,7 +36,9 @@ func GetHealth(c *http.HTTP) {
 // GetGenesis gets the first block
 func GetGenesis(c *http.HTTP) {
 	result, err := c.Genesis()
-	if !util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
+	} else {
 		dispatcher.Dispatch(&actions.SetGenesis{Genesis: result.Genesis})
 	}
 }
@@ -42,7 +46,8 @@ func GetGenesis(c *http.HTTP) {
 // GetBlock returns the contents of one block
 func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
 	block, err := c.Block(&height)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		return nil
 	}
 	return block
@@ -51,7 +56,8 @@ func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
 // GetTransaction gets a transaction by hash
 func GetTransaction(c *http.HTTP, hash []byte) *coretypes.ResultTx {
 	res, err := c.Tx(hash, false)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		return nil
 	}
 	return res

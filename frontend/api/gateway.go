@@ -14,7 +14,6 @@ import (
 
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/util"
 	"nhooyr.io/websocket"
 )
 
@@ -30,10 +29,13 @@ func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
 	fmt.Printf("connecting to %s\n", host)
 	gwClient, cancel, err := New(host)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		for i := 0; i < 10; i++ {
 			gwClient, cancel, err = New(host)
-			if !util.ErrPrint(err) {
+			if err != nil {
+				log.Error(err)
+			} else {
 				break
 			}
 		}
@@ -393,7 +395,9 @@ func (c *GatewayClient) Request(req MetaRequest) (*MetaResponse, error) {
 // Close closes given websocket connection
 func (c *GatewayClient) Close() {
 	err := c.Conn.Close(websocket.StatusNormalClosure, "")
-	if !util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
+	} else {
 		fmt.Println("Closed websocket connection")
 	}
 }

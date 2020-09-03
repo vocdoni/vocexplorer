@@ -72,7 +72,8 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
 		var err error
 		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.GetPackage(), keys)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			decryptionStatus = "Unable to decode vote"
 			displayPackage = false
 		}
@@ -149,7 +150,9 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 func (contents *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
 	if contents.DisplayPackage {
 		voteString, err := json.MarshalIndent(contents.VotePackage, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		accordionName := "accordionEnv"
 		return elem.Div(
 			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),

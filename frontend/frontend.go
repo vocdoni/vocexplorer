@@ -15,7 +15,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 func main() {
@@ -27,12 +26,18 @@ func main() {
 func initFrontend() {
 	var cfg *config.Cfg
 	resp, err := http.Get("/config")
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
 	resp.Body.Close()
-	if !util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
+	} else {
 		err = json.Unmarshal(body, &cfg)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	// Init clients with cfg so we don't have to wait for it to store
 	initClients(cfg)

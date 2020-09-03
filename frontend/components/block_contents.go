@@ -8,6 +8,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -104,7 +105,9 @@ func UpdateAndRenderBlockContents(d *BlockContents) {
 	var txHeights []int64
 	for _, tx := range store.Blocks.CurrentBlock.Block.Data.Txs {
 		err := json.Unmarshal(tx, &rawTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		hashString := fmt.Sprintf("%X", tx.Hash())
 		txHeight, _ := api.GetTxHeightFromHash(hashString)
 		txHeights = append(txHeights, txHeight)
@@ -230,7 +233,9 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 	for i, tx := range block.Data.Txs {
 		numTx++
 		err := json.Unmarshal(tx, &rawTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		hashString := fmt.Sprintf("%X", tx.Hash())
 		var hashElement vecty.ComponentOrHTML
 		if len(store.Blocks.CurrentBlockTxHeights) > i {
@@ -275,21 +280,27 @@ func preformattedBlockEvidence(block *tmtypes.Block) vecty.ComponentOrHTML {
 	}
 
 	evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 
 	return elem.Preformatted(elem.Code(vecty.Text(string(evidence))))
 }
 
 func preformattedBlockLastCommit(block *tmtypes.Block) vecty.ComponentOrHTML {
 	commit, err := json.MarshalIndent(block.LastCommit, "", "\t")
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 
 	return elem.Preformatted(elem.Code(vecty.Text(string(commit))))
 }
 
 func preformattedBlockHeader(block *tmtypes.Block) vecty.ComponentOrHTML {
 	header, err := json.MarshalIndent(block.Header, "", "\t")
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 
 	return elem.Preformatted(elem.Code(vecty.Text(string(header))))
 }

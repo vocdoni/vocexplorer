@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -21,7 +22,9 @@ func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
 	var err error
 	if block.GetTime() != nil {
 		tm, err = ptypes.Timestamp(block.GetTime())
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	p := message.NewPrinter(language.English)
 	return bootstrap.Card(bootstrap.CardParams{

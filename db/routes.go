@@ -87,10 +87,14 @@ func buildItemByIDHandler(db *dvotedb.BadgerDB, IDName, itemPrefix string) func(
 		}
 		id := ids[0]
 		addressBytes, err := hex.DecodeString(id)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		key := append([]byte(itemPrefix), addressBytes...)
 		raw, err := db.Get(key)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		w.Write(raw)
 		log.Debugf("Sent Item")
 	}
@@ -105,7 +109,8 @@ func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string, getIt
 			return
 		}
 		height, err := strconv.Atoi(heights[0])
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Cannot decode height", http.StatusInternalServerError)
 			return
 		}
@@ -145,7 +150,9 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 			return
 		}
 		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		items := listItemsByHeight(db, config.ListSize, from, []byte(key))
 		if len(items) == 0 {
 			log.Error("Retrieved no items")
@@ -191,7 +198,9 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			return
 		}
 		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 
 		heightMap := getHeightMap(db, heightMapKey)
 		itemHeight, ok := heightMap.Heights[parents[0]]
@@ -204,7 +213,9 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 
 		// Get keys
 		parentBytes, err := hex.DecodeString(parents[0])
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		keys := listItemsByHeight(db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
 		if len(keys) == 0 {
 			log.Error("No keys retrieved")
@@ -217,13 +228,17 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			var rawPackage []byte
 			if marshalHeight {
 				height := new(types.Height)
-				util.ErrPrint(proto.Unmarshal(rawKey, height))
+				if err := proto.Unmarshal(rawKey, height); err != nil {
+					log.Error(err)
+				}
 				log.Debugf("Getting item from height %d", height.GetHeight())
 				rawPackage, err = db.Get(append([]byte(itemPrefix), util.EncodeInt(height.GetHeight())...))
 			} else {
 				rawPackage, err = db.Get(append([]byte(itemPrefix), rawKey...))
 			}
-			if !util.ErrPrint(err) {
+			if err != nil {
+				log.Error(err)
+			} else {
 				rawItems.Items = append(rawItems.GetItems(), rawPackage)
 			}
 		}
@@ -237,7 +252,9 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
 			return
 		}
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		w.Write(msg)
 		log.Debugf("Sent %d items by %s %s", len(rawItems.GetItems()), parentName, parents[0])
 	}
@@ -260,9 +277,13 @@ func buildHeightByParentHandler(db *dvotedb.BadgerDB, parentName, heightMapKey s
 		}
 		if has {
 			rawHeightMap, err := db.Get([]byte(heightMapKey))
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 			err = proto.Unmarshal(rawHeightMap, &heightMap)
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 		height, ok := heightMap.Heights[parents[0]]
 		if !ok {
@@ -383,7 +404,9 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 		from, err := strconv.Atoi(froms[0])
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
@@ -393,21 +416,31 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		var rawTxs types.ItemList
 		for _, hash := range hashes {
 			rawTx, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 			var tx types.StoreTx
 			err = proto.Unmarshal(rawTx, &tx)
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 			send := types.SendTx{
 				Hash:  hash,
 				Store: &tx,
 			}
 			rawSend, err := proto.Marshal(&send)
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 			rawTxs.Items = append(rawTxs.GetItems(), rawSend)
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 		msg, err := proto.Marshal(&rawTxs)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		w.Write(msg)
 		log.Debugf("Sent %d txs", len(rawTxs.GetItems()))
 	}
@@ -423,7 +456,9 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		height, err := strconv.Atoi(ids[0])
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		id := util.EncodeInt(height)
 		key := append([]byte(config.TxHeightPrefix), id...)
 		hash, err := db.Get(key)
@@ -441,7 +476,9 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 
 		var tx types.StoreTx
 		err = proto.Unmarshal(raw, &tx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 
 		send := types.SendTx{
 			Hash:  hash,
@@ -449,7 +486,9 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 		}
 
 		rawTx, err := proto.Marshal(&send)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		w.Write(rawTx)
 		log.Debugf("Sent tx %d", height)
 	}
@@ -466,14 +505,16 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 		}
 		id := ids[0]
 		hash, err := hex.DecodeString(id)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			log.Errorf("Cannot decode tx hash")
 			http.Error(w, "Tx hash invalid", http.StatusNotFound)
 			return
 		}
 		key := append([]byte(config.TxHashPrefix), hash...)
 		has, err := db.Has(key)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			log.Errorf("Tx Height not found")
 			http.Error(w, "Tx hash invalid", http.StatusNotFound)
 			return
@@ -484,20 +525,23 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 			return
 		}
 		raw, err := db.Get(key)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Tx hash not found", http.StatusNotFound)
 			return
 		}
 
 		var tx types.StoreTx
 		err = proto.Unmarshal(raw, &tx)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Unable to get tx", http.StatusNotFound)
 			return
 		}
 		height := &types.Height{Height: tx.GetHeight()}
 		rawHeight, err := proto.Marshal(height)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Tx height invalid", http.StatusNotFound)
 			return
 		}
@@ -516,13 +560,15 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 		}
 		id := ids[0]
 		hash, err := hex.DecodeString(id)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Unable to decode nullifier", http.StatusNotFound)
 			return
 		}
 		key := append([]byte(config.EnvNullifierPrefix), hash...)
 		has, err := db.Has(key)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Unable to get envelope height", http.StatusNotFound)
 			return
 		}
@@ -532,14 +578,16 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 			return
 		}
 		raw, err := db.Get(key)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Unable to get envelope key", http.StatusNotFound)
 			return
 		}
 
 		var height types.Height
 		err = proto.Unmarshal(raw, &height)
-		if util.ErrPrint(err) {
+		if err != nil {
+			log.Error(err)
 			http.Error(w, "Unable to unmarshal height", http.StatusNotFound)
 			return
 		}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -31,12 +32,16 @@ func request(url string) ([]byte, bool) {
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get(url)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		return []byte{}, false
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	if util.ErrPrint(err) || resp.StatusCode != http.StatusOK {
+	if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil {
+			log.Error(err)
+		}
 		fmt.Println(string(body))
 		return []byte{}, false
 	}
@@ -51,7 +56,9 @@ func getHeight(url string) (int64, bool) {
 	var height types.Height
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &height)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	return height.GetHeight(), true
 }
@@ -64,7 +71,9 @@ func getHeightMap(url string) (map[string]int64, bool) {
 	var heightMap types.HeightMap
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &heightMap)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	return heightMap.GetHeights(), true
 }
@@ -132,14 +141,18 @@ func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 	}
 	var rawBlockList types.ItemList
 	err := proto.Unmarshal(body, &rawBlockList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var blockList [config.ListSize]*types.StoreBlock
 	for i, rawBlock := range rawBlockList.GetItems() {
 		if len(rawBlock) > 0 {
 			var block types.StoreBlock
 			err = proto.Unmarshal(rawBlock, &block)
 			blockList[i] = &block
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return blockList, true
@@ -156,14 +169,18 @@ func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.St
 	}
 	var rawBlockList types.ItemList
 	err := proto.Unmarshal(body, &rawBlockList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var blockList [config.ListSize]*types.StoreBlock
 	for i, rawBlock := range rawBlockList.GetItems() {
 		if len(rawBlock) > 0 {
 			var block types.StoreBlock
 			err = proto.Unmarshal(rawBlock, &block)
 			blockList[i] = &block
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return blockList, true
@@ -177,14 +194,18 @@ func GetValidatorList(i int) ([config.ListSize]*types.Validator, bool) {
 	}
 	var rawValidatorList types.ItemList
 	err := proto.Unmarshal(body, &rawValidatorList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var validatorList [config.ListSize]*types.Validator
 	for i, rawVal := range rawValidatorList.GetItems() {
 		if len(rawVal) > 0 {
 			var validator types.Validator
 			err = proto.Unmarshal(rawVal, &validator)
 			validatorList[i] = &validator
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return validatorList, true
@@ -198,7 +219,9 @@ func GetBlock(i int64) (*types.StoreBlock, bool) {
 	}
 	var block types.StoreBlock
 	err := proto.Unmarshal(body, &block)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return &block, true
 }
 
@@ -210,13 +233,17 @@ func GetTxList(from int) ([config.ListSize]*types.SendTx, bool) {
 	}
 	var rawTxList types.ItemList
 	err := proto.Unmarshal(body, &rawTxList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var txList [config.ListSize]*types.SendTx
 	for i, rawTx := range rawTxList.GetItems() {
 		if len(rawTx) > 0 {
 			var tx types.SendTx
 			err = proto.Unmarshal(rawTx, &tx)
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 			txList[i] = &tx
 		}
 	}
@@ -232,7 +259,9 @@ func GetTx(height int64) (*types.SendTx, bool) {
 	var tx types.SendTx
 	if len(body) > 0 {
 		err := proto.Unmarshal(body, &tx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	return &tx, true
 }
@@ -245,7 +274,9 @@ func GetTxHeightFromHash(hash string) (int64, bool) {
 	}
 	var height types.Height
 	err := proto.Unmarshal(body, &height)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return height.GetHeight(), true
 }
 
@@ -257,7 +288,9 @@ func GetValidator(address string) (*types.Validator, bool) {
 	}
 	var validator types.Validator
 	err := proto.Unmarshal(body, &validator)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return &validator, true
 }
 
@@ -269,14 +302,18 @@ func GetEnvelopeList(i int) ([config.ListSize]*types.Envelope, bool) {
 	}
 	var rawEnvList types.ItemList
 	err := proto.Unmarshal(body, &rawEnvList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
 		if len(rawEnvelope) > 0 {
 			envelope := new(types.Envelope)
 			err = proto.Unmarshal(rawEnvelope, envelope)
 			envList[i] = envelope
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return envList, true
@@ -290,7 +327,9 @@ func GetEnvelope(height int64) (*types.Envelope, bool) {
 	}
 	envelope := new(types.Envelope)
 	err := proto.Unmarshal(body, envelope)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return envelope, true
 }
 
@@ -302,7 +341,9 @@ func GetEnvelopeHeightFromNullifier(hash string) (int64, bool) {
 	}
 	var height types.Height
 	err := proto.Unmarshal(body, &height)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return height.GetHeight(), true
 }
 
@@ -314,14 +355,18 @@ func GetEnvelopeListByProcess(i int, process string) ([config.ListSize]*types.En
 	}
 	var rawEnvList types.ItemList
 	err := proto.Unmarshal(body, &rawEnvList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var envList [config.ListSize]*types.Envelope
 	for i, rawEnvelope := range rawEnvList.GetItems() {
 		if len(rawEnvelope) > 0 {
 			envelope := new(types.Envelope)
 			err = proto.Unmarshal(rawEnvelope, envelope)
 			envList[i] = envelope
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return envList, true
@@ -335,13 +380,17 @@ func GetEntityList(i int) ([config.ListSize]string, bool) {
 	}
 	var rawEntityList types.ItemList
 	err := proto.Unmarshal(body, &rawEntityList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var entityList [config.ListSize]string
 	for i, rawEntity := range rawEntityList.GetItems() {
 		if len(rawEntity) > 0 {
 			entity := strings.ToLower(util.HexToString(rawEntity))
 			entityList[i] = entity
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return entityList, true
@@ -355,13 +404,17 @@ func GetProcessList(i int) ([config.ListSize]string, bool) {
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var processList [config.ListSize]string
 	for i, rawProcess := range rawProcessList.GetItems() {
 		if len(rawProcess) > 0 {
 			process := strings.ToLower(util.HexToString(rawProcess))
 			processList[i] = process
-			util.ErrPrint(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 	return processList, true
@@ -375,7 +428,9 @@ func GetProcessListByEntity(i int, entity string) ([config.ListSize]string, bool
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var envList [config.ListSize]string
 	for i, rawProcess := range rawProcessList.GetItems() {
 		if len(rawProcess) > 0 {

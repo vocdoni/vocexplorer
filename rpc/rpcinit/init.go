@@ -8,14 +8,15 @@ import (
 
 	"github.com/tendermint/tendermint/rpc/client/http"
 	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	"gitlab.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/go-dvote/log"
 )
 
 // StartClient initializes an http tendermint api client on websockets
 func StartClient(host string) *http.HTTP {
 	fmt.Println("connecting to " + host)
 	tClient, err := initClient(host)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		return nil
 	}
 	return tClient

@@ -17,7 +17,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	"gitlab.com/vocdoni/vocexplorer/router"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 func newConfig() (*config.MainCfg, error) {
@@ -109,7 +108,9 @@ func main() {
 		log.Fatal("Cannot connect to tendermint client")
 	}
 	gen, err := tmClient.Genesis()
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	chainID := gen.Genesis.ChainID
 
 	d, err := db.NewDB(cfg.DataDir, chainID)
@@ -146,7 +147,8 @@ func main() {
 		cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
 	}
 	urlR, err := url.Parse(cfg.HostURL)
-	if util.ErrPrint(err) {
+	if err != nil {
+		log.Error(err)
 		return
 	}
 	log.Infof("Server on: %v\n", urlR)
@@ -163,13 +165,15 @@ func main() {
 
 	if cfg.DisableGzip {
 		s.Handler = r
-		err = s.ListenAndServe()
-		util.ErrFatal(err)
+		if err = s.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		h := gziphandler.GzipHandler(r)
 		s.Handler = h
-		err = s.ListenAndServe()
-		util.ErrFatal(err)
+		if err = s.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 }

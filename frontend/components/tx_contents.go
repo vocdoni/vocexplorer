@@ -11,6 +11,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -248,11 +249,15 @@ func UpdateAndRenderTxContents(d *TxContents) {
 
 	var txResult coretypes.ResultTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 
 	var rawTx dvotetypes.Tx
 	err = json.Unmarshal(tx.Store.Tx, &rawTx)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	var txContents []byte
 	var processID string
 	var nullifier string
@@ -260,14 +265,18 @@ func UpdateAndRenderTxContents(d *TxContents) {
 	var tm time.Time
 	if !types.BlockIsEmpty(store.Transactions.CurrentBlock) {
 		tm, err = ptypes.Timestamp(store.Transactions.CurrentBlock.GetTime())
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 
 	switch rawTx.Type {
 	case "vote":
 		var typedTx dvotetypes.VoteTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		typedTx.Nullifier = tx.Store.Nullifier
 
 		// TODO decrypt votes
@@ -275,12 +284,14 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		// if len(typedTx.EncryptionKeyIndexes) == 0 {
 		// 	var vote dvotetypes.VotePackage
 		// 	rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
-		// 	if util.ErrPrint(err) {
+		// 	if err != nil {
+		// log.Error(err)
 		// 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		// 		break
 		// 	}
 		// 	err = json.Unmarshal(rawVote, &vote)
-		// 	if util.ErrPrint(err) {
+		// 	if err != nil {
+		// log.Error(err)
 		// 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		// 		break
 		// 	}
@@ -289,30 +300,44 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		// }
 
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		processID = typedTx.ProcessID
 		nullifier = typedTx.Nullifier
 	case "newProcess":
 		var typedTx dvotetypes.NewProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		processID = typedTx.ProcessID
 		entityID = typedTx.EntityID
 	case "cancelProcess":
 		var typedTx dvotetypes.CancelProcessTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		processID = typedTx.ProcessID
 	case "admin", "addValidator", "removeValidator", "addOracle", "removeOracle", "addProcessKeys", "revealProcessKeys":
 		var typedTx dvotetypes.AdminTx
 		err = json.Unmarshal(tx.Store.Tx, &typedTx)
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 		processID = typedTx.ProcessID
 	}
 
@@ -326,7 +351,9 @@ func UpdateAndRenderTxContents(d *TxContents) {
 	var metadata []byte
 	if len(txResult.Hash.Bytes()) > 0 && txResult.Height > 0 && len(txResult.Tx.Hash()) > 0 {
 		metadata, err = json.MarshalIndent(txResult, "", "\t")
-		util.ErrPrint(err)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{

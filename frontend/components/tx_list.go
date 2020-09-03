@@ -10,6 +10,7 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
 	"github.com/gopherjs/vecty/prop"
+	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -100,7 +101,9 @@ func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx.Store.Tx, &rawTx)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", rawTx.Type)),
 		elem.Div(
