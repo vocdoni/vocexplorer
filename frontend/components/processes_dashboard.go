@@ -220,7 +220,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 
 func updateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
 	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
 	if ok {

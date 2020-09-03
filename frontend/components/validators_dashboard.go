@@ -10,8 +10,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -81,9 +81,9 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
-	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	update.BlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {
 		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, config.ListSize))
 	}

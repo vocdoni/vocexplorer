@@ -67,28 +67,3 @@ func init() {
 	GatewayConnected = true
 	ServerConnected = true
 }
-
-// func onAction(action interface{}) {
-// 	switch a := action.(type) {
-
-// 	case *actions.BlocksTabChange:
-// 		BlockTabActive = a.Tab
-
-// 	case *actions.BlocksHeightUpdate:
-// 		CurrentBlockHeight = a.Height
-
-// 	case *actions.ProcessesTabChange:
-// 		Processes.Pagination.Tab = a.Tab
-
-// 	case *actions.SignalRedirect:
-// 		RedirectChan <- struct{}{}
-
-// 	case *actions.StoreConfig:
-// 		Config = a.Config
-
-// 	default:
-// 		return // don't fire listeners
-// 	}
-
-// 	Listeners.Fire()
-// }

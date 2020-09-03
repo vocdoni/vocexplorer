@@ -12,7 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
 )
 
 func main() {
@@ -50,7 +49,7 @@ func initClients(cfg *config.Cfg) {
 	var tm *tmhttp.HTTP
 	var gw *api.GatewayClient
 	for i := 0; i < 5 && tm == nil; i++ {
-		tm = rpcinit.StartClient(cfg.TendermintHost)
+		tm = api.StartTendermintClient(cfg.TendermintHost)
 	}
 	if tm == nil {
 		log.Error("Cannot connect to tendermint api")

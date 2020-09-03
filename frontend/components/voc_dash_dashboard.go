@@ -163,7 +163,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 
 func updateVocdash(d *VocDashDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
 		updateEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, config.ListSize))

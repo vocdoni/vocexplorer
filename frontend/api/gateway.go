@@ -16,13 +16,6 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// GatewayClient holds an API websocket api.
-type GatewayClient struct {
-	Addr string
-	Conn *websocket.Conn
-	Ctx  context.Context
-}
-
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
@@ -87,7 +80,12 @@ func PingGateway(host string) bool {
 	}
 }
 
-// VochainInfo requests
+// GatewayClient holds an API websocket api.
+type GatewayClient struct {
+	Addr string
+	Conn *websocket.Conn
+	Ctx  context.Context
+}
 
 // GetEntityCount gets number of entities
 func (c *GatewayClient) GetEntityCount() (int64, error) {

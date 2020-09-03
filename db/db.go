@@ -20,7 +20,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/rpc"
-	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
 	"gitlab.com/vocdoni/vocexplorer/types"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
@@ -609,7 +608,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 		if i > 20 {
 			return nil, false
 		}
-		tmClient := rpcinit.StartClient("http://" + host)
+		tmClient := api.StartTendermintClient("http://" + host)
 		if tmClient == nil {
 			time.Sleep(1 * time.Second)
 			continue

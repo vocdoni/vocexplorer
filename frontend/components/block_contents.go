@@ -15,7 +15,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -99,7 +98,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 func UpdateAndRenderBlockContents(d *BlockContents) {
 	actions.EnableUpdates()
 	// Fetch block contents
-	block := rpc.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
+	block := api.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	var rawTx dvotetypes.Tx
 	var txHeights []int64

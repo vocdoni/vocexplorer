@@ -242,7 +242,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
 	}
 	// Set block associated with transaction
-	block, ok := api.GetBlock(store.Transactions.CurrentTransaction.Store.Height)
+	block, ok := api.GetStoreBlock(store.Transactions.CurrentTransaction.Store.Height)
 	if ok {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}

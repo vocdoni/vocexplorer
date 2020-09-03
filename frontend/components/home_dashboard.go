@@ -11,7 +11,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
 	"gitlab.com/vocdoni/vocexplorer/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -68,9 +67,9 @@ func UpdateAndRenderHomeDashboard(d *DashboardView) {
 
 func updateHomeDashboardInfo(d *DashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
-	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	update.BlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)
 	actions.UpdateCounts()
 	updateHomeBlocks(d, util.Max(store.Blocks.Count-1, config.HomeWidgetBlocksListSize))

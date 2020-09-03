@@ -150,7 +150,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
 	if ok {

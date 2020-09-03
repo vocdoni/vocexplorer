@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-//Ping pings the web server
-func Ping() bool {
+//PingServer pings the web server
+func PingServer() bool {
 	c := &http.Client{
 		Timeout: 1 * time.Second,
 	}
@@ -209,8 +209,8 @@ func GetValidatorList(i int) ([config.ListSize]*types.Validator, bool) {
 	return validatorList, true
 }
 
-//GetBlock returns a single block from the database
-func GetBlock(i int64) (*types.StoreBlock, bool) {
+//GetStoreBlock returns a single block from the database
+func GetStoreBlock(i int64) (*types.StoreBlock, bool) {
 	body, ok := request("/db/block/?height=" + util.IntToString(i))
 	if !ok {
 		return &types.StoreBlock{}, false

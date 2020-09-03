@@ -3,6 +3,7 @@ package update
 import (
 	"strings"
 
+	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -10,6 +11,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
+
+// Gateway API updates
 
 // DashboardInfo calls gateway apis, updates info needed for dashboard page
 func DashboardInfo(c *api.GatewayClient) {
@@ -126,4 +129,14 @@ func EntityProcessResults() {
 			}
 		}
 	}
+}
+
+// Tendermint API updates
+
+//BlockchainStatus updates the blockchain statistics
+func BlockchainStatus(c *http.HTTP) {
+	status := api.GetHealth(c)
+	genesis := api.GetGenesis(c)
+	dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
+	dispatcher.Dispatch(&actions.SetGenesis{Genesis: genesis})
 }

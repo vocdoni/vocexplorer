@@ -10,7 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc"
+	"gitlab.com/vocdoni/vocexplorer/update"
 )
 
 // StatsDashboardView renders the dashboard landing page
@@ -65,8 +65,8 @@ func UpdateAndRenderStatsDashboard(d *StatsDashboardView) {
 
 func updateStatsDashboard(d *StatsDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
-	rpc.UpdateBlockchainStatus(store.TendermintClient)
+	update.BlockchainStatus(store.TendermintClient)
 }

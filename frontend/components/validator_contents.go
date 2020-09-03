@@ -89,7 +89,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: util.Max(int(newVal)-1, 0)})
