@@ -69,8 +69,8 @@ func getHeightMap(url string) (map[string]int64, bool) {
 	return heightMap.GetHeights(), true
 }
 
-//GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
-func GetProcessEnvelopeHeight(process string) (int64, bool) {
+//GetProcessEnvelopeCount returns the height of envelopes belonging to given process stored by the database
+func GetProcessEnvelopeCount(process string) (int64, bool) {
 	return getHeight("/db/envprocheight/?process=" + process)
 }
 
@@ -291,8 +291,8 @@ func GetEnvelope(height int64) (*types.Envelope, bool) {
 	return envelope, true
 }
 
-//GetEnvelopeCountFromNullifier finds the height corresponding to a given envelope nullifier
-func GetEnvelopeCountFromNullifier(hash string) (int64, bool) {
+//GetEnvelopeHeightFromNullifier finds the height corresponding to a given envelope nullifier
+func GetEnvelopeHeightFromNullifier(hash string) (int64, bool) {
 	body, ok := request("/db/envelopenullifier/?nullifier=" + hash)
 	if !ok {
 		return 0, false

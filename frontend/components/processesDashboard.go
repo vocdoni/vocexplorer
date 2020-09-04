@@ -203,7 +203,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
 			oldEnvelopes := store.Processes.CurrentProcess.EnvelopeCount
-			newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+			newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
 			if ok {
 				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 			}
@@ -221,7 +221,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 	update.CurrentProcessResults()
-	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
