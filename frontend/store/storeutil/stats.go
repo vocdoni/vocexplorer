@@ -16,5 +16,4 @@ type Stats struct {
 	MaxBlockSize   int
 	Genesis        *tmtypes.GenesisDoc
 	ResultStatus   *coretypes.ResultStatus
-	Ok             bool
 }

@@ -140,19 +140,19 @@ func (c *GatewayClient) GetProcessKeys(pid string) (*Pkeys, error) {
 }
 
 // GetGatewayInfo gets gateway info
-func (c *GatewayClient) GetGatewayInfo() ([]string, int32, bool, error) {
+func (c *GatewayClient) GetGatewayInfo() ([]string, int32, error) {
 	var req MetaRequest
 	req.Method = "getGatewayInfo"
 	req.Timestamp = int32(time.Now().Unix())
 
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, false, err
+		return nil, 0, err
 	}
 	if !resp.Ok {
-		return nil, 0, false, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, fmt.Errorf("cannot get gateway infos")
 	}
-	return resp.APIList, resp.Health, resp.Ok, nil
+	return resp.APIList, resp.Health, nil
 }
 
 // GetBlockStatus gets latest block status for blockchain

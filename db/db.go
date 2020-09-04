@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -24,18 +25,23 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var exit chan struct{}
+
 // NewDB initializes a badger database at the given path
 func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
+	if chainID == "" {
+		return nil, errors.New("Chain ID empty, cannot initialize database")
+	}
 	log.Infof("Initializing database at " + path + "/" + chainID)
 	return dvotedb.NewBadgerDB(path + "/" + chainID)
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
-
+func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket string) {
+	exit = make(chan struct{}, 100)
 	// Init tendermint client
-	tClient, up := StartTendermint(tmHost)
-	if !up {
+	tClient, ok := StartTendermint(tmHost)
+	if !ok {
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
@@ -45,6 +51,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 	gwClient, cancel, up := startGateway(gwHost, gwSocket)
 	if !up {
 		log.Warn("Cannot connect to gateway api. Running as detached database")
+		*detached = true
 		return
 	}
 	defer (*cancel)()
@@ -52,15 +59,22 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 
 	i := 0
 	for {
-		updateBlockList(d, tClient)
-		// Update validators less frequently than blocks
-		if i%40 == 0 {
-			updateValidatorList(d, tClient)
+		select {
+		case <-exit:
+			*detached = true
+			log.Warnf("Gateway disconnected, converting to detached mode")
+			return
+		default:
+			updateBlockList(d, tClient)
+			// Update validators less frequently than blocks
+			if i%40 == 0 {
+				updateValidatorList(d, tClient)
+			}
+			updateEntityList(d, gwClient)
+			updateProcessList(d, gwClient)
+			time.Sleep(config.DBWaitTime * time.Millisecond)
+			i++
 		}
-		updateEntityList(d, gwClient)
-		updateProcessList(d, gwClient)
-		time.Sleep(config.DBWaitTime * time.Millisecond)
-		i++
 	}
 }
 
@@ -109,8 +123,20 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	procEnvHeightMapMutex := new(sync.Mutex)
 
 	status, err := c.Status()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return
+			}
+			status, err = c.Status()
+			if err == nil {
+				break
+			}
+		}
 	}
 	gwBlockHeight := status.SyncInfo.LatestBlockHeight
 
@@ -207,14 +233,38 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 	maxPerPage := 100
 	page := 0
 	resultValidators, err := c.Validators(&blockHeight, page, 100)
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return
+			}
+			resultValidators, err = c.Validators(&blockHeight, page, 100)
+			if err == nil {
+				break
+			}
+		}
 	}
 	// Check if there are more validators.
 	for len(resultValidators.Validators) == maxPerPage {
 		moreValidators, err := c.Validators(&blockHeight, page, maxPerPage)
+		// If error is returned, try the request more times, then fatal.
 		if err != nil {
 			log.Error(err)
+			for errs := 0; ; errs++ {
+				if errs > 10 {
+					log.Error("Gateway Disconnected")
+					exit <- struct{}{}
+					return
+				}
+				moreValidators, err = c.Validators(&blockHeight, page, maxPerPage)
+				if err == nil {
+					break
+				}
+			}
 		}
 
 		if len(moreValidators.Validators) > 0 {
@@ -308,7 +358,8 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 		log.Error(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Fatal("Blockchain client Disconnected")
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
 				return
 			}
 			res, err = c.Block(&height)
@@ -367,8 +418,20 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localEntityHeight := GetHeight(d, config.LatestEntityCountKey, 0).GetHeight()
 	gatewayEntityHeight, err := c.GetEntityCount()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return
+			}
+			gatewayEntityHeight, err = c.GetEntityCount()
+			if err == nil {
+				break
+			}
+		}
 	}
 	if localEntityHeight >= gatewayEntityHeight {
 		return
@@ -429,8 +492,20 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localProcessHeight := GetHeight(d, config.LatestProcessCountKey, 0).GetHeight()
 	gatewayProcessHeight, err := c.GetProcessCount()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return
+			}
+			gatewayProcessHeight, err = c.GetProcessCount()
+			if err == nil {
+				break
+			}
+		}
 	}
 	if localProcessHeight == gatewayProcessHeight {
 		return
@@ -511,11 +586,22 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	requestMutex.Lock()
 	log.Debugf("Getting processes from id %s", util.HexToString(lastProcess))
 	newProcessList, err := c.GetProcessList(entity, strings.ToLower(util.HexToString(lastProcess)))
-	requestMutex.Unlock()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
-		return
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return
+			}
+			newProcessList, err = c.GetProcessList(entity, strings.ToLower(util.HexToString(lastProcess)))
+			if err == nil {
+				break
+			}
+		}
 	}
+	requestMutex.Unlock()
 	if len(newProcessList) < 1 {
 		return
 	}

@@ -38,13 +38,12 @@ func Counts(c *api.GatewayClient) {
 
 // GatewayInfo calls gateway api, updates gateway health info
 func GatewayInfo(c *api.GatewayClient) {
-	apiList, health, ok, err := c.GetGatewayInfo()
+	apiList, health, err := c.GetGatewayInfo()
 	if err != nil {
 		log.Error(err)
 	}
 	dispatcher.Dispatch(&actions.SetGatewayInfo{
 		APIList: apiList,
-		Ok:      ok,
 		Health:  health,
 	})
 }

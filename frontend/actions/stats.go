@@ -18,7 +18,6 @@ type SetGenesis struct {
 //SetGatewayInfo is the action to set the gateway statistic info
 type SetGatewayInfo struct {
 	APIList []string
-	Ok      bool
 	Health  int32
 }
 

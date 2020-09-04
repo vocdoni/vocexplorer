@@ -2,6 +2,8 @@ package config
 
 //Cfg is the global config to be served to pages
 type Cfg struct {
+	// Detached is the detached state of the database
+	Detached bool `json:"detached"`
 	// GatewayHost is gateway websockets url
 	GatewayHost string `json:"gatewayHost"`
 	// GatewaySocket is gateway websockets socket label
@@ -15,10 +17,10 @@ type Cfg struct {
 //MainCfg includes backend and frontend config
 type MainCfg struct {
 	DataDir     string
-	Detached    bool
 	DisableGzip bool
 	Global      Cfg
 	HostURL     string
+	ChainID     string
 	LogLevel    string
 }
 

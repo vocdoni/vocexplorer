@@ -185,7 +185,6 @@ func statsActions(action interface{}) {
 
 	case *actions.SetGatewayInfo:
 		Stats.APIList = a.APIList
-		Stats.Ok = a.Ok
 		Stats.Health = a.Health
 
 	case *actions.SetBlockStatus:
