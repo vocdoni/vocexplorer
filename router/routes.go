@@ -2,11 +2,13 @@ package router
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	vocdb "gitlab.com/vocdoni/vocexplorer/db"
 	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
@@ -18,6 +20,74 @@ import (
 func PingHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
+	}
+}
+
+// StatsHandler is the public api for all blockchain statistics & information
+func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Debugf("Serving statistics to %s", r.Referer())
+		stats := new(api.VochainStats)
+
+		// If unable to get api information, don't return error so db information can still serve
+		t := api.StartTendermintClient(cfg.TendermintHost)
+		status := api.GetHealth(t)
+		if status == nil {
+			log.Errorf("Unable to get vochain status")
+		} else {
+			stats.NodeInfo = status.NodeInfo
+			stats.SyncInfo = status.SyncInfo
+			stats.ValidatorInfo = status.ValidatorInfo
+		}
+
+		genesis := api.GetGenesis(t)
+		if status == nil {
+			log.Errorf("Unable to get genesis block")
+		} else {
+			stats.Genesis = genesis
+		}
+
+		gw, cancel := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+		defer cancel()
+		apiList, health, err := gw.GetGatewayInfo()
+		if err != nil {
+			log.Error(err)
+		} else {
+			stats.GatewayAPIList = apiList
+			stats.GatewayHealth = health
+		}
+
+		blockTime, blockTimeStamp, height, err := gw.GetBlockStatus()
+		if err != nil {
+			log.Error(err)
+		} else {
+			stats.BlockTime = blockTime
+			stats.BlockTimeStamp = blockTimeStamp
+			stats.Height = height
+		}
+
+		blockHeight := vocdb.GetHeight(db, config.LatestBlockHeightKey, 1)
+		entityCount := vocdb.GetHeight(db, config.LatestEntityCountKey, 0)
+		envelopeCount := vocdb.GetHeight(db, config.LatestEnvelopeCountKey, 0)
+		processCount := vocdb.GetHeight(db, config.LatestProcessCountKey, 0)
+		transactionHeight := vocdb.GetHeight(db, config.LatestTxHeightKey, 1)
+		validatorCount := vocdb.GetHeight(db, config.LatestValidatorCountKey, 0)
+
+		stats.BlockHeight = blockHeight.GetHeight()
+		stats.EntityCount = entityCount.GetHeight()
+		stats.EnvelopeCount = envelopeCount.GetHeight()
+		stats.ProcessCount = processCount.GetHeight()
+		stats.TransactionHeight = transactionHeight.GetHeight()
+		stats.ValidatorCount = validatorCount.GetHeight()
+
+		msg, err := json.Marshal(stats)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to marshal stats", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(msg)
 	}
 }
 
@@ -411,7 +481,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		hashes := vocdb.ListItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
-			http.Error(w, "No txs available", http.StatusNotFound)
+			http.Error(w, "No txs available", http.StatusInternalServerError)
 			return
 		}
 		var rawTxs ptypes.ItemList
@@ -465,13 +535,13 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 		hash, err := db.Get(key)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to get tx hash", http.StatusNotFound)
+			http.Error(w, "Unable to get tx hash", http.StatusInternalServerError)
 			return
 		}
 		raw, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to get raw tx", http.StatusNotFound)
+			http.Error(w, "Unable to get raw tx", http.StatusInternalServerError)
 			return
 		}
 
@@ -509,7 +579,7 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 		if err != nil {
 			log.Error(err)
 			log.Errorf("Cannot decode tx hash")
-			http.Error(w, "Tx hash invalid", http.StatusNotFound)
+			http.Error(w, "Tx hash invalid", http.StatusInternalServerError)
 			return
 		}
 		key := append([]byte(config.TxHashPrefix), hash...)
@@ -517,18 +587,18 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 		if err != nil {
 			log.Error(err)
 			log.Errorf("Tx Height not found")
-			http.Error(w, "Tx hash invalid", http.StatusNotFound)
+			http.Error(w, "Tx hash invalid", http.StatusInternalServerError)
 			return
 		}
 		if !has {
 			log.Errorf("Tx hash key not found")
-			http.Error(w, "Tx hash key not found", http.StatusNotFound)
+			http.Error(w, "Tx hash key not found", http.StatusInternalServerError)
 			return
 		}
 		raw, err := db.Get(key)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Tx hash not found", http.StatusNotFound)
+			http.Error(w, "Tx hash not found", http.StatusInternalServerError)
 			return
 		}
 
@@ -536,14 +606,14 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 		err = proto.Unmarshal(raw, &tx)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to get tx", http.StatusNotFound)
+			http.Error(w, "Unable to get tx", http.StatusInternalServerError)
 			return
 		}
 		height := &ptypes.Height{Height: tx.GetHeight()}
 		rawHeight, err := proto.Marshal(height)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Tx height invalid", http.StatusNotFound)
+			http.Error(w, "Tx height invalid", http.StatusInternalServerError)
 			return
 		}
 		w.Write(rawHeight)
@@ -563,25 +633,25 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 		hash, err := hex.DecodeString(id)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to decode nullifier", http.StatusNotFound)
+			http.Error(w, "Unable to decode nullifier", http.StatusInternalServerError)
 			return
 		}
 		key := append([]byte(config.EnvNullifierPrefix), hash...)
 		has, err := db.Has(key)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to get envelope height", http.StatusNotFound)
+			http.Error(w, "Unable to get envelope height", http.StatusInternalServerError)
 			return
 		}
 		if !has {
 			log.Errorf("Envelope nullifier does not exist")
-			http.Error(w, "Envelope nullifier does not exist", http.StatusNotFound)
+			http.Error(w, "Envelope nullifier does not exist", http.StatusInternalServerError)
 			return
 		}
 		raw, err := db.Get(key)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to get envelope key", http.StatusNotFound)
+			http.Error(w, "Unable to get envelope key", http.StatusInternalServerError)
 			return
 		}
 
@@ -589,7 +659,7 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 		err = proto.Unmarshal(raw, &height)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, "Unable to unmarshal height", http.StatusNotFound)
+			http.Error(w, "Unable to unmarshal height", http.StatusInternalServerError)
 			return
 		}
 		w.Write(raw)
