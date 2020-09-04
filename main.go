@@ -13,6 +13,7 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
+	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
@@ -31,10 +32,11 @@ func newConfig() (*config.MainCfg, error) {
 	cfg.Global.GatewaySocket = *flag.String("gatewaySocket", "/dvote", "gateway API host socket to connect to")
 	cfg.Global.TendermintHost = *flag.String("tendermintHost", "0.0.0.0:26657", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
+	cfg.Global.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
+	cfg.ChainID = *flag.String("chainID", "", "chain ID to fall back on if running in detached mode")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
-	cfg.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	flag.Parse()
 
 	// setting up viper
@@ -52,14 +54,15 @@ func newConfig() (*config.MainCfg, error) {
 	// Add viper config path (now we know it)
 	viper.AddConfigPath(cfg.DataDir)
 
+	viper.BindPFlag("global.detached", flag.Lookup("detached"))
 	viper.BindPFlag("global.gatewayHost", flag.Lookup("gatewayHost"))
 	viper.BindPFlag("global.gatewaySocket", flag.Lookup("gatewaySocket"))
 	viper.BindPFlag("global.tendermintHost", flag.Lookup("tendermintHost"))
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
+	viper.BindPFlag("chainID", flag.Lookup("chainID"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
-	viper.BindPFlag("detached", flag.Lookup("detached"))
 
 	var cfgError error
 	_, err = os.Stat(cfg.DataDir + "/vocexplorer.yml")
@@ -85,6 +88,7 @@ func newConfig() (*config.MainCfg, error) {
 	if err != nil {
 		cfgError = fmt.Errorf("cannot unmarshal loaded config file: %s", err)
 	}
+
 	return &cfg, cfgError
 }
 
@@ -93,6 +97,7 @@ func main() {
 	if cfg == nil {
 		log.Fatal("cannot read configuration")
 	}
+
 	if err != nil {
 		log.Error(err)
 	}
@@ -102,25 +107,29 @@ func main() {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
 	}
 
-	// Get ChainID for db directory
-	tmClient, ok := db.StartTendermint(cfg.Global.TendermintHost)
-	if !ok {
-		log.Fatal("Cannot connect to tendermint client")
-	}
-	gen, err := tmClient.Genesis()
-	if err != nil {
-		log.Error(err)
-	}
-	chainID := gen.Genesis.ChainID
-
-	d, err := db.NewDB(cfg.DataDir, chainID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if !cfg.Detached {
-		go db.UpdateDB(d, cfg.Global.GatewayHost, cfg.Global.GatewaySocket, cfg.Global.TendermintHost)
+	var d *dvotedb.BadgerDB
+	if !cfg.Global.Detached {
+		// Get ChainID for db directory
+		tmClient, ok := db.StartTendermint(cfg.Global.TendermintHost)
+		if !ok {
+			log.Fatal("Cannot connect to tendermint client")
+		}
+		gen, err := tmClient.Genesis()
+		if err != nil {
+			log.Error(err)
+		}
+		cfg.ChainID = gen.Genesis.ChainID
+		d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost, cfg.Global.GatewaySocket)
 	} else {
 		log.Infof("Running in detached mode")
+		d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	//Convert host url to localhost if using internal docker network

@@ -29,41 +29,43 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		log.Debugf("Serving statistics to %s", r.Referer())
 		stats := new(api.VochainStats)
 
-		// If unable to get api information, don't return error so db information can still serve
-		t := api.StartTendermintClient(cfg.TendermintHost)
-		status := api.GetHealth(t)
-		if status == nil {
-			log.Errorf("Unable to get vochain status")
-		} else {
-			stats.NodeInfo = status.NodeInfo
-			stats.SyncInfo = status.SyncInfo
-		}
+		if !cfg.Detached {
+			// If unable to get api information, don't return error so db information can still serve
+			t := api.StartTendermintClient(cfg.TendermintHost)
+			status := api.GetHealth(t)
+			if status == nil {
+				log.Errorf("Unable to get vochain status")
+			} else {
+				stats.NodeInfo = status.NodeInfo
+				stats.SyncInfo = status.SyncInfo
+			}
 
-		genesis := api.GetGenesis(t)
-		if status == nil {
-			log.Errorf("Unable to get genesis block")
-		} else {
-			stats.GenesisTimeStamp = genesis.GenesisTime
-			stats.ChainID = genesis.ChainID
-		}
+			genesis := api.GetGenesis(t)
+			if status == nil {
+				log.Errorf("Unable to get genesis block")
+			} else {
+				stats.GenesisTimeStamp = genesis.GenesisTime
+				stats.ChainID = genesis.ChainID
+			}
 
-		gw, cancel := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
-		defer cancel()
-		apiList, health, err := gw.GetGatewayInfo()
-		if err != nil {
-			log.Error(err)
-		} else {
-			stats.GatewayAPIList = apiList
-			stats.GatewayHealth = health
-		}
+			gw, cancel := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+			defer cancel()
+			apiList, health, err := gw.GetGatewayInfo()
+			if err != nil {
+				log.Error(err)
+			} else {
+				stats.GatewayAPIList = apiList
+				stats.GatewayHealth = health
+			}
 
-		blockTime, blockTimeStamp, height, err := gw.GetBlockStatus()
-		if err != nil {
-			log.Error(err)
-		} else {
-			stats.BlockTime = blockTime
-			stats.BlockTimeStamp = blockTimeStamp
-			stats.Height = height
+			blockTime, blockTimeStamp, height, err := gw.GetBlockStatus()
+			if err != nil {
+				log.Error(err)
+			} else {
+				stats.BlockTime = blockTime
+				stats.BlockTimeStamp = blockTimeStamp
+				stats.Height = height
+			}
 		}
 
 		blockHeight := vocdb.GetHeight(db, config.LatestBlockHeightKey, 1)

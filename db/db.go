@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -26,16 +27,19 @@ import (
 
 // NewDB initializes a badger database at the given path
 func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
+	if chainID == "" {
+		return nil, errors.New("Chain ID empty, cannot initialize database")
+	}
 	log.Infof("Initializing database at " + path + "/" + chainID)
 	return dvotedb.NewBadgerDB(path + "/" + chainID)
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
+func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket string) {
 
 	// Init tendermint client
-	tClient, up := StartTendermint(tmHost)
-	if !up {
+	tClient, ok := StartTendermint(tmHost)
+	if !ok {
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
@@ -45,6 +49,7 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 	gwClient, cancel, up := startGateway(gwHost, gwSocket)
 	if !up {
 		log.Warn("Cannot connect to gateway api. Running as detached database")
+		*detached = true
 		return
 	}
 	defer (*cancel)()
@@ -111,6 +116,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
+		return
 	}
 	gwBlockHeight := status.SyncInfo.LatestBlockHeight
 
@@ -308,7 +314,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 		log.Error(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Fatal("Blockchain client Disconnected")
+				log.Error("Blockchain client Disconnected")
 				return
 			}
 			res, err = c.Block(&height)
