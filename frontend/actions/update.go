@@ -17,15 +17,15 @@ func UpdateCounts() {
 		// Transactions indexed by height, so convert to count
 		dispatcher.Dispatch(&SetTransactionCount{Count: int(newVal) - 1})
 	}
-	newVal, ok = api.GetEntityHeight()
+	newVal, ok = api.GetEntityCount()
 	if ok {
 		dispatcher.Dispatch(&SetEntityCount{Count: int(newVal)})
 	}
-	newVal, ok = api.GetProcessHeight()
+	newVal, ok = api.GetProcessCount()
 	if ok {
 		dispatcher.Dispatch(&SetProcessCount{Count: int(newVal)})
 	}
-	newVal, ok = api.GetEnvelopeHeight()
+	newVal, ok = api.GetEnvelopeCount()
 	if ok {
 		dispatcher.Dispatch(&SetEnvelopeCount{Count: int(newVal)})
 	}

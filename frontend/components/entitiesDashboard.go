@@ -108,7 +108,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 
-	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
@@ -133,7 +133,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
 			oldProcesses := store.Entities.CurrentEntity.ProcessCount
-			newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+			newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 			if ok {
 				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 			}
@@ -147,7 +147,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 				reverseIDList(&list)
 				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
 			}
-			newMap, ok := api.GetProcessEnvelopeHeightMap()
+			newMap, ok := api.GetProcessEnvelopeCountMap()
 			if ok {
 				dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
 			}
@@ -161,7 +161,7 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 
-	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
@@ -172,7 +172,7 @@ func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 			reverseIDList(&list)
 			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
 		}
-		newMap, ok := api.GetProcessEnvelopeHeightMap()
+		newMap, ok := api.GetProcessEnvelopeCountMap()
 		if ok {
 			dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
 		}

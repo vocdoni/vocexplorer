@@ -101,7 +101,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
 			oldEntities := store.Entities.Count
-			newVal, ok := api.GetEntityHeight()
+			newVal, ok := api.GetEntityCount()
 			if ok {
 				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
@@ -124,7 +124,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
 			oldProcesses := store.Processes.Count
-			newVal, ok := api.GetProcessHeight()
+			newVal, ok := api.GetProcessCount()
 			if ok {
 				dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
 			}
@@ -147,7 +147,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.EnvelopesIndexChange{Index: i})
 			oldEnvelopes := store.Envelopes.Count
-			newVal, ok := api.GetEnvelopeHeight()
+			newVal, ok := api.GetEnvelopeCount()
 			if ok {
 				dispatcher.Dispatch(&actions.SetEnvelopeCount{Count: int(newVal)})
 			}
@@ -204,11 +204,11 @@ func updateProcesses(d *VocDashDashboardView, index int) {
 		reverseIDList(&list)
 		dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
 	}
-	newVal, ok := api.GetProcessEnvelopeHeightMap()
+	newVal, ok := api.GetProcessEnvelopeCountMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newVal})
 	}
-	newVal, ok = api.GetEntityProcessHeightMap()
+	newVal, ok = api.GetEntityProcessCountMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
 	}

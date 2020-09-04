@@ -146,7 +146,7 @@ func (x *Envelope) GetPackage() string {
 	return ""
 }
 
-func (x *Envelope) GetProcessHeight() int64 {
+func (x *Envelope) GetProcessCount() int64 {
 	if x != nil {
 		return x.ProcessHeight
 	}

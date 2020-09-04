@@ -282,7 +282,7 @@ func buildHeightByParentHandler(db *dvotedb.BadgerDB, parentName, heightMapKey s
 
 // GetEnvelopeHandler writes a single envelope
 func GetEnvelopeHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestEnvelopeHeightKey, config.EnvPackagePrefix, nil)
+	return buildItemByHeightHandler(db, config.LatestEnvelopeCountKey, config.EnvPackagePrefix, nil)
 }
 
 // GetBlockHandler writes a block by height
@@ -302,12 +302,12 @@ func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 
 // GetEntityHandler writes a single entity
 func GetEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestEntityHeight, config.EntityIDPrefix, nil)
+	return buildItemByHeightHandler(db, config.LatestEntityCountKey, config.EntityIDPrefix, nil)
 }
 
 // GetProcessHandler writes a single process
 func GetProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestProcessHeight, config.ProcessIDPrefix, nil)
+	return buildItemByHeightHandler(db, config.LatestProcessCountKey, config.ProcessIDPrefix, nil)
 }
 
 // ListEntitiesHandler writes a list of entities from 'from'
@@ -322,7 +322,7 @@ func ListProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *h
 
 // ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
 func ListProcessesByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(db, "entity", config.EntityProcessHeightMapKey, config.ProcessByEntityPrefix, config.ProcessIDPrefix, true)
+	return buildListItemsByParent(db, "entity", config.EntityProcessCountMapKey, config.ProcessByEntityPrefix, config.ProcessIDPrefix, true)
 }
 
 // ListValidatorsHandler writes a list of validators from 'from'
@@ -350,7 +350,7 @@ func ListBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 
 // ListEnvelopesByProcessHandler writes a list of envelopes which share the given process
 func ListEnvelopesByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(db, "process", config.ProcessEnvelopeHeightMapKey, config.EnvPIDPrefix, config.EnvPackagePrefix, true)
+	return buildListItemsByParent(db, "process", config.ProcessEnvelopeCountMapKey, config.EnvPIDPrefix, config.EnvPackagePrefix, true)
 }
 
 // ListEnvelopesHandler writes a list of envelopes
@@ -360,7 +360,7 @@ func ListEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *h
 
 // EnvelopeHeightByProcessHandler writes the number of envelopes which share the given processID
 func EnvelopeHeightByProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildHeightByParentHandler(db, "process", config.ProcessEnvelopeHeightMapKey)
+	return buildHeightByParentHandler(db, "process", config.ProcessEnvelopeCountMapKey)
 }
 
 // NumBlocksByValidatorHandler writes the number of blocks which share the given proposer
@@ -370,7 +370,7 @@ func NumBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrite
 
 // ProcessHeightByEntityHandler writes the number of processes which share the given entity
 func ProcessHeightByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildHeightByParentHandler(db, "entity", config.EntityProcessHeightMapKey)
+	return buildHeightByParentHandler(db, "entity", config.EntityProcessCountMapKey)
 }
 
 // ListTxsHandler writes a list of txs starting with the given height key

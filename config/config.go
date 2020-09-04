@@ -61,18 +61,18 @@ const (
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored
 	LatestTxHeightKey = "LatestTxHeight"
-	//LatestValidatorHeightKey is the key for the value of the latest validator height stored
-	LatestValidatorHeightKey = "LatestValHeight"
+	//LatestEnvelopeCountKey is the key for the value of the latest envelope count stored
+	LatestEnvelopeCountKey = "LatestEnvHeight"
+	//LatestEntityCountKey is the key for the value of the latest entity count stored
+	LatestEntityCountKey = "LatestEntityCountKey"
+	//LatestProcessCountKey is the key for the value of the latest process count stored
+	LatestProcessCountKey = "LatestProcessCountKey"
+	//LatestValidatorCountKey is the key for the value of the latest validator count stored
+	LatestValidatorCountKey = "LatestValHeight"
+	//EntityProcessCountMapKey is the key for the map of entity process counts
+	EntityProcessCountMapKey = "EntityProcHeight"
+	//ProcessEnvelopeCountMapKey is the key for the map of process envelope counts
+	ProcessEnvelopeCountMapKey = "ProcEnvHeight"
 	//ValidatorHeightMapKey is the key for the map of validator block heights
 	ValidatorHeightMapKey = "ValHeightMap"
-	//ProcessEnvelopeHeightMapKey is the key for the map of process envelope heights
-	ProcessEnvelopeHeightMapKey = "ProcEnvHeight"
-	//LatestEnvelopeHeightKey is the key for the value of the latest envelope height stored
-	LatestEnvelopeHeightKey = "LatestEnvHeight"
-	//LatestEntityHeight is the key for the value of the latest entity height stored
-	LatestEntityHeight = "LatestEntityHeight"
-	//LatestProcessHeight is the key for the value of the latest process height stored
-	LatestProcessHeight = "LatestProcessHeight"
-	//EntityProcessHeightMapKey is the key for the map of entity process heights
-	EntityProcessHeightMapKey = "EntityProcHeight"
 )

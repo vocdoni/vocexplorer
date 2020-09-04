@@ -74,34 +74,34 @@ func GetProcessEnvelopeHeight(process string) (int64, bool) {
 	return getHeight("/db/envprocheight/?process=" + process)
 }
 
-//GetProcessEnvelopeHeightMap returns the entire map of process envelope heights
-func GetProcessEnvelopeHeightMap() (map[string]int64, bool) {
-	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeHeightMapKey)
+//GetProcessEnvelopeCountMap returns the entire map of process envelope heights
+func GetProcessEnvelopeCountMap() (map[string]int64, bool) {
+	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeCountMapKey)
 }
 
-//GetEnvelopeHeight returns the latest envelope height stored by the database
-func GetEnvelopeHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestEnvelopeHeightKey)
+//GetEnvelopeCount returns the latest envelope height stored by the database
+func GetEnvelopeCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestEnvelopeCountKey)
 }
 
-//GetProcessHeight returns the latest process height stored by the database
-func GetProcessHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestProcessHeight)
+//GetProcessCount returns the latest process height stored by the database
+func GetProcessCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestProcessCountKey)
 }
 
-//GetEntityHeight returns the latest envelope height stored by the database
-func GetEntityHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestEntityHeight)
+//GetEntityCount returns the latest envelope height stored by the database
+func GetEntityCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestEntityCountKey)
 }
 
-//GetEntityProcessHeight returns the number of processes belonging to a
-func GetEntityProcessHeight(entity string) (int64, bool) {
+//GetEntityProcessCount returns the number of processes belonging to a
+func GetEntityProcessCount(entity string) (int64, bool) {
 	return getHeight("/db/entityprocheight/?entity=" + entity)
 }
 
-//GetEntityProcessHeightMap returns the entire map of entity process heights
-func GetEntityProcessHeightMap() (map[string]int64, bool) {
-	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessHeightMapKey)
+//GetEntityProcessCountMap returns the entire map of entity process heights
+func GetEntityProcessCountMap() (map[string]int64, bool) {
+	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessCountMapKey)
 }
 
 //GetBlockHeight returns the latest block height stored by the database
@@ -121,7 +121,7 @@ func GetValidatorBlockHeight(proposer string) (int64, bool) {
 
 //GetValidatorCount returns the latest validator count stored by the database
 func GetValidatorCount() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestValidatorHeightKey)
+	return getHeight("/db/height/?key=" + config.LatestValidatorCountKey)
 }
 
 //GetBlockList returns a list of blocks from the database
@@ -291,8 +291,8 @@ func GetEnvelope(height int64) (*types.Envelope, bool) {
 	return envelope, true
 }
 
-//GetEnvelopeHeightFromNullifier finds the height corresponding to a given envelope nullifier
-func GetEnvelopeHeightFromNullifier(hash string) (int64, bool) {
+//GetEnvelopeCountFromNullifier finds the height corresponding to a given envelope nullifier
+func GetEnvelopeCountFromNullifier(hash string) (int64, bool) {
 	body, ok := request("/db/envelopenullifier/?nullifier=" + hash)
 	if !ok {
 		return 0, false

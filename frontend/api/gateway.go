@@ -249,8 +249,8 @@ func (c *GatewayClient) GetProcessList(entityID string, from string) ([]string, 
 
 // ProcessInfo requests
 
-// GetEnvelopeHeight gets number of envelopes in a given process
-func (c *GatewayClient) GetEnvelopeHeight(processID string) (int64, error) {
+// GetEnvelopeCount gets number of envelopes in a given process
+func (c *GatewayClient) GetEnvelopeCount(processID string) (int64, error) {
 	var req MetaRequest
 	req.Method = "getEnvelopeHeight"
 	req.ProcessID = processID

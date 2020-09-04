@@ -319,7 +319,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 	nullifier = util.StripHexString(nullifier)
 	var envelopeHeight int64
 	if nullifier != "" {
-		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
+		envelopeHeight, ok = api.GetEnvelopeCountFromNullifier(nullifier)
 	}
 	var metadata []byte
 	if len(txResult.Hash.Bytes()) > 0 && txResult.Height > 0 && len(txResult.Tx.Hash()) > 0 {
