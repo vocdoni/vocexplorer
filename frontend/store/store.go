@@ -66,4 +66,6 @@ func init() {
 
 	GatewayConnected = true
 	ServerConnected = true
+
+	RegisterActions()
 }

@@ -2,8 +2,6 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // EntitiesIndexChange is the action to set the pagination index
@@ -59,52 +57,4 @@ type SetEntityProcessList struct {
 // DisableEntityUpdate is the action to set the disable update status for entities
 type DisableEntityUpdate struct {
 	Disabled bool
-}
-
-// On initialization, register actions
-func init() {
-	dispatcher.Register(entityActions)
-}
-
-// entityActions is the handler for all entity-related store actions
-func entityActions(action interface{}) {
-	switch a := action.(type) {
-	case *EntitiesIndexChange:
-		store.Entities.Pagination.Index = a.Index
-
-	case *EntityProcessesIndexChange:
-		store.Entities.ProcessesIndex = a.Index
-
-	case *EntityProcessesPageChange:
-		store.Entities.ProcessesPage = a.Index
-
-	case *SetEntityIDs:
-		store.Entities.EntityIDs = a.EntityIDs
-
-	case *SetCurrentEntityID:
-		store.Entities.CurrentEntityID = a.EntityID
-
-	case *EntitiesTabChange:
-		store.Entities.Pagination.Tab = a.Tab
-
-	case *SetEntityCount:
-		store.Entities.Count = a.Count
-
-	case *SetProcessHeights:
-		store.Entities.ProcessHeights = a.ProcessHeights
-
-	case *SetEntityProcessList:
-		store.Entities.CurrentEntity.ProcessIDs = a.ProcessList
-
-	case *DisableEntityUpdate:
-		store.Entities.Pagination.DisableUpdate = a.Disabled
-
-	case *SetEntityProcessCount:
-		store.Entities.CurrentEntity.ProcessCount = a.Count
-
-	default:
-		return // don't fire listeners
-	}
-
-	store.Listeners.Fire()
 }
