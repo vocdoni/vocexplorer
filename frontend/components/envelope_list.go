@@ -99,7 +99,7 @@ func renderEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "+util.StripHexString(envelope.ProcessID)),
+						vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" envelope on process "+util.StripHexString(envelope.ProcessID)),
 					),
 					elem.Div(
 						elem.Div(

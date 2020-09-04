@@ -7,7 +7,6 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -204,7 +203,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
 			oldEnvelopes := store.Processes.CurrentProcess.EnvelopeCount
-			newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+			newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
 			if ok {
 				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 			}
@@ -212,7 +211,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
 			}
 			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
-				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, config.ListSize))
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, 1))
 			}
 		}
 	}
@@ -222,12 +221,12 @@ func updateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
-	newVal, ok := api.GetProcessEnvelopeHeight(store.Processes.CurrentProcessID)
+	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
-		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, config.ListSize))
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, 1))
 	}
 }
 

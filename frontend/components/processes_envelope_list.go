@@ -100,7 +100,7 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("card-header")),
 				NavLink(
 					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetProcessHeight()),
+					util.IntToString(envelope.GetProcessCount()),
 				),
 			),
 			elem.Div(

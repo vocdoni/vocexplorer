@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -76,6 +77,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 					break blockloop
 				}
 			}
+			log.Println("index: " + util.IntToString(i))
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			oldBlocks := store.Blocks.Count
 			newHeight, _ := api.GetBlockHeight()
@@ -83,7 +85,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 			if i < 1 {
 				oldBlocks = store.Blocks.Count
 			}
-			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, config.ListSize))
+			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -101,7 +103,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 			if i < 1 {
 				oldTxs = store.Transactions.Count
 			}
-			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, config.ListSize))
+			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, 1))
 		}
 	}
 }
@@ -113,10 +115,10 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)
 	if !store.Blocks.Pagination.DisableUpdate {
-		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, config.ListSize))
+		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 	}
 	if !store.Transactions.Pagination.DisableUpdate {
-		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, config.ListSize))
+		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, 1))
 	}
 }
 

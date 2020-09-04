@@ -58,15 +58,20 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else {
-		decryptionStatus = "Vote decrypted"
-		displayPackage = true
-		for _, index := range store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes {
-			if len(pkeys.Priv) <= int(index) {
-				decryptionStatus = "Process is still active, vote cannot be decrypted"
-				displayPackage = false
-				break
+		if pkeys != nil {
+			decryptionStatus = "Vote decrypted"
+			displayPackage = true
+			for _, index := range store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes {
+				if len(pkeys.Priv) <= int(index) {
+					decryptionStatus = "Process is still active, vote cannot be decrypted"
+					displayPackage = false
+					break
+				}
+				keys = append(keys, pkeys.Priv[index].Key)
 			}
-			keys = append(keys, pkeys.Priv[index].Key)
+		} else {
+			decryptionStatus = "Unable to decrypt"
+			displayPackage = true
 		}
 	}
 	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
@@ -124,7 +129,7 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight()))+" envelope on process "),
+						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessCount()))+" envelope on process "),
 						Link(
 							"/process/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),

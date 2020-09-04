@@ -70,11 +70,11 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
 			oldValidators := store.Validators.Count
 			newHeight, _ := api.GetValidatorCount()
-			dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight) - 1})
+			dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight)})
 			if i < 1 {
 				oldValidators = store.Validators.Count
 			}
-			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, config.ListSize))
+			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, 1))
 		}
 	}
 }
@@ -85,12 +85,12 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {
-		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, config.ListSize))
+		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
 	}
 }
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
-	fmt.Printf("Getting Blocks from index %d\n", index)
+	fmt.Printf("Getting Validators from index %d\n", index)
 	list, ok := api.GetValidatorList(index)
 	if ok {
 		reverseValidatorList(&list)

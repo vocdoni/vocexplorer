@@ -76,39 +76,39 @@ func getHeightMap(url string) (map[string]int64, bool) {
 	return heightMap.GetHeights(), true
 }
 
-//GetProcessEnvelopeHeight returns the height of envelopes belonging to given process stored by the database
-func GetProcessEnvelopeHeight(process string) (int64, bool) {
+//GetProcessEnvelopeCount returns the height of envelopes belonging to given process stored by the database
+func GetProcessEnvelopeCount(process string) (int64, bool) {
 	return getHeight("/db/envprocheight/?process=" + process)
 }
 
-//GetProcessEnvelopeHeightMap returns the entire map of process envelope heights
-func GetProcessEnvelopeHeightMap() (map[string]int64, bool) {
-	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeHeightMapKey)
+//GetProcessEnvelopeCountMap returns the entire map of process envelope heights
+func GetProcessEnvelopeCountMap() (map[string]int64, bool) {
+	return getHeightMap("/db/heightmap/?key=" + config.ProcessEnvelopeCountMapKey)
 }
 
-//GetEnvelopeHeight returns the latest envelope height stored by the database
-func GetEnvelopeHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestEnvelopeHeightKey)
+//GetEnvelopeCount returns the latest envelope height stored by the database
+func GetEnvelopeCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestEnvelopeCountKey)
 }
 
-//GetProcessHeight returns the latest process height stored by the database
-func GetProcessHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestProcessHeight)
+//GetProcessCount returns the latest process height stored by the database
+func GetProcessCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestProcessCountKey)
 }
 
-//GetEntityHeight returns the latest envelope height stored by the database
-func GetEntityHeight() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestEntityHeight)
+//GetEntityCount returns the latest envelope height stored by the database
+func GetEntityCount() (int64, bool) {
+	return getHeight("/db/height/?key=" + config.LatestEntityCountKey)
 }
 
-//GetEntityProcessHeight returns the number of processes belonging to a
-func GetEntityProcessHeight(entity string) (int64, bool) {
+//GetEntityProcessCount returns the number of processes belonging to a
+func GetEntityProcessCount(entity string) (int64, bool) {
 	return getHeight("/db/entityprocheight/?entity=" + entity)
 }
 
-//GetEntityProcessHeightMap returns the entire map of entity process heights
-func GetEntityProcessHeightMap() (map[string]int64, bool) {
-	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessHeightMapKey)
+//GetEntityProcessCountMap returns the entire map of entity process heights
+func GetEntityProcessCountMap() (map[string]int64, bool) {
+	return getHeightMap("/db/heightmap/?key=" + config.EntityProcessCountMapKey)
 }
 
 //GetBlockHeight returns the latest block height stored by the database
@@ -128,7 +128,7 @@ func GetValidatorBlockHeight(proposer string) (int64, bool) {
 
 //GetValidatorCount returns the latest validator count stored by the database
 func GetValidatorCount() (int64, bool) {
-	return getHeight("/db/height/?key=" + config.LatestValidatorHeightKey)
+	return getHeight("/db/height/?key=" + config.LatestValidatorCountKey)
 }
 
 //GetBlockList returns a list of blocks from the database
@@ -158,9 +158,6 @@ func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 
 //GetBlockListByValidator returns a list of blocks with given proposer from the database
 func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.StoreBlock, bool) {
-	if i < config.ListSize {
-		i = config.ListSize
-	}
 	body, ok := request("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
 	if !ok {
 		return [config.ListSize]*types.StoreBlock{}, false
