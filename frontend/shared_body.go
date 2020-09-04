@@ -18,7 +18,7 @@ type Body struct {
 func (b Body) Render() vecty.ComponentOrHTML {
 	return components.SectionMain(
 		router.NewRoute("/", &pages.HomeView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/vocdash", &pages.VocDashView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/participation", &pages.ParticipationView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/process/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/entity/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),

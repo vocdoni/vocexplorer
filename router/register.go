@@ -14,7 +14,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
 
 	// Page Routes
 	m.HandleFunc("/", indexHandler)
-	m.HandleFunc("/vocdash", indexHandler)
+	m.HandleFunc("/participation", indexHandler)
 	m.HandleFunc("/process/{id}", indexHandler)
 	m.HandleFunc("/entity/{id}", indexHandler)
 	m.HandleFunc("/envelope/{id}", indexHandler)
