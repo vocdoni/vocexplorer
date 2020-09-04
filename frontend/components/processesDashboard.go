@@ -6,7 +6,6 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -212,7 +211,7 @@ func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
 				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
 			}
 			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
-				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, config.ListSize))
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, 1))
 			}
 		}
 	}
@@ -227,7 +226,7 @@ func updateProcessesDashboard(d *ProcessesDashboardView) {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
-		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, config.ListSize))
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, 1))
 	}
 }
 
