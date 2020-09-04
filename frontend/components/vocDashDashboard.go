@@ -109,7 +109,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 				oldEntities = store.Entities.Count
 			}
 			if store.Entities.Count > 0 {
-				updateEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index-1, config.ListSize-1))
+				updateEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index, 1))
 			}
 		case i := <-store.Processes.Pagination.PagChannel:
 		processLoop:
@@ -132,7 +132,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 				oldProcesses = store.Processes.Count
 			}
 			if store.Processes.Count > 0 {
-				updateProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, config.ListSize))
+				updateProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, 1))
 				update.ProcessResults()
 			}
 		case i := <-store.Envelopes.Pagination.PagChannel:
@@ -155,7 +155,7 @@ func UpdateAndRenderVocDashDashboard(d *VocDashDashboardView) {
 				oldEnvelopes = store.Envelopes.Count
 			}
 			if store.Envelopes.Count > 0 {
-				updateEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, config.ListSize))
+				updateEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, 1))
 			}
 		}
 	}
@@ -166,13 +166,13 @@ func updateVocdash(d *VocDashDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
-		updateEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, config.ListSize))
+		updateEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, 1))
 	}
 	if !store.Entities.Pagination.DisableUpdate {
-		updateEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index-1, config.ListSize-1))
+		updateEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
 	}
 	if !store.Processes.Pagination.DisableUpdate {
-		updateProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, config.ListSize))
+		updateProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
 		update.ProcessResults()
 	}
 }
@@ -187,6 +187,7 @@ func updateEnvelopes(d *VocDashDashboardView, index int) {
 }
 
 func updateEntities(d *VocDashDashboardView, index int) {
+	index--
 	fmt.Printf("Getting entities from index %d\n", index)
 	list, ok := api.GetEntityList(index)
 	if ok {
@@ -196,6 +197,7 @@ func updateEntities(d *VocDashDashboardView, index int) {
 }
 
 func updateProcesses(d *VocDashDashboardView, index int) {
+	// index--
 	fmt.Printf("Getting processes from index %d\n", index)
 	list, ok := api.GetProcessList(index)
 	if ok {
