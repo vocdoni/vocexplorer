@@ -209,11 +209,11 @@ func (c *GatewayClient) GetLiveProcessList(from int64) ([]string, error) {
 }
 
 // GetScrutinizerEntities gets list of entities indexed by the scrutinizer on the Vochain
-func (c *GatewayClient) GetScrutinizerEntities(from int64) ([]string, error) {
+func (c *GatewayClient) GetScrutinizerEntities(from string) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getScrutinizerEntities"
 	req.Timestamp = int32(time.Now().Unix())
-	req.From = from
+	req.FromID = from
 	req.ListSize = 64
 
 	resp, err := c.Request(req)
@@ -229,12 +229,12 @@ func (c *GatewayClient) GetScrutinizerEntities(from int64) ([]string, error) {
 // EntityInfo requests
 
 // GetProcessList gets list of processes for a given entity, starting at from
-func (c *GatewayClient) GetProcessList(entityID string, from int64) ([]string, error) {
+func (c *GatewayClient) GetProcessList(entityID string, from string) ([]string, error) {
 	var req MetaRequest
 	req.Method = "getProcessList"
 	req.Timestamp = int32(time.Now().Unix())
 	req.EntityID = entityID
-	req.From = from
+	req.FromID = from
 	req.ListSize = 64
 
 	resp, err := c.Request(req)

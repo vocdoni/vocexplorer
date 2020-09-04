@@ -8,6 +8,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
+// TransactionTabChange is the action to change between tabs in transaction view details
+type TransactionTabChange struct {
+	Tab string
+}
+
 // TransactionsIndexChange is the action to set the pagination index
 type TransactionsIndexChange struct {
 	Index int
@@ -56,6 +61,9 @@ func init() {
 // transactionActions is the handler for all transaction-related store actions
 func transactionActions(action interface{}) {
 	switch a := action.(type) {
+	case *TransactionTabChange:
+		store.Transactions.Pagination.Tab = a.Tab
+
 	case *TransactionsIndexChange:
 		store.Transactions.Pagination.Index = a.Index
 

@@ -36,7 +36,7 @@ func (c *BlockContents) Mount() {
 // Render renders the BlockContents component
 func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	if !c.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if store.Blocks.CurrentBlock == nil {
 		return Container(

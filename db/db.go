@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -111,13 +112,14 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Wait for new blocks to be available
 	for gwBlockHeight-latestBlockHeight.GetHeight() < 1 {
 		time.Sleep(500 * time.Millisecond)
-		status, err := c.Status()
-		if err != nil {
-			log.Error(err)
-		}
-		if status != nil {
-			gwBlockHeight = status.SyncInfo.LatestBlockHeight
-		}
+		return
+		// status, err := c.Status()
+		// if err != nil {
+		// 	log.Error(err)
+		// }
+		// if status != nil {
+		// 	gwBlockHeight = status.SyncInfo.LatestBlockHeight
+		// }
 	}
 
 	batch := d.NewBatch()
@@ -338,13 +340,18 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 
 func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
-	// gatewayEntityHeight, err := c.GetEntityCount()
-	// util.ErrPrint(err)
-	// if localEntityHeight == gatewayEntityHeight {
-	if localEntityHeight > 0 {
+	gatewayEntityHeight, err := c.GetEntityCount()
+	util.ErrPrint(err)
+	if localEntityHeight >= gatewayEntityHeight {
 		return
 	}
-	newEntities, err := c.GetScrutinizerEntities(localEntityHeight)
+	latestKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight-1))...)
+	latestEntity, err := d.Get(latestKey)
+	if err != nil {
+		latestEntity = []byte{}
+	}
+	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
+	newEntities, err := c.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)))
 	if len(newEntities) < 1 {
 		log.Warn("No new entities fetched")
 		return
@@ -362,10 +369,10 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 			break
 		}
 		batch.Put(heightKey, rawEntity)
-		log.Debugf("Stored entity %s height %d", entity, int(localEntityHeight)+i)
+		// log.Debugf("Stored entity %s height %d", entity, int(localEntityHeight)+i)
 		// Add new entity to height map with height of 0 so db will get new entity's processes
 		if _, ok := heightMap.GetHeights()[entity]; ok {
-			log.Error("Fetched entity already stored")
+			log.Warn("Fetched entity already stored")
 		}
 		heightMap.Heights[entity] = 0
 	}
@@ -404,9 +411,8 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 
 	batch := d.NewBatch()
 
-	for entity, height := range heightMap.Heights {
-		go fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
-		// fetchProcesses(entity, height, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
+	for entity, localHeight := range heightMap.Heights {
+		go fetchProcesses(entity, localHeight, localProcessHeight, d, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
 	}
 	log.Debugf("Found %d stored entities", len(heightMap.Heights))
 
@@ -434,17 +440,42 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	batch.Write()
 }
 
-func fetchProcesses(entity string, height int64, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, complete chan struct{}) {
+func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.BadgerDB, batch dvotedb.Batch, heightMap *types.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, complete chan struct{}) {
 	defer func() {
 		complete <- struct{}{}
 	}()
+
+	var lastProcess []byte
+	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+	// Get Entity|LocalHeight:ProcessHeight
+	entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
+	entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight-1))...)
+	rawGlobalHeight, err := db.Get(entityProcessKey)
+	if err != nil {
+		log.Debugf("Height Key not found: %s", err.Error())
+		rawGlobalHeight = []byte{}
+	} else {
+		var globalHeight types.Height
+		err = proto.Unmarshal(rawGlobalHeight, &globalHeight)
+		if err != nil {
+			globalHeight.Height = -1
+		}
+		// Get ProcessHeight:PID
+		lastProcessKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight.GetHeight())...)
+		lastProcess, err = db.Get(lastProcessKey)
+		if err != nil {
+			log.Debugf("Process Key not found: %s", err.Error())
+			lastProcess = []byte{}
+		}
+	}
+
 	requestMutex.Lock()
-	newProcessList, err := c.GetProcessList(entity, height)
+	log.Debugf("Getting processes from id %s", util.HexToString(lastProcess))
+	newProcessList, err := c.GetProcessList(entity, strings.ToLower(util.HexToString(lastProcess)))
 	requestMutex.Unlock()
 	if util.ErrPrint(err) || len(newProcessList) < 1 {
 		return
 	}
-	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
 	util.ErrPrint(err)
 	var process string
 	for _, process = range newProcessList {

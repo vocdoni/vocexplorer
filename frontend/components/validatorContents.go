@@ -35,7 +35,7 @@ func (contents *ValidatorContents) Mount() {
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	return Container(
 		renderServerConnectionBanner(),

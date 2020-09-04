@@ -35,7 +35,7 @@ func (dash *VocDashDashboardView) Mount() {
 // Render renders the VocDashDashboardView component
 func (dash *VocDashDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(

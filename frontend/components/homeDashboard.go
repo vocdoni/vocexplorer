@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
@@ -35,7 +34,7 @@ func (dash *DashboardView) Mount() {
 // Render renders the DashboardView component
 func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
-		return elem.Div(vecty.Text("Loading..."))
+		return LoadingBar()
 	}
 	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
 		return Container(
