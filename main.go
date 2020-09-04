@@ -112,19 +112,23 @@ func main() {
 		// Get ChainID for db directory
 		tmClient, ok := db.StartTendermint(cfg.Global.TendermintHost)
 		if !ok {
-			log.Fatal("Cannot connect to tendermint client")
+			cfg.Global.Detached = true
+		} else {
+			gen, err := tmClient.Genesis()
+			if err != nil {
+				log.Error(err)
+			}
+			cfg.ChainID = gen.Genesis.ChainID
+			d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
+			if err != nil {
+				log.Error(err)
+				cfg.Global.Detached = true
+			} else {
+				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost, cfg.Global.GatewaySocket)
+			}
 		}
-		gen, err := tmClient.Genesis()
-		if err != nil {
-			log.Error(err)
-		}
-		cfg.ChainID = gen.Genesis.ChainID
-		d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost, cfg.Global.GatewaySocket)
-	} else {
+	}
+	if cfg.Global.Detached {
 		log.Infof("Running in detached mode")
 		d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
 		if err != nil {

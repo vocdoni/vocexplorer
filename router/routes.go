@@ -26,7 +26,7 @@ func PingHandler() func(w http.ResponseWriter, r *http.Request) {
 // StatsHandler is the public api for all blockchain statistics & information
 func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Serving statistics to %s", r.Referer())
+		log.Debugf("Serving statistics ")
 		stats := new(api.VochainStats)
 
 		if !cfg.Detached {
