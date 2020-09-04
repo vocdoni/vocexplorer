@@ -10,22 +10,6 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
-// ErrPrint prints an error to stdout. If err is nil, return false. If err is not nil, return true
-func ErrPrint(err error) bool {
-	if err != nil {
-		log.Error(err)
-		return true
-	}
-	return false
-}
-
-// ErrFatal calls log.Fatal if err is not nil
-func ErrFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 // MsToString turns a milliseconds int32 to a readable string
 func MsToString(ms int32) string {
 	seconds, ms := ms/1000, ms%1000

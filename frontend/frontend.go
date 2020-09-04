@@ -2,23 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gopherjs/vecty"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/rpc/rpcinit"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
-
-//go:generate env GOARCH=wasm GOOS=js go build -o ../static/main.wasm
 
 func main() {
 	initFrontend()
@@ -29,12 +23,12 @@ func main() {
 func initFrontend() {
 	var cfg *config.Cfg
 	resp, err := http.Get("/config")
-	util.ErrPrint(err)
-	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1048576))
-	resp.Body.Close()
-	if !util.ErrPrint(err) {
-		err = json.Unmarshal(body, &cfg)
-		util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
+	err = json.NewDecoder(resp.Body).Decode(&cfg)
+	if err != nil {
+		log.Error(err)
 	}
 	// Init clients with cfg so we don't have to wait for it to store
 	initClients(cfg)
@@ -55,7 +49,7 @@ func initClients(cfg *config.Cfg) {
 	var tm *tmhttp.HTTP
 	var gw *api.GatewayClient
 	for i := 0; i < 5 && tm == nil; i++ {
-		tm = rpcinit.StartClient(cfg.TendermintHost)
+		tm = api.StartTendermintClient(cfg.TendermintHost)
 	}
 	if tm == nil {
 		log.Error("Cannot connect to tendermint api")

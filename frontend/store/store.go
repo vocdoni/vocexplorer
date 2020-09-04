@@ -2,8 +2,8 @@ package store
 
 import (
 	"github.com/tendermint/tendermint/rpc/client/http"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
 
@@ -66,29 +66,6 @@ func init() {
 
 	GatewayConnected = true
 	ServerConnected = true
+
+	Reduce()
 }
-
-// func onAction(action interface{}) {
-// 	switch a := action.(type) {
-
-// 	case *actions.BlocksTabChange:
-// 		BlockTabActive = a.Tab
-
-// 	case *actions.BlocksHeightUpdate:
-// 		CurrentBlockHeight = a.Height
-
-// 	case *actions.ProcessesTabChange:
-// 		Processes.Pagination.Tab = a.Tab
-
-// 	case *actions.SignalRedirect:
-// 		RedirectChan <- struct{}{}
-
-// 	case *actions.StoreConfig:
-// 		Config = a.Config
-
-// 	default:
-// 		return // don't fire listeners
-// 	}
-
-// 	Listeners.Fire()
-// }

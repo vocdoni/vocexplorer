@@ -19,7 +19,7 @@ for (j in modules) {
 }
 
 gulp.task('go:generate', (done) =>
-  exec('go generate', {cwd: './frontend'}, (err, stdout, stderr) => {
+  exec('env GOARCH=wasm GOOS=js go build -o ../static/main.wasm', {cwd: './frontend'}, (err, stdout, stderr) => {
     if (stdout) {
       console.log(stdout)
     }

@@ -5,11 +5,11 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
 
@@ -21,7 +21,9 @@ type EnvelopesView struct {
 // Render renders the EnvelopesView component
 func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
-	util.ErrPrint(err)
+	if err != nil {
+		log.Error(err)
+	}
 	dispatcher.Dispatch(&actions.SetCurrentEnvelopeHeight{Height: height})
 	dash := new(components.EnvelopeContents)
 	dash.Rendered = false
