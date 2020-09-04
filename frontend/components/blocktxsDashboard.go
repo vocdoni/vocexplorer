@@ -81,11 +81,11 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			oldBlocks := store.Blocks.Count
 			newHeight, _ := api.GetBlockHeight()
-			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight)})
+			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
 			if i < 1 {
 				oldBlocks = store.Blocks.Count
 			}
-			updateBlocks(d, util.Max(oldBlocks-util.Max(store.Blocks.Pagination.Index, 1), 0))
+			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -103,7 +103,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 			if i < 1 {
 				oldTxs = store.Transactions.Count
 			}
-			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, config.ListSize))
+			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, 1))
 		}
 	}
 }
@@ -115,10 +115,10 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.UpdateCounts()
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	if !store.Blocks.Pagination.DisableUpdate {
-		updateBlocks(d, util.Max(store.Blocks.Count-util.Max(store.Blocks.Pagination.Index, 1), 0))
+		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 	}
 	if !store.Transactions.Pagination.DisableUpdate {
-		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, config.ListSize))
+		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, 1))
 	}
 }
 

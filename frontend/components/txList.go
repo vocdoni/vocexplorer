@@ -118,6 +118,10 @@ func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					vecty.Markup(vecty.Class("dt")),
+					vecty.Text(fmt.Sprintf("# %d", tx.Store.GetTxHeight())),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
 					vecty.Text(
 						fmt.Sprintf("%s transaction on block ", humanize.Ordinal(int(tx.Store.Index+1))),
 					),

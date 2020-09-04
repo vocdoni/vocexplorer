@@ -9,11 +9,13 @@ import (
 func UpdateCounts() {
 	newVal, ok := api.GetBlockHeight()
 	if ok {
-		dispatcher.Dispatch(&BlocksHeightUpdate{Height: int(newVal)})
+		// Blocks indexed by height, so convert to count
+		dispatcher.Dispatch(&BlocksHeightUpdate{Height: int(newVal) - 1})
 	}
 	newVal, ok = api.GetTxHeight()
 	if ok {
-		dispatcher.Dispatch(&SetTransactionCount{Count: int(newVal)})
+		// Transactions indexed by height, so convert to count
+		dispatcher.Dispatch(&SetTransactionCount{Count: int(newVal) - 1})
 	}
 	newVal, ok = api.GetEntityHeight()
 	if ok {
