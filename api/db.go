@@ -157,7 +157,7 @@ func GetBlockHeight() (int64, bool) {
 
 //GetTxHeight returns the latest tx height stored by the database
 func GetTxHeight() (int64, bool) {
-	return getHeight("db/height/?key=" + config.LatestTxHeightKey)
+	return getHeight("/api/height/?key=" + config.LatestTxHeightKey)
 }
 
 //GetValidatorBlockHeight returns the height of blocks belonging to given validator stored by the database
