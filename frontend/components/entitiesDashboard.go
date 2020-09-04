@@ -6,7 +6,6 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -106,7 +105,14 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
 	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	updateEntityProcesses(d, util.Max(store.Entities.Count-store.Entities.ProcessesIndex, config.ListSize))
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
+
+	newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+	if ok {
+		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+	}
+	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -114,7 +120,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateEntityProcesses(d, util.Max(store.Entities.Count-store.Entities.ProcessesIndex, config.ListSize))
+			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
 		case i := <-store.Entities.Pagination.PagChannel:
 		loop:
 			for {
@@ -126,15 +132,17 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
-			oldProcesses := store.Entities.Count
-			newHeight, _ := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
-			dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newHeight)})
-			if i < 1 {
-				oldProcesses = store.Entities.Count
+			oldProcesses := store.Entities.CurrentEntity.ProcessCount
+			newCount, ok := api.GetEntityProcessHeight(store.Entities.CurrentEntityID)
+			if ok {
+				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 			}
-			index := util.Max(oldProcesses-store.Entities.ProcessesIndex, config.ListSize)
+			if i < 1 {
+				oldProcesses = store.Entities.CurrentEntity.ProcessCount
+			}
+			index := util.Max(oldProcesses-store.Entities.ProcessesIndex, 1)
 			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
-			list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
+			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
 			if ok {
 				reverseIDList(&list)
 				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
@@ -149,6 +157,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
+	index--
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.Ping()})
 
