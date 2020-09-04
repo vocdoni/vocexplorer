@@ -37,14 +37,14 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		} else {
 			stats.NodeInfo = status.NodeInfo
 			stats.SyncInfo = status.SyncInfo
-			stats.ValidatorInfo = status.ValidatorInfo
 		}
 
 		genesis := api.GetGenesis(t)
 		if status == nil {
 			log.Errorf("Unable to get genesis block")
 		} else {
-			stats.Genesis = genesis
+			stats.GenesisTimeStamp = genesis.GenesisTime
+			stats.ChainID = genesis.ChainID
 		}
 
 		gw, cancel := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
