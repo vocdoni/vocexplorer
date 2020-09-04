@@ -65,8 +65,8 @@ func UpdateDB(d *dvotedb.BadgerDB, gwHost, gwSocket, tmHost string) {
 }
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
-	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
-	latestValidatorHeight := getHeight(d, config.LatestValidatorHeightKey, 0)
+	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
+	latestValidatorHeight := GetHeight(d, config.LatestValidatorHeightKey, 0)
 	batch := d.NewBatch()
 	fetchValidators(latestBlockHeight.GetHeight(), latestValidatorHeight.GetHeight(), c, batch)
 	if err := batch.Write(); err != nil {
@@ -74,7 +74,8 @@ func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	}
 }
 
-func getHeightMap(d *dvotedb.BadgerDB, key string) *voctypes.HeightMap {
+// GetHeightMap fetches a height map from the database
+func GetHeightMap(d *dvotedb.BadgerDB, key string) *voctypes.HeightMap {
 	var valMap voctypes.HeightMap
 	valMapKey := []byte(key)
 	has, err := d.Has(valMapKey)
@@ -95,16 +96,16 @@ func getHeightMap(d *dvotedb.BadgerDB, key string) *voctypes.HeightMap {
 }
 func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	// Fetch latest block & tx heights
-	latestBlockHeight := getHeight(d, config.LatestBlockHeightKey, 1)
-	latestTxHeight := getHeight(d, config.LatestTxHeightKey, 1)
-	latestEnvelopeHeight := getHeight(d, config.LatestEnvelopeHeightKey, 0)
+	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
+	latestTxHeight := GetHeight(d, config.LatestTxHeightKey, 1)
+	latestEnvelopeHeight := GetHeight(d, config.LatestEnvelopeHeightKey, 0)
 
 	// Get Height maps: stored in map object so each update isn't slow db-write/get
 	// Map of validator:num blocks
-	valMap := getHeightMap(d, config.ValidatorHeightMapKey)
+	valMap := GetHeightMap(d, config.ValidatorHeightMapKey)
 	valMapMutex := new(sync.Mutex)
 	// Map of pid:num envelopes
-	procEnvHeightMap := getHeightMap(d, config.ProcessEnvelopeHeightMapKey)
+	procEnvHeightMap := GetHeightMap(d, config.ProcessEnvelopeHeightMapKey)
 	procEnvHeightMapMutex := new(sync.Mutex)
 
 	status, err := c.Status()
@@ -371,7 +372,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 }
 
 func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
-	localEntityHeight := getHeight(d, config.LatestEntityHeight, 0).GetHeight()
+	localEntityHeight := GetHeight(d, config.LatestEntityHeight, 0).GetHeight()
 	gatewayEntityHeight, err := c.GetEntityCount()
 	if err != nil {
 		log.Error(err)
@@ -390,7 +391,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 		log.Warn("No new entities fetched")
 		return
 	}
-	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
+	heightMap := GetHeightMap(d, config.EntityProcessHeightMapKey)
 
 	// write new entities to db
 	batch := d.NewBatch()
@@ -433,7 +434,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 }
 
 func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
-	localProcessHeight := getHeight(d, config.LatestProcessHeight, 0).GetHeight()
+	localProcessHeight := GetHeight(d, config.LatestProcessHeight, 0).GetHeight()
 	gatewayProcessHeight, err := c.GetProcessCount()
 	if err != nil {
 		log.Error(err)
@@ -443,7 +444,7 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	}
 
 	// Get height map for list of entities, current heights stored
-	heightMap := getHeightMap(d, config.EntityProcessHeightMapKey)
+	heightMap := GetHeightMap(d, config.EntityProcessHeightMapKey)
 	// Initialize concurrency helper variables
 	heightMapMutex := new(sync.Mutex)
 	requestMutex := new(sync.Mutex)
@@ -554,8 +555,8 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	}
 }
 
-// listItemsByHeight returns a list of items given integer keys
-func listItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]byte {
+// ListItemsByHeight returns a list of items given integer keys
+func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]byte {
 	if max > 64 {
 		max = 64
 	}
@@ -617,7 +618,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 	}
 }
 
-func getHeight(d *dvotedb.BadgerDB, key string, def int64) *voctypes.Height {
+func GetHeight(d *dvotedb.BadgerDB, key string, def int64) *voctypes.Height {
 	height := &voctypes.Height{Height: def}
 	has, err := d.Has([]byte(key))
 	if err != nil {

@@ -1,4 +1,4 @@
-package db
+package router
 
 import (
 	"encoding/hex"
@@ -8,6 +8,7 @@ import (
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	vocdb "gitlab.com/vocdoni/vocexplorer/db"
 	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
@@ -115,7 +116,7 @@ func buildItemByHeightHandler(db *dvotedb.BadgerDB, heightKey, key string, getIt
 			return
 		}
 
-		envHeight := getHeight(db, heightKey, 0)
+		envHeight := vocdb.GetHeight(db, heightKey, 0)
 		if height > int(envHeight.GetHeight()) {
 			log.Errorf("Requested item does not exist")
 			http.Error(w, "Requested item does not exist", http.StatusInternalServerError)
@@ -153,7 +154,7 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 		if err != nil {
 			log.Error(err)
 		}
-		items := listItemsByHeight(db, config.ListSize, from, []byte(key))
+		items := vocdb.ListItemsByHeight(db, config.ListSize, from, []byte(key))
 		if len(items) == 0 {
 			log.Error("Retrieved no items")
 			http.Error(w, "No items available", http.StatusInternalServerError)
@@ -202,7 +203,7 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			log.Error(err)
 		}
 
-		heightMap := getHeightMap(db, heightMapKey)
+		heightMap := vocdb.GetHeightMap(db, heightMapKey)
 		itemHeight, ok := heightMap.Heights[parents[0]]
 		if !ok {
 			log.Error("Parent does not exist")
@@ -216,7 +217,7 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 		if err != nil {
 			log.Error(err)
 		}
-		keys := listItemsByHeight(db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
+		keys := vocdb.ListItemsByHeight(db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
 		if len(keys) == 0 {
 			log.Error("No keys retrieved")
 			http.Error(w, "No items available", http.StatusInternalServerError)
@@ -407,7 +408,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		if err != nil {
 			log.Error(err)
 		}
-		hashes := listItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
+		hashes := vocdb.ListItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
 			log.Errorf("No txs available at height %d", from)
 			http.Error(w, "No txs available", http.StatusNotFound)
