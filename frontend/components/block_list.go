@@ -13,7 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -76,7 +76,7 @@ func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-p.ListSize; i-- {
-		if types.BlockIsEmpty(store.Blocks.Blocks[i]) {
+		if proto.BlockIsEmpty(store.Blocks.Blocks[i]) {
 			continue
 		}
 		blockList = append(blockList, elem.Div(

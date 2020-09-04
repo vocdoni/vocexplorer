@@ -5,19 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-amino"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
-	"gitlab.com/vocdoni/vocexplorer/types"
 )
 
 // RegisterRoutes takes a mux and registers all the routes callbacks within this package
 func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *dvotedb.BadgerDB) {
-	// Init amino encoder
-	var cdc = amino.NewCodec()
-	cdc.RegisterConcrete(types.StoreBlock{}, "storeBlock", nil)
-	cdc.RegisterConcrete(types.StoreTx{}, "storeTx", nil)
 
 	// Page Routes
 	m.HandleFunc("/", indexHandler)

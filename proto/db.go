@@ -1,4 +1,4 @@
-package types
+package proto
 
 //BlockIsEmpty returns true if block is empty
 func BlockIsEmpty(s *StoreBlock) bool {

@@ -11,11 +11,11 @@ import (
 	"gitlab.com/vocdoni/go-dvote/crypto/nacl"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -42,7 +42,7 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
 		return LoadingBar()
 	}
-	if store.Envelopes.CurrentEnvelope == nil || types.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
+	if store.Envelopes.CurrentEnvelope == nil || proto.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
 		return elem.Div(
 			elem.Main(vecty.Text("Envelope not available")),
 		)

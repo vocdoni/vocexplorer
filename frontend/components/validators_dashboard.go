@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
-	"gitlab.com/vocdoni/vocexplorer/update"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -98,7 +98,7 @@ func updateValidators(d *ValidatorsDashboardView, index int) {
 	}
 }
 
-func reverseValidatorList(list *[config.ListSize]*types.Validator) {
+func reverseValidatorList(list *[config.ListSize]*proto.Validator) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

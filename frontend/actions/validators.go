@@ -4,7 +4,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // ValidatorsIndexChange is the action to set the pagination index
@@ -14,7 +14,7 @@ type ValidatorsIndexChange struct {
 
 // SetValidatorList is the action to set the validator list
 type SetValidatorList struct {
-	List [config.ListSize]*types.Validator
+	List [config.ListSize]*proto.Validator
 }
 
 // SetValidatorCount is the action to set the Validator count
@@ -29,7 +29,7 @@ type DisableValidatorUpdate struct {
 
 // SetCurrentValidator is the action to set the currently displayed validator
 type SetCurrentValidator struct {
-	Validator *types.Validator
+	Validator *proto.Validator
 }
 
 // SetCurrentValidatorID is the action to set the currently displayed validator ID
@@ -44,7 +44,7 @@ type SetCurrentValidatorBlockCount struct {
 
 // SetCurrentValidatorBlockList is the action to set the list of blocks belonging to the current validator
 type SetCurrentValidatorBlockList struct {
-	BlockList [config.ListSize]*types.StoreBlock
+	BlockList [config.ListSize]*proto.StoreBlock
 }
 
 // On initialization, register actions

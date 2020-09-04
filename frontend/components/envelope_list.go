@@ -13,7 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -66,7 +66,7 @@ func renderEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 
 	empty := p.ListSize
 	for i := len(store.Envelopes.Envelopes) - 1; i >= len(store.Envelopes.Envelopes)-p.ListSize; i-- {
-		if types.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
+		if proto.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
 			empty--
 		} else {
 			envelope := store.Envelopes.Envelopes[i]
@@ -83,7 +83,7 @@ func renderEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
+func renderEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(

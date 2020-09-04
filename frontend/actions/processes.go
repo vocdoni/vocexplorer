@@ -1,12 +1,12 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // ProcessesIndexChange is the action to set the pagination index
@@ -88,7 +88,7 @@ type SetCurrentProcessID struct {
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList [config.ListSize]*types.Envelope
+	EnvelopeList [config.ListSize]*proto.Envelope
 }
 
 // On initialization, register actions

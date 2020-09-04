@@ -4,12 +4,12 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //ValidatorCard renders a single validator card
-func ValidatorCard(validator *types.Validator) vecty.ComponentOrHTML {
+func ValidatorCard(validator *proto.Validator) vecty.ComponentOrHTML {
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
 			"/validator/"+util.HexToString(validator.GetAddress()),

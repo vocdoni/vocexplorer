@@ -17,7 +17,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -81,7 +81,7 @@ func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 
 	empty := p.ListSize
 	for i := p.ListSize - 1; i >= 0; i-- {
-		if types.TxIsEmpty(store.Transactions.Transactions[i]) {
+		if proto.TxIsEmpty(store.Transactions.Transactions[i]) {
 			empty--
 		} else {
 			tx := store.Transactions.Transactions[i]
@@ -98,7 +98,7 @@ func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderTx(tx *types.SendTx) vecty.ComponentOrHTML {
+func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx.Store.Tx, &rawTx)
 	if err != nil {

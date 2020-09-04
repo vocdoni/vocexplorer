@@ -5,18 +5,18 @@ import (
 
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
 	Count                     int
 	CurrentTransactionHeight  int64
-	CurrentTransaction        *types.SendTx
+	CurrentTransaction        *proto.SendTx
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *types.StoreBlock
+	CurrentBlock              *proto.StoreBlock
 	Pagination                PageStore
-	Transactions              [config.ListSize]*types.SendTx
+	Transactions              [config.ListSize]*proto.SendTx
 }
 
 // DecodedTransaction stores human-readable decoded transaction data

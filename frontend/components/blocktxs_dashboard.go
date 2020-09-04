@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
-	"gitlab.com/vocdoni/vocexplorer/update"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -138,14 +138,14 @@ func updateTxs(d *BlockTxsDashboardView, index int) {
 	}
 }
 
-func reverseBlockList(list *[config.ListSize]*types.StoreBlock) {
+func reverseBlockList(list *[config.ListSize]*proto.StoreBlock) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]
 	}
 }
 
-func reverseTxList(list *[config.ListSize]*types.SendTx) {
+func reverseTxList(list *[config.ListSize]*proto.SendTx) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

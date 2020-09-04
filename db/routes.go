@@ -8,7 +8,7 @@ import (
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
 )
@@ -36,7 +36,7 @@ func HeightHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		var height types.Height
+		var height ptypes.Height
 		err = proto.Unmarshal(val, &height)
 		if err != nil {
 			log.Error(err)
@@ -65,7 +65,7 @@ func HeightMapHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.
 			return
 		}
 
-		var heightMap types.HeightMap
+		var heightMap ptypes.HeightMap
 		err = proto.Unmarshal(val, &heightMap)
 		if err != nil {
 			log.Error(err)
@@ -159,7 +159,7 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
-		var itemList types.ItemList
+		var itemList ptypes.ItemList
 		for _, rawItem := range items {
 			if getItem != nil {
 				rawItem, err = getItem(rawItem)
@@ -222,12 +222,12 @@ func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getH
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
-		var rawItems types.ItemList
+		var rawItems ptypes.ItemList
 		// Get packages by height:package
 		for _, rawKey := range keys {
 			var rawPackage []byte
 			if marshalHeight {
-				height := new(types.Height)
+				height := new(ptypes.Height)
 				if err := proto.Unmarshal(rawKey, height); err != nil {
 					log.Error(err)
 				}
@@ -268,7 +268,7 @@ func buildHeightByParentHandler(db *dvotedb.BadgerDB, parentName, heightMapKey s
 			http.Error(w, "Url Param 'process' missing", http.StatusBadRequest)
 			return
 		}
-		var heightMap types.HeightMap
+		var heightMap ptypes.HeightMap
 		has, err := db.Has([]byte(heightMapKey))
 		if err != nil || !has {
 			log.Error("No item height not found")
@@ -289,7 +289,7 @@ func buildHeightByParentHandler(db *dvotedb.BadgerDB, parentName, heightMapKey s
 		if !ok {
 			height = 0
 		}
-		sendHeight := &types.Height{Height: int64(height)}
+		sendHeight := &ptypes.Height{Height: int64(height)}
 		msg, err := proto.Marshal(sendHeight)
 		if err != nil {
 			log.Error(err)
@@ -413,18 +413,18 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			http.Error(w, "No txs available", http.StatusNotFound)
 			return
 		}
-		var rawTxs types.ItemList
+		var rawTxs ptypes.ItemList
 		for _, hash := range hashes {
 			rawTx, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 			if err != nil {
 				log.Error(err)
 			}
-			var tx types.StoreTx
+			var tx ptypes.StoreTx
 			err = proto.Unmarshal(rawTx, &tx)
 			if err != nil {
 				log.Error(err)
 			}
-			send := types.SendTx{
+			send := ptypes.SendTx{
 				Hash:  hash,
 				Store: &tx,
 			}
@@ -474,13 +474,13 @@ func GetTxHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		var tx types.StoreTx
+		var tx ptypes.StoreTx
 		err = proto.Unmarshal(raw, &tx)
 		if err != nil {
 			log.Error(err)
 		}
 
-		send := types.SendTx{
+		send := ptypes.SendTx{
 			Hash:  hash,
 			Store: &tx,
 		}
@@ -531,14 +531,14 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 			return
 		}
 
-		var tx types.StoreTx
+		var tx ptypes.StoreTx
 		err = proto.Unmarshal(raw, &tx)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "Unable to get tx", http.StatusNotFound)
 			return
 		}
-		height := &types.Height{Height: tx.GetHeight()}
+		height := &ptypes.Height{Height: tx.GetHeight()}
 		rawHeight, err := proto.Marshal(height)
 		if err != nil {
 			log.Error(err)
@@ -584,7 +584,7 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 			return
 		}
 
-		var height types.Height
+		var height ptypes.Height
 		err = proto.Unmarshal(raw, &height)
 		if err != nil {
 			log.Error(err)

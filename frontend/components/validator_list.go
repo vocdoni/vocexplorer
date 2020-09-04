@@ -13,7 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -76,7 +76,7 @@ func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 	var validatorElems []vecty.MarkupOrChild
 
 	for i := len(store.Validators.Validators) - 1; i >= len(store.Validators.Validators)-p.ListSize; i-- {
-		if types.ValidatorIsEmpty(store.Validators.Validators[i]) {
+		if proto.ValidatorIsEmpty(store.Validators.Validators[i]) {
 			continue
 		}
 		validatorElems = append(validatorElems, elem.Div(

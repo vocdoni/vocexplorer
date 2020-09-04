@@ -6,14 +6,14 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
-	"gitlab.com/vocdoni/vocexplorer/update"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -212,7 +212,7 @@ func updateProcesses(d *VocDashDashboardView, index int) {
 	}
 }
 
-func reverseEnvelopeList(list *[config.ListSize]*types.Envelope) {
+func reverseEnvelopeList(list *[config.ListSize]*proto.Envelope) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

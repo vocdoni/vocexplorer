@@ -2,8 +2,8 @@ package store
 
 import (
 	"github.com/tendermint/tendermint/rpc/client/http"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
 

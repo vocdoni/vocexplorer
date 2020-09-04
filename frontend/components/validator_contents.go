@@ -6,12 +6,12 @@ import (
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -185,12 +185,12 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 	return elem.Div(elem.Heading5(vecty.Text("No blocks validated")))
 }
 
-func renderValidatorBlocks(blocks [config.ListSize]*types.StoreBlock) vecty.ComponentOrHTML {
+func renderValidatorBlocks(blocks [config.ListSize]*proto.StoreBlock) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	empty := config.ListSize
 	for i := len(blocks) - 1; i >= len(blocks)-config.ListSize; i-- {
-		if types.BlockIsEmpty(blocks[i]) {
+		if proto.BlockIsEmpty(blocks[i]) {
 			empty--
 		} else {
 			block := blocks[i]

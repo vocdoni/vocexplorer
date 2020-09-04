@@ -5,7 +5,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // BlocksIndexChange is the action to set the pagination index
@@ -20,7 +20,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList [config.ListSize]*types.StoreBlock
+	BlockList [config.ListSize]*proto.StoreBlock
 }
 
 // BlocksHeightUpdate is the action to change the current block height

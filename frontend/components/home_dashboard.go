@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/gopherjs/vecty"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/update"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 

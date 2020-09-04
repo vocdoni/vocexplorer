@@ -13,13 +13,13 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -263,7 +263,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 	var nullifier string
 	var entityID string
 	var tm time.Time
-	if !types.BlockIsEmpty(store.Transactions.CurrentBlock) {
+	if !proto.BlockIsEmpty(store.Transactions.CurrentBlock) {
 		tm, err = ptypes.Timestamp(store.Transactions.CurrentBlock.GetTime())
 		if err != nil {
 			log.Error(err)
@@ -382,7 +382,7 @@ func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("dt")),
 					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
 					vecty.If(
-						!types.BlockIsEmpty(store.Transactions.CurrentBlock),
+						!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
 						Link(
 							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
 							util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
@@ -390,7 +390,7 @@ func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 						),
 					),
 					vecty.If(
-						types.BlockIsEmpty(store.Transactions.CurrentBlock),
+						proto.BlockIsEmpty(store.Transactions.CurrentBlock),
 						vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
 					),
 				),
@@ -406,7 +406,7 @@ func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("dt")),
 				vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
 				vecty.If(
-					!types.BlockIsEmpty(store.Transactions.CurrentBlock),
+					!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
 					Link(
 						"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
 						util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
@@ -414,7 +414,7 @@ func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 					),
 				),
 				vecty.If(
-					types.BlockIsEmpty(store.Transactions.CurrentBlock),
+					proto.BlockIsEmpty(store.Transactions.CurrentBlock),
 					vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
 				),
 			),

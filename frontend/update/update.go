@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"

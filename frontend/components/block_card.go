@@ -10,14 +10,14 @@ import (
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/types"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *types.StoreBlock) vecty.ComponentOrHTML {
+func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 	var tm time.Time
 	var err error
 	if block.GetTime() != nil {
