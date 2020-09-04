@@ -241,7 +241,7 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 				"",
 			)
 		} else {
-			hashElement = elem.Div(vecty.Markup(vecty.Class("nav-link")), vecty.Text(hashString))
+			hashElement = elem.Div(vecty.Text(hashString))
 		}
 		data = append(
 			data,

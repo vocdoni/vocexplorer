@@ -98,10 +98,9 @@ func renderProcessEnvelope(envelope *types.Envelope) vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				Link(
+				NavLink(
 					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
 					util.IntToString(envelope.GetProcessHeight()),
-					"nav-link",
 				),
 			),
 			elem.Div(

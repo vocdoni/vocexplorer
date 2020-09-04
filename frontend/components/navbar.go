@@ -46,37 +46,37 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "active"),
 						),
-						Link("/", "Home", "nav-link"),
+						NavLink("/", "Home"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						Link("/vocdash", "Processes & Entities", "nav-link"),
+						NavLink("/vocdash", "Processes & Entities"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						Link("/blocktxs", "Blocks & Transactions", "nav-link"),
+						NavLink("/blocktxs", "Blocks & Transactions"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						Link("/validators", "Validators", "nav-link"),
+						NavLink("/validators", "Validators"),
 					),
 					// elem.ListItem(
 					// 	vecty.Markup(
 					// 		vecty.Class("nav-item", "dropdown"),
 					// 	),
-					// 	Link("/blocks", "Blocks", "nav-link"),
+					// 	NavLink("/blocks", "Blocks"),
 					// ),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						Link("/stats", "Stats", "nav-link"),
+						NavLink("/stats", "Stats"),
 					),
 				),
 				// &SearchBar{},
@@ -85,21 +85,29 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 	)
 }
 
+func NavLink(route, text string) *vecty.HTML {
+	return Link(route, text, "nav-link")
+}
+
 // Link renders a link which, when clicks, signals a redirect
 func Link(route, text, class string) *vecty.HTML {
-	if class == "" {
-		class = "nav-link"
+	attrs := []vecty.Applyer{
+		prop.Href(route),
+		event.Click(
+			func(e *vecty.Event) {
+				dispatcher.Dispatch(&actions.SignalRedirect{})
+				router.Redirect(route)
+			},
+		).PreventDefault(),
 	}
+
+	if class != "" {
+		attrs = append(attrs, vecty.Class(class))
+	}
+
 	return elem.Anchor(
 		vecty.Markup(
-			prop.Href(route),
-			vecty.Class(class),
-			event.Click(
-				func(e *vecty.Event) {
-					dispatcher.Dispatch(&actions.SignalRedirect{})
-					router.Redirect(route)
-				},
-			).PreventDefault(),
+			attrs...,
 		),
 		vecty.Text(text),
 	)
