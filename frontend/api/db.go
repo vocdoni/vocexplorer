@@ -147,9 +147,6 @@ func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 
 //GetBlockListByValidator returns a list of blocks with given proposer from the database
 func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.StoreBlock, bool) {
-	if i < config.ListSize {
-		i = config.ListSize
-	}
 	body, ok := request("/db/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))
 	if !ok {
 		return [config.ListSize]*types.StoreBlock{}, false
