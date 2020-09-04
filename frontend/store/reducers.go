@@ -5,8 +5,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
-// RegisterActions registers all storage actions
-func RegisterActions() {
+// Reduce registers all storage actions
+func Reduce() {
 	dispatcher.Register(blockActions)
 	dispatcher.Register(clientActions)
 	dispatcher.Register(configActions)
