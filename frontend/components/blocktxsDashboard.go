@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -76,14 +77,15 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 					break blockloop
 				}
 			}
+			log.Println("index: " + util.IntToString(i))
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			oldBlocks := store.Blocks.Count
 			newHeight, _ := api.GetBlockHeight()
-			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
+			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight)})
 			if i < 1 {
 				oldBlocks = store.Blocks.Count
 			}
-			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, config.ListSize))
+			updateBlocks(d, util.Max(oldBlocks-util.Max(store.Blocks.Pagination.Index, 1), 0))
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -113,7 +115,7 @@ func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
 	actions.UpdateCounts()
 	rpc.UpdateBlockchainStatus(store.TendermintClient)
 	if !store.Blocks.Pagination.DisableUpdate {
-		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, config.ListSize))
+		updateBlocks(d, util.Max(store.Blocks.Count-util.Max(store.Blocks.Pagination.Index, 1), 0))
 	}
 	if !store.Transactions.Pagination.DisableUpdate {
 		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, config.ListSize))
