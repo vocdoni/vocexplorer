@@ -44,7 +44,6 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 			// &LatestBlocksWidget{},
 			&BlockList{},
 			&TxList{},
-			&BlockchainInfo{},
 		)
 	}
 	return &bootstrap.Alert{

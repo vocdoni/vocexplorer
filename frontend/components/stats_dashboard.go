@@ -68,5 +68,6 @@ func updateStatsDashboard(d *StatsDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
+	update.DashboardInfo(store.GatewayClient)
 	update.BlockchainStatus(store.TendermintClient)
 }

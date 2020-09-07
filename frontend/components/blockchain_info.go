@@ -1,7 +1,8 @@
 package components
 
 import (
-	"github.com/dustin/go-humanize"
+	"time"
+
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -56,7 +57,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						elem.TableRow(
 							elem.TableHeader(vecty.Text("Latest block timestamp")),
 							elem.TableData(vecty.Text(
-								p.Sprintf(humanize.Time(store.Stats.BlockTimeStamp)),
+								p.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
 							)),
 						),
 						elem.TableRow(

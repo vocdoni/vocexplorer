@@ -39,7 +39,6 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		&ValidatorListView{},
-		&BlockchainInfo{},
 	)
 }
 
