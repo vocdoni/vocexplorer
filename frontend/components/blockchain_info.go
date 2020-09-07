@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -47,15 +48,21 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 							elem.TableData(vecty.Text(store.Stats.ResultStatus.NodeInfo.Version)),
 						),
 						elem.TableRow(
-							elem.TableHeader(vecty.Text("Block Height")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight),
-							)),
-						),
-						elem.TableRow(
 							elem.TableHeader(vecty.Text("Max block size")),
 							elem.TableData(vecty.Text(
 								p.Sprintf("%d", store.Stats.Genesis.ConsensusParams.Block.MaxBytes),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Latest block timestamp")),
+							elem.TableData(vecty.Text(
+								p.Sprintf(humanize.Time(store.Stats.BlockTimeStamp)),
+							)),
+						),
+						elem.TableRow(
+							elem.TableHeader(vecty.Text("Block height")),
+							elem.TableData(vecty.Text(
+								p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight),
 							)),
 						),
 						elem.TableRow(
