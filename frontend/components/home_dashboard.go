@@ -50,7 +50,7 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderHomeDashboard keeps the home dashboard data up to date
 func UpdateAndRenderHomeDashboard(d *DashboardView) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(util.Max(store.Config.RefreshTime, 1)) * time.Second)
 	updateHomeDashboardInfo(d)
 	for {

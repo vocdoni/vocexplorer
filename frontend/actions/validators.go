@@ -20,11 +20,6 @@ type SetValidatorCount struct {
 	Count int
 }
 
-// DisableValidatorUpdate is the action to set the disable update status for validators
-type DisableValidatorUpdate struct {
-	Disabled bool
-}
-
 // SetCurrentValidator is the action to set the currently displayed validator
 type SetCurrentValidator struct {
 	Validator *proto.Validator

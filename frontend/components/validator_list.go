@@ -2,19 +2,13 @@ package components
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/proto"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ValidatorListView is the validator list component
@@ -32,29 +26,12 @@ func (b *ValidatorListView) Render() vecty.ComponentOrHTML {
 			RefreshCh:       store.Validators.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
+			SearchCh:        store.Validators.Pagination.SearchChannel,
+			Searching:       &store.Validators.Pagination.Search,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderValidators(p, index)
-		}
-		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
-			return elem.Input(vecty.Markup(
-				event.Input(func(e *vecty.Event) {
-					search := e.Target.Get("value").String()
-					index, err := strconv.Atoi(e.Target.Get("value").String())
-					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
-						*self.CurrentPage = 0
-						dispatcher.Dispatch(&actions.DisableValidatorUpdate{Disabled: false})
-						self.RefreshCh <- *self.CurrentPage * config.ListSize
-					} else {
-						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						dispatcher.Dispatch(&actions.DisableValidatorUpdate{Disabled: true})
-						self.RefreshCh <- int(*self.TotalItems) - index
-					}
-					vecty.Rerender(self)
-				}),
-				prop.Placeholder("search validators"),
-			))
 		}
 
 		return elem.Section(

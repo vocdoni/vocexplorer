@@ -178,7 +178,7 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 
 // UpdateAndRenderProcessesDashboard keeps the data for the processes dashboard up-to-date
 func UpdateAndRenderProcessesDashboard(d *ProcessesDashboardView) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: 0})
 	dispatcher.Dispatch(&actions.ProcessEnvelopesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)

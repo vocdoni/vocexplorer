@@ -29,8 +29,3 @@ type SetCurrentEnvelope struct {
 type SetCurrentEnvelopeHeight struct {
 	Height int64
 }
-
-// DisableEnvelopeUpdate is the action to set the disable update status for envelopes
-type DisableEnvelopeUpdate struct {
-	Disabled bool
-}

@@ -53,8 +53,3 @@ type SetProcessHeights struct {
 type SetEntityProcessList struct {
 	ProcessList [config.ListSize]string
 }
-
-// DisableEntityUpdate is the action to set the disable update status for entities
-type DisableEntityUpdate struct {
-	Disabled bool
-}

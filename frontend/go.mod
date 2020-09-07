@@ -14,3 +14,5 @@ require (
 )
 
 replace gitlab.com/vocdoni/vocexplorer => ../
+
+replace gitlab.com/vocodni/vocexplorer/frontend => ./

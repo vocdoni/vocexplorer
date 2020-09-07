@@ -54,7 +54,7 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
 func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateBlockTxsDashboard(d)
@@ -85,6 +85,26 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 				oldBlocks = store.Blocks.Count
 			}
 			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
+
+		case search := <-store.Blocks.Pagination.SearchChannel:
+		blocksearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Blocks.Pagination.SearchChannel:
+				default:
+					break blocksearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
+			list, ok := api.GetBlockSearch(search)
+			if ok {
+				reverseBlockList(&list)
+				dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
+			}
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {

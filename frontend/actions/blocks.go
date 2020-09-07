@@ -40,8 +40,3 @@ type SetCurrentBlockHeight struct {
 type SetCurrentBlockTxHeights struct {
 	Heights []int64
 }
-
-// DisableBlockUpdate is the action to set the disable update status for blocks
-type DisableBlockUpdate struct {
-	Disabled bool
-}

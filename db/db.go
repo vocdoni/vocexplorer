@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -692,6 +693,30 @@ func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 		height--
 	}
 	return hashList
+}
+
+// SearchItems returns a list of items given search term, starting with given prefix
+func SearchItems(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
+	if max > 64 {
+		max = 64
+	}
+
+	var itemList [][]byte
+	iter := d.NewIterator().(*dvotedb.BadgerIterator)
+	// dvote badgerdb iterator has bug: rewind() on first Seek call rewinds to start of db
+	iter.Seek(prefix)
+	iter.Next()
+	for iter.Seek(prefix); bytes.HasPrefix(iter.Key(), prefix); iter.Next() {
+		if max < 1 {
+			break
+		}
+		if bytes.Contains(iter.Key(), term) {
+			itemList = append(itemList, iter.Value())
+			max--
+		}
+	}
+	iter.Release()
+	return itemList
 }
 
 func startGateway(host string) (*api.GatewayClient, *context.CancelFunc, bool) {

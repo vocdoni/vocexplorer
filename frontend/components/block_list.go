@@ -2,19 +2,13 @@ package components
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/proto"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // BlockList is the block list component
@@ -32,29 +26,12 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 			RefreshCh:       store.Blocks.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Blocks.Pagination.DisableUpdate,
+			SearchCh:        store.Blocks.Pagination.SearchChannel,
+			Searching:       &store.Blocks.Pagination.Search,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderBlocks(p, index)
-		}
-		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
-			return elem.Input(vecty.Markup(
-				event.Input(func(e *vecty.Event) {
-					search := e.Target.Get("value").String()
-					index, err := strconv.Atoi(e.Target.Get("value").String())
-					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
-						*self.CurrentPage = 0
-						dispatcher.Dispatch(&actions.DisableBlockUpdate{Disabled: false})
-						self.RefreshCh <- *self.CurrentPage * config.ListSize
-					} else {
-						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						dispatcher.Dispatch(&actions.DisableBlockUpdate{Disabled: true})
-						self.RefreshCh <- int(*self.TotalItems) - index
-					}
-					vecty.Rerender(self)
-				}),
-				prop.Placeholder("search blocks"),
-			))
 		}
 
 		return elem.Section(
@@ -85,6 +62,9 @@ func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 		))
 	}
 	if len(blockList) == 0 {
+		if *p.Searching {
+			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
+		}
 		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

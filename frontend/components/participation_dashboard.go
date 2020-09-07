@@ -77,7 +77,7 @@ func (dash *ParticipationDashboardView) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderParticipationDashboard continuously updates the information needed by the participation dashboard
 func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateParticipation(d)

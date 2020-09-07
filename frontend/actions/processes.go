@@ -54,11 +54,6 @@ type SetProcessKeys struct {
 	ID   string
 }
 
-// DisableProcessUpdate is the action to set the disable update status for processes
-type DisableProcessUpdate struct {
-	Disabled bool
-}
-
 // SetProcessState is the action to set the current process state
 type SetProcessState struct {
 	State string

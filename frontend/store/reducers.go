@@ -17,6 +17,7 @@ func Reduce() {
 	dispatcher.Register(processActions)
 	dispatcher.Register(envelopeActions)
 	dispatcher.Register(entityActions)
+	dispatcher.Register(disableUpdateActions)
 }
 
 // configActions is the handler for all config-related actions
@@ -62,9 +63,6 @@ func entityActions(action interface{}) {
 	case *actions.SetEntityProcessList:
 		Entities.CurrentEntity.ProcessIDs = a.ProcessList
 
-	case *actions.DisableEntityUpdate:
-		Entities.Pagination.DisableUpdate = a.Disabled
-
 	case *actions.SetEntityProcessCount:
 		Entities.CurrentEntity.ProcessCount = a.Count
 
@@ -92,9 +90,6 @@ func envelopeActions(action interface{}) {
 
 	case *actions.SetCurrentEnvelopeHeight:
 		Envelopes.CurrentEnvelopeHeight = a.Height
-
-	case *actions.DisableEnvelopeUpdate:
-		Envelopes.Pagination.DisableUpdate = a.Disabled
 
 	default:
 		return // don't fire listeners
@@ -132,9 +127,6 @@ func processActions(action interface{}) {
 
 	case *actions.SetProcessKeys:
 		Processes.ProcessKeys[a.ID] = a.Keys
-
-	case *actions.DisableProcessUpdate:
-		Processes.Pagination.DisableUpdate = a.Disabled
 
 	case *actions.SetProcessState:
 		Processes.CurrentProcess.State = a.State
@@ -214,9 +206,6 @@ func transactionActions(action interface{}) {
 	case *actions.SetTransactionCount:
 		Transactions.Count = a.Count
 
-	case *actions.DisableTransactionsUpdate:
-		Transactions.Pagination.DisableUpdate = a.Disabled
-
 	case *actions.SetCurrentTransactionHeight:
 		Transactions.CurrentTransactionHeight = a.Height
 
@@ -247,9 +236,6 @@ func validatorActions(action interface{}) {
 
 	case *actions.SetValidatorCount:
 		Validators.Count = a.Count
-
-	case *actions.DisableValidatorUpdate:
-		Validators.Pagination.DisableUpdate = a.Disabled
 
 	case *actions.SetCurrentValidator:
 		Validators.CurrentValidator = a.Validator
@@ -316,11 +302,24 @@ func blockActions(action interface{}) {
 	case *actions.SetCurrentBlockTxHeights:
 		Blocks.CurrentBlockTxHeights = a.Heights
 
-	case *actions.DisableBlockUpdate:
-		Blocks.Pagination.DisableUpdate = a.Disabled
 	default:
 		return // don't fire listeners
 	}
 
 	Listeners.Fire()
+}
+
+func disableUpdateActions(action interface{}) {
+	switch a := action.(type) {
+	case *actions.DisableUpdate:
+		*a.Updater = a.Disabled
+
+	case *actions.EnableAllUpdates:
+		Blocks.Pagination.DisableUpdate = false
+		Entities.Pagination.DisableUpdate = false
+		Envelopes.Pagination.DisableUpdate = false
+		Transactions.Pagination.DisableUpdate = false
+		Validators.Pagination.DisableUpdate = false
+		Processes.Pagination.DisableUpdate = false
+	}
 }

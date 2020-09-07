@@ -173,7 +173,9 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
 			RefreshCh:       store.Validators.Pagination.PagChannel,
-			RenderSearchBar: false,
+			SearchCh:        store.Validators.Pagination.SearchChannel,
+			Searching:       &store.Validators.Pagination.Search,
+			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderValidatorBlocks(store.Validators.CurrentBlockList)

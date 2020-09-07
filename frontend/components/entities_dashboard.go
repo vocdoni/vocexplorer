@@ -101,7 +101,7 @@ func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
 
 // UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
 func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
 	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)

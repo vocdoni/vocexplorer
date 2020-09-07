@@ -96,7 +96,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 
 // UpdateAndRenderBlockContents keeps the block contents up to date
 func UpdateAndRenderBlockContents(d *BlockContents) {
-	actions.EnableUpdates()
+	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
 	block := api.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})

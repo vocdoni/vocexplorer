@@ -59,6 +59,20 @@ func init() {
 	Transactions.Pagination.PagChannel = make(chan int, 50)
 	Validators.Pagination.PagChannel = make(chan int, 50)
 
+	Entities.Pagination.SearchChannel = make(chan string, 50)
+	Processes.Pagination.SearchChannel = make(chan string, 50)
+	Envelopes.Pagination.SearchChannel = make(chan string, 50)
+	Blocks.Pagination.SearchChannel = make(chan string, 50)
+	Transactions.Pagination.SearchChannel = make(chan string, 50)
+	Validators.Pagination.SearchChannel = make(chan string, 50)
+
+	Entities.Pagination.Search = false
+	Processes.Pagination.Search = false
+	Envelopes.Pagination.Search = false
+	Blocks.Pagination.Search = false
+	Transactions.Pagination.Search = false
+	Validators.Pagination.Search = false
+
 	Processes.ProcessResults = make(map[string]storeutil.Process)
 	Processes.ProcessKeys = make(map[string]*api.Pkeys)
 	Processes.EnvelopeHeights = make(map[string]int64)

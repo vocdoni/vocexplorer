@@ -193,6 +193,31 @@ func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 	return blockList, true
 }
 
+//GetBlockSearch returns a list of blocks from the database according to the search term
+func GetBlockSearch(term string) ([config.ListSize]*types.StoreBlock, bool) {
+	body, ok := request("/api/blocksearch/?term=" + term)
+	if !ok {
+		return [config.ListSize]*types.StoreBlock{}, false
+	}
+	var rawBlockList types.ItemList
+	err := proto.Unmarshal(body, &rawBlockList)
+	if err != nil {
+		log.Error(err)
+	}
+	var blockList [config.ListSize]*types.StoreBlock
+	for i, rawBlock := range rawBlockList.GetItems() {
+		if len(rawBlock) > 0 {
+			var block types.StoreBlock
+			err = proto.Unmarshal(rawBlock, &block)
+			blockList[i] = &block
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}
+	return blockList, true
+}
+
 //GetBlockListByValidator returns a list of blocks with given proposer from the database
 func GetBlockListByValidator(i int, proposer []byte) ([config.ListSize]*types.StoreBlock, bool) {
 	body, ok := request("/api/listblocksvalidator/?from=" + util.IntToString(i) + "&proposer=" + util.HexToString(proposer))

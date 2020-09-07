@@ -249,6 +249,58 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 	}
 }
 
+func buildSearchHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byte) ([]byte, error)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		terms, ok := r.URL.Query()["term"]
+		if !ok || len(terms[0]) < 1 {
+			log.Errorf("Url Param 'term' is missing")
+			http.Error(w, "Url Param 'term' missing", http.StatusBadRequest)
+			return
+		}
+		searchTerm := terms[0]
+		odd := false
+		if len(searchTerm)%2 != 0 {
+			searchTerm += "0"
+			odd = true
+		}
+		term, err := hex.DecodeString(searchTerm)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to decode search term", http.StatusBadRequest)
+		}
+		if odd == true {
+			term = term[:len(term)-1]
+		}
+		items := vocdb.SearchItems(db, config.ListSize, term, []byte(key))
+		if len(items) == 0 {
+			log.Error("Retrieved no items")
+			http.Error(w, "No items available", http.StatusInternalServerError)
+			return
+		}
+		var itemList ptypes.ItemList
+		for _, rawItem := range items {
+			if getItem != nil {
+				rawItem, err = getItem(rawItem)
+				if err != nil {
+					log.Error(err)
+					http.Error(w, "item not found", http.StatusInternalServerError)
+					return
+				}
+			}
+			itemList.Items = append(itemList.GetItems(), rawItem)
+		}
+
+		msg, err := proto.Marshal(&itemList)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
+			return
+		}
+		w.Write(msg)
+		log.Debugf("Sent %d items", len(itemList.GetItems()))
+	}
+}
+
 func buildListItemsByParent(db *dvotedb.BadgerDB, parentName, heightMapKey, getHeightPrefix, itemPrefix string, marshalHeight bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
@@ -660,4 +712,12 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 		w.Write(raw)
 
 	}
+}
+
+// SearchBlocksHandler writes a list of blocks by search term
+func SearchBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.BlockHashPrefix,
+		nil,
+	)
 }

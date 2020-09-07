@@ -32,31 +32,31 @@ const (
 	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
 	DBWaitTime = 0
 	//ProcessIDPrefix is the key prefix for process id's by height
-	ProcessIDPrefix = "00"
+	ProcessIDPrefix = "ph_"
 	//EntityIDPrefix is the key prefix for entity id's by height
-	EntityIDPrefix = "01"
+	EntityIDPrefix = "eh_"
 	//BlockHeightPrefix is the key prefix for block hashes by height
-	BlockHeightPrefix = "02"
+	BlockHeightPrefix = "bh_"
 	//BlockHashPrefix is the key prefix for blocks by hash
-	BlockHashPrefix = "03"
+	BlockHashPrefix = "bid"
 	//TxHeightPrefix is the key prefix for transaction hashes by height
-	TxHeightPrefix = "04"
+	TxHeightPrefix = "th_"
 	//TxHashPrefix is the key prefix for transactions by hash
-	TxHashPrefix = "05"
+	TxHashPrefix = "tid"
 	//ValidatorPrefix is the key prefix for validators by address
-	ValidatorPrefix = "06"
+	ValidatorPrefix = "vid"
 	//EnvPackagePrefix is the key prefix for envelope packages by height
-	EnvPackagePrefix = "07"
+	EnvPackagePrefix = "evh"
 	//EnvNullifierPrefix is the key prefix for envelope heights by nullifier
-	EnvNullifierPrefix = "08"
+	EnvNullifierPrefix = "evi"
 	//EnvPIDPrefix is the key prefix for envelope heights by processID
-	EnvPIDPrefix = "09"
+	EnvPIDPrefix = "evp"
 	//BlockByValidatorPrefix is the key prefix for block hash by validator
-	BlockByValidatorPrefix = "10"
+	BlockByValidatorPrefix = "bv_"
 	//ProcessByEntityPrefix is the key prefix for process heights by entity process height
-	ProcessByEntityPrefix = "11"
+	ProcessByEntityPrefix = "pe_"
 	//ValidatorHeightPrefix is the key prefix for validator IDs by height
-	ValidatorHeightPrefix = "12"
+	ValidatorHeightPrefix = "vh_"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored

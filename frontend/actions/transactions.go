@@ -26,11 +26,6 @@ type SetTransactionCount struct {
 	Count int
 }
 
-// DisableTransactionsUpdate is the action to set the disable update status for transactions
-type DisableTransactionsUpdate struct {
-	Disabled bool
-}
-
 // SetCurrentTransactionHeight is the action to set the height of the current transaction
 type SetCurrentTransactionHeight struct {
 	Height int64

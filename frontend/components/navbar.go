@@ -85,6 +85,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 	)
 }
 
+// NavLink generates a Link with nav-link styling
 func NavLink(route, text string) *vecty.HTML {
 	return Link(route, text, "nav-link")
 }

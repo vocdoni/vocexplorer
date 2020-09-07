@@ -5,6 +5,16 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
+// DisableUpdate is the action to set the disable update status for given disableupdate boolean
+type DisableUpdate struct {
+	Updater  *bool
+	Disabled bool
+}
+
+// EnableAllUpdates is the action to set all disable updates bools to false
+type EnableAllUpdates struct {
+}
+
 // UpdateCounts updates the values of all item counts (eg. validator count)
 func UpdateCounts() {
 	newVal, ok := api.GetBlockHeight()
@@ -33,13 +43,4 @@ func UpdateCounts() {
 	if ok {
 		dispatcher.Dispatch(&SetValidatorCount{Count: int(newVal)})
 	}
-}
-
-// EnableUpdates resets all components' 'disable update' flags
-func EnableUpdates() {
-	dispatcher.Dispatch(&DisableBlockUpdate{Disabled: false})
-	dispatcher.Dispatch(&DisableEntityUpdate{Disabled: false})
-	dispatcher.Dispatch(&DisableEnvelopeUpdate{Disabled: false})
-	dispatcher.Dispatch(&DisableTransactionsUpdate{Disabled: false})
-	dispatcher.Dispatch(&DisableValidatorUpdate{Disabled: false})
 }

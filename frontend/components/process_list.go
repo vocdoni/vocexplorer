@@ -2,18 +2,12 @@ package components
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
-	"github.com/gopherjs/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessListView renders the process list pane
@@ -31,29 +25,12 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 			RefreshCh:       store.Processes.Pagination.PagChannel,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
+			SearchCh:        store.Processes.Pagination.SearchChannel,
+			Searching:       &store.Processes.Pagination.Search,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderProcessItems()...)
-		}
-		p.SearchBar = func(self *Pagination) vecty.ComponentOrHTML {
-			return elem.Input(vecty.Markup(
-				event.Input(func(e *vecty.Event) {
-					search := e.Target.Get("value").String()
-					index, err := strconv.Atoi(e.Target.Get("value").String())
-					if err != nil || index < 0 || index > int(*self.TotalItems) || search == "" {
-						*self.CurrentPage = 0
-						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: false})
-						self.RefreshCh <- *self.CurrentPage * config.ListSize
-					} else {
-						*self.CurrentPage = util.Max(int(*self.TotalItems)-index-1, 0) / config.ListSize
-						dispatcher.Dispatch(&actions.DisableProcessUpdate{Disabled: true})
-						self.RefreshCh <- int(*self.TotalItems) - index
-					}
-					vecty.Rerender(self)
-				}),
-				prop.Placeholder("search processes"),
-			))
 		}
 		return p
 	}
