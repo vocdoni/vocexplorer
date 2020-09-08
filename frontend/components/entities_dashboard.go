@@ -105,7 +105,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
 	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
@@ -158,7 +158,7 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 
 func updateEntityProcesses(d *EntitiesDashboardView, index int) {
 	index--
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)

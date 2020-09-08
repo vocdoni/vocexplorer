@@ -66,7 +66,7 @@ func UpdateAndRenderHomeDashboard(d *DashboardView) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	update.BlockchainStatus(store.TendermintClient)

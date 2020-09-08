@@ -37,7 +37,7 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
-func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket string) {
+func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	exit = make(chan struct{}, 100)
 
 	// Init height keys
@@ -47,13 +47,13 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket stri
 	if err != nil {
 		log.Error(err)
 	}
-	batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
 	batch.Put([]byte(config.LatestTxHeightKey), encHeight)
 	zeroHeight.Height = 0
 	encHeight, err = proto.Marshal(&zeroHeight)
 	if err != nil {
 		log.Error(err)
 	}
+	batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
 	batch.Put([]byte(config.LatestEntityCountKey), encHeight)
 	batch.Put([]byte(config.LatestEnvelopeCountKey), encHeight)
 	batch.Put([]byte(config.LatestProcessCountKey), encHeight)
@@ -66,17 +66,17 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket stri
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
-	log.Debugf("Connected to " + tmHost)
+	log.Info("Connected to " + tmHost)
 
 	// Init gateway client
-	gwClient, cancel, up := startGateway(gwHost, gwSocket)
+	gwClient, cancel, up := startGateway(gwHost)
 	if !up {
 		log.Warn("Cannot connect to gateway api. Running as detached database")
 		*detached = true
 		return
 	}
 	defer (*cancel)()
-	log.Debugf("Connected to " + gwHost)
+	log.Info("Connected to " + gwHost)
 
 	i := 0
 	for {
@@ -100,7 +100,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket stri
 }
 
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
-	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
+	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 0)
 	latestValidatorCount := GetHeight(d, config.LatestValidatorCountKey, 0)
 	batch := d.NewBatch()
 	fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight(), c, batch)
@@ -682,23 +682,13 @@ func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 	return hashList
 }
 
-func startGateway(host, socket string) (*api.GatewayClient, *context.CancelFunc, bool) {
-	ping := api.PingGateway(host)
-	if !ping {
-		log.Warn("Gateway Client is not running. Running as detached database")
-		return nil, nil, false
-	}
-	for i := 0; ; i++ {
-		if i > 20 {
-			return nil, nil, false
-		}
-		gwClient, cancel := api.InitGateway("http://" + host + socket)
-		if gwClient == nil {
-			time.Sleep(5 * time.Second)
-			continue
-		} else {
-			return gwClient, &cancel, true
-		}
+func startGateway(host string) (*api.GatewayClient, *context.CancelFunc, bool) {
+	gwClient, cancel := api.InitGateway(host)
+	if gwClient == nil {
+		return nil, &cancel, false
+
+	} else {
+		return gwClient, &cancel, true
 	}
 }
 
@@ -708,7 +698,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 		if i > 20 {
 			return nil, false
 		}
-		tmClient := api.StartTendermintClient("http://" + host)
+		tmClient := api.StartTendermintClient(host)
 		if tmClient == nil {
 			time.Sleep(1 * time.Second)
 			continue

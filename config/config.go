@@ -6,8 +6,6 @@ type Cfg struct {
 	Detached bool `json:"detached"`
 	// GatewayHost is gateway websockets url
 	GatewayHost string `json:"gatewayHost"`
-	// GatewaySocket is gateway websockets socket label
-	GatewaySocket string `json:"gatewaySocket"`
 	// TendermintHost is tendermint api url
 	TendermintHost string `json:"tendermintHost"`
 	// RefreshTime is the number of seconds between page data refresh

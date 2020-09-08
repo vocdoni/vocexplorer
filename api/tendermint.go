@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	gohttp "net/http"
 	"time"
 
@@ -14,10 +13,10 @@ import (
 
 // StartTendermintClient initializes an http tendermint api client on websockets
 func StartTendermintClient(host string) *http.HTTP {
-	fmt.Println("connecting to " + host)
+	log.Infof("connecting to %s", host)
 	tClient, err := initClient(host)
 	if err != nil {
-		log.Error(err)
+		log.Warn(err.Error())
 		return nil
 	}
 	return tClient

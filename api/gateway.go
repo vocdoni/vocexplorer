@@ -1,10 +1,7 @@
 package api
 
 import (
-	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"strings"
 
 	"context"
 	"encoding/json"
@@ -19,7 +16,7 @@ import (
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
-	fmt.Printf("connecting to %s\n", host)
+	log.Infof("connecting to %s\n", host)
 	gwClient, cancel, err := New(host)
 	if err != nil {
 		log.Error(err)
@@ -48,36 +45,21 @@ func New(addr string) (*GatewayClient, context.CancelFunc, error) {
 	return &GatewayClient{Addr: addr, Conn: conn, Ctx: ctx}, cancel, nil
 }
 
-// PingGateway pings the gateway host
-func PingGateway(host string) bool {
-	if strings.HasPrefix(host, "ws://") {
-		host = host[5:]
+// Ping pings the gateway host
+func (c *GatewayClient) Ping() bool {
+	var req MetaRequest
+	req.Method = "getGatewayInfo"
+	req.Timestamp = int32(time.Now().Unix())
+
+	resp, err := c.Request(req)
+	if err != nil {
+		log.Error(err)
+		return false
 	}
-	pingClient := http.Client{
-		Timeout: 5 * time.Second,
+	if !resp.Ok {
+		return false
 	}
-	for i := 0; ; i++ {
-		if i > 10 {
-			return false
-		}
-		resp, err := pingClient.Get("http://" + host + "/ping")
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Debug(err.Error())
-			time.Sleep(time.Second)
-			continue
-		}
-		if string(body) != "pong" {
-			log.Warn("Gateway ping not yet available")
-		} else {
-			return true
-		}
-	}
+	return true
 }
 
 // GatewayClient holds an API websocket api.

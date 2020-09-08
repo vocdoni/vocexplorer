@@ -38,7 +38,7 @@ func initFrontend() {
 	}
 	// Wait for store.Config to populate
 	i := 0
-	for ; store.Config.GatewayHost == "" && store.Config.GatewaySocket == "" && store.Config.RefreshTime == 0; i++ {
+	for ; store.Config.GatewayHost == "" && store.Config.RefreshTime == 0; i++ {
 		if i > 50 {
 			log.Fatal("Config could not be stored")
 		}
@@ -55,7 +55,7 @@ func initClients(cfg *config.Cfg) {
 		log.Error("Cannot connect to tendermint api")
 	}
 	for i := 0; i < 5 && gw == nil; i++ {
-		gw, _ = api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+		gw, _ = api.InitGateway(cfg.GatewayHost)
 	}
 	if gw == nil {
 		log.Error("Cannot connect to gateway api")

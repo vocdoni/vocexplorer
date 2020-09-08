@@ -28,10 +28,9 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.GatewayHost = *flag.String("gatewayHost", "0.0.0.0:9090", "gateway API host to connect to")
-	cfg.Global.GatewaySocket = *flag.String("gatewaySocket", "/dvote", "gateway API host socket to connect to")
-	cfg.Global.TendermintHost = *flag.String("tendermintHost", "0.0.0.0:26657", "gateway API host to connect to")
-	cfg.Global.RefreshTime = *flag.Int("refreshTime", 5, "Number of seconds between each content refresh")
+	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
+	cfg.Global.TendermintHost = *flag.String("tendermintHost", "http://0.0.0.0:26657", "gateway API host to connect to")
+	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
 	cfg.Global.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
@@ -56,7 +55,6 @@ func newConfig() (*config.MainCfg, error) {
 
 	viper.BindPFlag("global.detached", flag.Lookup("detached"))
 	viper.BindPFlag("global.gatewayHost", flag.Lookup("gatewayHost"))
-	viper.BindPFlag("global.gatewaySocket", flag.Lookup("gatewaySocket"))
 	viper.BindPFlag("global.tendermintHost", flag.Lookup("tendermintHost"))
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
@@ -97,7 +95,6 @@ func main() {
 	if cfg == nil {
 		log.Fatal("cannot read configuration")
 	}
-
 	if err != nil {
 		log.Error(err)
 	}
@@ -124,7 +121,7 @@ func main() {
 				log.Error(err)
 				cfg.Global.Detached = true
 			} else {
-				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost, cfg.Global.GatewaySocket)
+				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost)
 			}
 		}
 	}
@@ -137,28 +134,9 @@ func main() {
 	}
 
 	//Convert host url to localhost if using internal docker network
-	if strings.Contains(cfg.Global.GatewayHost, "dvotenode") {
-		sub := strings.Split(cfg.Global.GatewayHost, ":")
-		port := "9090"
-		if len(sub) < 1 {
-			port = sub[1][:4]
-		}
-		cfg.Global.GatewayHost = "ws://localhost:" + port
-	} else {
-		cfg.Global.GatewayHost = "ws://" + cfg.Global.GatewayHost
-	}
+	cfg.Global.GatewayHost = strings.Replace(cfg.Global.GatewayHost, "dvotenode", "localhost", 1)
+	cfg.Global.TendermintHost = strings.Replace(cfg.Global.TendermintHost, "dvotenode", "localhost", 1)
 
-	//Convert host url to localhost if using internal docker network
-	if strings.Contains(cfg.Global.TendermintHost, "dvotenode") {
-		sub := strings.Split(cfg.Global.TendermintHost, ":")
-		port := "26657"
-		if len(sub) < 1 {
-			port = sub[1]
-		}
-		cfg.Global.TendermintHost = "http://localhost:" + port
-	} else {
-		cfg.Global.TendermintHost = "http://" + cfg.Global.TendermintHost
-	}
 	urlR, err := url.Parse(cfg.HostURL)
 	if err != nil {
 		log.Error(err)

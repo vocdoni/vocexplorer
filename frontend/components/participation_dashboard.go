@@ -162,7 +162,7 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 }
 
 func updateParticipation(d *ParticipationDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: api.PingGateway(store.Config.GatewayHost)})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {

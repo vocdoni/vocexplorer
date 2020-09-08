@@ -48,7 +48,7 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 				stats.ChainID = genesis.ChainID
 			}
 
-			gw, cancel := api.InitGateway(cfg.GatewayHost + cfg.GatewaySocket)
+			gw, cancel := api.InitGateway(cfg.GatewayHost)
 			defer cancel()
 			apiList, health, err := gw.GetGatewayInfo()
 			if err != nil {
