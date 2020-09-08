@@ -133,7 +133,7 @@ func HeightMapHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.
 		}
 		val, err := db.Get([]byte(keys[0]))
 		if err != nil {
-			log.Error(err)
+			log.Error("Key %s not found: %s", keys[0], err.Error())
 			http.Error(w, "Key not found", http.StatusInternalServerError)
 			return
 		}

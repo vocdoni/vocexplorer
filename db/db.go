@@ -39,6 +39,27 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
 func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost, gwSocket string) {
 	exit = make(chan struct{}, 100)
+
+	// Init height keys
+	batch := d.NewBatch()
+	zeroHeight := voctypes.Height{Height: 1}
+	encHeight, err := proto.Marshal(&zeroHeight)
+	if err != nil {
+		log.Error(err)
+	}
+	batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
+	batch.Put([]byte(config.LatestTxHeightKey), encHeight)
+	zeroHeight.Height = 0
+	encHeight, err = proto.Marshal(&zeroHeight)
+	if err != nil {
+		log.Error(err)
+	}
+	batch.Put([]byte(config.LatestEntityCountKey), encHeight)
+	batch.Put([]byte(config.LatestEnvelopeCountKey), encHeight)
+	batch.Put([]byte(config.LatestProcessCountKey), encHeight)
+	batch.Put([]byte(config.LatestValidatorCountKey), encHeight)
+	batch.Write()
+
 	// Init tendermint client
 	tClient, ok := StartTendermint(tmHost)
 	if !ok {

@@ -72,7 +72,7 @@ func updateHomeDashboardInfo(d *DashboardView) {
 	update.BlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)
 	actions.UpdateCounts()
-	updateHomeBlocks(d, util.Max(store.Blocks.Count-1, config.HomeWidgetBlocksListSize))
+	updateHomeBlocks(d, util.Max(store.Blocks.Count, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {
