@@ -707,16 +707,19 @@ func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 }
 
 // SearchItems returns a list of items given search term, starting with given prefix
-func SearchItems(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
+func SearchItems(d *dvotedb.BadgerDB, max int, term string, prefix []byte) [][]byte {
+	// func SearchItems(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
 	return searchIter(d, max, term, prefix, false)
 }
 
 // SearchKeys returns a list of key values including the search term, starting with the given prefix
-func SearchKeys(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
+func SearchKeys(d *dvotedb.BadgerDB, max int, term string, prefix []byte) [][]byte {
+	// func SearchKeys(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
 	return searchIter(d, max, term, prefix, true)
 }
 
-func searchIter(d *dvotedb.BadgerDB, max int, term, prefix []byte, getKey bool) [][]byte {
+func searchIter(d *dvotedb.BadgerDB, max int, term string, prefix []byte, getKey bool) [][]byte {
+	// func searchIter(d *dvotedb.BadgerDB, max int, term, prefix []byte, getKey bool) [][]byte {
 	if max > 64 {
 		max = 64
 	}
@@ -730,7 +733,10 @@ func searchIter(d *dvotedb.BadgerDB, max int, term, prefix []byte, getKey bool) 
 		if max < 1 {
 			break
 		}
-		if bytes.Contains(iter.Key(), term) {
+		// Converting each key to string is a Non-ideal solution. Without converting to string, we cannot analyze each character because each hex byte represents two characters. Alternative would be to decode hex byte array to byte array (one byte per character), but this may be no faster.
+		keyString := hex.EncodeToString(iter.Key())
+		if strings.Contains(keyString, term) {
+			// if bytes.Contains(iter.Key(), term) {
 			if getKey {
 				// Append key, cutting off the prefix bytes
 				// Safe-copy of key
