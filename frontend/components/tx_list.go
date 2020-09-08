@@ -56,11 +56,9 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 
 func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
-	fmt.Printf("%+v\n\n", store.Transactions.Transactions)
 
 	for i := len(store.Transactions.Transactions) - 1; i >= len(store.Transactions.Transactions)-p.ListSize; i-- {
 		if proto.TxIsEmpty(store.Transactions.Transactions[i]) {
-			fmt.Printf("tx %d empty", i)
 			continue
 		}
 		txList = append(txList, renderTx(store.Transactions.Transactions[i]))

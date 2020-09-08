@@ -259,24 +259,29 @@ func buildSearchHandler(db *dvotedb.BadgerDB, key string, getKey bool, getItem f
 			return
 		}
 		searchTerm := strings.ToLower(terms[0])
-		odd := false
-		if len(searchTerm)%2 != 0 {
-			searchTerm += "0"
-			odd = true
-		}
-		term, err := hex.DecodeString(searchTerm)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, "Unable to decode search term", http.StatusBadRequest)
-		}
-		if odd == true {
-			term = term[:len(term)-1]
-		}
+		// odd := false
+		// if len(searchTerm)%2 != 0 {
+		// 	searchTerm += "0"
+		// 	odd = true
+		// }
+		// term, err := hex.DecodeString(searchTerm)
+		// if err != nil {
+		// 	log.Error(err)
+		// 	http.Error(w, "Unable to decode search term", http.StatusBadRequest)
+		// }
+		// if odd == true {
+		// 	term = term[:len(term)-1]
+		// }
+
+		var err error
+
 		var items [][]byte
 		if getKey {
-			items = vocdb.SearchKeys(db, config.ListSize, term, []byte(key))
+			items = vocdb.SearchKeys(db, config.ListSize, searchTerm, []byte(key))
+			// items = vocdb.SearchKeys(db, config.ListSize, term, []byte(key))
 		} else {
-			items = vocdb.SearchItems(db, config.ListSize, term, []byte(key))
+			items = vocdb.SearchItems(db, config.ListSize, searchTerm, []byte(key))
+			// items = vocdb.SearchItems(db, config.ListSize, term, []byte(key))
 		}
 		if len(items) == 0 {
 			log.Error("Retrieved no items")
@@ -733,8 +738,28 @@ func SearchBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 func SearchTransactionsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return buildSearchHandler(db,
 		config.TxHashPrefix,
-		false,
-		nil,
+		true,
+		func(hash []byte) ([]byte, error) {
+			log.Debugf("Hash found: %X", hash)
+			rawTx, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
+			if err != nil {
+				return []byte{}, err
+			}
+			var tx ptypes.StoreTx
+			err = proto.Unmarshal(rawTx, &tx)
+			if err != nil {
+				return []byte{}, err
+			}
+			send := ptypes.SendTx{
+				Hash:  hash,
+				Store: &tx,
+			}
+			rawSend, err := proto.Marshal(&send)
+			if err != nil {
+				return []byte{}, err
+			}
+			return rawSend, nil
+		},
 	)
 }
 

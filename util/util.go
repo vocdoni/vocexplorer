@@ -129,5 +129,5 @@ func StripHexString(str string) string {
 
 //HexToString converts an array of hexbytes to a string
 func HexToString(bytes []byte) string {
-	return strings.ToUpper(hex.EncodeToString(bytes))
+	return strings.ToLower(hex.EncodeToString(bytes))
 }
