@@ -178,7 +178,7 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderValidatorBlocks(store.Validators.CurrentBlockList)
+			return renderValidatorBlocks(p, store.Validators.CurrentBlockList)
 		}
 
 		return elem.Div(
@@ -192,7 +192,7 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 	return elem.Div(elem.Heading5(vecty.Text("No blocks validated")))
 }
 
-func renderValidatorBlocks(blocks [config.ListSize]*proto.StoreBlock) vecty.ComponentOrHTML {
+func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBlock) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	empty := config.ListSize
@@ -205,6 +205,9 @@ func renderValidatorBlocks(blocks [config.ListSize]*proto.StoreBlock) vecty.Comp
 		}
 	}
 	if empty == 0 {
+		if *p.Searching {
+			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
+		}
 		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

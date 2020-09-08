@@ -195,27 +195,80 @@ func GetBlockList(i int) ([config.ListSize]*types.StoreBlock, bool) {
 
 //GetBlockSearch returns a list of blocks from the database according to the search term
 func GetBlockSearch(term string) ([config.ListSize]*types.StoreBlock, bool) {
-	body, ok := request("/api/blocksearch/?term=" + term)
+	itemList, ok := getItemList(&types.StoreBlock{}, "/api/blocksearch/?term="+term)
 	if !ok {
 		return [config.ListSize]*types.StoreBlock{}, false
 	}
-	var rawBlockList types.ItemList
-	err := proto.Unmarshal(body, &rawBlockList)
-	if err != nil {
-		log.Error(err)
+	list, ok := itemList.([config.ListSize]*types.StoreBlock)
+	if !ok {
+		return [config.ListSize]*types.StoreBlock{}, false
 	}
-	var blockList [config.ListSize]*types.StoreBlock
-	for i, rawBlock := range rawBlockList.GetItems() {
-		if len(rawBlock) > 0 {
-			var block types.StoreBlock
-			err = proto.Unmarshal(rawBlock, &block)
-			blockList[i] = &block
-			if err != nil {
-				log.Error(err)
-			}
-		}
+	return list, true
+}
+
+//GetTransactionSearch returns a list of transactions from the database according to the search term
+func GetTransactionSearch(term string) ([config.ListSize]*types.SendTx, bool) {
+	itemList, ok := getItemList(&types.SendTx{}, "/api/transactionsearch/?term="+term)
+	if !ok {
+		return [config.ListSize]*types.SendTx{}, false
 	}
-	return blockList, true
+	list, ok := itemList.([config.ListSize]*types.SendTx)
+	if !ok {
+		return [config.ListSize]*types.SendTx{}, false
+	}
+	return list, true
+}
+
+//GetEnvelopeSearch returns a list of envelopes from the database according to the search term
+func GetEnvelopeSearch(term string) ([config.ListSize]*types.Envelope, bool) {
+	itemList, ok := getItemList(&types.Envelope{}, "/api/envelopesearch/?term="+term)
+	if !ok {
+		return [config.ListSize]*types.Envelope{}, false
+	}
+	list, ok := itemList.([config.ListSize]*types.Envelope)
+	if !ok {
+		return [config.ListSize]*types.Envelope{}, false
+	}
+	return list, true
+}
+
+//GetEntitySearch returns a list of entities from the database according to the search term
+func GetEntitySearch(term string) ([config.ListSize]string, bool) {
+	itemList, ok := getItemList("", "/api/entitysearch/?term="+term)
+	if !ok {
+		return [config.ListSize]string{}, false
+	}
+	list, ok := itemList.([config.ListSize]string)
+	if !ok {
+		return [config.ListSize]string{}, false
+	}
+	return list, true
+}
+
+//GetProcessSearch returns a list of processes from the database according to the search term
+func GetProcessSearch(term string) ([config.ListSize]string, bool) {
+	itemList, ok := getItemList("", "/api/processsearch/?term="+term)
+	if !ok {
+		return [config.ListSize]string{}, false
+	}
+	list, ok := itemList.([config.ListSize]string)
+	if !ok {
+		return [config.ListSize]string{}, false
+	}
+	return list, true
+}
+
+//GetValidatorSearch returns a list of validators from the database according to the search term
+func GetValidatorSearch(term string) ([config.ListSize]*types.Validator, bool) {
+	itemList, ok := getItemList(&types.Validator{}, "/api/validatorsearch/?term="+term)
+	if !ok {
+		return [config.ListSize]*types.Validator{}, false
+	}
+	list, ok := itemList.([config.ListSize]*types.Validator)
+	if !ok {
+		return [config.ListSize]*types.Validator{}, false
+	}
+	return list, true
 }
 
 //GetBlockListByValidator returns a list of blocks with given proposer from the database
@@ -445,9 +498,6 @@ func GetEntityList(i int) ([config.ListSize]string, bool) {
 		if len(rawEntity) > 0 {
 			entity := strings.ToLower(util.HexToString(rawEntity))
 			entityList[i] = entity
-			if err != nil {
-				log.Error(err)
-			}
 		}
 	}
 	return entityList, true
@@ -512,4 +562,81 @@ func GetStats() (*VochainStats, bool) {
 		return stats, false
 	}
 	return stats, true
+}
+
+func getItemList(itemType interface{}, url string) (interface{}, bool) {
+	body, ok := request(url)
+	if !ok {
+		return nil, false
+	}
+	var rawItemList types.ItemList
+	err := proto.Unmarshal(body, &rawItemList)
+	if err != nil {
+		log.Error(err)
+		return nil, false
+	}
+	switch itemType.(type) {
+	case *types.StoreBlock:
+		itemList := [config.ListSize]*types.StoreBlock{}
+		for i, rawItem := range rawItemList.GetItems() {
+			if len(rawItem) > 0 {
+				var item types.StoreBlock
+				err = proto.Unmarshal(rawItem, &item)
+				itemList[i] = &item
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+		return itemList, true
+	case *types.SendTx:
+		itemList := [config.ListSize]*types.SendTx{}
+		for i, rawItem := range rawItemList.GetItems() {
+			if len(rawItem) > 0 {
+				var item types.SendTx
+				err = proto.Unmarshal(rawItem, &item)
+				itemList[i] = &item
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+		return itemList, true
+	case *types.Envelope:
+		itemList := [config.ListSize]*types.Envelope{}
+		for i, rawItem := range rawItemList.GetItems() {
+			if len(rawItem) > 0 {
+				var item types.Envelope
+				err = proto.Unmarshal(rawItem, &item)
+				itemList[i] = &item
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+		return itemList, true
+	case string:
+		itemList := [config.ListSize]string{}
+		for i, rawItem := range rawItemList.GetItems() {
+			if len(rawItem) > 0 {
+				item := strings.ToLower(util.HexToString(rawItem))
+				itemList[i] = item
+			}
+		}
+		return itemList, true
+	case *types.Validator:
+		itemList := [config.ListSize]*types.Validator{}
+		for i, rawItem := range rawItemList.GetItems() {
+			if len(rawItem) > 0 {
+				var item types.Validator
+				err = proto.Unmarshal(rawItem, &item)
+				itemList[i] = &item
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+		return itemList, true
+	}
+	return nil, false
 }

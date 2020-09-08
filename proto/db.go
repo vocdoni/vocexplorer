@@ -10,7 +10,7 @@ func BlockIsEmpty(s *StoreBlock) bool {
 
 //TxIsEmpty returns true if tx is empty
 func TxIsEmpty(s *SendTx) bool {
-	if len(s.GetHash()) == 0 && s.GetStore().GetTxHeight() == 0 && s.GetStore().GetHeight() == 0 && s.GetStore().GetIndex() == 0 {
+	if len(s.GetHash()) == 0 && s.GetStore().GetTxHeight() == 0 && s.GetStore().GetHeight() == 0 && s.GetStore().GetIndex() == 0 && s.GetStore() == nil {
 		return true
 	}
 	return false

@@ -470,7 +470,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	if localEntityHeight >= gatewayEntityHeight {
 		return
 	}
-	latestKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight-1))...)
+	latestKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight-1))...)
 	latestEntity, err := d.Get(latestKey)
 	if err != nil {
 		latestEntity = []byte{}
@@ -488,14 +488,20 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	i := 0
 	entity := ""
 	for i, entity = range newEntities {
-		heightKey := append([]byte(config.EntityIDPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
+		// Write entityHeight:entityID
+		heightKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
 		rawEntity, err := hex.DecodeString(util.StripHexString(entity))
 		if err != nil {
 			log.Error(err)
 			break
 		}
 		batch.Put(heightKey, rawEntity)
-		// log.Debugf("Stored entity %s height %d", entity, int(localEntityHeight)+i)
+
+		// Write entityID:[]
+		// Write entityID:[]
+		entityIDKey := append([]byte(config.EntityIDPrefix), rawEntity...)
+		batch.Put(entityIDKey, []byte{})
+
 		// Add new entity to height map with height of 0 so db will get new entity's processes
 		if _, ok := heightMap.GetHeights()[entity]; ok {
 			log.Warn("Fetched entity already stored")
@@ -509,7 +515,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	}
 	log.Debugf("Fetched %d new entities at height %d", len(newEntities), int(localEntityHeight)+i+1)
 
-	// Write entity height
+	// Write latest entity height
 	encHeight := voctypes.Height{Height: localEntityHeight + int64(i) + 1}
 	rawHeight, err := proto.Marshal(&encHeight)
 	if err != nil {
@@ -517,6 +523,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	}
 	heightKey := []byte(config.LatestEntityCountKey)
 	batch.Put(heightKey, rawHeight)
+
 	// Write entity/process height map
 	heightMapKey := []byte(config.EntityProcessCountMapKey)
 	batch.Put(heightMapKey, rawValMap)
@@ -609,7 +616,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 			globalHeight.Height = -1
 		}
 		// Get ProcessHeight:PID
-		lastProcessKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight.GetHeight())...)
+		lastProcessKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight.GetHeight())...)
 		lastProcess, err = db.Get(lastProcessKey)
 		if err != nil {
 			log.Debugf("Process Key not found: %s", err.Error())
@@ -653,8 +660,12 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 		heightMapMutex.Unlock()
 
 		// Write Height:PID
-		processKey := append([]byte(config.ProcessIDPrefix), util.EncodeInt(globalHeight)...)
+		processKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight)...)
 		batch.Put(processKey, rawProcess)
+
+		// Write PID:[]
+		processIDKey := append([]byte(config.ProcessIDPrefix), rawProcess...)
+		batch.Put(processIDKey, []byte{})
 
 		// Write Entity|LocalHeight:ProcessHeight
 		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
@@ -697,6 +708,15 @@ func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]
 
 // SearchItems returns a list of items given search term, starting with given prefix
 func SearchItems(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
+	return searchIter(d, max, term, prefix, false)
+}
+
+// SearchKeys returns a list of key values including the search term, starting with the given prefix
+func SearchKeys(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
+	return searchIter(d, max, term, prefix, true)
+}
+
+func searchIter(d *dvotedb.BadgerDB, max int, term, prefix []byte, getKey bool) [][]byte {
 	if max > 64 {
 		max = 64
 	}
@@ -711,7 +731,12 @@ func SearchItems(d *dvotedb.BadgerDB, max int, term, prefix []byte) [][]byte {
 			break
 		}
 		if bytes.Contains(iter.Key(), term) {
-			itemList = append(itemList, iter.Value())
+			if getKey {
+				// Append key, cutting off the prefix bytes
+				itemList = append(itemList, iter.Key()[len(prefix):])
+			} else {
+				itemList = append(itemList, iter.Value())
+			}
 			max--
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -249,7 +250,7 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 	}
 }
 
-func buildSearchHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byte) ([]byte, error)) func(w http.ResponseWriter, r *http.Request) {
+func buildSearchHandler(db *dvotedb.BadgerDB, key string, getKey bool, getItem func(key []byte) ([]byte, error)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		terms, ok := r.URL.Query()["term"]
 		if !ok || len(terms[0]) < 1 {
@@ -257,7 +258,7 @@ func buildSearchHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byt
 			http.Error(w, "Url Param 'term' missing", http.StatusBadRequest)
 			return
 		}
-		searchTerm := terms[0]
+		searchTerm := strings.ToLower(terms[0])
 		odd := false
 		if len(searchTerm)%2 != 0 {
 			searchTerm += "0"
@@ -271,7 +272,12 @@ func buildSearchHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byt
 		if odd == true {
 			term = term[:len(term)-1]
 		}
-		items := vocdb.SearchItems(db, config.ListSize, term, []byte(key))
+		var items [][]byte
+		if getKey {
+			items = vocdb.SearchKeys(db, config.ListSize, term, []byte(key))
+		} else {
+			items = vocdb.SearchItems(db, config.ListSize, term, []byte(key))
+		}
 		if len(items) == 0 {
 			log.Error("Retrieved no items")
 			http.Error(w, "No items available", http.StatusInternalServerError)
@@ -297,7 +303,7 @@ func buildSearchHandler(db *dvotedb.BadgerDB, key string, getItem func(key []byt
 			return
 		}
 		w.Write(msg)
-		log.Debugf("Sent %d items", len(itemList.GetItems()))
+		log.Debugf("Sent %d items for search term %s, key %s", len(itemList.GetItems()), searchTerm, key)
 	}
 }
 
@@ -441,27 +447,27 @@ func GetValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 
 // GetEntityHandler writes a single entity
 func GetEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestEntityCountKey, config.EntityIDPrefix, nil)
+	return buildItemByHeightHandler(db, config.LatestEntityCountKey, config.EntityHeightPrefix, nil)
 }
 
 // GetProcessHandler writes a single process
 func GetProcessHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByHeightHandler(db, config.LatestProcessCountKey, config.ProcessIDPrefix, nil)
+	return buildItemByHeightHandler(db, config.LatestProcessCountKey, config.ProcessHeightPrefix, nil)
 }
 
 // ListEntitiesHandler writes a list of entities from 'from'
 func ListEntitiesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsHandler(db, config.EntityIDPrefix, nil)
+	return buildListItemsHandler(db, config.EntityHeightPrefix, nil)
 }
 
 // ListProcessesHandler writes a list of processes from 'from'
 func ListProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsHandler(db, config.ProcessIDPrefix, nil)
+	return buildListItemsHandler(db, config.ProcessHeightPrefix, nil)
 }
 
 // ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
 func ListProcessesByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(db, "entity", config.EntityProcessCountMapKey, config.ProcessByEntityPrefix, config.ProcessIDPrefix, true)
+	return buildListItemsByParent(db, "entity", config.EntityProcessCountMapKey, config.ProcessByEntityPrefix, config.ProcessHeightPrefix, true)
 }
 
 // ListValidatorsHandler writes a list of validators from 'from'
@@ -718,6 +724,54 @@ func EnvelopeHeightFromNullifierHandler(db *dvotedb.BadgerDB) func(w http.Respon
 func SearchBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return buildSearchHandler(db,
 		config.BlockHashPrefix,
+		false,
+		nil,
+	)
+}
+
+// SearchTransactionsHandler writes a list of transactions by search term
+func SearchTransactionsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.TxHashPrefix,
+		false,
+		nil,
+	)
+}
+
+// SearchEnvelopesHandler writes a list of envelopes by search term
+func SearchEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.EnvNullifierPrefix,
+		false,
+		func(key []byte) ([]byte, error) {
+			return db.Get(append([]byte(config.EnvPackagePrefix), key...))
+		},
+	)
+}
+
+// SearchProcessesHandler writes a list of processes by search term
+func SearchProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.ProcessIDPrefix,
+		true,
+		nil,
+	)
+}
+
+// SearchEntitiesHandler writes a list of entities by search term
+func SearchEntitiesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.EntityIDPrefix,
+		true,
+		nil,
+	)
+}
+
+// SearchValidatorsHandler writes a list of validators by search term
+func SearchValidatorsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildSearchHandler(db,
+		config.ValidatorPrefix,
+		false,
 		nil,
 	)
 }

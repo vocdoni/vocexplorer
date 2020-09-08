@@ -56,19 +56,20 @@ func (b *TxList) Render() vecty.ComponentOrHTML {
 
 func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
+	fmt.Printf("%+v\n\n", store.Transactions.Transactions)
 
-	empty := p.ListSize
-	for i := p.ListSize - 1; i >= 0; i-- {
+	for i := len(store.Transactions.Transactions) - 1; i >= len(store.Transactions.Transactions)-p.ListSize; i-- {
 		if proto.TxIsEmpty(store.Transactions.Transactions[i]) {
-			empty--
-		} else {
-			tx := store.Transactions.Transactions[i]
-			txList = append(txList, renderTx(tx))
+			fmt.Printf("tx %d empty", i)
+			continue
 		}
+		txList = append(txList, renderTx(store.Transactions.Transactions[i]))
 	}
-	if empty == 0 {
-		fmt.Println("No txs available")
-		return elem.Div(vecty.Text("Loading Txs..."))
+	if len(txList) == 0 {
+		if *p.Searching {
+			return elem.Div(vecty.Text("No Transactions Found With Given ID"))
+		}
+		return elem.Div(vecty.Text("Loading Transactions..."))
 	}
 
 	return elem.Div(

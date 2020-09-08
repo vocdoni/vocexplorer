@@ -123,6 +123,26 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 				oldTxs = store.Transactions.Count
 			}
 			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, 1))
+
+		case search := <-store.Transactions.Pagination.SearchChannel:
+		txsearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Transactions.Pagination.SearchChannel:
+				default:
+					break txsearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.TransactionsIndexChange{Index: 0})
+			list, ok := api.GetTransactionSearch(search)
+			if ok {
+				reverseTxList(&list)
+				dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: [config.ListSize]*proto.SendTx{nil}})
+			}
 		}
 	}
 }

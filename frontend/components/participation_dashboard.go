@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -111,6 +112,25 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 			if store.Entities.Count > 0 {
 				updateEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index, 1))
 			}
+		case search := <-store.Entities.Pagination.SearchChannel:
+		entitySearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Entities.Pagination.SearchChannel:
+				default:
+					break entitySearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: 0})
+			list, ok := api.GetEntitySearch(search)
+			if ok {
+				reverseIDList(&list)
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: [config.ListSize]string{}})
+			}
 		case i := <-store.Processes.Pagination.PagChannel:
 		processLoop:
 			for {
@@ -135,6 +155,25 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 				updateProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, 1))
 				update.ProcessResults()
 			}
+		case search := <-store.Processes.Pagination.SearchChannel:
+		processSearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Processes.Pagination.SearchChannel:
+				default:
+					break processSearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
+			list, ok := api.GetProcessSearch(search)
+			if ok {
+				reverseIDList(&list)
+				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: [config.ListSize]string{}})
+			}
 		case i := <-store.Envelopes.Pagination.PagChannel:
 		envelopeLoop:
 			for {
@@ -156,6 +195,25 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 			}
 			if store.Envelopes.Count > 0 {
 				updateEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, 1))
+			}
+		case search := <-store.Envelopes.Pagination.SearchChannel:
+		envelopeSearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Envelopes.Pagination.SearchChannel:
+				default:
+					break envelopeSearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.EnvelopesIndexChange{Index: 0})
+			list, ok := api.GetEnvelopeSearch(search)
+			if ok {
+				reverseEnvelopeList(&list)
+				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: [config.ListSize]*proto.Envelope{}})
 			}
 		}
 	}

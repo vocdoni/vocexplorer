@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -74,6 +75,25 @@ func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
 				oldValidators = store.Validators.Count
 			}
 			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, 1))
+		case search := <-store.Validators.Pagination.SearchChannel:
+		validatorSearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Validators.Pagination.SearchChannel:
+				default:
+					break validatorSearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
+			list, ok := api.GetValidatorSearch(search)
+			if ok {
+				reverseValidatorList(&list)
+				dispatcher.Dispatch(&actions.SetValidatorList{List: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetValidatorList{List: [config.ListSize]*proto.Validator{}})
+			}
 		}
 	}
 }

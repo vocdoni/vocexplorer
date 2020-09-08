@@ -62,6 +62,9 @@ func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int)
 		}
 	}
 	if empty == 0 {
+		if *p.Searching {
+			return elem.Div(vecty.Text("No Envelopes Found With Given ID"))
+		}
 		fmt.Println("No envelopes available")
 		return elem.Div(vecty.Text("Loading envelopes..."))
 	}
