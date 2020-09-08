@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -258,29 +257,23 @@ func buildSearchHandler(db *dvotedb.BadgerDB, key string, getKey bool, getItem f
 			http.Error(w, "Url Param 'term' missing", http.StatusBadRequest)
 			return
 		}
-		searchTerm := strings.ToLower(terms[0])
-		// odd := false
-		// if len(searchTerm)%2 != 0 {
-		// 	searchTerm += "0"
-		// 	odd = true
-		// }
-		// term, err := hex.DecodeString(searchTerm)
-		// if err != nil {
-		// 	log.Error(err)
-		// 	http.Error(w, "Unable to decode search term", http.StatusBadRequest)
-		// }
-		// if odd == true {
-		// 	term = term[:len(term)-1]
-		// }
-
-		var err error
+		searchTerm := terms[0]
+		// If search term is odd, simply trim off last character (each byte is 2 characters). Otherwise would have to convert each key into a string, consuming much time
+		if len(searchTerm)%2 != 0 {
+			searchTerm = searchTerm[:len(searchTerm)-1]
+		}
+		term, err := hex.DecodeString(searchTerm)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Unable to decode search term", http.StatusBadRequest)
+		}
 
 		var items [][]byte
 		if getKey {
-			items = vocdb.SearchKeys(db, config.ListSize, searchTerm, []byte(key))
+			items = vocdb.SearchKeys(db, config.ListSize, term, []byte(key))
 			// items = vocdb.SearchKeys(db, config.ListSize, term, []byte(key))
 		} else {
-			items = vocdb.SearchItems(db, config.ListSize, searchTerm, []byte(key))
+			items = vocdb.SearchItems(db, config.ListSize, term, []byte(key))
 			// items = vocdb.SearchItems(db, config.ListSize, term, []byte(key))
 		}
 		if len(items) == 0 {

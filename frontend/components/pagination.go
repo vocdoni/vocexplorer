@@ -63,7 +63,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 					}
 					vecty.Rerender(self)
 				}),
-				prop.Placeholder("search by height, id"),
+				prop.Placeholder("search by height, id (even-length)"),
 			))
 		}
 	}
