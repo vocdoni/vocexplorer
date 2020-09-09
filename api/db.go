@@ -206,6 +206,19 @@ func GetBlockSearch(term string) ([config.ListSize]*types.StoreBlock, bool) {
 	return list, true
 }
 
+//GetBlocksByValidatorSearch returns a list of blocks from the database according to the search term and given validator
+func GetBlocksByValidatorSearch(term, validator string) ([config.ListSize]*types.StoreBlock, bool) {
+	itemList, ok := getItemList(&types.StoreBlock{}, "/api/validatorblocksearch/?term="+term+"&validator="+validator)
+	if !ok {
+		return [config.ListSize]*types.StoreBlock{}, false
+	}
+	list, ok := itemList.([config.ListSize]*types.StoreBlock)
+	if !ok {
+		return [config.ListSize]*types.StoreBlock{}, false
+	}
+	return list, true
+}
+
 //GetTransactionSearch returns a list of transactions from the database according to the search term
 func GetTransactionSearch(term string) ([config.ListSize]*types.SendTx, bool) {
 	itemList, ok := getItemList(&types.SendTx{}, "/api/transactionsearch/?term="+term)

@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
@@ -19,9 +20,7 @@ import (
 type ValidatorContents struct {
 	vecty.Core
 	vecty.Mounter
-	CurrentBlock int
-	CurrentPage  int
-	Rendered     bool
+	Rendered bool
 }
 
 // Mount triggers when ValidatorContents renders
@@ -56,7 +55,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: util.Max(int(newVal)-1, 0)})
 	}
-	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
+	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.Pagination.Index)
 	for {
 		select {
 		case i := <-store.Validators.Pagination.PagChannel:
@@ -69,7 +68,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 					break blockloop
 				}
 			}
-			contents.CurrentBlock = i
+			store.Validators.Pagination.Index = i
 			oldBlocks := store.Validators.CurrentBlockCount
 			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 			if ok {
@@ -78,14 +77,33 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			if i < 1 {
 				oldBlocks = store.Validators.CurrentBlockCount
 			}
-			updateValidatorBlocks(contents, oldBlocks-contents.CurrentBlock)
+			updateValidatorBlocks(contents, oldBlocks-store.Validators.Pagination.Index)
+		case search := <-store.Validators.Pagination.SearchChannel:
+		blocksearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Validators.Pagination.SearchChannel:
+				default:
+					break blocksearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
+			list, ok := api.GetBlocksByValidatorSearch(search, store.Validators.CurrentValidatorID)
+			if ok {
+				reverseBlockList(&list)
+				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
+			}
 		case <-store.RedirectChan:
 			fmt.Println("Redirecting...")
 			ticker.Stop()
 			return
 		case <-ticker.C:
 			if !store.Validators.Pagination.DisableUpdate {
-				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-contents.CurrentBlock)
+				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.Pagination.Index)
 			}
 		}
 
@@ -169,7 +187,7 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 		p := &Pagination{
 			TotalPages:      int(store.Validators.CurrentBlockCount) / config.ListSize,
 			TotalItems:      &store.Validators.CurrentBlockCount,
-			CurrentPage:     &contents.CurrentPage,
+			CurrentPage:     &store.Validators.Pagination.CurrentPage,
 			ListSize:        config.ListSize,
 			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
 			RefreshCh:       store.Validators.Pagination.PagChannel,

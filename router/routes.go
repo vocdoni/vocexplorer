@@ -720,6 +720,49 @@ func SearchBlocksHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *ht
 	)
 }
 
+// SearchBlocksByValidatorHandler writes a list of blocks by search term belonging to given validator
+func SearchBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		terms, ok := r.URL.Query()["term"]
+		if !ok || len(terms[0]) < 1 {
+			log.Warnf("Url Param 'term' is missing")
+			http.Error(w, "Url Param 'term' missing", http.StatusBadRequest)
+			return
+		}
+		searchTerm := strings.ToLower(terms[0])
+
+		validators, ok := r.URL.Query()["validator"]
+		if !ok || len(validators[0]) < 1 {
+			log.Warnf("Url Param 'validator' is missing")
+			http.Error(w, "Url Param 'validator' missing", http.StatusBadRequest)
+			return
+		}
+		validator := strings.ToLower(validators[0])
+
+		var err error
+		var items [][]byte
+		items = vocdb.SearchBlocksByValidator(db, config.ListSize, searchTerm, validator)
+		if len(items) == 0 {
+			log.Warn("Retrieved no items")
+			http.Error(w, "No items available", http.StatusInternalServerError)
+			return
+		}
+		var itemList ptypes.ItemList
+		for _, rawItem := range items {
+			itemList.Items = append(itemList.GetItems(), rawItem)
+		}
+
+		msg, err := proto.Marshal(&itemList)
+		if err != nil {
+			log.Warn(err)
+			http.Error(w, "Unable to encode data", http.StatusInternalServerError)
+			return
+		}
+		w.Write(msg)
+		log.Debugf("Sent %d blocks for search term %s, validator %s", len(itemList.GetItems()), searchTerm, validator)
+	}
+}
+
 // SearchTransactionsHandler writes a list of transactions by search term
 func SearchTransactionsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return buildSearchHandler(db,
