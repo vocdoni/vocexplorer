@@ -30,7 +30,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
 			SearchCh:        store.Processes.Pagination.SearchChannel,
 			Searching:       &store.Processes.Pagination.Search,
-			RenderSearchBar: true,
+			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderProcessEnvelopes(p, store.Processes.CurrentProcess, index)

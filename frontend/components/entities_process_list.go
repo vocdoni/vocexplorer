@@ -24,7 +24,7 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 			DisableUpdate:   &store.Entities.Pagination.DisableUpdate,
 			SearchCh:        store.Entities.Pagination.SearchChannel,
 			Searching:       &store.Entities.Pagination.Search,
-			RenderSearchBar: true,
+			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderEntityProcessItems()...)
