@@ -162,9 +162,6 @@ func (contents *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
 		return elem.Div(
 			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
 			renderCollapsible("Envelope Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(voteString)))),
-			// renderCollapsible("Data", accordionName, "Two", transactions),
-			// renderCollapsible("Evidence", accordionName, "Three", elem.Preformatted(vecty.Text(string(evidence)))),
-			// renderCollapsible("Last Commit", accordionName, "Four", elem.Preformatted(vecty.Text(string(commit)))),
 		)
 	}
 	return nil

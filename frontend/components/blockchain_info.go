@@ -27,7 +27,8 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 		}
 	}
 
-	syncing := int(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight)-store.Blocks.Count > 1
+	// Buffer of +- 1 block so syncing does not flash back/forth
+	syncing := int(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight)-store.Blocks.Count > 2
 	p := message.NewPrinter(language.English)
 
 	return elem.Section(

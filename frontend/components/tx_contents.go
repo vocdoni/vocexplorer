@@ -10,7 +10,7 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/api"
@@ -189,7 +189,7 @@ func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
 		Alias: "contents",
 	}}
 	metadata := &TransactionTab{&Tab{
-		Text:  "Metadata",
+		Text:  "Transaction Log",
 		Alias: "metadata",
 	}}
 
@@ -225,7 +225,7 @@ func preformattedTransactionMetadata() vecty.ComponentOrHTML {
 	if len(store.Transactions.CurrentDecodedTransaction.Metadata) <= 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),
-			vecty.Text("Empty metadata"),
+			vecty.Text("Empty transaction log"),
 		)
 	}
 	return elem.Preformatted(elem.Code(
@@ -247,7 +247,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
-	var txResult coretypes.ResultTx
+	var txResult abci.ResponseDeliverTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
 	if err != nil {
 		log.Error(err)
@@ -278,27 +278,6 @@ func UpdateAndRenderTxContents(d *TxContents) {
 			log.Error(err)
 		}
 		typedTx.Nullifier = tx.Store.Nullifier
-
-		// TODO decrypt votes
-		// Decode vote package if vote is unencrypted
-		// if len(typedTx.EncryptionKeyIndexes) == 0 {
-		// 	var vote dvotetypes.VotePackage
-		// 	rawVote, err := base64.StdEncoding.DecodeString(typedTx.VotePackage)
-		// 	if err != nil {
-		// log.Error(err)
-		// 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		// 		break
-		// 	}
-		// 	err = json.Unmarshal(rawVote, &vote)
-		// 	if err != nil {
-		// log.Error(err)
-		// 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		// 		break
-		// 	}
-		// 	voteIndent, err := json.MarshalIndent(vote, "", "\t")
-		// 	typedTx.VotePackage = string(voteIndent)
-		// }
-
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			log.Error(err)
@@ -349,7 +328,7 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
 	}
 	var metadata []byte
-	if len(txResult.Hash.Bytes()) > 0 && txResult.Height > 0 && len(txResult.Tx.Hash()) > 0 {
+	if !txResult.Equal(abci.ResponseDeliverTx{}) {
 		metadata, err = json.MarshalIndent(txResult, "", "\t")
 		if err != nil {
 			log.Error(err)
@@ -368,8 +347,6 @@ func UpdateAndRenderTxContents(d *TxContents) {
 		},
 	})
 }
-
-//TODO: link to envelope. Possibly store envelope nullifier/height in tx
 
 func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
 	accordionName := "accordionTx"

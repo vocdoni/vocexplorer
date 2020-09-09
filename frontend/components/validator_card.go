@@ -13,8 +13,8 @@ import (
 func ValidatorCard(validator *proto.Validator) vecty.ComponentOrHTML {
 	blocks := "none"
 	numBlocks, ok := store.Validators.BlockHeights[util.HexToString(validator.GetAddress())]
-	if ok || numBlocks < 1 {
-		blocks = util.IntToString(numBlocks - 1)
+	if ok || numBlocks > 0 {
+		blocks = util.IntToString(numBlocks)
 	}
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(

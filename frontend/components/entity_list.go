@@ -73,12 +73,6 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 				),
 			),
 		),
-	// elem.Div(
-	// 	vecty.Markup(vecty.Class("details")),
-	// 	elem.Div(
-	// 		vecty.Text("(date?)"),
-	// 	),
-	// ),
 	)
 }
 

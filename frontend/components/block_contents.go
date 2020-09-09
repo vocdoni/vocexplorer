@@ -62,24 +62,6 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 						Body: BlockView(store.Blocks.CurrentBlock.Block),
 					}),
 				),
-				elem.Div(
-					vecty.Markup(vecty.Class("extra-column")),
-					bootstrap.Card(bootstrap.CardParams{
-						Header: elem.Heading4(vecty.Text("Validator")),
-						Body: elem.Div(
-							Link(
-								"/validator/"+store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
-								store.Blocks.CurrentBlock.Block.ValidatorsHash.String(),
-								"",
-							),
-						),
-						ClassNames: []string{"validator"},
-					}),
-					bootstrap.Card(bootstrap.CardParams{
-						Body:       vecty.Text("card body"),
-						ClassNames: []string{"flex-grow-1", "ml-0", "ml-md-5", "ml-lg-0"},
-					}),
-				),
 			),
 		),
 		elem.Section(

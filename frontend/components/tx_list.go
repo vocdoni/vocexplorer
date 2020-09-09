@@ -89,7 +89,7 @@ func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("type")),
 				elem.Div(
 					elem.Span(
-						vecty.Text(fmt.Sprintf("# %d", tx.Store.GetTxHeight())),
+						vecty.Text(fmt.Sprintf("#%d", tx.Store.GetTxHeight())),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),

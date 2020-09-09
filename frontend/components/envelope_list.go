@@ -91,10 +91,6 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 							vecty.Text(processResults.State),
 						),
 					),
-					// elem.Span(
-					// 	vecty.Markup(vecty.Class("status")),
-					// 	vecty.Text(info.State),
-					// ),
 				),
 			),
 			elem.Div(

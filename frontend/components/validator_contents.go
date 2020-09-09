@@ -53,7 +53,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	}
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
-		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: util.Max(int(newVal)-1, 0)})
+		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
 	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.Pagination.Index)
 	for {
@@ -72,7 +72,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			oldBlocks := store.Validators.CurrentBlockCount
 			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 			if ok {
-				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal) - 1})
+				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 			}
 			if i < 1 {
 				oldBlocks = store.Validators.CurrentBlockCount
@@ -115,7 +115,7 @@ func updateValidatorBlocks(contents *ValidatorContents, i int) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
-		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: util.Max(int(newVal)-1, 0)})
+		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
 	if newVal > 0 {
 		newList, ok := api.GetBlockListByValidator(i, store.Validators.CurrentValidator.GetAddress())

@@ -66,12 +66,6 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						),
 						NavLink("/validators", "Validators"),
 					),
-					// elem.ListItem(
-					// 	vecty.Markup(
-					// 		vecty.Class("nav-item", "dropdown"),
-					// 	),
-					// 	NavLink("/blocks", "Blocks"),
-					// ),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
