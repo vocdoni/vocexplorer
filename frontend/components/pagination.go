@@ -105,9 +105,12 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("pagination-wrapper")),
 			elem.Div(
 				vecty.Markup(vecty.Class("page-count")),
-				elem.Span(
-					vecty.Text(
-						fmt.Sprintf("Page %d", *p.CurrentPage+1),
+				vecty.If(
+					!*p.Searching,
+					elem.Span(
+						vecty.Text(
+							fmt.Sprintf("Page %d of %d", *p.CurrentPage+1, p.TotalPages+1),
+						),
 					),
 				),
 			),

@@ -68,11 +68,11 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 					break blockloop
 				}
 			}
-			store.Validators.Pagination.Index = i
+			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
 			oldBlocks := store.Validators.CurrentBlockCount
 			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 			if ok {
-				store.Validators.CurrentBlockCount = int(newVal) - 1
+				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal) - 1})
 			}
 			if i < 1 {
 				oldBlocks = store.Validators.CurrentBlockCount
@@ -226,7 +226,6 @@ func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBl
 		if *p.Searching {
 			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
 		}
-		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
 	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))

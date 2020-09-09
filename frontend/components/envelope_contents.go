@@ -131,8 +131,8 @@ func renderEnvelopeHeader() vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessCount()))+" envelope on process "),
 						Link(
-							"/process/"+util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
-							util.StripHexString(store.Envelopes.CurrentEnvelope.GetProcessID()),
+							"/process/"+util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
+							util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
 							"hash",
 						),
 					),

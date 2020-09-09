@@ -383,7 +383,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	for i, entity = range newEntities {
 		// Write entityHeight:entityID
 		heightKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
-		rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+		rawEntity, err := hex.DecodeString(util.TrimHex(entity))
 		if err != nil {
 			log.Error(err)
 			break
@@ -494,7 +494,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	}()
 
 	var lastProcess []byte
-	rawEntity, err := hex.DecodeString(util.StripHexString(entity))
+	rawEntity, err := hex.DecodeString(util.TrimHex(entity))
 	// Get Entity|LocalHeight:ProcessHeight
 	entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
 	entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight-1))...)
@@ -541,7 +541,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	}
 	var process string
 	for _, process = range newProcessList {
-		rawProcess, err := hex.DecodeString(util.StripHexString(process))
+		rawProcess, err := hex.DecodeString(util.TrimHex(process))
 		if err != nil {
 			log.Error(err)
 		}
@@ -595,12 +595,12 @@ func storeEnvelope(tx tmtypes.Tx, height *voctypes.Height, procHeightMap *voctyp
 
 		// Update height of process env belongs to
 		procHeightMapMutex.Lock()
-		procHeight, ok := procHeightMap.Heights[util.StripHexString(votePackage.GetProcessID())]
+		procHeight, ok := procHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())]
 		if !ok {
 			procHeight = 0
 		}
 		procHeight++
-		procHeightMap.Heights[util.StripHexString(votePackage.GetProcessID())] = procHeight
+		procHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())] = procHeight
 		procHeightMapMutex.Unlock()
 
 		votePackage.ProcessHeight = procHeight
@@ -643,7 +643,7 @@ func storeEnvelope(tx tmtypes.Tx, height *voctypes.Height, procHeightMap *voctyp
 		if err != nil {
 			log.Error(err)
 		}
-		nullifier, err := hex.DecodeString(util.StripHexString(votePackage.Nullifier))
+		nullifier, err := hex.DecodeString(util.TrimHex(votePackage.Nullifier))
 		if err != nil {
 			log.Error(err)
 		}
@@ -652,7 +652,7 @@ func storeEnvelope(tx tmtypes.Tx, height *voctypes.Height, procHeightMap *voctyp
 
 		// Write pid|heightbyPID:globalHeight
 		heightBytes := util.EncodeInt(procHeight)
-		PIDBytes, err := hex.DecodeString(util.StripHexString(votePackage.ProcessID))
+		PIDBytes, err := hex.DecodeString(util.TrimHex(votePackage.ProcessID))
 		if err != nil {
 			log.Error(err)
 		}

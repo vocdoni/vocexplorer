@@ -52,7 +52,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						NavLink("/participation", "Processes & Entities"),
+						NavLink("/participation", "Processes, Entities & Envelopes"),
 					),
 					elem.ListItem(
 						vecty.Markup(

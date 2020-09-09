@@ -4,12 +4,18 @@ import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //ValidatorCard renders a single validator card
 func ValidatorCard(validator *proto.Validator) vecty.ComponentOrHTML {
+	blocks := "none"
+	numBlocks, ok := store.Validators.BlockHeights[util.HexToString(validator.GetAddress())]
+	if ok || numBlocks < 1 {
+		blocks = util.IntToString(numBlocks - 1)
+	}
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
 			"/validator/"+util.HexToString(validator.GetAddress()),
@@ -27,6 +33,16 @@ func ValidatorCard(validator *proto.Validator) vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("dd")),
 					vecty.Markup(vecty.Attribute("title", util.HexToString(validator.GetAddress()))),
 					vecty.Text(util.HexToString(validator.GetAddress())),
+				),
+			),
+			elem.Div(
+				elem.Div(
+					vecty.Markup(vecty.Class("dt")),
+					vecty.Text("Blocks proposed: "),
+				),
+				elem.Span(
+					vecty.Markup(vecty.Class("dd")),
+					vecty.Text(blocks),
 				),
 			),
 			elem.Div(

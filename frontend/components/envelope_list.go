@@ -1,7 +1,7 @@
 package components
 
 import (
-	"fmt"
+	"strings"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
@@ -48,48 +48,84 @@ func renderEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 			empty--
 		} else {
 			envelope := store.Envelopes.Envelopes[i]
-			EnvelopeList = append(EnvelopeList, renderEnvelope(envelope))
+			EnvelopeList = append(EnvelopeList, EnvelopeBlock(envelope))
 		}
 	}
 	if empty == 0 {
 		if *p.Searching {
 			return elem.Div(vecty.Text("No Envelopes Found With Given ID"))
 		}
-		fmt.Println("No envelopes available")
 		return elem.Div(vecty.Text("Loading envelopes..."))
 	}
-	EnvelopeList = append(EnvelopeList, vecty.Markup(vecty.Class("responsive-card-deck")))
 	return elem.Div(
 		EnvelopeList...,
 	)
 }
 
-func renderEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
+// EnvelopeBlock renders a single envelope block
+func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
+	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
+	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
+	return elem.Div(
+		vecty.Markup(vecty.Class("tile")),
+		elem.Div(
+			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
-				vecty.Markup(vecty.Class("card-header")),
-				Link(
-					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetGlobalHeight()),
-					"nav-link",
+				vecty.Markup(vecty.Class("type")),
+				elem.Div(
+					elem.Span(
+						vecty.Markup(vecty.Class("title")),
+						vecty.Text("#"+util.IntToString(envelope.GetGlobalHeight())),
+					),
+					vecty.If(
+						processResults.ProcessType != "",
+						elem.Span(
+							vecty.Markup(vecty.Class("title")),
+							vecty.Text(processResults.ProcessType),
+						),
+					),
+					vecty.If(
+						processResults.State != "",
+						elem.Span(
+							vecty.Markup(vecty.Class("status")),
+							vecty.Text(processResults.State),
+						),
+					),
+					// elem.Span(
+					// 	vecty.Markup(vecty.Class("status")),
+					// 	vecty.Text(info.State),
+					// ),
 				),
 			),
 			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
+				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" envelope on process "+util.StripHexString(envelope.ProcessID)),
-					),
 					elem.Div(
 						elem.Div(
-							vecty.Markup(vecty.Class("dt")),
-							vecty.Text("Nullifier"),
+							Link(
+								"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
+								envelope.Nullifier,
+								"hash",
+							),
 						),
 						elem.Div(
-							vecty.Markup(vecty.Class("dd")),
-							vecty.Text(envelope.GetNullifier()),
+							vecty.If(
+								processEnvelopeCount < 1,
+								vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" envelope on process "),
+							),
+							vecty.If(
+								processEnvelopeCount > 1,
+								vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" of "+util.IntToString(processEnvelopeCount)+" envelopes on process "),
+							),
+							vecty.If(
+								processEnvelopeCount == 1,
+								vecty.Text("only envelope on process "),
+							),
+							Link(
+								"/process/"+util.TrimHex(envelope.ProcessID),
+								util.TrimHex(envelope.ProcessID),
+								"hash",
+							),
 						),
 					),
 				),

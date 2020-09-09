@@ -38,9 +38,6 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 			p,
 		)
 	}
-	if store.Entities.CurrentEntity.ProcessCount < 1 {
-		return elem.Div(vecty.Text("No processes available"))
-	}
 	return elem.Div(vecty.Text("Waiting for processes..."))
 }
 

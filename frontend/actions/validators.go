@@ -39,3 +39,8 @@ type SetCurrentValidatorBlockCount struct {
 type SetCurrentValidatorBlockList struct {
 	BlockList [config.ListSize]*proto.StoreBlock
 }
+
+// SetValidatorBlockHeightMap is the action to set the map of block heights associated with each validator
+type SetValidatorBlockHeightMap struct {
+	HeightMap map[string]int64
+}

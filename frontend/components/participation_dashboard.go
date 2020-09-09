@@ -195,6 +195,7 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 			}
 			if store.Envelopes.Count > 0 {
 				updateEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, 1))
+				update.EnvelopeProcessResults()
 			}
 		case search := <-store.Envelopes.Pagination.SearchChannel:
 		envelopeSearch:
@@ -215,6 +216,7 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 			} else {
 				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: [config.ListSize]*proto.Envelope{}})
 			}
+			update.EnvelopeProcessResults()
 		}
 	}
 }
@@ -225,6 +227,7 @@ func updateParticipation(d *ParticipationDashboardView) {
 	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
 		updateEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, 1))
+		update.EnvelopeProcessResults()
 	}
 	if !store.Entities.Pagination.DisableUpdate {
 		updateEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))

@@ -10,6 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // Gateway API updates
@@ -87,6 +88,31 @@ func ProcessResults() {
 							State:       st,
 							Results:     res},
 					})
+				}
+			}
+		}
+	}
+}
+
+// EnvelopeProcessResults updates auxilary info for all process id's belonging to currently displayed envelopes
+func EnvelopeProcessResults() {
+	for _, envelope := range store.Envelopes.Envelopes {
+		if envelope != nil {
+			ID := strings.ToLower(util.TrimHex(envelope.ProcessID))
+			if ID != "" {
+				if _, ok := store.Processes.ProcessResults[ID]; !ok {
+					t, st, res, err := store.GatewayClient.GetProcessResults(ID)
+					if err != nil {
+						log.Error(err)
+					} else {
+						dispatcher.Dispatch(&actions.SetProcessContents{
+							ID: ID,
+							Process: storeutil.Process{
+								ProcessType: t,
+								State:       st,
+								Results:     res},
+						})
+					}
 				}
 			}
 		}

@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -31,7 +29,6 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 		))
 	}
 	if len(blockList) == 0 {
-		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
 	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))

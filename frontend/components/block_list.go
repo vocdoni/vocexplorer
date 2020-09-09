@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -65,7 +63,6 @@ func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 		if *p.Searching {
 			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
 		}
-		fmt.Println("No blocks available")
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
 	blockList = append(blockList, vecty.Markup(vecty.Class("row")))

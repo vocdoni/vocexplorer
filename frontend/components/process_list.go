@@ -53,12 +53,6 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 						),
 					),
 				),
-				elem.Div(
-					vecty.Markup(vecty.Class("details")),
-					elem.Div(
-						vecty.Text("(date?)"),
-					),
-				),
 			),
 		)
 	}
@@ -96,12 +90,12 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 					),
 				),
 			),
-			elem.Div(
-				vecty.Markup(vecty.Class("details")),
-				elem.Div(
-					vecty.Text("(date?)"),
-				),
-			),
+			// elem.Div(
+			// 	vecty.Markup(vecty.Class("details")),
+			// 	elem.Div(
+			// 		vecty.Text("(date?)"),
+			// 	),
+			// ),
 		),
 	)
 }

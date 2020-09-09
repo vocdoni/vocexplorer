@@ -89,6 +89,9 @@ func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("type")),
 				elem.Div(
 					elem.Span(
+						vecty.Text(fmt.Sprintf("# %d", tx.Store.GetTxHeight())),
+					),
+					elem.Span(
 						vecty.Markup(vecty.Class("title")),
 						vecty.Text(rawTx.Type),
 					),
@@ -97,11 +100,13 @@ func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 			elem.Div(
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
-					vecty.Text(fmt.Sprintf("# %d", tx.Store.GetTxHeight())),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+					elem.Div(
+						Link(
+							"/tx/"+util.IntToString(tx.Store.TxHeight),
+							util.HexToString(tx.GetHash()),
+							"",
+						),
+					),
 					vecty.Text(
 						fmt.Sprintf("%s transaction on block ", humanize.Ordinal(int(tx.Store.Index+1))),
 					),
@@ -109,20 +114,6 @@ func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 						"/block/"+util.IntToString(tx.Store.Height),
 						util.IntToString(tx.Store.Height),
 						"",
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Hash"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						Link(
-							"/tx/"+util.IntToString(tx.Store.TxHeight),
-							util.HexToString(tx.GetHash()),
-							"",
-						),
 					),
 				),
 			),

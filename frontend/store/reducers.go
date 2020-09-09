@@ -249,6 +249,9 @@ func validatorActions(action interface{}) {
 	case *actions.SetCurrentValidatorBlockList:
 		Validators.CurrentBlockList = a.BlockList
 
+	case *actions.SetValidatorBlockHeightMap:
+		Validators.BlockHeights = a.HeightMap
+
 	default:
 		return // don't fire listeners
 	}

@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -62,7 +60,6 @@ func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 		))
 	}
 	if len(validatorElems) == 0 {
-		fmt.Println("No validators available")
 		return elem.Div(vecty.Text("Loading Validators..."))
 	}
 	validatorElems = append(validatorElems, vecty.Markup(vecty.Class("row")))

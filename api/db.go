@@ -163,6 +163,11 @@ func GetValidatorBlockHeight(proposer string) (int64, bool) {
 	return getHeight("/api/numblocksvalidator/?proposer=" + proposer)
 }
 
+//GetValidatorBlockHeightMap returns the entire map of validator block heights
+func GetValidatorBlockHeightMap() (map[string]int64, bool) {
+	return getHeightMap("/api/heightmap/?key=" + config.ValidatorHeightMapKey)
+}
+
 //GetValidatorCount returns the latest validator count stored by the database
 func GetValidatorCount() (int64, bool) {
 	return getHeight("/api/height/?key=" + config.LatestValidatorCountKey)

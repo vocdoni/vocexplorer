@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -65,7 +63,6 @@ func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int)
 		if *p.Searching {
 			return elem.Div(vecty.Text("No Envelopes Found With Given ID"))
 		}
-		fmt.Println("No envelopes available")
 		return elem.Div(vecty.Text("Loading envelopes..."))
 	}
 	EnvelopeList = append(EnvelopeList, vecty.Markup(vecty.Class("responsive-card-deck")))

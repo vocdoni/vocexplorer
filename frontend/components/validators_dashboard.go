@@ -115,6 +115,10 @@ func updateValidators(d *ValidatorsDashboardView, index int) {
 		reverseValidatorList(&list)
 		dispatcher.Dispatch(&actions.SetValidatorList{List: list})
 	}
+	blockHeights, ok := api.GetValidatorBlockHeightMap()
+	if ok {
+		dispatcher.Dispatch(&actions.SetValidatorBlockHeightMap{HeightMap: blockHeights})
+	}
 }
 
 func reverseValidatorList(list *[config.ListSize]*proto.Validator) {
