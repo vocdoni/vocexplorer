@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -19,21 +18,20 @@ import (
 
 // VochainStats is the type used by the public stats api
 type VochainStats struct {
-	BlockHeight       int64               `json:"block_height"`
-	EntityCount       int64               `json:"entity_count"`
-	EnvelopeCount     int64               `json:"envelope_count"`
-	ProcessCount      int64               `json:"process_count"`
-	TransactionHeight int64               `json:"transaction_height"`
-	ValidatorCount    int64               `json:"validator_count"`
-	BlockTime         *[5]int32           `json:"block_time"`
-	BlockTimeStamp    int32               `json:"block_time_stamp"`
-	ChainID           string              `json:"chain_id"`
-	GatewayAPIList    []string            `json:"gateway_api_list"`
-	GatewayHealth     int32               `json:"gateway_health"`
-	GenesisTimeStamp  time.Time           `json:"genesis_time_stamp"`
-	Height            int64               `json:"height"`
-	NodeInfo          p2p.DefaultNodeInfo `json:"node_info"`
-	SyncInfo          coretypes.SyncInfo  `json:"sync_info"`
+	BlockHeight       int64              `json:"block_height"`
+	EntityCount       int64              `json:"entity_count"`
+	EnvelopeCount     int64              `json:"envelope_count"`
+	ProcessCount      int64              `json:"process_count"`
+	TransactionHeight int64              `json:"transaction_height"`
+	ValidatorCount    int64              `json:"validator_count"`
+	BlockTime         *[5]int32          `json:"block_time"`
+	BlockTimeStamp    int32              `json:"block_time_stamp"`
+	ChainID           string             `json:"chain_id"`
+	GenesisTimeStamp  time.Time          `json:"genesis_time_stamp"`
+	Height            int64              `json:"height"`
+	Network           string             `json:"network"`
+	Version           string             `json:"version"`
+	SyncInfo          coretypes.SyncInfo `json:"sync_info"`
 }
 
 //PingServer pings the web server

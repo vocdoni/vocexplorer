@@ -36,7 +36,8 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 			if status == nil {
 				log.Errorf("Unable to get vochain status")
 			} else {
-				stats.NodeInfo = status.NodeInfo
+				stats.Network = status.NodeInfo.Network
+				stats.Version = status.NodeInfo.Version
 				stats.SyncInfo = status.SyncInfo
 			}
 
@@ -50,14 +51,6 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 
 			gw, cancel := api.InitGateway(cfg.GatewayHost)
 			defer cancel()
-			apiList, health, err := gw.GetGatewayInfo()
-			if err != nil {
-				log.Error(err)
-			} else {
-				stats.GatewayAPIList = apiList
-				stats.GatewayHealth = health
-			}
-
 			blockTime, blockTimeStamp, height, err := gw.GetBlockStatus()
 			if err != nil {
 				log.Error(err)

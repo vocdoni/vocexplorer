@@ -47,17 +47,29 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	if err != nil {
 		log.Error(err)
 	}
-	batch.Put([]byte(config.LatestTxHeightKey), encHeight)
+	if ok, err := d.Has([]byte(config.LatestTxHeightKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestTxHeightKey), encHeight)
+	}
+	if ok, err := d.Has([]byte(config.LatestBlockHeightKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
+	}
 	zeroHeight.Height = 0
 	encHeight, err = proto.Marshal(&zeroHeight)
 	if err != nil {
 		log.Error(err)
 	}
-	batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
-	batch.Put([]byte(config.LatestEntityCountKey), encHeight)
-	batch.Put([]byte(config.LatestEnvelopeCountKey), encHeight)
-	batch.Put([]byte(config.LatestProcessCountKey), encHeight)
-	batch.Put([]byte(config.LatestValidatorCountKey), encHeight)
+	if ok, err := d.Has([]byte(config.LatestEntityCountKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestEntityCountKey), encHeight)
+	}
+	if ok, err := d.Has([]byte(config.LatestEnvelopeCountKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestEnvelopeCountKey), encHeight)
+	}
+	if ok, err := d.Has([]byte(config.LatestProcessCountKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestProcessCountKey), encHeight)
+	}
+	if ok, err := d.Has([]byte(config.LatestValidatorCountKey)); !ok || err != nil {
+		batch.Put([]byte(config.LatestValidatorCountKey), encHeight)
+	}
 	batch.Write()
 
 	// Init tendermint client
