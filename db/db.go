@@ -727,9 +727,10 @@ func searchIter(d *dvotedb.BadgerDB, max int, term string, prefix []byte, getKey
 	var itemList [][]byte
 	iter := d.NewIterator().(*dvotedb.BadgerIterator)
 	// dvote badgerdb iterator has bug: rewind() on first Seek call rewinds to start of db
+	var valid bool
 	iter.Seek(prefix)
-	iter.Next()
-	for iter.Seek(prefix); bytes.HasPrefix(iter.Key(), prefix); iter.Next() {
+	valid = iter.Next()
+	for iter.Seek(prefix); valid && bytes.HasPrefix(iter.Key(), prefix); valid = iter.Next() {
 		if max < 1 {
 			break
 		}
