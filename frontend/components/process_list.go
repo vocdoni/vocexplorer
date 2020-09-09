@@ -113,15 +113,13 @@ func renderProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
 	for _, ID := range store.Processes.ProcessIDs {
 		if ID != "" {
-			height, hok := store.Processes.EnvelopeHeights[ID]
+			height, _ := store.Processes.EnvelopeHeights[ID]
 			info, iok := store.Processes.ProcessResults[ID]
 
-			if iok && hok || !store.Processes.Pagination.Search {
-				elemList = append(
-					elemList,
-					ProcessBlock(ID, iok, height, info),
-				)
-			}
+			elemList = append(
+				elemList,
+				ProcessBlock(ID, iok, height, info),
+			)
 		}
 	}
 	return elemList

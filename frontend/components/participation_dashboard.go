@@ -169,11 +169,11 @@ func UpdateAndRenderParticipationDashboard(d *ParticipationDashboardView) {
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
 			list, ok := api.GetProcessSearch(search)
 			if ok {
-				reverseIDList(&list)
 				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
 			} else {
 				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: [config.ListSize]string{}})
 			}
+			update.ProcessResults()
 		case i := <-store.Envelopes.Pagination.PagChannel:
 		envelopeLoop:
 			for {
