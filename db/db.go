@@ -42,7 +42,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 
 	// Init height keys
 	batch := d.NewBatch()
-	zeroHeight := voctypes.Height{Height: 1}
+	zeroHeight := voctypes.Height{Height: 0}
 	encHeight, err := proto.Marshal(&zeroHeight)
 	if err != nil {
 		log.Error(err)
@@ -53,8 +53,6 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	if ok, err := d.Has([]byte(config.LatestBlockHeightKey)); !ok || err != nil {
 		batch.Put([]byte(config.LatestBlockHeightKey), encHeight)
 	}
-	zeroHeight.Height = 0
-	encHeight, err = proto.Marshal(&zeroHeight)
 	if err != nil {
 		log.Error(err)
 	}
@@ -114,10 +112,12 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 0)
 	latestValidatorCount := GetHeight(d, config.LatestValidatorCountKey, 0)
-	batch := d.NewBatch()
-	fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight(), c, batch)
-	if err := batch.Write(); err != nil {
-		log.Error(err)
+	if latestBlockHeight.GetHeight() > 0 {
+		batch := d.NewBatch()
+		fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight(), c, batch)
+		if err := batch.Write(); err != nil {
+			log.Error(err)
+		}
 	}
 }
 
@@ -722,7 +722,7 @@ func StartTendermint(host string) (*tmhttp.HTTP, bool) {
 
 // GetHeight fetches a height value from the database corresponding to given key
 func GetHeight(d *dvotedb.BadgerDB, key string, def int64) *voctypes.Height {
-	height := &voctypes.Height{Height: def}
+	height := &voctypes.Height{}
 	has, err := d.Has([]byte(key))
 	if err != nil {
 		log.Error(err)
@@ -736,6 +736,9 @@ func GetHeight(d *dvotedb.BadgerDB, key string, def int64) *voctypes.Height {
 		if err != nil {
 			log.Error(err)
 		}
+	}
+	if def > height.GetHeight() {
+		height.Height = def
 	}
 	return height
 }
