@@ -120,11 +120,11 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 				elem.ListItem(
 					vecty.Markup(
 						vecty.MarkupIf(
-							*p.CurrentPage != 0,
+							*p.CurrentPage != 0 || *p.Searching,
 							vecty.Class("page-item"),
 						),
 						vecty.MarkupIf(
-							*p.CurrentPage == 0,
+							*p.CurrentPage == 0 && !*p.Searching,
 							vecty.Class("page-item", "disabled"),
 						),
 					),
@@ -133,11 +133,11 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 							vecty.Class("page-link"),
 							event.Click(p.PageStart),
 							vecty.MarkupIf(
-								*p.CurrentPage != 0,
+								*p.CurrentPage != 0 || *p.Searching,
 								prop.Disabled(false),
 							),
 							vecty.MarkupIf(
-								*p.CurrentPage == 0,
+								*p.CurrentPage == 0 && !*p.Searching,
 								prop.Disabled(true),
 							),
 						),
