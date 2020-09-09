@@ -222,7 +222,7 @@ func buildListItemsHandler(db *dvotedb.BadgerDB, key string, getItem func(key []
 		}
 		items := vocdb.ListItemsByHeight(db, config.ListSize, from, []byte(key))
 		if len(items) == 0 {
-			log.Error("Retrieved no items")
+			log.Errorf("Retrieved no items from key %s, index %d", key, from)
 			http.Error(w, "No items available", http.StatusInternalServerError)
 			return
 		}
