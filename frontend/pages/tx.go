@@ -36,5 +36,8 @@ func (home *TxView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateTxContents(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

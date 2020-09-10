@@ -27,5 +27,8 @@ func (bv *BlocksView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateBlocksDashboard(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

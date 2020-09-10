@@ -27,5 +27,8 @@ func (home *EntitiesView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateEntitiesDashboard(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

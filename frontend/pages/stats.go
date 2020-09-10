@@ -32,5 +32,8 @@ func (stats *Stats) Component() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateStatsDashboard(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

@@ -118,8 +118,6 @@ func startGateway(host string) (*api.GatewayClient, *context.CancelFunc, bool) {
 	gwClient, cancel := api.InitGateway(host)
 	if gwClient == nil {
 		return nil, &cancel, false
-
-	} else {
-		return gwClient, &cancel, true
 	}
+	return gwClient, &cancel, true
 }

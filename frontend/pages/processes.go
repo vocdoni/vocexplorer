@@ -27,5 +27,8 @@ func (home *ProcessesView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateProcessesDashboard(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

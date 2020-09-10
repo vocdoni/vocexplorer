@@ -29,5 +29,8 @@ func (home *ProcessView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateProcessContents(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

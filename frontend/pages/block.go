@@ -36,5 +36,8 @@ func (home *BlockView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateBlockContents(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

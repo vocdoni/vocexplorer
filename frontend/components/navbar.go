@@ -58,70 +58,70 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "blocks",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/blocks", "Blocks"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "transactions",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/transactions", "Transactions"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "entities",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/entities", "Entities"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "processes",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/processes", "Processes"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "envelopes",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/envelopes", "Vote Envelopes"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "validators",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/validators", "Validators"),
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "dropdown"),
+							vecty.Class("nav-item"),
 							vecty.MarkupIf(
 								active == "stats",
-								vecty.Class("nav-item", "dropdown", "active"),
+								vecty.Class("nav-item", "active"),
 							),
 						),
 						NavLink("/stats", "Stats"),

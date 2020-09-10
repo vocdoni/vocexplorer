@@ -29,5 +29,8 @@ func (home *ValidatorView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go dash.UpdateValidatorContents()
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

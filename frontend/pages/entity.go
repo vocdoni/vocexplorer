@@ -29,5 +29,8 @@ func (home *EntityView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateEntityContents(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }

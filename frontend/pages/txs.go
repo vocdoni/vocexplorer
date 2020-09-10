@@ -27,5 +27,8 @@ func (bv *TxsView) Render() vecty.ComponentOrHTML {
 		})
 	}
 	go components.UpdateTxsDashboard(dash)
-	return elem.Div(dash)
+	return elem.Div(
+		&components.Header{},
+		dash,
+	)
 }
