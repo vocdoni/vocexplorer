@@ -44,6 +44,9 @@ func initClient(host string) (*http.HTTP, error) {
 
 // PingTendermint pings the tendermint client and returns true if ok
 func PingTendermint(c *http.HTTP) bool {
+	if c == nil {
+		return false
+	}
 	status, err := c.Status()
 	if err != nil || status == nil {
 		return false
@@ -53,6 +56,9 @@ func PingTendermint(c *http.HTTP) bool {
 
 // GetHealth calls the tendermint Health api
 func GetHealth(c *http.HTTP) *coretypes.ResultStatus {
+	if c == nil {
+		return nil
+	}
 	status, err := c.Status()
 	if err != nil {
 		log.Error(err)
@@ -63,6 +69,9 @@ func GetHealth(c *http.HTTP) *coretypes.ResultStatus {
 
 // GetGenesis gets the first block
 func GetGenesis(c *http.HTTP) *types.GenesisDoc {
+	if c == nil {
+		return nil
+	}
 	result, err := c.Genesis()
 	if err != nil {
 		log.Error(err)
@@ -73,6 +82,9 @@ func GetGenesis(c *http.HTTP) *types.GenesisDoc {
 
 // GetBlock returns the contents of one block
 func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
+	if c == nil {
+		return nil
+	}
 	block, err := c.Block(&height)
 	if err != nil {
 		log.Error(err)
@@ -83,6 +95,9 @@ func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
 
 // GetTransaction gets a transaction by hash
 func GetTransaction(c *http.HTTP, hash []byte) *coretypes.ResultTx {
+	if c == nil {
+		return nil
+	}
 	res, err := c.Tx(hash, false)
 	if err != nil {
 		log.Error(err)

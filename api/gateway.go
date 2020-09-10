@@ -1,11 +1,11 @@
 package api
 
 import (
-	"math/rand"
-
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -317,6 +317,9 @@ func (c *GatewayClient) GetEnvelope(processID, nullifier string) (string, error)
 
 // Request makes a request to the previously connected endpoint
 func (c *GatewayClient) Request(req MetaRequest) (*MetaResponse, error) {
+	if c == nil {
+		return nil, errors.New("Cannot connect to nil gateway client")
+	}
 	method := req.Method
 	req.Timestamp = int32(time.Now().Unix())
 	reqInner, err := json.Marshal(req)
