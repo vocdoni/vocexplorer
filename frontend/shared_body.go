@@ -18,17 +18,19 @@ type Body struct {
 func (b Body) Render() vecty.ComponentOrHTML {
 	return components.SectionMain(
 		router.NewRoute("/", &pages.HomeView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/participation", &pages.ParticipationView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/process/{id}", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/entity/{id}", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/envelope/{id}", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/blocktxs", &pages.BlockTxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/processes", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/process/{id}", &pages.ProcessView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/entities", &pages.EntitiesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/entity/{id}", &pages.EntityView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelopes", &pages.EnvelopesView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/envelope/{id}", &pages.EnvelopeView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/blocks", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/block/{id}", &pages.BlocksView{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/tx/{id}", &pages.TxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/block/{id}", &pages.BlockView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/transactions", &pages.TxsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/transaction/{id}", &pages.TxView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/stats", &pages.Stats{}, router.NewRouteOpts{ExactMatch: true}),
-		router.NewRoute("/validator/{id}", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/validator/{id}", &pages.ValidatorView{}, router.NewRouteOpts{ExactMatch: true}),
 		// Note that this handler only works for router.Link and router.Redirect accesses.
 		// Directly accessing a non-existant route won't be handled by this.
 		router.NotFoundHandler(&notFound{}),

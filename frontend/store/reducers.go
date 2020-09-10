@@ -51,7 +51,7 @@ func entityActions(action interface{}) {
 	case *actions.SetCurrentEntityID:
 		Entities.CurrentEntityID = a.EntityID
 
-	case *actions.EntitiesTabChange:
+	case *actions.EntityTabChange:
 		Entities.Pagination.Tab = a.Tab
 
 	case *actions.SetEntityCount:
@@ -113,7 +113,7 @@ func processActions(action interface{}) {
 	case *actions.SetProcessIDs:
 		Processes.ProcessIDs = a.ProcessIDs
 
-	case *actions.ProcessesTabChange:
+	case *actions.ProcessTabChange:
 		Processes.Pagination.Tab = a.Tab
 
 	case *actions.SetProcessCount:

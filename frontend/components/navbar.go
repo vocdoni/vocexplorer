@@ -52,13 +52,31 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						NavLink("/participation", "Processes, Entities & Envelopes"),
+						NavLink("/blocks", "Blocks"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
 						),
-						NavLink("/blocktxs", "Blocks & Transactions"),
+						NavLink("/transactions", "Transactions"),
+					),
+					elem.ListItem(
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						NavLink("/entities", "Entities"),
+					),
+					elem.ListItem(
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						NavLink("/processes", "Processes"),
+					),
+					elem.ListItem(
+						vecty.Markup(
+							vecty.Class("nav-item", "dropdown"),
+						),
+						NavLink("/envelopes", "Vote Envelopes"),
 					),
 					elem.ListItem(
 						vecty.Markup(

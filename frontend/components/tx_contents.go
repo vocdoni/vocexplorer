@@ -233,8 +233,8 @@ func preformattedTransactionMetadata() vecty.ComponentOrHTML {
 	))
 }
 
-// UpdateAndRenderTxContents keeps the transaction contents up to date
-func UpdateAndRenderTxContents(d *TxContents) {
+// UpdateTxContents keeps the transaction contents up to date
+func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
 	tx, ok := api.GetTx(store.Transactions.CurrentTransactionHeight)

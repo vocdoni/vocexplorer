@@ -66,7 +66,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	i := int64(0)
 	numNewBlocks := util.Min(config.NumBlockUpdates, int(gwBlockHeight-latestBlockHeight.GetHeight()))
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
-	txsList := make([]tmtypes.Txs, numNewBlocks)
+	txsList := make([]tmtypes.transactions, numNewBlocks)
 	complete := make(chan struct{}, config.NumBlockUpdates)
 	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
 	nextHeight := make(chan struct{})
@@ -93,10 +93,10 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
 		complete = make(chan struct{}, len(txsList))
-		for _, txs := range txsList {
-			if len(txs) > 0 {
-				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
-				latestTxHeight.Height += int64(len(txs))
+		for _, transactions := range txsList {
+			if len(transactions) > 0 {
+				go updateTxs(latestTxHeight.GetHeight(), transactions, c, batch, complete, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
+				latestTxHeight.Height += int64(len(transactions))
 			} else {
 				complete <- struct{}{}
 			}
@@ -144,7 +144,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, myHeight, nextHeight chan struct{}, transactions *tmtypes.transactions, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
@@ -167,7 +167,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 		}
 	}
 	var block voctypes.StoreBlock
-	block.NumTxs = int64(len(res.Block.Data.Txs))
+	block.NumTxs = int64(len(res.Block.Data.transactions))
 	block.Hash = res.BlockID.Hash
 	block.Height = res.Block.Header.Height
 	block.Proposer = res.Block.ProposerAddress
@@ -177,7 +177,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 	}
 	block.Time = tm
 
-	*txs = res.Block.Data.Txs
+	*transactions = res.Block.Data.transactions
 
 	bodyValue, err := proto.Marshal(&block)
 	if err != nil {
@@ -298,10 +298,10 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
+func updateTxs(startTxHeight int64, transactions tmtypes.transactions, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
 	numTxs := int64(-1)
 	var blockHeight int64
-	for i, tx := range txs {
+	for i, tx := range transactions {
 		numTxs = int64(i)
 		txRes := api.GetTransaction(c, tx.Hash())
 

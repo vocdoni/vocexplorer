@@ -46,8 +46,8 @@ func (dash *StatsDashboardView) Render() vecty.ComponentOrHTML {
 	}
 }
 
-// UpdateAndRenderStatsDashboard keeps the stats dashboard updated
-func UpdateAndRenderStatsDashboard(d *StatsDashboardView) {
+// UpdateStatsDashboard keeps the stats dashboard updated
+func UpdateStatsDashboard(d *StatsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateStatsDashboard(d)

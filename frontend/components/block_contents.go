@@ -76,8 +76,8 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	)
 }
 
-// UpdateAndRenderBlockContents keeps the block contents up to date
-func UpdateAndRenderBlockContents(d *BlockContents) {
+// UpdateBlockContents keeps the block contents up to date
+func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
 	block := api.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
@@ -222,7 +222,7 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 		if len(store.Blocks.CurrentBlockTxHeights) > i {
 			txHeight = store.Blocks.CurrentBlockTxHeights[i]
 			hashElement = Link(
-				"/tx/"+util.IntToString(txHeight),
+				"/transaction/"+util.IntToString(txHeight),
 				hashString,
 				"",
 			)

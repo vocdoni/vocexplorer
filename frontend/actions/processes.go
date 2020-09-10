@@ -22,8 +22,8 @@ type ProcessEnvelopesPageChange struct {
 	Index int
 }
 
-// ProcessesTabChange is the action to change processes tabs
-type ProcessesTabChange struct {
+// ProcessTabChange is the action to change processes tabs
+type ProcessTabChange struct {
 	Tab string
 }
 

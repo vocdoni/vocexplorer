@@ -94,8 +94,8 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	)
 }
 
-// UpdateAndRenderEnvelopesDashboard keeps the envelope contents up to date
-func UpdateAndRenderEnvelopesDashboard(d *EnvelopeContents) {
+// UpdateEnvelopeContents keeps the envelope contents up to date
+func UpdateEnvelopeContents(d *EnvelopeContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch actual envelope contents
 	envelope, ok := api.GetEnvelope(store.Envelopes.CurrentEnvelopeHeight)

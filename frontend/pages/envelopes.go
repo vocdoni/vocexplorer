@@ -1,31 +1,22 @@
 package pages
 
 import (
-	"strconv"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	router "marwan.io/vecty-router"
 )
 
-// EnvelopesView renders the Envelopes page
+// EnvelopesView renders the processes page
 type EnvelopesView struct {
 	vecty.Core
+	Cfg *config.Cfg
 }
 
 // Render renders the EnvelopesView component
 func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
-	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
-	if err != nil {
-		log.Error(err)
-	}
-	dispatcher.Dispatch(&actions.SetCurrentEnvelopeHeight{Height: height})
-	dash := new(components.EnvelopeContents)
+	dash := new(components.EnvelopesDashboardView)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
 	if !store.Listeners.Has(dash) {
@@ -35,6 +26,6 @@ func (home *EnvelopesView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateAndRenderEnvelopesDashboard(dash)
+	go components.UpdateEnvelopesDashboard(dash)
 	return elem.Div(dash)
 }

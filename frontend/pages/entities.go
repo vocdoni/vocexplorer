@@ -3,22 +3,20 @@ package pages
 import (
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	router "marwan.io/vecty-router"
 )
 
-// EntitiesView renders the Entities page
+// EntitiesView renders the processes page
 type EntitiesView struct {
 	vecty.Core
+	Cfg *config.Cfg
 }
 
 // Render renders the EntitiesView component
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
 	dash := new(components.EntitiesDashboardView)
-	dispatcher.Dispatch(&actions.SetCurrentEntityID{EntityID: router.GetNamedVar(home)["id"]})
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
 	if !store.Listeners.Has(dash) {
@@ -28,6 +26,6 @@ func (home *EntitiesView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateAndRenderEntitiesDashboard(dash)
+	go components.UpdateEntitiesDashboard(dash)
 	return elem.Div(dash)
 }

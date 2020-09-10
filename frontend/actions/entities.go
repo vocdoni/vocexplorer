@@ -19,8 +19,8 @@ type EntityProcessesPageChange struct {
 	Index int
 }
 
-// EntitiesTabChange is the action to change entities tabs
-type EntitiesTabChange struct {
+// EntityTabChange is the action to change entities tabs
+type EntityTabChange struct {
 	Tab string
 }
 

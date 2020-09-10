@@ -17,32 +17,30 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// BlockTxsDashboardView renders the dashboard landing page
-type BlockTxsDashboardView struct {
+// TxsDashboardView renders the dashboard landing page
+type TxsDashboardView struct {
 	vecty.Core
 	vecty.Mounter
 	Rendered bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
-func (dash *BlockTxsDashboardView) Mount() {
+func (dash *TxsDashboardView) Mount() {
 	if !dash.Rendered {
 		dash.Rendered = true
 		vecty.Rerender(dash)
 	}
 }
 
-// Render renders the BlockTxsDashboardView component
-func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
+// Render renders the TxsDashboardView component
+func (dash *TxsDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil && len(store.Blocks.Blocks) > 0 {
+	if dash != nil {
 		return Container(
 			renderGatewayConnectionBanner(),
 			renderServerConnectionBanner(),
-			// &LatestBlocksWidget{},
-			&BlockList{},
 			&TxList{},
 		)
 	}
@@ -52,12 +50,12 @@ func (dash *BlockTxsDashboardView) Render() vecty.ComponentOrHTML {
 	}
 }
 
-// UpdateAndRenderBlockTxsDashboard keeps the block transactions dashboard updated
-func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
+// UpdateTxsDashboard keeps the transactions dashboard updated
+func UpdateTxsDashboard(d *TxsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	updateBlockTxsDashboard(d)
+	updateTxsDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -65,46 +63,7 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateBlockTxsDashboard(d)
-		case i := <-store.Blocks.Pagination.PagChannel:
-		blockloop:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case i = <-store.Blocks.Pagination.PagChannel:
-				default:
-					break blockloop
-				}
-			}
-			log.Println("index: " + util.IntToString(i))
-			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
-			oldBlocks := store.Blocks.Count
-			newHeight, _ := api.GetBlockHeight()
-			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
-			if i < 1 {
-				oldBlocks = store.Blocks.Count
-			}
-			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
-
-		case search := <-store.Blocks.Pagination.SearchChannel:
-		blocksearch:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case search = <-store.Blocks.Pagination.SearchChannel:
-				default:
-					break blocksearch
-				}
-			}
-			log.Println("search: " + search)
-			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
-			list, ok := api.GetBlockSearch(search)
-			if ok {
-				reverseBlockList(&list)
-				dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
-			} else {
-				dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
-			}
+			updateTxsDashboard(d)
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
 			for {
@@ -147,42 +106,23 @@ func UpdateAndRenderBlockTxsDashboard(d *BlockTxsDashboardView) {
 	}
 }
 
-func updateBlockTxsDashboard(d *BlockTxsDashboardView) {
+func updateTxsDashboard(d *TxsDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)
-	if !store.Blocks.Pagination.DisableUpdate {
-		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
-	}
 	if !store.Transactions.Pagination.DisableUpdate {
 		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, 1))
 	}
 }
 
-func updateBlocks(d *BlockTxsDashboardView, index int) {
-	fmt.Printf("Getting Blocks from index %d\n", index)
-	list, ok := api.GetBlockList(index)
-	if ok {
-		reverseBlockList(&list)
-		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
-	}
-}
-
-func updateTxs(d *BlockTxsDashboardView, index int) {
-	fmt.Printf("Getting Txs from index %d\n", index)
+func updateTxs(d *TxsDashboardView, index int) {
+	fmt.Printf("Getting transactions from index %d\n", index)
 	list, ok := api.GetTxList(index)
 	if ok {
 		reverseTxList(&list)
 		dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: list})
-	}
-}
-
-func reverseBlockList(list *[config.ListSize]*proto.StoreBlock) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
 	}
 }
 

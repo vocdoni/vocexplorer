@@ -26,6 +26,6 @@ func (home *HomeView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateAndRenderHomeDashboard(dash)
+	go components.UpdateHomeDashboard(dash)
 	return elem.Div(dash)
 }

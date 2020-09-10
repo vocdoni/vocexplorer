@@ -43,8 +43,8 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-// UpdateAndRenderValidatorsDashboard keeps the validators data up to date
-func UpdateAndRenderValidatorsDashboard(d *ValidatorsDashboardView) {
+// UpdateValidatorsDashboard keeps the validators data up to date
+func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)

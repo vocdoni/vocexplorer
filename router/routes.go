@@ -509,7 +509,7 @@ func ProcessHeightByEntityHandler(db *dvotedb.BadgerDB) func(w http.ResponseWrit
 	return buildHeightByParentHandler(db, "entity", config.EntityProcessCountMapKey)
 }
 
-// ListTxsHandler writes a list of txs starting with the given height key
+// ListTxsHandler writes a list of transactions starting with the given height key
 func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
@@ -524,8 +524,8 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 		}
 		hashes := vocdb.ListItemsByHeight(db, config.ListSize, from, []byte(config.TxHeightPrefix))
 		if len(hashes) == 0 {
-			log.Warnf("No txs available at height %d", from)
-			http.Error(w, "No txs available", http.StatusInternalServerError)
+			log.Warnf("No transactions available at height %d", from)
+			http.Error(w, "No transactions available", http.StatusInternalServerError)
 			return
 		}
 		var rawTxs ptypes.ItemList
@@ -557,7 +557,7 @@ func ListTxsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Re
 			log.Warn(err)
 		}
 		w.Write(msg)
-		log.Debugf("Sent %d txs", len(rawTxs.GetItems()))
+		log.Debugf("Sent %d transactions", len(rawTxs.GetItems()))
 	}
 }
 

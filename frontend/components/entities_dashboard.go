@@ -2,16 +2,17 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -22,11 +23,6 @@ type EntitiesDashboardView struct {
 	Rendered bool
 }
 
-//EntitiesTab is the tab component for entities
-type EntitiesTab struct {
-	*Tab
-}
-
 // Mount is called after the component renders to signal that it can be rerendered safely
 func (dash *EntitiesDashboardView) Mount() {
 	if !dash.Rendered {
@@ -35,84 +31,39 @@ func (dash *EntitiesDashboardView) Mount() {
 	}
 }
 
-func (e *EntitiesTab) dispatch() interface{} {
-	return &actions.EntitiesTabChange{
-		Tab: e.alias(),
-	}
-}
-
-func (e *EntitiesTab) store() string {
-	return store.Entities.Pagination.Tab
-}
-
 // Render renders the EntitiesDashboardView component
 func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash == nil || store.GatewayClient == nil {
-		return Container(&bootstrap.Alert{
-			Type:     "warning",
-			Contents: "Connecting to blockchain client",
-		})
-	}
-
-	return Container(
-		renderGatewayConnectionBanner(),
-		renderServerConnectionBanner(),
-		elem.Section(
-			vecty.Markup(vecty.Class("details-view", "no-column")),
-			elem.Div(
-				vecty.Markup(vecty.Class("row")),
-				elem.Div(
-					vecty.Markup(vecty.Class("main-column")),
-					bootstrap.Card(bootstrap.CardParams{
-						Body: dash.EntityDetails(),
-					}),
-				),
-			),
-		),
-		elem.Section(
-			vecty.Markup(vecty.Class("row")),
-			elem.Div(
-				vecty.Markup(vecty.Class("col-12")),
+	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
+		return Container(
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
+			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
-					Body: &EntityProcessListView{},
+					Body: vecty.List{
+						elem.Heading2(vecty.Text("Entities")),
+						&EntityListView{},
+					},
 				}),
 			),
-		),
+		)
+	}
+	return elem.Div(
+		&bootstrap.Alert{
+			Contents: "Connecting to blockchain clients",
+			Type:     "warning",
+		},
 	)
 }
 
-//EntityDetails renders the details of a single entity
-func (dash *EntitiesDashboardView) EntityDetails() vecty.List {
-	return vecty.List{
-		elem.Heading1(
-			vecty.Text("Entity details"),
-		),
-		elem.Heading2(vecty.Text(store.Entities.CurrentEntityID)),
-		elem.Anchor(
-			vecty.Markup(vecty.Class("hash")),
-			vecty.Markup(vecty.Attribute("href", "https://vocdoni.link/entities/0x"+store.Entities.CurrentEntityID)),
-			vecty.Text("Entity Profile"),
-		),
-	}
-}
-
-// UpdateAndRenderEntitiesDashboard keeps the dashboard data up to date
-func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
+// UpdateEntitiesDashboard continuously updates the information needed by the Entities dashboard
+func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
-	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
-	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-	if ok {
-		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
-	}
-	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	updateEntities(d)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -120,62 +71,78 @@ func UpdateAndRenderEntitiesDashboard(d *EntitiesDashboardView) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
+			updateEntities(d)
 		case i := <-store.Entities.Pagination.PagChannel:
-		loop:
+		entityLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
 				case i = <-store.Entities.Pagination.PagChannel:
 				default:
-					break loop
+					break entityLoop
 				}
 			}
-			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
-			oldProcesses := store.Entities.CurrentEntity.ProcessCount
-			newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
+			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
+			oldEntities := store.Entities.Count
+			newVal, ok := api.GetEntityCount()
 			if ok {
-				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
 			if i < 1 {
-				oldProcesses = store.Entities.CurrentEntity.ProcessCount
+				oldEntities = store.Entities.Count
 			}
-			index := util.Max(oldProcesses-store.Entities.ProcessesIndex, 1)
-			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
-			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
+			if store.Entities.Count > 0 {
+				getEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index, 1))
+			}
+		case search := <-store.Entities.Pagination.SearchChannel:
+		entitySearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Entities.Pagination.SearchChannel:
+				default:
+					break entitySearch
+				}
+			}
+			log.Println("search: " + search)
+			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: 0})
+			list, ok := api.GetEntitySearch(search)
 			if ok {
 				reverseIDList(&list)
-				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+			} else {
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: [config.ListSize]string{}})
 			}
-			newMap, ok := api.GetProcessEnvelopeCountMap()
-			if ok {
-				dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
-			}
-			update.EntityProcessResults()
 		}
 	}
 }
 
-func updateEntityProcesses(d *EntitiesDashboardView, index int) {
-	index--
+func updateEntities(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-
-	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-	if ok {
-		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+	actions.UpdateCounts()
+	if !store.Entities.Pagination.DisableUpdate {
+		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
 	}
-	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.Pagination.DisableUpdate {
-		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
-		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
-		if ok {
-			reverseIDList(&list)
-			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
-		}
-		newMap, ok := api.GetProcessEnvelopeCountMap()
-		if ok {
-			dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
-		}
-		update.EntityProcessResults()
+}
+
+func getEntities(d *EntitiesDashboardView, index int) {
+	index--
+	fmt.Printf("Getting entities from index %d\n", index)
+	list, ok := api.GetEntityList(index)
+	if ok {
+		reverseIDList(&list)
+		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+	}
+	newVal, ok := api.GetEntityProcessCountMap()
+	if ok {
+		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
+	}
+}
+
+func reverseIDList(list *[config.ListSize]string) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
 	}
 }
