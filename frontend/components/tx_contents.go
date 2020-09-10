@@ -238,8 +238,10 @@ func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
 	tx, ok := api.GetTx(store.Transactions.CurrentTransactionHeight)
-	if ok {
+	if ok && tx != nil {
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
+	} else {
+		return
 	}
 	// Set block associated with transaction
 	block, ok := api.GetStoreBlock(store.Transactions.CurrentTransaction.Store.Height)

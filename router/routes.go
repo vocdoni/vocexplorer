@@ -653,7 +653,7 @@ func TxHeightFromHashHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r
 			http.Error(w, "Unable to get tx", http.StatusInternalServerError)
 			return
 		}
-		height := &ptypes.Height{Height: tx.GetHeight()}
+		height := &ptypes.Height{Height: tx.GetTxHeight()}
 		rawHeight, err := proto.Marshal(height)
 		if err != nil {
 			log.Warn(err)
