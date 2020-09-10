@@ -9,7 +9,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/prop"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
@@ -104,6 +103,17 @@ func TransactionView() vecty.List {
 		contents = append(contents, vecty.List{
 			elem.Div(
 				vecty.Markup(vecty.Class("details")),
+				elem.Span(
+					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on "),
+					vecty.If(
+						!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
+						Link(
+							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+							"block "+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+							"",
+						),
+					),
+				),
 				elem.Span(vecty.Text(fmt.Sprintf(
 					"%s (%s)",
 					humanize.Time(store.Transactions.CurrentDecodedTransaction.Time),
@@ -117,6 +127,12 @@ func TransactionView() vecty.List {
 				),
 				elem.Description(
 					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
+				),
+				elem.DefinitionTerm(
+					vecty.Text("Hash"),
+				),
+				elem.Description(
+					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.GetHash())),
 				),
 				vecty.If(
 					store.Transactions.CurrentDecodedTransaction.EntityID != "",
@@ -350,123 +366,116 @@ func UpdateTxContents(d *TxContents) {
 	})
 }
 
-func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
-	accordionName := "accordionTx"
+// func (t *TxContents) renderFullTx() vecty.ComponentOrHTML {
+// 	accordionName := "accordionTx"
 
-	if store.Transactions.CurrentDecodedTransaction == nil {
-		return bootstrap.Card(bootstrap.CardParams{
-			Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
-			Body: elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
-					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
-					vecty.If(
-						!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
-						Link(
-							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
-							util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
-							"",
-						),
-					),
-					vecty.If(
-						proto.BlockIsEmpty(store.Transactions.CurrentBlock),
-						vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
-					),
-				),
-			),
-		},
-		)
-	}
+// if store.Transactions.CurrentDecodedTransaction == nil {
+// 	return bootstrap.Card(bootstrap.CardParams{
+// 		Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
+// 		Body: elem.Div(
+// 			elem.Div(
+// 				vecty.Markup(vecty.Class("dt")),
 
-	return bootstrap.Card(bootstrap.CardParams{
-		Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
-		Body: elem.Div(
-			elem.Div(
-				vecty.Markup(vecty.Class("dt")),
-				vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
-				vecty.If(
-					!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
-					Link(
-						"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
-						util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
-						"",
-					),
-				),
-				vecty.If(
-					proto.BlockIsEmpty(store.Transactions.CurrentBlock),
-					vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
-				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
-					vecty.Text("Hash"),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.GetHash())),
-				),
-				vecty.If(
-					!store.Transactions.CurrentDecodedTransaction.Time.IsZero(),
-					elem.Div(
-						vecty.Text(humanize.Time(store.Transactions.CurrentDecodedTransaction.Time)),
-					),
-				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
-					vecty.Text("Transaction Type"),
-				),
-				elem.Div(
-					vecty.Markup(vecty.Class("dd")),
-					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
-				),
-			),
-			vecty.If(
-				store.Transactions.CurrentDecodedTransaction.EntityID != "",
-				elem.Div(
-					vecty.Text("Belongs to entity "),
-					Link(
-						"/entity/"+store.Transactions.CurrentDecodedTransaction.EntityID,
-						store.Transactions.CurrentDecodedTransaction.EntityID,
-						"",
-					),
-				),
-			),
-			vecty.If(
-				store.Transactions.CurrentDecodedTransaction.ProcessID != "",
-				elem.Div(
-					vecty.Text("Belongs to process "),
-					Link(
-						"/process/"+store.Transactions.CurrentDecodedTransaction.ProcessID,
-						store.Transactions.CurrentDecodedTransaction.ProcessID,
-						"",
-					),
-				),
-			),
-			vecty.If(
-				store.Transactions.CurrentDecodedTransaction.Nullifier != "" && store.Transactions.CurrentDecodedTransaction.RawTx.Type == "vote",
-				elem.Div(
-					vecty.Text("Contains vote envelope "),
-					Link(
-						"/envelope/"+util.IntToString(store.Transactions.CurrentDecodedTransaction.EnvelopeHeight),
-						store.Transactions.CurrentDecodedTransaction.Nullifier,
-						"",
-					),
-				),
-			),
-			elem.Div(
-				vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-				vecty.If(
-					len(store.Transactions.CurrentDecodedTransaction.RawTxContents) > 0,
-					renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.RawTxContents)))),
-				),
-				vecty.If(
-					len(store.Transactions.CurrentDecodedTransaction.Metadata) > 0,
-					renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.Metadata)))),
-				),
-			),
-		),
-	})
-}
+// 				),
+// 				vecty.If(
+// 					proto.BlockIsEmpty(store.Transactions.CurrentBlock),
+// 					vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
+// 				),
+// 			),
+// 		),
+// 	},
+// 	)
+// }
+
+// 	return bootstrap.Card(bootstrap.CardParams{
+// 		Header: vecty.Text("Transaction " + util.IntToString(store.Transactions.CurrentTransaction.Store.TxHeight)),
+// 		Body: elem.Div(
+// 			elem.Div(
+// 				vecty.Markup(vecty.Class("dt")),
+// 				vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on block "),
+// 				vecty.If(
+// 					!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
+// 					Link(
+// 						"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+// 						util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+// 						"",
+// 					),
+// 				),
+// 				vecty.If(
+// 					proto.BlockIsEmpty(store.Transactions.CurrentBlock),
+// 					vecty.Text(util.IntToString(store.Transactions.CurrentTransaction.Store.Height)+" (block not yet available)"),
+// 				),
+// 			),
+// 			elem.Div(
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dt")),
+// 					vecty.Text("Hash"),
+// 				),
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dd")),
+// 					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.GetHash())),
+// 				),
+// 				vecty.If(
+// 					!store.Transactions.CurrentDecodedTransaction.Time.IsZero(),
+// 					elem.Div(
+// 						vecty.Text(humanize.Time(store.Transactions.CurrentDecodedTransaction.Time)),
+// 					),
+// 				),
+// 			),
+// 			elem.Div(
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dt")),
+// 					vecty.Text("Transaction Type"),
+// 				),
+// 				elem.Div(
+// 					vecty.Markup(vecty.Class("dd")),
+// 					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
+// 				),
+// 			),
+// 			vecty.If(
+// 				store.Transactions.CurrentDecodedTransaction.EntityID != "",
+// 				elem.Div(
+// 					vecty.Text("Belongs to entity "),
+// 					Link(
+// 						"/entity/"+store.Transactions.CurrentDecodedTransaction.EntityID,
+// 						store.Transactions.CurrentDecodedTransaction.EntityID,
+// 						"",
+// 					),
+// 				),
+// 			),
+// 			vecty.If(
+// 				store.Transactions.CurrentDecodedTransaction.ProcessID != "",
+// 				elem.Div(
+// 					vecty.Text("Belongs to process "),
+// 					Link(
+// 						"/process/"+store.Transactions.CurrentDecodedTransaction.ProcessID,
+// 						store.Transactions.CurrentDecodedTransaction.ProcessID,
+// 						"",
+// 					),
+// 				),
+// 			),
+// 			vecty.If(
+// 				store.Transactions.CurrentDecodedTransaction.Nullifier != "" && store.Transactions.CurrentDecodedTransaction.RawTx.Type == "vote",
+// 				elem.Div(
+// 					vecty.Text("Contains vote envelope "),
+// 					Link(
+// 						"/envelope/"+util.IntToString(store.Transactions.CurrentDecodedTransaction.EnvelopeHeight),
+// 						store.Transactions.CurrentDecodedTransaction.Nullifier,
+// 						"",
+// 					),
+// 				),
+// 			),
+// 			elem.Div(
+// 				vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
+// 				vecty.If(
+// 					len(store.Transactions.CurrentDecodedTransaction.RawTxContents) > 0,
+// 					renderCollapsible("Transaction Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.RawTxContents)))),
+// 				),
+// 				vecty.If(
+// 					len(store.Transactions.CurrentDecodedTransaction.Metadata) > 0,
+// 					renderCollapsible("Transaction MetaData", accordionName, "Two", elem.Preformatted(vecty.Text(string(store.Transactions.CurrentDecodedTransaction.Metadata)))),
+// 				),
+// 			),
+// 		),
+// 	})
+// }
