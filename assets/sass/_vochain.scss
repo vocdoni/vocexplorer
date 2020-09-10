@@ -4,10 +4,14 @@ pre {
   tab-size: 2;
 }
 
-main > div > progress {
-  width: 100%;
-  height: 2px;
-  vertical-align: top;
+main {
+  min-height: 100vh;
+
+  > div > progress {
+    width: 100%;
+    height: 2px;
+    vertical-align: top;
+  }
 }
 
 .contents-loader {
@@ -67,52 +71,71 @@ main > div > progress {
   }
 }
 
+@mixin tile-color($color) {
+  border-left-color: $color;
+  .type > div {
+    color: darken($color, 10%);
+  }
+}
+
+@mixin desktop-tile-color($color) {
+  .type > div {
+    background-color: lighten($color, 40%);
+    border: 1px solid $color;
+  }
+}
+
 // tile are the long cards with a colored side
 .tile {
   border-radius: 5px;
   font-size: $font-size-xs;
   padding: 1rem;
+  min-height: 3.5rem;
 
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
 
+  &.addProcessKeys {
+    @include tile-color($cyan)
+  }
+
+  &.revealProcessKeys {
+    @include tile-color($teal);
+  }
+
   &.newProcess,
   &.paused {
-    border-left-color: $gray-500;
-    .type > div {
-      color: $gray-600;
-    }
+    @include tile-color(lighten($gray-600, 5%));
   }
   &.cancelProcess,
   &.canceled {
-    border-left-color: $yellow;
-    .type > div {
-      color: darken($yellow, 10%);
-    }
+    @include tile-color($yellow);
   }
 
   @media (min-width: map-get($grid-breakpoints, "md")) {
     padding: 0;
 
+    // Green by default
     .type > div {
-      background-color: lighten($green, 30%);
+      background-color: lighten($green, 40%);
       border: 1px solid $green;
       margin-top: -1px;
       margin-bottom: -1px;
     }
+
+    &.addProcessKeys {
+      @include desktop-tile-color($cyan);
+    }
+    &.revealProcessKeys {
+      @include desktop-tile-color($teal);
+    }
     &.cancelProcess,
     &.canceled {
-      .type > div {
-        background-color: lighten($yellow, 40%);
-        border: 1px solid $yellow;
-      }
+      @include desktop-tile-color($yellow);
     }
     &.newProcess,
     &.paused {
-      .type > div {
-        background-color: $gray-400;
-        border-color: $gray-500;
-      }
+      @include desktop-tile-color(lighten($gray-600, 5%));
     }
   }
 
@@ -241,15 +264,7 @@ main > div > progress {
         @extend .mr-sm-2;
         @extend .d-flex;
         @extend .d-sm-inline-block;
-
-        button:hover, button:focus, button:active {
-          border-color: $gray-300;
-        }
-
-        &:last-child button,
-        button.active {
-          border-bottom-color: transparent;
-        }
+        margin-bottom: 0;
 
         + li {
           button {
@@ -257,19 +272,41 @@ main > div > progress {
           }
         }
 
-        a, button {
+        a, button, &:last-child button {
           @extend .col-12;
           @extend .nav-link;
           border-radius: 0;
           border-color: $gray-200;
+          background-color: lighten($gray-100, 1%);
+          border-bottom: 1px solid $gray-200;
+          color: $gray-600;
+
+          &:hover, &:focus, &:active {
+            border-color: $gray-500;
+            color: $brand-color;
+          }
+
+          &.active {
+            background-color: white;
+            color: $brand-color;
+          }
+        }
+
+        &:last-child button/* ,
+        button.active  */{
+          border-bottom-color: transparent;
         }
 
         @media (min-width: map-get($grid-breakpoints, "sm")) {
+          margin-bottom: -1px;
           a, button, + li button, button.active, &:last-child button {
             border-top-left-radius: $nav-tabs-border-radius;
             border-top-right-radius: $nav-tabs-border-radius;
             border-color: $nav-tabs-link-active-border-color;
             border-bottom: none;
+          }
+          button.active {
+            border-bottom: none !important;
           }
         }
       }

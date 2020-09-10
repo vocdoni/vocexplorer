@@ -67,7 +67,7 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile")),
+		vecty.Markup(vecty.Class("tile", processResults.State)),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
