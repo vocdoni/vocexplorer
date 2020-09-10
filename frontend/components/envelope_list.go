@@ -105,6 +105,7 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 							),
 						),
 						elem.Div(
+							vecty.Markup(vecty.Class("text-truncate")),
 							vecty.If(
 								processEnvelopeCount < 1,
 								vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" envelope on process "),

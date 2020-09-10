@@ -23,7 +23,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 	active := getActivePage()
 	return elem.Navigation(
 		vecty.Markup(
-			vecty.Class("navbar", "navbar-expand-lg", "navbar-light", "bg-light"),
+			vecty.Class("navbar", "navbar-expand-lg", "navbar-dark", "bg-dark"),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("container-fluid")),

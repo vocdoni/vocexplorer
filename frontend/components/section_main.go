@@ -10,5 +10,6 @@ func SectionMain(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
 	return elem.Body(vecty.List{
 		&Header{},
 		elem.Main(markup...),
+		Footer(),
 	})
 }

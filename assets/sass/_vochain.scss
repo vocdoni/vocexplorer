@@ -95,7 +95,7 @@ main > div > progress {
     padding: 0;
 
     .type > div {
-      background-color: lighten($green, 50%);
+      background-color: lighten($green, 30%);
       border: 1px solid $green;
       margin-top: -1px;
       margin-bottom: -1px;
@@ -430,4 +430,29 @@ main > div > progress {
   background-position: center;
   width: 100%;
   height: 100%;
+}
+
+footer {
+  @extend .navbar;
+  @extend .navbar-expand-lg;
+  @extend .navbar-dark;
+  @extend .bg-dark;
+
+  margin-top: 50px;
+  padding: 50px 20px 30px;
+
+  div {
+    flex-direction: column;
+  }
+
+  p {
+    width: 100%;
+    text-align: center;
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
