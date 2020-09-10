@@ -102,7 +102,7 @@ func renderTx(tx *proto.SendTx) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						Link(
-							"transaction/"+util.IntToString(tx.Store.TxHeight),
+							"/transaction/"+util.IntToString(tx.Store.TxHeight),
 							util.HexToString(tx.GetHash()),
 							"",
 						),
