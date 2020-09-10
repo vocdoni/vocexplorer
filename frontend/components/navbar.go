@@ -1,6 +1,9 @@
 package components
 
 import (
+	"strings"
+	"syscall/js"
+
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/event"
@@ -17,6 +20,7 @@ type NavBar struct {
 
 // Render renders the NavBar component
 func (n *NavBar) Render() vecty.ComponentOrHTML {
+	active := getActivePage()
 	return elem.Navigation(
 		vecty.Markup(
 			vecty.Class("navbar", "navbar-expand-lg", "navbar-light", "bg-light"),
@@ -44,49 +48,81 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 					),
 					elem.ListItem(
 						vecty.Markup(
-							vecty.Class("nav-item", "active"),
+							vecty.Class("nav-item"),
+							vecty.MarkupIf(
+								active == "home",
+								vecty.Class("nav-item", "active"),
+							),
 						),
 						NavLink("/", "Home"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "blocks",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/blocks", "Blocks"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "transactions",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/transactions", "Transactions"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "entities",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/entities", "Entities"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "processes",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/processes", "Processes"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "envelopes",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/envelopes", "Vote Envelopes"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "validators",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/validators", "Validators"),
 					),
 					elem.ListItem(
 						vecty.Markup(
 							vecty.Class("nav-item", "dropdown"),
+							vecty.MarkupIf(
+								active == "stats",
+								vecty.Class("nav-item", "dropdown", "active"),
+							),
 						),
 						NavLink("/stats", "Stats"),
 					),
@@ -124,4 +160,28 @@ func Link(route, text, class string) *vecty.HTML {
 		),
 		vecty.Text(text),
 	)
+}
+
+func getActivePage() string {
+	path := js.Global().Get("location").Get("pathname").String()
+	active := ""
+	switch {
+	case strings.Contains(path, "block"):
+		active = "blocks"
+	case strings.Contains(path, "transaction"):
+		active = "transactions"
+	case strings.Contains(path, "entit"):
+		active = "entities"
+	case strings.Contains(path, "process"):
+		active = "processes"
+	case strings.Contains(path, "envelope"):
+		active = "envelopes"
+	case strings.Contains(path, "validator"):
+		active = "validators"
+	case strings.Contains(path, "stats"):
+		active = "stats"
+	default:
+		active = "home"
+	}
+	return active
 }
