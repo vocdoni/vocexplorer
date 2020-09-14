@@ -10,6 +10,11 @@ type ValidatorsIndexChange struct {
 	Index int
 }
 
+// ValidatorBlocksIndexChange is the action to set the pagination index
+type ValidatorBlocksIndexChange struct {
+	Index int
+}
+
 // SetValidatorList is the action to set the validator list
 type SetValidatorList struct {
 	List [config.ListSize]*proto.Validator

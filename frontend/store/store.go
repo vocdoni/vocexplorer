@@ -53,25 +53,34 @@ func init() {
 
 	RedirectChan = make(chan struct{}, 50)
 	Entities.Pagination.PagChannel = make(chan int, 50)
+	Entities.ProcessPagination.PagChannel = make(chan int, 50)
 	Processes.Pagination.PagChannel = make(chan int, 50)
+	Processes.EnvelopePagination.PagChannel = make(chan int, 50)
 	Envelopes.Pagination.PagChannel = make(chan int, 50)
 	Blocks.Pagination.PagChannel = make(chan int, 50)
 	Transactions.Pagination.PagChannel = make(chan int, 50)
 	Validators.Pagination.PagChannel = make(chan int, 50)
+	Validators.BlockPagination.PagChannel = make(chan int, 50)
 
 	Entities.Pagination.SearchChannel = make(chan string, 50)
+	Entities.ProcessPagination.SearchChannel = make(chan string, 50)
 	Processes.Pagination.SearchChannel = make(chan string, 50)
+	Processes.EnvelopePagination.SearchChannel = make(chan string, 50)
 	Envelopes.Pagination.SearchChannel = make(chan string, 50)
 	Blocks.Pagination.SearchChannel = make(chan string, 50)
 	Transactions.Pagination.SearchChannel = make(chan string, 50)
 	Validators.Pagination.SearchChannel = make(chan string, 50)
+	Validators.BlockPagination.SearchChannel = make(chan string, 50)
 
 	Entities.Pagination.Search = false
+	Entities.ProcessPagination.Search = false
 	Processes.Pagination.Search = false
+	Processes.EnvelopePagination.Search = false
 	Envelopes.Pagination.Search = false
 	Blocks.Pagination.Search = false
 	Transactions.Pagination.Search = false
 	Validators.Pagination.Search = false
+	Validators.BlockPagination.Search = false
 
 	Processes.ProcessResults = make(map[string]storeutil.Process)
 	Processes.ProcessKeys = make(map[string]*api.Pkeys)

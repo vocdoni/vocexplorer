@@ -17,11 +17,6 @@ type ProcessEnvelopesIndexChange struct {
 	Index int
 }
 
-// ProcessEnvelopesPageChange is the action to set the pagination page for the current process' envelope list
-type ProcessEnvelopesPageChange struct {
-	Index int
-}
-
 // ProcessTabChange is the action to change processes tabs
 type ProcessTabChange struct {
 	Tab string

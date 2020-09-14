@@ -6,14 +6,13 @@ import (
 
 // Entities stores the current entities information
 type Entities struct {
-	Count           int
-	CurrentEntity   Entity
-	CurrentEntityID string
-	EntityIDs       [config.ListSize]string
-	Pagination      PageStore
-	ProcessesIndex  int
-	ProcessesPage   int
-	ProcessHeights  map[string]int64
+	Count             int
+	CurrentEntity     Entity
+	CurrentEntityID   string
+	EntityIDs         [config.ListSize]string
+	Pagination        PageStore
+	ProcessPagination PageStore
+	ProcessHeights    map[string]int64
 }
 
 // Entity holds info about one vochain entity

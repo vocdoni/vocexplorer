@@ -1,8 +1,6 @@
 package components
 
 import (
-	"syscall/js"
-
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"github.com/gopherjs/vecty/prop"
@@ -15,28 +13,6 @@ func RenderList(slice []string) []vecty.MarkupOrChild {
 		elemList = append(elemList, elem.ListItem(vecty.Text(term)))
 	}
 	return elemList
-}
-
-// BeforeUnload packages the given func in an eventlistener function to be called before page unload
-func BeforeUnload(close func()) {
-	var unloadFunc js.Func
-	unloadFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		close()
-		unloadFunc.Release() // release the function if the button will not be clicked again
-		return nil
-	})
-	js.Global().Call("addEventListener", "beforeunload", unloadFunc)
-}
-
-// OnLoad packages the given func in an eventlistener function to be called on page load
-func OnLoad(close func()) {
-	var loadFunc js.Func
-	loadFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		close()
-		loadFunc.Release() // release the function if the button will not be clicked again
-		return nil
-	})
-	js.Global().Call("addEventListener", "load", loadFunc)
 }
 
 func renderCollapsible(head, accordionName, num string, body vecty.ComponentOrHTML) vecty.ComponentOrHTML {

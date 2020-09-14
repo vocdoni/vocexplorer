@@ -3,7 +3,7 @@ package components
 import (
 	"strings"
 
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -32,40 +32,54 @@ func (b *EnvelopeList) Render() vecty.ComponentOrHTML {
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderEnvelopes(p, index)
+			return elem.Div(renderEnvelopes(p, index)...)
 		}
 		return p
 	}
 	return elem.Div(vecty.Text("No envelopes available"))
 }
 
-func renderEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
-	var EnvelopeList []vecty.MarkupOrChild
-
+func renderEnvelopes(p *Pagination, index int) []vecty.MarkupOrChild {
 	empty := p.ListSize
+	var elemList []vecty.MarkupOrChild
 	for i := len(store.Envelopes.Envelopes) - 1; i >= len(store.Envelopes.Envelopes)-p.ListSize; i-- {
 		if proto.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
 			empty--
 		} else {
 			envelope := store.Envelopes.Envelopes[i]
-			EnvelopeList = append(EnvelopeList, EnvelopeBlock(envelope))
+			elemList = append(elemList, EnvelopeBlock(envelope))
 		}
 	}
-	if empty == 0 {
+	if empty == 0 || len(elemList) < 1 {
 		if *p.Searching {
-			return elem.Div(vecty.Text("No Envelopes Found With Given ID"))
+			return []vecty.MarkupOrChild{vecty.Text("No Envelopes Found With Given ID")}
 		}
-		return elem.Div(vecty.Text("Loading envelopes..."))
+		return []vecty.MarkupOrChild{vecty.Text("Loading envelopes...")}
 	}
-	return elem.Div(
-		EnvelopeList...,
-	)
+	return elemList
 }
 
 // EnvelopeBlock renders a single envelope block
 func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
+	if processResults.EnvelopeCount < 1 && processResults.ProcessType == "" && processResults.State == "" {
+		return elem.Div(
+			vecty.Markup(vecty.Class("tile", "empty")),
+			elem.Div(
+				vecty.Markup(vecty.Class("tile-body")),
+				elem.Div(
+					vecty.Markup(vecty.Class("type")),
+					elem.Div(
+						elem.Span(
+							vecty.Markup(vecty.Class("title")),
+							vecty.Text("Loading envelope..."),
+						),
+					),
+				),
+			),
+		)
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", processResults.State)),
 		elem.Div(

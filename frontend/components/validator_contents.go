@@ -55,20 +55,20 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
-	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.Pagination.Index)
+	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
 	for {
 		select {
-		case i := <-store.Validators.Pagination.PagChannel:
+		case i := <-store.Validators.BlockPagination.PagChannel:
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-store.Validators.Pagination.PagChannel:
+				case i = <-store.Validators.BlockPagination.PagChannel:
 				default:
 					break blockloop
 				}
 			}
-			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
+			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: i})
 			oldBlocks := store.Validators.CurrentBlockCount
 			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 			if ok {
@@ -77,19 +77,19 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			if i < 1 {
 				oldBlocks = store.Validators.CurrentBlockCount
 			}
-			updateValidatorBlocks(contents, oldBlocks-store.Validators.Pagination.Index)
-		case search := <-store.Validators.Pagination.SearchChannel:
+			updateValidatorBlocks(contents, oldBlocks-store.Validators.BlockPagination.Index)
+		case search := <-store.Validators.BlockPagination.SearchChannel:
 		blocksearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case search = <-store.Validators.Pagination.SearchChannel:
+				case search = <-store.Validators.BlockPagination.SearchChannel:
 				default:
 					break blocksearch
 				}
 			}
 			log.Println("search: " + search)
-			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
+			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: 0})
 			list, ok := api.GetBlocksByValidatorSearch(search, store.Validators.CurrentValidatorID)
 			if ok {
 				reverseBlockList(&list)
@@ -102,8 +102,8 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			if !store.Validators.Pagination.DisableUpdate {
-				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.Pagination.Index)
+			if !store.Validators.BlockPagination.DisableUpdate {
+				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
 			}
 		}
 
@@ -187,12 +187,12 @@ func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrH
 		p := &Pagination{
 			TotalPages:      int(store.Validators.CurrentBlockCount) / config.ListSize,
 			TotalItems:      &store.Validators.CurrentBlockCount,
-			CurrentPage:     &store.Validators.Pagination.CurrentPage,
+			CurrentPage:     &store.Validators.BlockPagination.CurrentPage,
 			ListSize:        config.ListSize,
-			DisableUpdate:   &store.Validators.Pagination.DisableUpdate,
-			RefreshCh:       store.Validators.Pagination.PagChannel,
-			SearchCh:        store.Validators.Pagination.SearchChannel,
-			Searching:       &store.Validators.Pagination.Search,
+			DisableUpdate:   &store.Validators.BlockPagination.DisableUpdate,
+			RefreshCh:       store.Validators.BlockPagination.PagChannel,
+			SearchCh:        store.Validators.BlockPagination.SearchChannel,
+			Searching:       &store.Validators.BlockPagination.Search,
 			RenderSearchBar: true,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {

@@ -40,10 +40,7 @@ func entityActions(action interface{}) {
 		Entities.Pagination.Index = a.Index
 
 	case *actions.EntityProcessesIndexChange:
-		Entities.ProcessesIndex = a.Index
-
-	case *actions.EntityProcessesPageChange:
-		Entities.ProcessesPage = a.Index
+		Entities.ProcessPagination.Index = a.Index
 
 	case *actions.SetEntityIDs:
 		Entities.EntityIDs = a.EntityIDs
@@ -105,10 +102,7 @@ func processActions(action interface{}) {
 		Processes.Pagination.Index = a.Index
 
 	case *actions.ProcessEnvelopesIndexChange:
-		Processes.EnvelopesIndex = a.Index
-
-	case *actions.ProcessEnvelopesPageChange:
-		Processes.EnvelopesPage = a.Index
+		Processes.EnvelopePagination.Index = a.Index
 
 	case *actions.SetProcessIDs:
 		Processes.ProcessIDs = a.ProcessIDs
@@ -231,6 +225,9 @@ func validatorActions(action interface{}) {
 	case *actions.ValidatorsIndexChange:
 		Validators.Pagination.Index = a.Index
 
+	case *actions.ValidatorBlocksIndexChange:
+		Validators.BlockPagination.Index = a.Index
+
 	case *actions.SetValidatorList:
 		Validators.Validators = a.List
 
@@ -320,9 +317,12 @@ func disableUpdateActions(action interface{}) {
 	case *actions.EnableAllUpdates:
 		Blocks.Pagination.DisableUpdate = false
 		Entities.Pagination.DisableUpdate = false
+		Entities.ProcessPagination.DisableUpdate = false
 		Envelopes.Pagination.DisableUpdate = false
 		Transactions.Pagination.DisableUpdate = false
 		Validators.Pagination.DisableUpdate = false
+		Validators.BlockPagination.DisableUpdate = false
 		Processes.Pagination.DisableUpdate = false
+		Processes.EnvelopePagination.DisableUpdate = false
 	}
 }

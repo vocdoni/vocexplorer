@@ -18,12 +18,12 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Entities.CurrentEntity.ProcessCount) / config.ListSize,
 			TotalItems:      &store.Entities.CurrentEntity.ProcessCount,
-			CurrentPage:     &store.Entities.ProcessesPage,
-			RefreshCh:       store.Entities.Pagination.PagChannel,
+			CurrentPage:     &store.Entities.ProcessPagination.CurrentPage,
+			RefreshCh:       store.Entities.ProcessPagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   &store.Entities.Pagination.DisableUpdate,
-			SearchCh:        store.Entities.Pagination.SearchChannel,
-			Searching:       &store.Entities.Pagination.Search,
+			DisableUpdate:   &store.Entities.ProcessPagination.DisableUpdate,
+			SearchCh:        store.Entities.ProcessPagination.SearchChannel,
+			Searching:       &store.Entities.ProcessPagination.Search,
 			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {

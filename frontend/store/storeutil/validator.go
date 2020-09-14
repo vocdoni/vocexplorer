@@ -14,5 +14,6 @@ type Validators struct {
 	CurrentValidator   *proto.Validator
 	CurrentValidatorID string
 	Pagination         PageStore
+	BlockPagination    PageStore
 	Validators         [config.ListSize]*proto.Validator
 }

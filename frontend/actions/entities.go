@@ -9,13 +9,8 @@ type EntitiesIndexChange struct {
 	Index int
 }
 
-// EntityProcessesIndexChange is the action to set the pagination index for the current entity's process list
+// EntityProcessesIndexChange is the action to set the pagination index
 type EntityProcessesIndexChange struct {
-	Index int
-}
-
-// EntityProcessesPageChange is the action to set the pagination page for the current entity's process list
-type EntityProcessesPageChange struct {
 	Index int
 }
 

@@ -37,6 +37,25 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 	return elem.Div(vecty.Text("No processes available"))
 }
 
+func renderProcessItems() []vecty.MarkupOrChild {
+	if len(store.Processes.ProcessIDs) == 0 {
+		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
+	}
+	var elemList []vecty.MarkupOrChild
+	for _, ID := range store.Processes.ProcessIDs {
+		if ID != "" {
+			height, _ := store.Processes.EnvelopeHeights[ID]
+			info, iok := store.Processes.ProcessResults[ID]
+
+			elemList = append(
+				elemList,
+				ProcessBlock(ID, iok, height, info),
+			)
+		}
+	}
+	return elemList
+}
+
 //ProcessBlock renders a single process card
 func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
 	if !ok {
@@ -92,23 +111,4 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 			),
 		),
 	)
-}
-
-func renderProcessItems() []vecty.MarkupOrChild {
-	if len(store.Processes.ProcessIDs) == 0 {
-		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
-	}
-	var elemList []vecty.MarkupOrChild
-	for _, ID := range store.Processes.ProcessIDs {
-		if ID != "" {
-			height, _ := store.Processes.EnvelopeHeights[ID]
-			info, iok := store.Processes.ProcessResults[ID]
-
-			elemList = append(
-				elemList,
-				ProcessBlock(ID, iok, height, info),
-			)
-		}
-	}
-	return elemList
 }

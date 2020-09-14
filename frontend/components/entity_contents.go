@@ -102,8 +102,6 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 // UpdateEntityContents keeps the dashboard data up to date
 func UpdateEntityContents(d *EntityContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: 0})
-	dispatcher.Dispatch(&actions.EntityProcessesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
@@ -112,7 +110,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
-	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
+	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -120,13 +118,13 @@ func UpdateEntityContents(d *EntityContentsView) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessesIndex, 1))
-		case i := <-store.Entities.Pagination.PagChannel:
+			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
+		case i := <-store.Entities.ProcessPagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-store.Entities.Pagination.PagChannel:
+				case i = <-store.Entities.ProcessPagination.PagChannel:
 				default:
 					break loop
 				}
@@ -140,7 +138,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 			if i < 1 {
 				oldProcesses = store.Entities.CurrentEntity.ProcessCount
 			}
-			index := util.Max(oldProcesses-store.Entities.ProcessesIndex, 1)
+			index := util.Max(oldProcesses-store.Entities.ProcessPagination.Index, 1)
 			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
 			if ok {
@@ -165,7 +163,7 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
-	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.Pagination.DisableUpdate {
+	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.ProcessPagination.DisableUpdate {
 		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {

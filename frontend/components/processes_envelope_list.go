@@ -22,12 +22,12 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 		p := &Pagination{
 			TotalPages:      int(store.Processes.CurrentProcess.EnvelopeCount) / config.ListSize,
 			TotalItems:      &store.Processes.CurrentProcess.EnvelopeCount,
-			CurrentPage:     &store.Processes.EnvelopesPage,
-			RefreshCh:       store.Processes.Pagination.PagChannel,
+			CurrentPage:     &store.Processes.EnvelopePagination.CurrentPage,
+			RefreshCh:       store.Processes.EnvelopePagination.PagChannel,
 			ListSize:        config.ListSize,
-			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
-			SearchCh:        store.Processes.Pagination.SearchChannel,
-			Searching:       &store.Processes.Pagination.Search,
+			DisableUpdate:   &store.Processes.EnvelopePagination.DisableUpdate,
+			SearchCh:        store.Processes.EnvelopePagination.SearchChannel,
+			Searching:       &store.Processes.EnvelopePagination.Search,
 			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {

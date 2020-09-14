@@ -179,8 +179,6 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: 0})
-	dispatcher.Dispatch(&actions.ProcessEnvelopesPageChange{Index: 0})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateProcessContents(d)
 	for {
@@ -191,12 +189,12 @@ func UpdateProcessContents(d *ProcessContentsView) {
 			return
 		case <-ticker.C:
 			updateProcessContents(d)
-		case i := <-store.Processes.Pagination.PagChannel:
+		case i := <-store.Processes.EnvelopePagination.PagChannel:
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
 				select {
-				case i = <-store.Processes.Pagination.PagChannel:
+				case i = <-store.Processes.EnvelopePagination.PagChannel:
 				default:
 					break loop
 				}
@@ -211,7 +209,7 @@ func UpdateProcessContents(d *ProcessContentsView) {
 				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
 			}
 			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
-				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopesIndex, 1))
+				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopePagination.Index, 1))
 			}
 		}
 	}
@@ -226,7 +224,7 @@ func updateProcessContents(d *ProcessContentsView) {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
-		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopesIndex, 1))
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
 	}
 }
 
