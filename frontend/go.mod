@@ -11,6 +11,7 @@ require (
 	gitlab.com/vocdoni/vocexplorer v0.0.0-20200903194749-046f8672292b
 	golang.org/x/text v0.3.3
 	marwan.io/vecty-router v0.0.0-20190701140924-0b5c86ca8801
+	nhooyr.io/websocket v1.8.6
 )
 
 replace gitlab.com/vocdoni/vocexplorer => ../

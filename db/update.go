@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
@@ -17,13 +16,15 @@ import (
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
+	"nhooyr.io/websocket"
 )
 
-func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
+func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 	// Fetch latest block & tx heights
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
 	latestTxHeight := GetHeight(d, config.LatestTxHeightKey, 1)
@@ -37,7 +38,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	procEnvHeightMap := GetHeightMap(d, config.ProcessEnvelopeCountMapKey)
 	procEnvHeightMapMutex := new(sync.Mutex)
 
-	status, err := c.Status()
+	status, err := rpc.Status(c)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -47,7 +48,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 				exit <- struct{}{}
 				return
 			}
-			status, err = c.Status()
+			status, err = rpc.Status(c)
 			if err == nil {
 				break
 			}
@@ -144,13 +145,13 @@ func updateBlockList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, c *websocket.Conn, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
 	}()
 	// Thread-safe api request
-	res, err := c.Block(&height)
+	res, err := rpc.Block(c, &height)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -160,7 +161,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 				exit <- struct{}{}
 				return
 			}
-			res, err = c.Block(&height)
+			res, err = rpc.Block(c, &height)
 			if err == nil {
 				break
 			}
@@ -213,7 +214,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *tmhttp.HTTP, complete, my
 	(*batch).Put(validatorHeightKey, hashValue)
 }
 
-func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
+func updateValidatorList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 0)
 	latestValidatorCount := GetHeight(d, config.LatestValidatorCountKey, 0)
 	if latestBlockHeight.GetHeight() > 0 {
@@ -225,10 +226,10 @@ func updateValidatorList(d *dvotedb.BadgerDB, c *tmhttp.HTTP) {
 	}
 }
 
-func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dvotedb.Batch) {
+func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
-	resultValidators, err := c.Validators(&blockHeight, page, 100)
+	resultValidators, err := rpc.Validators(c, &blockHeight, page, 100)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -238,7 +239,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 				exit <- struct{}{}
 				return
 			}
-			resultValidators, err = c.Validators(&blockHeight, page, 100)
+			resultValidators, err = rpc.Validators(c, &blockHeight, page, 100)
 			if err == nil {
 				break
 			}
@@ -246,7 +247,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 	}
 	// Check if there are more validators.
 	for len(resultValidators.Validators) == maxPerPage {
-		moreValidators, err := c.Validators(&blockHeight, page, maxPerPage)
+		moreValidators, err := rpc.Validators(c, &blockHeight, page, maxPerPage)
 		// If error is returned, try the request more times, then fatal.
 		if err != nil {
 			log.Error(err)
@@ -256,7 +257,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 					exit <- struct{}{}
 					return
 				}
-				moreValidators, err = c.Validators(&blockHeight, page, maxPerPage)
+				moreValidators, err = rpc.Validators(c, &blockHeight, page, maxPerPage)
 				if err == nil {
 					break
 				}
@@ -298,7 +299,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *tmhttp.HTTP, batch dv
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *tmhttp.HTTP, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *websocket.Conn, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
 	numTxs := int64(-1)
 	var blockHeight int64
 	for i, tx := range txs {

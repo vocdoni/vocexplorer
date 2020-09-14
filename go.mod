@@ -8,9 +8,11 @@ require (
 	github.com/golang/protobuf v1.4.0
 	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/gorilla/mux v1.7.3
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.1.3 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.3
+	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.7
 	gitlab.com/vocdoni/go-dvote v0.5.2
 	golang.org/x/text v0.3.3 // indirect

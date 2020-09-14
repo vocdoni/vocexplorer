@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gopherjs/vecty"
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"nhooyr.io/websocket"
 )
 
 func main() {
@@ -46,7 +46,7 @@ func initFrontend() {
 }
 
 func initClients(cfg *config.Cfg) {
-	var tm *tmhttp.HTTP
+	var tm *websocket.Conn
 	var gw *api.GatewayClient
 	for i := 0; i < 5 && tm == nil; i++ {
 		tm = api.StartTendermintClient(cfg.TendermintHost)

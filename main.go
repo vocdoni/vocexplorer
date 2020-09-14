@@ -15,6 +15,8 @@ import (
 	"github.com/gorilla/mux"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	"gitlab.com/vocdoni/vocexplorer/router"
@@ -107,13 +109,13 @@ func main() {
 	var d *dvotedb.BadgerDB
 	if !cfg.Global.Detached {
 		// Get ChainID for db directory
-		tmClient, ok := db.StartTendermint(cfg.Global.TendermintHost)
+		tmClient, ok := api.StartTendermint(cfg.Global.TendermintHost)
 		if !ok {
 			cfg.Global.Detached = true
 		} else {
-			gen, err := tmClient.Genesis()
+			gen, err := rpc.Genesis(tmClient)
 			if err != nil {
-				log.Error(err)
+				log.Fatal(err)
 			}
 			cfg.ChainID = gen.Genesis.ChainID
 			d, err = db.NewDB(cfg.DataDir, cfg.ChainID)

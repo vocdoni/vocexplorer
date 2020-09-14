@@ -1,11 +1,9 @@
 package db
 
 import (
-	"context"
 	"errors"
 	"time"
 
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
@@ -60,22 +58,22 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	batch.Write()
 
 	// Init tendermint client
-	tClient, ok := StartTendermint(tmHost)
+	tClient, ok := api.StartTendermint(tmHost)
 	if !ok {
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
-	log.Info("Connected to " + tmHost)
+	log.Debugf("Connected to " + tmHost)
 
 	// Init gateway client
-	gwClient, cancel, up := startGateway(gwHost)
+	gwClient, cancel, up := api.StartGateway(gwHost)
 	if !up {
 		log.Warn("Cannot connect to gateway api. Running as detached database")
 		*detached = true
 		return
 	}
 	defer (*cancel)()
-	log.Info("Connected to " + gwHost)
+	log.Debugf("Connected to %s", gwHost)
 
 	i := 0
 	for {
@@ -96,28 +94,4 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 			i++
 		}
 	}
-}
-
-//StartTendermint starts the tendermint client
-func StartTendermint(host string) (*tmhttp.HTTP, bool) {
-	for i := 0; ; i++ {
-		if i > 20 {
-			return nil, false
-		}
-		tmClient := api.StartTendermintClient(host)
-		if tmClient == nil {
-			time.Sleep(1 * time.Second)
-			continue
-		} else {
-			return tmClient, true
-		}
-	}
-}
-
-func startGateway(host string) (*api.GatewayClient, *context.CancelFunc, bool) {
-	gwClient, cancel := api.InitGateway(host)
-	if gwClient == nil {
-		return nil, &cancel, false
-	}
-	return gwClient, &cancel, true
 }

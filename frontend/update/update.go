@@ -3,7 +3,6 @@ package update
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/rpc/client/http"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -11,6 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"nhooyr.io/websocket"
 )
 
 // Gateway API updates
@@ -159,7 +159,7 @@ func EntityProcessResults() {
 // Tendermint API updates
 
 //BlockchainStatus updates the blockchain statistics
-func BlockchainStatus(c *http.HTTP) {
+func BlockchainStatus(c *websocket.Conn) {
 	status := api.GetHealth(c)
 	genesis := api.GetGenesis(c)
 	dispatcher.Dispatch(&actions.SetResultStatus{Status: status})

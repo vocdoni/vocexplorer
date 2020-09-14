@@ -13,6 +13,15 @@ import (
 	"nhooyr.io/websocket"
 )
 
+// StartGateway starts a gateway client and returns true if ok
+func StartGateway(host string) (*GatewayClient, *context.CancelFunc, bool) {
+	gwClient, cancel := InitGateway(host)
+	if gwClient == nil {
+		return nil, &cancel, false
+	}
+	return gwClient, &cancel, true
+}
+
 // InitGateway initializes a connection with the gateway
 func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client

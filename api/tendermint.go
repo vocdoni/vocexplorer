@@ -1,20 +1,36 @@
 package api
 
 import (
-	gohttp "net/http"
 	"time"
 
-	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
+	"nhooyr.io/websocket"
 )
 
+//StartTendermint starts the tendermint client
+func StartTendermint(host string) (*websocket.Conn, bool) {
+	for i := 0; ; i++ {
+		if i > 20 {
+			return nil, false
+		}
+		hostCopy := string([]byte(host))
+		tmClient := StartTendermintClient(hostCopy)
+		if tmClient == nil {
+			time.Sleep(1 * time.Second)
+			continue
+		} else {
+			return tmClient, true
+		}
+	}
+}
+
 // StartTendermintClient initializes an http tendermint api client on websockets
-func StartTendermintClient(host string) *http.HTTP {
+func StartTendermintClient(host string) *websocket.Conn {
 	log.Infof("connecting to %s", host)
-	tClient, err := initClient(host)
+	tClient, err := rpc.NewClient(host)
 	if err != nil {
 		log.Warn(err.Error())
 		return nil
@@ -22,32 +38,12 @@ func StartTendermintClient(host string) *http.HTTP {
 	return tClient
 }
 
-func initClient(host string) (*http.HTTP, error) {
-	httpClient, err := jsonrpcclient.DefaultHTTPClient(host)
-	if err != nil {
-		return nil, err
-	}
-	httpClient.Timeout = 2 * time.Second
-	// Increase max idle connections. This fixes issue with too many concurrent requests, as described here: https://github.com/golang/go/issues/16012
-	httpClient.Transport.(*gohttp.Transport).MaxIdleConnsPerHost = 10000
-	c, err := http.NewWithClient(host, "/websocket", httpClient)
-	// c, err := http.NewWithTimeout(host, "/websocket", 2)
-	if err != nil {
-		return nil, err
-	}
-	_, err = c.Status()
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-}
-
 // PingTendermint pings the tendermint client and returns true if ok
-func PingTendermint(c *http.HTTP) bool {
+func PingTendermint(c *websocket.Conn) bool {
 	if c == nil {
 		return false
 	}
-	status, err := c.Status()
+	status, err := rpc.Status(c)
 	if err != nil || status == nil {
 		return false
 	}
@@ -55,11 +51,11 @@ func PingTendermint(c *http.HTTP) bool {
 }
 
 // GetHealth calls the tendermint Health api
-func GetHealth(c *http.HTTP) *coretypes.ResultStatus {
+func GetHealth(c *websocket.Conn) *coretypes.ResultStatus {
 	if c == nil {
 		return nil
 	}
-	status, err := c.Status()
+	status, err := rpc.Status(c)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -68,11 +64,11 @@ func GetHealth(c *http.HTTP) *coretypes.ResultStatus {
 }
 
 // GetGenesis gets the first block
-func GetGenesis(c *http.HTTP) *types.GenesisDoc {
+func GetGenesis(c *websocket.Conn) *types.GenesisDoc {
 	if c == nil {
 		return nil
 	}
-	result, err := c.Genesis()
+	result, err := rpc.Genesis(c)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -81,11 +77,11 @@ func GetGenesis(c *http.HTTP) *types.GenesisDoc {
 }
 
 // GetBlock returns the contents of one block
-func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
+func GetBlock(c *websocket.Conn, height int64) *coretypes.ResultBlock {
 	if c == nil {
 		return nil
 	}
-	block, err := c.Block(&height)
+	block, err := rpc.Block(c, &height)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -94,11 +90,11 @@ func GetBlock(c *http.HTTP, height int64) *coretypes.ResultBlock {
 }
 
 // GetTransaction gets a transaction by hash
-func GetTransaction(c *http.HTTP, hash []byte) *coretypes.ResultTx {
+func GetTransaction(c *websocket.Conn, hash []byte) *coretypes.ResultTx {
 	if c == nil {
 		return nil
 	}
-	res, err := c.Tx(hash, false)
+	res, err := rpc.Tx(c, hash, false)
 	if err != nil {
 		log.Error(err)
 		return nil
