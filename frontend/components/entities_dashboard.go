@@ -108,7 +108,6 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: 0})
 			list, ok := api.GetEntitySearch(search)
 			if ok {
-				reverseIDList(&list)
 				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 			} else {
 				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: [config.ListSize]string{}})
@@ -131,18 +130,10 @@ func getEntities(d *EntitiesDashboardView, index int) {
 	fmt.Printf("Getting entities from index %d\n", index)
 	list, ok := api.GetEntityList(index)
 	if ok {
-		reverseIDList(&list)
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 	}
 	newVal, ok := api.GetEntityProcessCountMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
-	}
-}
-
-func reverseIDList(list *[config.ListSize]string) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
 	}
 }

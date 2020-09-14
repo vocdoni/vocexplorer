@@ -31,7 +31,7 @@ const (
 	NumBlockUpdates = 100
 	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
 	DBWaitTime = 0
-	//ProcessHeightPrefix is the key prefix for process id's by height
+	//ProcessHeightPrefix is the key prefix for processes by height
 	ProcessHeightPrefix = "ph_"
 	//EntityHeightPrefix is the key prefix for entity id's by height
 	EntityHeightPrefix = "eh_"
@@ -57,7 +57,7 @@ const (
 	ProcessByEntityPrefix = "pe_"
 	//ValidatorHeightPrefix is the key prefix for validator IDs by height
 	ValidatorHeightPrefix = "vh_"
-	//ProcessIDPrefix is the key prefix for process ID's as standalone keys (for iteration over keys)
+	//ProcessIDPrefix is the key prefix for process heights by ID
 	ProcessIDPrefix = "pid"
 	//EntityIDPrefix is the key prefix for entity ID's as standalone keys (for iteration over keys)
 	EntityIDPrefix = "eid"

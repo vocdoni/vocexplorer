@@ -3,11 +3,14 @@ package components
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessListView renders the process list pane
@@ -38,18 +41,15 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 }
 
 func renderProcessItems() []vecty.MarkupOrChild {
-	if len(store.Processes.ProcessIDs) == 0 {
-		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
-	}
 	var elemList []vecty.MarkupOrChild
-	for _, ID := range store.Processes.ProcessIDs {
-		if ID != "" {
-			height, _ := store.Processes.EnvelopeHeights[ID]
-			info, iok := store.Processes.ProcessResults[ID]
+	for _, process := range store.Processes.Processes {
+		if process != nil {
+			height, _ := store.Processes.EnvelopeHeights[process.ID]
+			info, iok := store.Processes.ProcessResults[process.ID]
 
 			elemList = append(
 				elemList,
-				ProcessBlock(ID, iok, height, info),
+				ProcessBlock(process, iok, height, info),
 			)
 		}
 	}
@@ -57,8 +57,8 @@ func renderProcessItems() []vecty.MarkupOrChild {
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
-	if !ok {
+func ProcessBlock(process *proto.Process, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+	if !ok || process == nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile", "empty")),
 			elem.Div(
@@ -75,6 +75,7 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 			),
 		)
 	}
+	entityHeight := store.Entities.ProcessHeights[process.EntityID]
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", info.State)),
 		elem.Div(
@@ -96,8 +97,27 @@ func ProcessBlock(ID string, ok bool, height int64, info storeutil.Process) vect
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						Link("/process/"+ID,
-							ID,
+						Link("/process/"+process.ID,
+							process.ID,
+							"hash",
+						),
+					),
+					elem.Div(
+						vecty.If(
+							entityHeight < 1,
+							vecty.Text(humanize.Ordinal(int(process.GetLocalHeight().GetHeight()+1))+" process hosted by entity "),
+						),
+						vecty.If(
+							entityHeight > 1,
+							vecty.Text(humanize.Ordinal(int(process.GetLocalHeight().GetHeight()+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
+						),
+						vecty.If(
+							entityHeight == 1,
+							vecty.Text("only process hosted by entity "),
+						),
+						Link(
+							"/entity/"+util.TrimHex(process.GetEntityID()),
+							util.TrimHex(process.GetEntityID()),
 							"hash",
 						),
 					),

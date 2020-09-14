@@ -122,11 +122,11 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 							vecty.Markup(vecty.Class("text-truncate")),
 							vecty.If(
 								processEnvelopeCount < 1,
-								vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" envelope on process "),
+								vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "),
 							),
 							vecty.If(
 								processEnvelopeCount > 1,
-								vecty.Text(humanize.Ordinal(int(envelope.GetProcessCount()))+" of "+util.IntToString(processEnvelopeCount)+" envelopes on process "),
+								vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" of "+util.IntToString(processEnvelopeCount)+" envelopes on process "),
 							),
 							vecty.If(
 								processEnvelopeCount == 1,

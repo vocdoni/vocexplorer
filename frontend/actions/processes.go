@@ -22,9 +22,9 @@ type ProcessTabChange struct {
 	Tab string
 }
 
-// SetProcessIDs is the action to set the process list
-type SetProcessIDs struct {
-	ProcessIDs [config.ListSize]string
+// SetProcessList is the action to set the process list
+type SetProcessList struct {
+	Processes [config.ListSize]*proto.Process
 }
 
 // SetProcessCount is the action to set the process count
@@ -69,9 +69,9 @@ type SetCurrentProcess struct {
 	Process storeutil.Process
 }
 
-// SetCurrentProcessID is the action to set the current process ID
-type SetCurrentProcessID struct {
-	ID string
+// SetCurrentProcessStruct is the action to set the current process
+type SetCurrentProcessStruct struct {
+	Process *proto.Process
 }
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process

@@ -18,10 +18,10 @@ type ProcessesEnvelopeListView struct {
 
 // Render renders the EnvelopeListView component
 func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
-	if store.Processes.CurrentProcess.EnvelopeCount > 0 {
+	if store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
 		p := &Pagination{
-			TotalPages:      int(store.Processes.CurrentProcess.EnvelopeCount) / config.ListSize,
-			TotalItems:      &store.Processes.CurrentProcess.EnvelopeCount,
+			TotalPages:      int(store.Processes.CurrentProcessResults.EnvelopeCount) / config.ListSize,
+			TotalItems:      &store.Processes.CurrentProcessResults.EnvelopeCount,
 			CurrentPage:     &store.Processes.EnvelopePagination.CurrentPage,
 			RefreshCh:       store.Processes.EnvelopePagination.PagChannel,
 			ListSize:        config.ListSize,
@@ -31,7 +31,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderProcessEnvelopes(p, store.Processes.CurrentProcess, index)
+			return renderProcessEnvelopes(p, store.Processes.CurrentProcessResults, index)
 		}
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-envelopes")),
@@ -78,7 +78,7 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("card-header")),
 				NavLink(
 					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetProcessCount()),
+					util.IntToString(envelope.GetGlobalHeight()),
 				),
 			),
 			elem.Div(

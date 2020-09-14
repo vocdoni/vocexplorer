@@ -42,19 +42,19 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 }
 
 func renderEntityProcessItems() []vecty.MarkupOrChild {
-	if len(store.Entities.CurrentEntity.ProcessIDs) == 0 {
-		return []vecty.MarkupOrChild{vecty.Text("No valid processes")}
-	}
 	var elemList []vecty.MarkupOrChild
-	for _, ID := range store.Entities.CurrentEntity.ProcessIDs {
-		if ID != "" {
-			height, _ := store.Processes.EnvelopeHeights[ID]
-			info, iok := store.Processes.ProcessResults[ID]
+	for _, process := range store.Entities.CurrentEntity.Processes {
+		if process != nil {
+			ID := process.ID
+			if ID != "" {
+				height, _ := store.Processes.EnvelopeHeights[ID]
+				info, iok := store.Processes.ProcessResults[ID]
 
-			elemList = append(
-				elemList,
-				ProcessBlock(ID, iok, height, info),
-			)
+				elemList = append(
+					elemList,
+					ProcessBlock(process, iok, height, info),
+				)
+			}
 		}
 	}
 	return elemList

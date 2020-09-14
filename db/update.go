@@ -14,6 +14,7 @@ import (
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	dvoteutil "gitlab.com/vocdoni/go-dvote/util"
 	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/rpc"
@@ -442,7 +443,7 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 			}
 		}
 	}
-	if localProcessHeight == gatewayProcessHeight {
+	if localProcessHeight >= gatewayProcessHeight {
 		return
 	}
 
@@ -494,7 +495,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 		complete <- struct{}{}
 	}()
 
-	var lastProcess []byte
+	var lastRawProcess []byte
 	rawEntity, err := hex.DecodeString(util.TrimHex(entity))
 	// Get Entity|LocalHeight:ProcessHeight
 	entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
@@ -509,18 +510,28 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 		if err != nil {
 			globalHeight.Height = -1
 		}
-		// Get ProcessHeight:PID
+		// Get ProcessHeight:Process
 		lastProcessKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight.GetHeight())...)
-		lastProcess, err = db.Get(lastProcessKey)
+		lastRawProcess, err = db.Get(lastProcessKey)
 		if err != nil {
 			log.Debugf("Process Key not found: %s", err.Error())
-			lastProcess = []byte{}
+			lastRawProcess = []byte{}
 		}
 	}
-
+	var lastProcess voctypes.Process
+	if len(lastRawProcess) > 0 {
+		err := proto.Unmarshal(lastRawProcess, &lastProcess)
+		if err != nil {
+			log.Error(err)
+		}
+	}
 	requestMutex.Lock()
-	log.Debugf("Getting processes from id %s", util.HexToString(lastProcess))
-	newProcessList, err := c.GetProcessList(entity, strings.ToLower(util.HexToString(lastProcess)))
+	lastPID := lastProcess.ID
+	log.Debugf("Getting processes from id %s", lastPID)
+	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
+		lastPID = ""
+	}
+	newProcessList, err := c.GetProcessList(entity, lastPID)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -530,7 +541,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 				exit <- struct{}{}
 				return
 			}
-			newProcessList, err = c.GetProcessList(entity, strings.ToLower(util.HexToString(lastProcess)))
+			newProcessList, err = c.GetProcessList(entity, lastPID)
 			if err == nil {
 				break
 			}
@@ -540,12 +551,8 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	if len(newProcessList) < 1 {
 		return
 	}
-	var process string
-	for _, process = range newProcessList {
-		rawProcess, err := hex.DecodeString(util.TrimHex(process))
-		if err != nil {
-			log.Error(err)
-		}
+	var process voctypes.Process
+	for _, processID := range newProcessList {
 		heightMapMutex.Lock()
 		*numNew++
 		globalHeight := int(height) + *numNew
@@ -553,22 +560,35 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 		heightMap.Heights[entity]++
 		heightMapMutex.Unlock()
 
-		// Write Height:PID
+		process.ID = processID
+		process.EntityID = entity
+		process.LocalHeight = &voctypes.Height{Height: localHeight}
+		rawProcess, err := proto.Marshal(&process)
+		if err != nil {
+			log.Error(err)
+		}
+		rawPID, err := hex.DecodeString(util.TrimHex(processID))
+		if err != nil {
+			log.Error(err)
+		}
+
+		// Write Height:Process
 		processKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight)...)
 		batch.Put(processKey, rawProcess)
 
-		// Write PID:[]
-		processIDKey := append([]byte(config.ProcessIDPrefix), rawProcess...)
-		batch.Put(processIDKey, []byte{})
-
-		// Write Entity|LocalHeight:ProcessHeight
-		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
-		entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight))...)
 		storeHeight := &voctypes.Height{Height: int64(globalHeight)}
 		rawStoreHeight, err := proto.Marshal(storeHeight)
 		if err != nil {
 			log.Error(err)
 		}
+		// Write PID:Processheight
+		processIDKey := append([]byte(config.ProcessIDPrefix), rawPID...)
+		batch.Put(processIDKey, rawStoreHeight)
+
+		// Write Entity|LocalHeight:ProcessHeight
+		entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
+		entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight))...)
+
 		batch.Put(entityProcessKey, rawStoreHeight)
 	}
 }

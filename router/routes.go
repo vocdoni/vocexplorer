@@ -812,8 +812,15 @@ func SearchEnvelopesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r 
 func SearchProcessesHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter, r *http.Request) {
 	return buildSearchHandler(db,
 		config.ProcessIDPrefix,
-		true,
-		nil,
+		false,
+		func(key []byte) ([]byte, error) {
+			height := &ptypes.Height{}
+			err := proto.Unmarshal(key, height)
+			if err != nil {
+				log.Warn("Unable to unmarshal process height")
+			}
+			return db.Get(append([]byte(config.ProcessHeightPrefix), util.EncodeInt(height.GetHeight())...))
+		},
 	)
 }
 

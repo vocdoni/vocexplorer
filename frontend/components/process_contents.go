@@ -42,10 +42,10 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 		}
 	}
 
-	if store.Processes.CurrentProcess.ProcessType == "" {
+	if store.Processes.CurrentProcessResults.ProcessType == "" {
 		dispatcher.Dispatch(&actions.SetProcessType{Type: "unknown"})
 	}
-	if store.Processes.CurrentProcess.State == "" {
+	if store.Processes.CurrentProcessResults.State == "" {
 		dispatcher.Dispatch(&actions.SetProcessState{State: "unknown"})
 	}
 
@@ -82,22 +82,22 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		elem.Heading1(
 			vecty.Text("Process details"),
 		),
-		elem.Heading2(vecty.Text(store.Processes.CurrentProcessID)),
+		elem.Heading2(vecty.Text(store.Processes.CurrentProcess.ID)),
 		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
-				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcess.State)),
-				vecty.Text(store.Processes.CurrentProcess.State),
+				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcessResults.State)),
+				vecty.Text(store.Processes.CurrentProcessResults.State),
 			),
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(
 			elem.DefinitionTerm(vecty.Text("Process type")),
-			elem.Description(vecty.Text(store.Processes.CurrentProcess.ProcessType)),
+			elem.Description(vecty.Text(store.Processes.CurrentProcessResults.ProcessType)),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(store.Processes.CurrentProcess.State)),
+			elem.Description(vecty.Text(store.Processes.CurrentProcessResults.State)),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
-			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcess.EnvelopeCount))),
+			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcessResults.EnvelopeCount))),
 		),
 	}
 }
@@ -138,7 +138,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(results, renderResults(store.Processes.CurrentProcess.Results)),
+			TabContents(results, renderResults(store.Processes.CurrentProcessResults.Results)),
 			TabContents(envelopes, &ProcessesEnvelopeListView{}),
 		),
 	}
@@ -200,15 +200,15 @@ func UpdateProcessContents(d *ProcessContentsView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
-			oldEnvelopes := store.Processes.CurrentProcess.EnvelopeCount
-			newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
+			oldEnvelopes := store.Processes.CurrentProcessResults.EnvelopeCount
+			newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
 			if ok {
 				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 			}
 			if i < 1 {
-				oldEnvelopes = store.Processes.CurrentProcess.EnvelopeCount
+				oldEnvelopes = store.Processes.CurrentProcessResults.EnvelopeCount
 			}
-			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
+			if store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
 				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopePagination.Index, 1))
 			}
 		}
@@ -219,18 +219,18 @@ func updateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
-	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcessID)
+	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 	}
-	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
-		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
+	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
+		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcessResults.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
 	}
 }
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {
 	fmt.Printf("Getting envelopes from index %d\n", index)
-	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcessID)
+	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcess.ID)
 	if ok {
 		reverseEnvelopeList(&list)
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -264,14 +265,14 @@ func GetEntitySearch(term string) ([config.ListSize]string, bool) {
 }
 
 //GetProcessSearch returns a list of processes from the database according to the search term
-func GetProcessSearch(term string) ([config.ListSize]string, bool) {
-	itemList, ok := getItemList("", "/api/processsearch/?term="+term)
+func GetProcessSearch(term string) ([config.ListSize]*types.Process, bool) {
+	itemList, ok := getItemList(&types.Process{}, "/api/processsearch/?term="+term)
 	if !ok {
-		return [config.ListSize]string{}, false
+		return [config.ListSize]*types.Process{}, false
 	}
-	list, ok := itemList.([config.ListSize]string)
+	list, ok := itemList.([config.ListSize]*types.Process)
 	if !ok {
-		return [config.ListSize]string{}, false
+		return [config.ListSize]*types.Process{}, false
 	}
 	return list, true
 }
@@ -522,20 +523,21 @@ func GetEntityList(i int) ([config.ListSize]string, bool) {
 }
 
 //GetProcessList returns a list of entities from the database
-func GetProcessList(i int) ([config.ListSize]string, bool) {
+func GetProcessList(i int) ([config.ListSize]*types.Process, bool) {
 	body, ok := request("/api/listprocesses/?from=" + util.IntToString(i))
 	if !ok {
-		return [config.ListSize]string{}, false
+		return [config.ListSize]*types.Process{}, false
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
 	if err != nil {
 		log.Error(err)
 	}
-	var processList [config.ListSize]string
+	var processList [config.ListSize]*types.Process
 	for i, rawProcess := range rawProcessList.GetItems() {
 		if len(rawProcess) > 0 {
-			process := strings.ToLower(util.HexToString(rawProcess))
+			process := new(types.Process)
+			err = proto.Unmarshal(rawProcess, process)
 			processList[i] = process
 			if err != nil {
 				log.Error(err)
@@ -546,24 +548,28 @@ func GetProcessList(i int) ([config.ListSize]string, bool) {
 }
 
 //GetProcessListByEntity returns a list of processes by entity
-func GetProcessListByEntity(i int, entity string) ([config.ListSize]string, bool) {
+func GetProcessListByEntity(i int, entity string) ([config.ListSize]*types.Process, bool) {
 	body, ok := request("/api/listprocessesbyentity/?from=" + util.IntToString(i) + "&entity=" + entity)
 	if !ok {
-		return [config.ListSize]string{}, false
+		return [config.ListSize]*types.Process{}, false
 	}
 	var rawProcessList types.ItemList
 	err := proto.Unmarshal(body, &rawProcessList)
 	if err != nil {
 		log.Error(err)
 	}
-	var envList [config.ListSize]string
+	var processList [config.ListSize]*types.Process
 	for i, rawProcess := range rawProcessList.GetItems() {
 		if len(rawProcess) > 0 {
-			envelope := strings.ToLower(util.HexToString(rawProcess))
-			envList[i] = envelope
+			process := new(types.Process)
+			err = proto.Unmarshal(rawProcess, process)
+			processList[i] = process
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
-	return envList, true
+	return processList, true
 }
 
 //GetStats gets the latest blockchain statistics
@@ -633,7 +639,23 @@ func getItemList(itemType interface{}, url string) (interface{}, bool) {
 			}
 		}
 		return itemList, true
+	case *types.Process:
+		itemList := [config.ListSize]*types.Process{}
+		fmt.Println("unmarshalling processes")
+		for i, rawItem := range rawItemList.GetItems() {
+			fmt.Println("unmarshalling process")
+			if len(rawItem) > 0 {
+				var item types.Process
+				err = proto.Unmarshal(rawItem, &item)
+				if err != nil {
+					log.Error(err)
+				}
+				itemList[i] = &item
+			}
+		}
+		return itemList, true
 	case string:
+		fmt.Println("unmarshalling strings")
 		itemList := [config.ListSize]string{}
 		for i, rawItem := range rawItemList.GetItems() {
 			if len(rawItem) > 0 {

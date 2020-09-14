@@ -142,7 +142,6 @@ func UpdateEntityContents(d *EntityContentsView) {
 			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
 			if ok {
-				reverseIDList(&list)
 				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
 			}
 			newMap, ok := api.GetProcessEnvelopeCountMap()
@@ -167,7 +166,6 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
 		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {
-			reverseIDList(&list)
 			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
 		}
 		newMap, ok := api.GetProcessEnvelopeCountMap()

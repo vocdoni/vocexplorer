@@ -14,6 +14,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -111,9 +112,9 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
 			list, ok := api.GetProcessSearch(search)
 			if ok {
-				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
+				dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: [config.ListSize]string{}})
+				dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*proto.Process{}})
 			}
 			update.ProcessResults()
 		}
@@ -135,8 +136,7 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	fmt.Printf("Getting processes from index %d\n", index)
 	list, ok := api.GetProcessList(index)
 	if ok {
-		reverseIDList(&list)
-		dispatcher.Dispatch(&actions.SetProcessIDs{ProcessIDs: list})
+		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 	}
 	newVal, ok := api.GetProcessEnvelopeCountMap()
 	if ok {

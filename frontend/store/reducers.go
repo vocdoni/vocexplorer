@@ -58,7 +58,7 @@ func entityActions(action interface{}) {
 		Entities.ProcessHeights = a.ProcessHeights
 
 	case *actions.SetEntityProcessList:
-		Entities.CurrentEntity.ProcessIDs = a.ProcessList
+		Entities.CurrentEntity.Processes = a.ProcessList
 
 	case *actions.SetEntityProcessCount:
 		Entities.CurrentEntity.ProcessCount = a.Count
@@ -104,8 +104,8 @@ func processActions(action interface{}) {
 	case *actions.ProcessEnvelopesIndexChange:
 		Processes.EnvelopePagination.Index = a.Index
 
-	case *actions.SetProcessIDs:
-		Processes.ProcessIDs = a.ProcessIDs
+	case *actions.SetProcessList:
+		Processes.Processes = a.Processes
 
 	case *actions.ProcessTabChange:
 		Processes.Pagination.Tab = a.Tab
@@ -123,22 +123,22 @@ func processActions(action interface{}) {
 		Processes.ProcessKeys[a.ID] = a.Keys
 
 	case *actions.SetProcessState:
-		Processes.CurrentProcess.State = a.State
+		Processes.CurrentProcessResults.State = a.State
 
 	case *actions.SetProcessType:
-		Processes.CurrentProcess.ProcessType = a.Type
+		Processes.CurrentProcessResults.ProcessType = a.Type
 
 	case *actions.SetCurrentProcessEnvelopeHeight:
-		Processes.CurrentProcess.EnvelopeCount = a.Height
+		Processes.CurrentProcessResults.EnvelopeCount = a.Height
 
 	case *actions.SetCurrentProcess:
+		Processes.CurrentProcessResults = a.Process
+
+	case *actions.SetCurrentProcessStruct:
 		Processes.CurrentProcess = a.Process
 
-	case *actions.SetCurrentProcessID:
-		Processes.CurrentProcessID = a.ID
-
 	case *actions.SetCurrentProcessEnvelopes:
-		Processes.CurrentProcess.Envelopes = a.EnvelopeList
+		Processes.CurrentProcessResults.Envelopes = a.EnvelopeList
 
 	default:
 		return // don't fire listeners

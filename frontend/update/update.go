@@ -74,20 +74,23 @@ func GetIDs(IDList *[]string, c *api.GatewayClient, getList func() ([]string, er
 
 // ProcessResults updates auxilary info for all currently displayed process id's
 func ProcessResults() {
-	for _, ID := range store.Processes.ProcessIDs {
-		if ID != "" {
-			if _, ok := store.Processes.ProcessResults[ID]; !ok {
-				t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
-				if err != nil {
-					log.Error(err)
-				} else {
-					dispatcher.Dispatch(&actions.SetProcessContents{
-						ID: ID,
-						Process: storeutil.Process{
-							ProcessType: t,
-							State:       st,
-							Results:     res},
-					})
+	for _, process := range store.Processes.Processes {
+		if process != nil {
+			ID := process.ID
+			if ID != "" {
+				if _, ok := store.Processes.ProcessResults[ID]; !ok {
+					t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
+					if err != nil {
+						log.Error(err)
+					} else {
+						dispatcher.Dispatch(&actions.SetProcessContents{
+							ID: ID,
+							Process: storeutil.Process{
+								ProcessType: t,
+								State:       st,
+								Results:     res},
+						})
+					}
 				}
 			}
 		}
@@ -121,7 +124,7 @@ func EnvelopeProcessResults() {
 
 // CurrentProcessResults updates current process information
 func CurrentProcessResults() {
-	t, st, res, err := store.GatewayClient.GetProcessResults(store.Processes.CurrentProcessID)
+	t, st, res, err := store.GatewayClient.GetProcessResults(store.Processes.CurrentProcess.ID)
 	if err != nil {
 		log.Error(err)
 	} else {
@@ -136,20 +139,23 @@ func CurrentProcessResults() {
 
 // EntityProcessResults ensures the given entity's processes' results are all stored
 func EntityProcessResults() {
-	for _, ID := range store.Entities.CurrentEntity.ProcessIDs {
-		if ID != "" {
-			if _, ok := store.Processes.ProcessResults[ID]; !ok {
-				t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
-				if err != nil {
-					log.Error(err)
-				} else {
-					dispatcher.Dispatch(&actions.SetProcessContents{
-						ID: ID,
-						Process: storeutil.Process{
-							ProcessType: t,
-							State:       st,
-							Results:     res},
-					})
+	for _, process := range store.Entities.CurrentEntity.Processes {
+		if process != nil {
+			ID := process.ID
+			if ID != "" {
+				if _, ok := store.Processes.ProcessResults[ID]; !ok {
+					t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
+					if err != nil {
+						log.Error(err)
+					} else {
+						dispatcher.Dispatch(&actions.SetProcessContents{
+							ID: ID,
+							Process: storeutil.Process{
+								ProcessType: t,
+								State:       st,
+								Results:     res},
+						})
+					}
 				}
 			}
 		}

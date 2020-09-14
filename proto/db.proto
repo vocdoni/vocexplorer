@@ -54,6 +54,12 @@ message Validator {
     Height height = 5;
 }
 
+message Process {
+    string ID = 1;
+    string EntityID = 2;
+    Height LocalHeight = 3;
+}
+
 message HeightMap {
     map<string, int64> heights = 1;
 }
