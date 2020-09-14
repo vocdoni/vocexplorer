@@ -5,6 +5,11 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
+// TransactionTabChange is the action to change between tabs in transaction view details
+type EnvelopesTabChange struct {
+	Tab string
+}
+
 // EnvelopesIndexChange is the action to set the pagination index
 type EnvelopesIndexChange struct {
 	Index int

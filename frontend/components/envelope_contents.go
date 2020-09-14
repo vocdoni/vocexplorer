@@ -3,11 +3,11 @@ package components
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/hexops/vecty/prop"
 	"gitlab.com/vocdoni/go-dvote/crypto/nacl"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
@@ -42,6 +42,7 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
 		return LoadingBar()
 	}
+
 	if store.Envelopes.CurrentEnvelope == nil || proto.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
 		return elem.Div(
 			elem.Main(vecty.Text("Envelope not available")),
@@ -87,11 +88,23 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	contents.DisplayPackage = displayPackage
 	contents.VotePackage = votePackage
 
-	return elem.Main(
-		renderEnvelopeHeader(),
-		vecty.Text(contents.DecryptionStatus),
-		contents.renderVotePackage(),
-	)
+	return Container(DetailsView(
+		contents.EnvelopeView(),
+		contents.EnvelopeDetails(),
+	))
+}
+
+type EnvelopeTab struct {
+	*Tab
+}
+
+func (t *EnvelopeTab) store() string {
+	return store.Envelopes.Pagination.Tab
+}
+func (t *EnvelopeTab) dispatch() interface{} {
+	return &actions.EnvelopesTabChange{
+		Tab: t.alias(),
+	}
 }
 
 // UpdateEnvelopeContents keeps the envelope contents up to date
@@ -113,43 +126,66 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 	}
 }
 
-func renderEnvelopeHeader() vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-header")),
-				Link(
-					"/envelope/"+util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
-					util.IntToString(store.Envelopes.CurrentEnvelope.GetGlobalHeight()),
-					"nav-link",
-				),
-			),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
-				elem.Div(
-					vecty.Markup(vecty.Class("block-card-heading")),
-					elem.Div(
-						vecty.Text(humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight()))+" envelope on process "),
-						Link(
-							"/process/"+util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
-							util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
-							"hash",
-						),
-					),
-					elem.Div(
-						elem.Div(
-							vecty.Markup(vecty.Class("dt")),
-							vecty.Text("Nullifier"),
-						),
-						elem.Div(
-							vecty.Markup(vecty.Class("dd")),
-							vecty.Text(store.Envelopes.CurrentEnvelope.GetNullifier()),
-						),
-					),
-				),
+func (c *EnvelopeContents) EnvelopeView() vecty.List {
+	return vecty.List{
+		elem.Heading1(
+			vecty.Markup(vecty.Class("card-title")),
+			vecty.Text("Envelope details"),
+		),
+		elem.Heading2(
+			vecty.Text(fmt.Sprintf(
+				"Envelope height: %d",
+				store.Envelopes.CurrentEnvelope.GetGlobalHeight(),
+			)),
+		),
+		elem.HorizontalRule(),
+		elem.DescriptionList(
+			elem.DefinitionTerm(vecty.Text("Belongs to process")),
+			elem.Description(Link(
+				"/process/"+util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
+				util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
+				"hash",
+			)),
+			elem.DefinitionTerm(vecty.Text("Position in process")),
+			elem.Description(vecty.Text(
+				humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight())),
+			)),
+			elem.DefinitionTerm(vecty.Text("Nullifier")),
+			elem.Description(vecty.Text(
+				store.Envelopes.CurrentEnvelope.GetNullifier(),
+			)),
+			elem.DefinitionTerm(vecty.Text("Decryption status")),
+			elem.Description(vecty.Text(
+				c.DecryptionStatus,
+			)),
+		),
+	}
+}
+
+func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
+	cTab := &EnvelopeTab{&Tab{
+		Text:  "Contents",
+		Alias: "contents",
+	}}
+
+	contents := c.renderVotePackage()
+
+	if contents == nil {
+		return nil
+	}
+
+	return vecty.List{
+		elem.Navigation(
+			vecty.Markup(vecty.Class("tabs")),
+			elem.UnorderedList(
+				TabLink(c, cTab),
 			),
 		),
-	)
+		elem.Div(
+			vecty.Markup(vecty.Class("tabs-content")),
+			TabContents(cTab, contents),
+		),
+	}
 }
 
 func (contents *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
@@ -158,11 +194,7 @@ func (contents *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
 		if err != nil {
 			log.Error(err)
 		}
-		accordionName := "accordionEnv"
-		return elem.Div(
-			vecty.Markup(vecty.Class("accordion"), prop.ID(accordionName)),
-			renderCollapsible("Envelope Contents", accordionName, "One", elem.Preformatted(vecty.Text(string(voteString)))),
-		)
+		return elem.Preformatted(vecty.Text(string(voteString)))
 	}
 	return nil
 }

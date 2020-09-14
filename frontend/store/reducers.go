@@ -88,6 +88,9 @@ func envelopeActions(action interface{}) {
 	case *actions.SetCurrentEnvelopeHeight:
 		Envelopes.CurrentEnvelopeHeight = a.Height
 
+	case *actions.EnvelopesTabChange:
+		Envelopes.Pagination.Tab = a.Tab
+
 	default:
 		return // don't fire listeners
 	}

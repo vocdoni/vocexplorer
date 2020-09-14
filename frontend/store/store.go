@@ -50,6 +50,7 @@ func init() {
 	Processes.Pagination.Tab = "results"
 	Entities.Pagination.Tab = "processes"
 	Transactions.Pagination.Tab = "contents"
+	Envelopes.Pagination.Tab = "contents"
 
 	RedirectChan = make(chan struct{}, 50)
 	Entities.Pagination.PagChannel = make(chan int, 50)

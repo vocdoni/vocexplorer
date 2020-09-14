@@ -1,6 +1,8 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -16,62 +18,46 @@ func ValidatorCard(validator *proto.Validator) vecty.ComponentOrHTML {
 	if ok || numBlocks > 0 {
 		blocks = util.IntToString(numBlocks)
 	}
-	return bootstrap.Card(bootstrap.CardParams{
-		Header: Link(
-			"/validator/"+util.HexToString(validator.GetAddress()),
-			"#"+util.IntToString(validator.GetHeight().GetHeight()),
+	vLink := func(text string) vecty.ComponentOrHTML {
+		return Link(
+			fmt.Sprintf("/validator/%x", validator.GetAddress()),
+			text,
 			"",
-		),
+		)
+	}
+	return bootstrap.Card(bootstrap.CardParams{
+		Header: vLink(fmt.Sprintf("#%d", validator.GetHeight().GetHeight())),
 		Body: vecty.List{
-			elem.Div(
-				vecty.Markup(vecty.Class("detail", "text-truncate", "mt-2")),
-				elem.Span(
-					vecty.Markup(vecty.Class("dt", "mr-2")),
+			elem.DescriptionList(
+				elem.DefinitionTerm(
 					vecty.Text("Address"),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
+				elem.Description(
 					vecty.Markup(vecty.Attribute("title", util.HexToString(validator.GetAddress()))),
-					vecty.Text(util.HexToString(validator.GetAddress())),
+					vLink(util.HexToString(validator.GetAddress())),
 				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+				elem.DefinitionTerm(
 					vecty.Text("Blocks proposed: "),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
+				elem.Description(
 					vecty.Text(blocks),
 				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+				elem.DefinitionTerm(
 					vecty.Text("PubKey"),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
+				elem.Description(
 					vecty.Text(util.HexToString(validator.GetPubKey())),
 				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+				elem.DefinitionTerm(
 					vecty.Text("Priority"),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
+				elem.Description(
 					vecty.Text(util.IntToString(validator.GetProposerPriority())),
 				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+				elem.DefinitionTerm(
 					vecty.Text("Voting Power"),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
+				elem.Description(
 					vecty.Text(util.IntToString(validator.GetVotingPower())),
 				),
 			),

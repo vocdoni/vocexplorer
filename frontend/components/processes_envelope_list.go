@@ -34,10 +34,6 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			return renderProcessEnvelopes(p, store.Processes.CurrentProcessResults, index)
 		}
 		return elem.Div(
-			vecty.Markup(vecty.Class("recent-envelopes")),
-			elem.Heading3(
-				vecty.Text("Envelopes"),
-			),
 			p,
 		)
 	}
@@ -76,9 +72,10 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
-				NavLink(
+				Link(
 					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetGlobalHeight()),
+					util.IntToString(envelope.GetProcessHeight()),
+					"",
 				),
 			),
 			elem.Div(

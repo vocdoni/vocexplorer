@@ -66,8 +66,12 @@ main {
     font-size: $font-size-xxs;
   }
 
-  .detail {
+  .card dl {
     font-size: $font-size-xs;
+    flex-direction: column;
+    dd, dt {
+      @extend .col-12;
+    }
   }
 }
 
@@ -224,7 +228,7 @@ main {
 
 
 .card {
-  dl {
+  dl, .detail {
     @extend .row;
 
     dt {
@@ -250,7 +254,7 @@ main {
     margin-right: -$card-spacer-x;
 
     ul {
-      padding: $card-spacer-x;
+      padding: 0;
       padding-bottom: 0;
 
       @extend .nav;
@@ -296,8 +300,11 @@ main {
         button.active  */{
           border-bottom-color: transparent;
         }
-
-        @media (min-width: map-get($grid-breakpoints, "sm")) {
+      }
+      @media (min-width: map-get($grid-breakpoints, "sm")) {
+        padding: $card-spacer-x;
+        padding-bottom: 0;
+        li {
           margin-bottom: -1px;
           a, button, + li button, button.active, &:last-child button {
             border-top-left-radius: $nav-tabs-border-radius;
@@ -317,7 +324,7 @@ main {
   }
 }
 
-.tabs-content pre {
+.card-body pre {
   padding: 1rem;
   margin: 0;
   background-color: #f8f9fa;
@@ -454,6 +461,34 @@ main {
       bottom: 0;
       right: 0;
       left: 0;
+    }
+  }
+}
+
+.poll-results {
+  @extend .row;
+  > div {
+    @extend .col-12;
+    @extend .col-md-3;
+    border-bottom: 1px solid $gray-200;
+    margin-bottom: $card-spacer-x;
+
+  }
+  .question {
+    display: block;
+    background: lighten($brand-color, 70%);
+    color: $brand-color;
+    padding: .5rem 1rem;
+    font-weight: bold;
+    margin-bottom: .5rem;
+  }
+  ol {
+    list-style-type: lower-latin;
+    padding-left: 2rem;
+  }
+  @media (min-width: map-get($grid-breakpoints, "md")) {
+    > div {
+      border-bottom: none;
     }
   }
 }

@@ -10,6 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/proto"
@@ -33,13 +34,34 @@ func (contents *ValidatorContents) Mount() {
 
 // Render renders the ValidatorContents component
 func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
+
 	if !contents.Rendered {
 		return LoadingBar()
 	}
+
 	return Container(
 		renderServerConnectionBanner(),
-		contents.renderValidatorHeader(),
-		contents.renderValidatorBlockList(),
+		elem.Section(
+			vecty.Markup(vecty.Class("details-view", "no-column")),
+			elem.Div(
+				vecty.Markup(vecty.Class("row")),
+				elem.Div(
+					vecty.Markup(vecty.Class("main-column")),
+					bootstrap.Card(bootstrap.CardParams{
+						Body: ValidatorView(),
+					}),
+				),
+			),
+		),
+		elem.Section(
+			vecty.Markup(vecty.Class("row", "paginated", "list")),
+			elem.Div(
+				vecty.Markup(vecty.Class("col-12")),
+				bootstrap.Card(bootstrap.CardParams{
+					Body: ValidatorDetails(),
+				}),
+			),
+		),
 	)
 }
 
@@ -106,9 +128,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
 			}
 		}
-
 	}
-
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
@@ -126,88 +146,82 @@ func updateValidatorBlocks(contents *ValidatorContents, i int) {
 	}
 }
 
-func (contents *ValidatorContents) renderValidatorHeader() vecty.ComponentOrHTML {
-	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
-		elem.Div(vecty.Markup(vecty.Class("card")),
-			elem.Div(
-				elem.Heading2(
-					vecty.Markup(vecty.Class("card-header")),
-					vecty.Text("Validator Address "+util.HexToString(store.Validators.CurrentValidator.GetAddress())),
-				),
-			),
-			elem.Div(
-				vecty.Markup(vecty.Class("card-body")),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Blocks"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(store.Validators.CurrentBlockCount)),
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Priority"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(store.Validators.CurrentValidator.GetProposerPriority())),
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("Voting Power"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.IntToString(store.Validators.CurrentValidator.GetVotingPower())),
-					),
-				),
-				elem.Div(
-					elem.Div(
-						vecty.Markup(vecty.Class("dt")),
-						vecty.Text("PubKey"),
-					),
-					elem.Div(
-						vecty.Markup(vecty.Class("dd")),
-						vecty.Text(util.HexToString(store.Validators.CurrentValidator.GetPubKey())),
-					),
-				),
-			),
+func ValidatorView() vecty.List {
+	return vecty.List{
+		elem.Heading1(
+			vecty.Markup(vecty.Class("card-title")),
+			vecty.Text("Validator details"),
 		),
-	)
+		elem.Heading2(
+			vecty.Text(fmt.Sprintf(
+				"Validator address: %x",
+				store.Validators.CurrentValidator.GetAddress(),
+			)),
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("details")),
+			elem.Span(vecty.Text(fmt.Sprintf(
+				"Validated %d blocks",
+				store.Validators.CurrentBlockCount,
+			))),
+		),
+		elem.HorizontalRule(),
+		elem.DescriptionList(
+			elem.DefinitionTerm(vecty.Text("Address")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%x", store.Validators.CurrentValidator.GetAddress()),
+			)),
+			elem.DefinitionTerm(vecty.Text("Public key")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%x", store.Validators.CurrentValidator.GetPubKey()),
+			)),
+			elem.DefinitionTerm(vecty.Text("Blocks")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%d", store.Validators.CurrentBlockCount),
+			)),
+			elem.DefinitionTerm(vecty.Text("Proposing priority")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%d", store.Validators.CurrentValidator.GetProposerPriority()),
+			)),
+			elem.DefinitionTerm(vecty.Text("Voting power")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%d", store.Validators.CurrentValidator.GetVotingPower()),
+			)),
+		),
+	}
 }
 
-func (contents *ValidatorContents) renderValidatorBlockList() vecty.ComponentOrHTML {
-	if store.Validators.CurrentBlockCount > 0 {
-		p := &Pagination{
-			TotalPages:      int(store.Validators.CurrentBlockCount) / config.ListSize,
-			TotalItems:      &store.Validators.CurrentBlockCount,
-			CurrentPage:     &store.Validators.BlockPagination.CurrentPage,
-			ListSize:        config.ListSize,
-			DisableUpdate:   &store.Validators.BlockPagination.DisableUpdate,
-			RefreshCh:       store.Validators.BlockPagination.PagChannel,
-			SearchCh:        store.Validators.BlockPagination.SearchChannel,
-			Searching:       &store.Validators.BlockPagination.Search,
-			RenderSearchBar: true,
-		}
-		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderValidatorBlocks(p, store.Validators.CurrentBlockList)
-		}
-
-		return elem.Div(
-			vecty.Markup(vecty.Class("recent-blocks")),
-			elem.Heading3(
-				vecty.Text("Blocks"),
+func ValidatorDetails() vecty.ComponentOrHTML {
+	if store.Validators.CurrentBlockCount <= 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			elem.Code(
+				vecty.Text("There aren't any blocks validated, yet"),
 			),
-			p,
 		)
 	}
-	return elem.Div(elem.Heading5(vecty.Text("No blocks validated")))
+
+	p := &Pagination{
+		TotalPages:      int(store.Validators.CurrentBlockCount) / config.ListSize,
+		TotalItems:      &store.Validators.CurrentBlockCount,
+		CurrentPage:     &store.Validators.BlockPagination.CurrentPage,
+		ListSize:        config.ListSize,
+		DisableUpdate:   &store.Validators.BlockPagination.DisableUpdate,
+		RefreshCh:       store.Validators.BlockPagination.PagChannel,
+		SearchCh:        store.Validators.BlockPagination.SearchChannel,
+		Searching:       &store.Validators.BlockPagination.Search,
+		RenderSearchBar: true,
+	}
+	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
+		return renderValidatorBlocks(p, store.Validators.CurrentBlockList)
+	}
+
+	return elem.Div(
+		elem.Heading3(
+			vecty.Text("Blocks"),
+		),
+		p,
+	)
 }
 
 func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBlock) vecty.ComponentOrHTML {
@@ -219,7 +233,10 @@ func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBl
 			empty--
 		} else {
 			block := blocks[i]
-			blockList = append(blockList, BlockCard(block))
+			blockList = append(blockList, elem.Div(
+				vecty.Markup(vecty.Class("paginated-card")),
+				BlockCard(block),
+			))
 		}
 	}
 	if empty == 0 {
@@ -228,7 +245,8 @@ func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBl
 		}
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}
-	blockList = append(blockList, vecty.Markup(vecty.Class("responsive-card-deck")))
+
+	blockList = append(blockList, vecty.Markup(vecty.Class("row")))
 	return elem.Div(
 		blockList...,
 	)

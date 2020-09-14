@@ -52,26 +52,9 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	return Container(
 		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
-		elem.Section(
-			vecty.Markup(vecty.Class("details-view", "no-column")),
-			elem.Div(
-				vecty.Markup(vecty.Class("row")),
-				elem.Div(
-					vecty.Markup(vecty.Class("main-column")),
-					bootstrap.Card(bootstrap.CardParams{
-						Body: dash.ProcessDetails(),
-					}),
-				),
-			),
-		),
-		elem.Section(
-			vecty.Markup(vecty.Class("row")),
-			elem.Div(
-				vecty.Markup(vecty.Class("col-12")),
-				bootstrap.Card(bootstrap.CardParams{
-					Body: dash.ProcessTabs(),
-				}),
-			),
+		DetailsView(
+			dash.ProcessDetails(),
+			dash.ProcessTabs(),
 		),
 	)
 }
@@ -144,6 +127,17 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 	}
 }
 
+func renderPollAnswers(answers []uint32) vecty.ComponentOrHTML {
+	items := vecty.List{}
+	for _, a := range answers {
+		items = append(items, elem.ListItem(
+			vecty.Text(fmt.Sprintf("%d", a)),
+		))
+	}
+
+	return items
+}
+
 func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
 		return elem.Preformatted(
@@ -151,28 +145,25 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 			vecty.Text("No results yet"),
 		)
 	}
-	var resultList []vecty.MarkupOrChild
-	var header []vecty.MarkupOrChild
-	header = append(header, elem.TableHeader())
-	numCols := 0
+
+	content := vecty.List{}
+
 	for i, row := range results {
-		var resultRow []vecty.MarkupOrChild
-		resultRow = append(resultRow, elem.TableHeader(vecty.Text("Question "+util.IntToString(i)+": ")))
-		for _, val := range row {
-			resultRow = append(resultRow, elem.TableData(vecty.Text(util.IntToString(val)+" ")))
-		}
-		resultList = append(resultList, elem.TableRow(resultRow...))
-		numCols = util.Max(numCols, len(row))
+		res := elem.OrderedList(
+			renderPollAnswers(row),
+		)
+		content = append(content, elem.Div(
+			elem.Span(
+				vecty.Markup(vecty.Class("question")),
+				vecty.Text(fmt.Sprintf("Question %d", i+1)),
+			),
+			res,
+		))
 	}
-	for i := 0; i < numCols; i++ {
-		header = append(header, elem.TableHeader(vecty.Text("Option "+util.IntToString(i)+": ")))
-	}
-	resultList = append(resultList, elem.TableHead(
-		elem.TableRow(header...),
-	))
+
 	return elem.Div(
-		elem.Heading5(vecty.Text("Process Results: ")),
-		elem.Table(resultList...),
+		vecty.Markup(vecty.Class("poll-results")),
+		content,
 	)
 }
 

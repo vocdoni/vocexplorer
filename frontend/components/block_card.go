@@ -44,24 +44,25 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 					vecty.Text(humanize.Time(tm)),
 				),
 			),
-			elem.Div(
-				vecty.Markup(vecty.Class("detail", "text-truncate", "mt-2")),
-				elem.Span(
-					vecty.Markup(vecty.Class("dt", "mr-2")),
+			elem.DescriptionList(
+				elem.DefinitionTerm(
 					vecty.Text("Hash"),
 				),
-				elem.Span(
-					vecty.Markup(vecty.Class("dd")),
-					vecty.Markup(vecty.Attribute("title", hex.EncodeToString(block.GetHash()))),
+				elem.Description(
+					vecty.Markup(
+						vecty.Attribute("title", hex.EncodeToString(block.GetHash())),
+						vecty.Markup(vecty.Class("text-truncate")),
+					),
 					vecty.Text(hex.EncodeToString(block.GetHash())),
 				),
-			),
-			elem.Div(
-				elem.Div(
-					vecty.Markup(vecty.Class("dt")),
+				elem.DefinitionTerm(
 					vecty.Text("Proposer Address"),
 				),
-				elem.Div(
+				elem.Description(
+					vecty.Markup(
+						vecty.Class("text-truncate"),
+						vecty.Attribute("title", util.HexToString(block.GetProposer())),
+					),
 					Link(
 						"/validator/"+util.HexToString(block.GetProposer()),
 						util.HexToString(block.GetProposer()),

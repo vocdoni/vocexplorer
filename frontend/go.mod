@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/golang/protobuf v1.4.2
+	github.com/gopherjs/vecty v0.5.0
 	github.com/hexops/vecty v0.5.1-0.20200816075853-64e387e2b2b3
 	github.com/tendermint/tendermint v0.33.8
 	gitlab.com/vocdoni/go-dvote v0.5.2

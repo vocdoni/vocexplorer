@@ -53,7 +53,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	}
 	return Container(
 		elem.Section(
-			vecty.Markup(vecty.Class("details-view")),
+			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
 				vecty.Markup(vecty.Class("row")),
 				elem.Div(
@@ -112,13 +112,11 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text(fmt.Sprintf("%d transactions", len(block.Data.Txs))),
 			),
 			elem.Span(
-				vecty.Text(fmt.Sprintf("%d bytes", block.Size())),
+				vecty.Text(humanize.Bytes(uint64(block.Size()))),
 			),
-			elem.Span(vecty.Text(fmt.Sprintf(
-				"%s (%s)",
+			elem.Span(vecty.Text(
 				humanize.Time(block.Header.Time),
-				block.Header.Time.Local().String(),
-			))),
+			)),
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(
@@ -139,7 +137,6 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				),
 			),
 			elem.DefinitionTerm(
-				vecty.Markup(vecty.Class("dt")),
 				vecty.Text("Proposer Address"),
 			),
 			elem.Description(
@@ -148,6 +145,24 @@ func BlockView(block *tmtypes.Block) vecty.List {
 					block.ProposerAddress.String(),
 					"",
 				),
+			),
+			elem.DefinitionTerm(
+				vecty.Text("Total transactions"),
+			),
+			elem.Description(
+				vecty.Text(fmt.Sprintf("%d", (len(block.Data.Txs)))),
+			),
+			elem.DefinitionTerm(
+				vecty.Text("Block size"),
+			),
+			elem.Description(
+				vecty.Text(fmt.Sprintf("%d bytes", block.Size())),
+			),
+			elem.DefinitionTerm(
+				vecty.Text("Time"),
+			),
+			elem.Description(
+				vecty.Text(block.Header.Time.UTC().String()),
 			),
 		),
 	}
