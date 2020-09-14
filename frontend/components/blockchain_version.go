@@ -3,7 +3,7 @@ package components
 import (
 	"fmt"
 
-	"github.com/gopherjs/vecty"
+	"github.com/hexops/vecty"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )

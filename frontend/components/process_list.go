@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/dustin/go-humanize"
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"

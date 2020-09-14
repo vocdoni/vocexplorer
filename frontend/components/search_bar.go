@@ -1,8 +1,8 @@
 package components
 
 import (
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 )
 
 //SearchBar is a component for a search bar

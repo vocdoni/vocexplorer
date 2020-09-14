@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/prop"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/prop"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/pages"
 	router "marwan.io/vecty-router"

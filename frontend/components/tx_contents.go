@@ -7,8 +7,8 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"

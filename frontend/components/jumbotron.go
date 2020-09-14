@@ -3,8 +3,8 @@ package components
 import (
 	"fmt"
 
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )

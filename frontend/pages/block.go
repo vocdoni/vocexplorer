@@ -3,8 +3,8 @@ package pages
 import (
 	"strconv"
 
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"

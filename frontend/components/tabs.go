@@ -1,9 +1,9 @@
 package components
 
 import (
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/event"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 

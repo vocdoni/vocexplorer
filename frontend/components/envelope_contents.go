@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
-	"github.com/gopherjs/vecty/prop"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/prop"
 	"gitlab.com/vocdoni/go-dvote/crypto/nacl"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"

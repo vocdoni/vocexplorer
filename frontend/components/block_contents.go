@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/dustin/go-humanize"
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"

@@ -1,8 +1,8 @@
 package components
 
 import (
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
+	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 )
 
 // LoadingBar renders a basic loading bar
