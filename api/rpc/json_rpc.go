@@ -146,27 +146,42 @@ func bundleRequest(method string, params map[string]interface{}, id rpctypes.JSO
 func call(c *websocket.Conn, method string, params map[string]interface{}, result interface{}) (interface{}, error) {
 	id++
 	myID := id
-	req, err := bundleRequest(method, params, myID)
-	if err != nil {
-		return nil, err
+	var err error
+	done := make(chan struct{})
+	go request(c, method, params, myID, result, &err, done)
+	<-done
+	return result, err
+}
+
+func request(c *websocket.Conn, method string, params map[string]interface{}, myID rpctypes.JSONRPCIntID, response interface{}, err *error, done chan struct{}) {
+	var req []byte
+	req, *err = bundleRequest(method, params, myID)
+	if *err != nil {
+		close(done)
+		return
 	}
 	reqMutex.Lock()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	err = c.Write(ctx, websocket.MessageText, req)
-	if err != nil {
-		return nil, err
+	*err = c.Write(ctx, websocket.MessageText, req)
+	if *err != nil {
+		close(done)
+		reqMutex.Unlock()
+		return
 	}
-	_, msg, err := c.Read(ctx)
+	var msg []byte
+	_, msg, *err = c.Read(ctx)
 	reqMutex.Unlock()
-	if err != nil {
-		return nil, err
+	if *err != nil {
+		close(done)
+		return
 	}
-	response, err := UnmarshalResponseBytes(cdc, msg, myID, result)
-	if err != nil {
-		return nil, err
+	response, *err = UnmarshalResponseBytes(cdc, msg, myID, response)
+	if *err != nil {
+		close(done)
+		return
 	}
-	return response, err
+	close(done)
 }
 
 func initCdc() {

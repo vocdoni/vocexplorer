@@ -155,7 +155,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *websocket.Conn, complete,
 	res, err := rpc.Block(c, &height)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {
 				log.Error("Gateway Disconnected")
