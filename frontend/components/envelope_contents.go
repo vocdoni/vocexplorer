@@ -52,7 +52,7 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	var decryptionStatus string
 	var displayPackage bool
 	var votePackage *dvotetypes.VotePackage
-	pkeys, _ := store.Processes.ProcessKeys[store.Envelopes.CurrentEnvelope.ProcessID]
+	pkeys := store.Processes.ProcessKeys[store.Envelopes.CurrentEnvelope.ProcessID]
 	keys := []string{}
 	// If package is encrypted
 	if len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) == 0 {

@@ -17,7 +17,7 @@ var exit chan struct{}
 // NewDB initializes a badger database at the given path
 func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 	if chainID == "" {
-		return nil, errors.New("Chain ID empty, cannot initialize database")
+		return nil, errors.New("Chain ID empty, cannot initialize database. See --chainID config option if running in detached mode")
 	}
 	log.Infof("Initializing database at " + path + "/" + chainID)
 	return dvotedb.NewBadgerDB(path + "/" + chainID)

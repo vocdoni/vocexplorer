@@ -2,7 +2,6 @@ syntax = "proto3";
 package proto;
 
 import "google/protobuf/timestamp.proto";
-// TODO: import tendermint proto types. Current import has errors, possibly on tendermint's end
 option go_package = "/proto";
 
 message Height {

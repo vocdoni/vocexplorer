@@ -345,6 +345,9 @@ func UpdateTxContents(d *TxContents) {
 	if nullifier != "" {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
 	}
+	if !ok {
+		log.Error("unable to retrieve envelope height, envelope may not exist")
+	}
 	var metadata []byte
 	if !txResult.Equal(abci.ResponseDeliverTx{}) {
 		metadata, err = json.MarshalIndent(txResult, "", "\t")

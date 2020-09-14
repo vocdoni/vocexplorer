@@ -44,7 +44,7 @@ func renderProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
 	for _, process := range store.Processes.Processes {
 		if process != nil {
-			height, _ := store.Processes.EnvelopeHeights[process.ID]
+			height := store.Processes.EnvelopeHeights[process.ID]
 			info, iok := store.Processes.ProcessResults[process.ID]
 
 			elemList = append(
