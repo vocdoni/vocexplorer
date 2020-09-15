@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync/atomic"
 
+	"gitlab.com/vocdoni/go-dvote/log"
 	"nhooyr.io/websocket"
 )
 
@@ -49,10 +50,13 @@ func (t *TendermintRPC) GetConnection() *PoolConnection {
 // Close closes all connections in the pool
 func (t *TendermintRPC) Close() {
 	if t != nil {
+		numConns := 0
 		for _, conn := range t.Conns {
 			conn.Lock()
 			conn.Close()
+			numConns++
 		}
+		log.Infof("Closed %d websocket connections", numConns)
 	}
 }
 

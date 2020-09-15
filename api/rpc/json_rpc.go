@@ -30,7 +30,7 @@ func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	tMutex := new(sync.Mutex)
 	done := make(chan error, conns)
 	for i := 0; i < conns; i++ {
-		newConnection(done, t, host, tMutex)
+		go newConnection(done, t, host, tMutex)
 	}
 	// Sync: wait here for all goroutines to complete
 	num := 0

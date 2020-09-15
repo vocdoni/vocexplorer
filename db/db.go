@@ -5,11 +5,13 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"google.golang.org/protobuf/proto"
@@ -61,7 +63,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	batch.Write()
 
 	// Init tendermint client
-	tClient, ok := api.StartTendermint(tmHost, 100)
+	tClient, ok := api.StartTendermint(tmHost, 20)
 	if !ok {
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
@@ -83,9 +85,9 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for sig := range c {
-			log.Infof("captured %v, stopping profiler and exiting..", sig)
+			log.Infof("captured %v, stopping profiler and closing websockets connections...", sig)
 			go func() {
-				time.Sleep(5 * time.Second)
+				time.Sleep(30 * time.Second)
 				os.Exit(1)
 			}()
 			tClient.Close()
@@ -96,6 +98,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	}()
 
 	i := 0
+	hasSynced := false
 	for {
 		select {
 		case <-exit:
@@ -103,6 +106,8 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 			log.Warnf("Gateway disconnected, converting to detached mode")
 			return
 		default:
+			// If synced, wait. If first time synced, reduce connections to 2.
+			waitSync(d, tClient, &hasSynced, tmHost)
 			updateBlockList(d, tClient)
 			// Update validators less frequently than blocks
 			if i%40 == 0 {
@@ -114,4 +119,53 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 			i++
 		}
 	}
+}
+
+func waitSync(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, hasSynced *bool, host string) {
+	sync := isSynced(d, t)
+	for sync == true {
+		if *hasSynced == false {
+			*hasSynced = true
+			oldClient := *t
+			newClient, ok := api.StartTendermint(host, 2)
+			if !ok {
+				log.Warn("Cannot connect to tendermint api. Running as detached database")
+				return
+			}
+			*t = *newClient
+			log.Infof("Blockchain storage is synced, reducing to 2 websockets connections")
+			oldClient.Close()
+		}
+		time.Sleep(1 * time.Second)
+		sync = isSynced(d, t)
+	}
+}
+
+func isSynced(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) bool {
+	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
+	status, err := t.Status()
+	// If error is returned, try the request more times, then fatal.
+	if err != nil {
+		if strings.Contains(err.Error(), "WebSocket closed") {
+			exit <- struct{}{}
+			return false
+		}
+		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 10 {
+				log.Error("Gateway Disconnected")
+				exit <- struct{}{}
+				return false
+			}
+			status, err = t.Status()
+			if err == nil {
+				break
+			}
+		}
+	}
+	gwBlockHeight := status.SyncInfo.LatestBlockHeight
+	if gwBlockHeight-latestBlockHeight.GetHeight() < 1 {
+		return true
+	}
+	return false
 }

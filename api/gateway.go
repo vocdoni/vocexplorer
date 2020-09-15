@@ -389,6 +389,6 @@ func (c *GatewayClient) Close() {
 	if err != nil {
 		log.Error(err)
 	} else {
-		fmt.Println("Closed websocket connection")
+		log.Info("Closed gateway connection")
 	}
 }
