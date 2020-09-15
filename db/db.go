@@ -2,6 +2,9 @@ package db
 
 import (
 	"errors"
+	"os"
+	"os/signal"
+	"runtime/pprof"
 	"time"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
@@ -64,7 +67,6 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 		return
 	}
 	log.Debugf("Connected to " + tmHost)
-	defer func() { tClient.Close() }()
 
 	// Init gateway client
 	gwClient, cancel, up := api.StartGateway(gwHost)
@@ -73,9 +75,25 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 		*detached = true
 		return
 	}
-	defer func() { gwClient.Close() }()
 	defer (*cancel)()
 	log.Debugf("Connected to %s", gwHost)
+
+	// Interrupt signal should close clients
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			log.Infof("captured %v, stopping profiler and exiting..", sig)
+			go func() {
+				time.Sleep(5 * time.Second)
+				os.Exit(1)
+			}()
+			tClient.Close()
+			gwClient.Close()
+			pprof.StopCPUProfile()
+			os.Exit(1)
+		}
+	}()
 
 	i := 0
 	for {

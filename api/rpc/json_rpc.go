@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	"gitlab.com/vocdoni/go-dvote/log"
 	"nhooyr.io/websocket"
 )
 
@@ -25,16 +27,21 @@ func init() {
 // InitTendermintRPC initializes a TendermintRPC client
 func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	t := new(TendermintRPC)
+	tMutex := new(sync.Mutex)
+	done := make(chan error, conns)
 	for i := 0; i < conns; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		c, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{})
+		newConnection(done, t, host, tMutex)
+	}
+	// Sync: wait here for all goroutines to complete
+	num := 0
+	for err := range done {
 		if err != nil {
-			return nil, err
+			log.Warn(err)
 		}
-		// Set readLimit to the maximum read size, from tendermint/p2p/conn/connection.go
-		c.SetReadLimit(22020096)
-		t.AddConnection(c)
+		if num >= conns-1 {
+			break
+		}
+		num++
 	}
 	result := new(coretypes.ResultStatus)
 	_, err := t.call("status", nil, result)
@@ -43,6 +50,22 @@ func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	}
 
 	return t, nil
+}
+
+func newConnection(done chan error, t *TendermintRPC, host string, connMutex *sync.Mutex) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	c, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{})
+	if err != nil {
+		done <- err
+		return
+	}
+	// Set readLimit to the maximum read size, from tendermint/p2p/conn/connection.go
+	c.SetReadLimit(22020096)
+	connMutex.Lock()
+	t.AddConnection(c)
+	connMutex.Unlock()
+	done <- nil
 }
 
 // Status calls the tendermint status api

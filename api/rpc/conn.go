@@ -48,8 +48,11 @@ func (t *TendermintRPC) GetConnection() *PoolConnection {
 
 // Close closes all connections in the pool
 func (t *TendermintRPC) Close() {
-	for _, conn := range t.Conns {
-		conn.Close()
+	if t != nil {
+		for _, conn := range t.Conns {
+			conn.Lock()
+			conn.Close()
+		}
 	}
 }
 

@@ -41,6 +41,10 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	status, err := t.Status()
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
+		if strings.Contains(err.Error(), "WebSocket closed") {
+			exit <- struct{}{}
+			return
+		}
 		log.Error(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {

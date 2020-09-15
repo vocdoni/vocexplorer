@@ -19,14 +19,7 @@ func main() {
 	initFrontend()
 	vecty.SetTitle("Vochain Block Explorer")
 	vecty.RenderBody(&Body{})
-	var unloadFunc js.Func
-	unloadFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		close()
-		unloadFunc.Release() // release the function if the button will not be clicked again
-		return nil
-	})
-	js.Global().Call("addEventListener", "beforeunload", unloadFunc)
-
+	beforeUnload()
 }
 
 func initFrontend() {
@@ -52,14 +45,13 @@ func initFrontend() {
 			log.Fatal("Config could not be stored")
 		}
 	}
-	beforeUnload()
 }
 
 func initClients(cfg *config.Cfg) {
 	var tm *rpc.TendermintRPC
 	var gw *api.GatewayClient
 	for i := 0; i < 5 && tm == nil; i++ {
-		tm = api.StartTendermintClient(cfg.TendermintHost, 5)
+		tm = api.StartTendermintClient(cfg.TendermintHost, 2)
 	}
 	if tm == nil {
 		log.Error("Cannot connect to tendermint api")

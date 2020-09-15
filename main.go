@@ -100,7 +100,6 @@ func main() {
 		log.Error(err)
 	}
 	log.Init(cfg.LogLevel, "stdout")
-
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
 	}
@@ -168,5 +167,4 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
 }
