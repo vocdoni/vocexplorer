@@ -16,7 +16,6 @@ import (
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	"gitlab.com/vocdoni/vocexplorer/router"
@@ -109,11 +108,11 @@ func main() {
 	var d *dvotedb.BadgerDB
 	if !cfg.Global.Detached {
 		// Get ChainID for db directory
-		tmClient, ok := api.StartTendermint(cfg.Global.TendermintHost)
+		tmClient, ok := api.StartTendermint(cfg.Global.TendermintHost, 1)
 		if !ok {
 			cfg.Global.Detached = true
 		} else {
-			gen, err := rpc.Genesis(tmClient)
+			gen, err := tmClient.Genesis()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -126,6 +125,7 @@ func main() {
 				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost)
 			}
 		}
+		tmClient.Close()
 	}
 	if cfg.Global.Detached {
 		log.Infof("Running in detached mode")

@@ -7,17 +7,16 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api/rpc"
-	"nhooyr.io/websocket"
 )
 
 //StartTendermint starts the tendermint client
-func StartTendermint(host string) (*websocket.Conn, bool) {
+func StartTendermint(host string, conns int) (*rpc.TendermintRPC, bool) {
 	for i := 0; ; i++ {
 		if i > 20 {
 			return nil, false
 		}
 		hostCopy := string([]byte(host))
-		tmClient := StartTendermintClient(hostCopy)
+		tmClient := StartTendermintClient(hostCopy, conns)
 		if tmClient == nil {
 			time.Sleep(1 * time.Second)
 			continue
@@ -28,9 +27,9 @@ func StartTendermint(host string) (*websocket.Conn, bool) {
 }
 
 // StartTendermintClient initializes an http tendermint api client on websockets
-func StartTendermintClient(host string) *websocket.Conn {
-	log.Infof("connecting to %s", host)
-	tClient, err := rpc.NewClient(host)
+func StartTendermintClient(host string, conns int) *rpc.TendermintRPC {
+	log.Infof("connecting to %s with %d connections", host, conns)
+	tClient, err := rpc.InitTendermintRPC(host, conns)
 	if err != nil {
 		log.Warn(err.Error())
 		return nil
@@ -39,11 +38,11 @@ func StartTendermintClient(host string) *websocket.Conn {
 }
 
 // PingTendermint pings the tendermint client and returns true if ok
-func PingTendermint(c *websocket.Conn) bool {
-	if c == nil {
+func PingTendermint(t *rpc.TendermintRPC) bool {
+	if t == nil {
 		return false
 	}
-	status, err := rpc.Status(c)
+	status, err := t.Status()
 	if err != nil || status == nil {
 		return false
 	}
@@ -51,11 +50,11 @@ func PingTendermint(c *websocket.Conn) bool {
 }
 
 // GetHealth calls the tendermint Health api
-func GetHealth(c *websocket.Conn) *coretypes.ResultStatus {
-	if c == nil {
+func GetHealth(t *rpc.TendermintRPC) *coretypes.ResultStatus {
+	if t == nil {
 		return nil
 	}
-	status, err := rpc.Status(c)
+	status, err := t.Status()
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -64,11 +63,11 @@ func GetHealth(c *websocket.Conn) *coretypes.ResultStatus {
 }
 
 // GetGenesis gets the first block
-func GetGenesis(c *websocket.Conn) *types.GenesisDoc {
-	if c == nil {
+func GetGenesis(t *rpc.TendermintRPC) *types.GenesisDoc {
+	if t == nil {
 		return nil
 	}
-	result, err := rpc.Genesis(c)
+	result, err := t.Genesis()
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -77,11 +76,11 @@ func GetGenesis(c *websocket.Conn) *types.GenesisDoc {
 }
 
 // GetBlock returns the contents of one block
-func GetBlock(c *websocket.Conn, height int64) *coretypes.ResultBlock {
-	if c == nil {
+func GetBlock(t *rpc.TendermintRPC, height int64) *coretypes.ResultBlock {
+	if t == nil {
 		return nil
 	}
-	block, err := rpc.Block(c, &height)
+	block, err := t.Block(&height)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -90,11 +89,11 @@ func GetBlock(c *websocket.Conn, height int64) *coretypes.ResultBlock {
 }
 
 // GetTransaction gets a transaction by hash
-func GetTransaction(c *websocket.Conn, hash []byte) *coretypes.ResultTx {
-	if c == nil {
+func GetTransaction(t *rpc.TendermintRPC, hash []byte) *coretypes.ResultTx {
+	if t == nil {
 		return nil
 	}
-	res, err := rpc.Tx(c, hash, false)
+	res, err := t.Tx(hash, false)
 	if err != nil {
 		log.Error(err)
 		return nil

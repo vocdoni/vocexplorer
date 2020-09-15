@@ -32,7 +32,7 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 
 		if !cfg.Detached {
 			// If unable to get api information, don't return error so db information can still serve
-			t := api.StartTendermintClient(cfg.TendermintHost)
+			t := api.StartTendermintClient(cfg.TendermintHost, 2)
 			status := api.GetHealth(t)
 			if status == nil {
 				log.Warnf("Unable to get vochain status")

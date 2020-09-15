@@ -22,10 +22,9 @@ import (
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
-	"nhooyr.io/websocket"
 )
 
-func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
+func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	// Fetch latest block & tx heights
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
 	latestTxHeight := GetHeight(d, config.LatestTxHeightKey, 1)
@@ -39,7 +38,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 	procEnvHeightMap := GetHeightMap(d, config.ProcessEnvelopeCountMapKey)
 	procEnvHeightMapMutex := new(sync.Mutex)
 
-	status, err := rpc.Status(c)
+	status, err := t.Status()
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -49,7 +48,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 				exit <- struct{}{}
 				return
 			}
-			status, err = rpc.Status(c)
+			status, err = t.Status()
 			if err == nil {
 				break
 			}
@@ -74,7 +73,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 	nextHeight := make(chan struct{})
 	myHeight := make(chan struct{})
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, c, complete, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, t, complete, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
 		if i == 0 {
 			//Signal to the first block to start
 			close(myHeight)
@@ -97,7 +96,7 @@ func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 		complete = make(chan struct{}, len(txsList))
 		for _, txs := range txsList {
 			if len(txs) > 0 {
-				go updateTxs(latestTxHeight.GetHeight(), txs, c, batch, complete, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
+				go updateTxs(latestTxHeight.GetHeight(), txs, t, batch, complete, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
 				latestTxHeight.Height += int64(len(txs))
 			} else {
 				complete <- struct{}{}
@@ -146,13 +145,13 @@ func updateBlockList(d *dvotedb.BadgerDB, c *websocket.Conn) {
 
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, c *websocket.Conn, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
 	defer func() {
 		complete <- struct{}{}
 	}()
 	// Thread-safe api request
-	res, err := rpc.Block(c, &height)
+	res, err := t.Block(&height)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Warn(err)
@@ -162,7 +161,7 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *websocket.Conn, complete,
 				exit <- struct{}{}
 				return
 			}
-			res, err = rpc.Block(c, &height)
+			res, err = t.Block(&height)
 			if err == nil {
 				break
 			}
@@ -215,22 +214,22 @@ func fetchBlock(height int64, batch *dvotedb.Batch, c *websocket.Conn, complete,
 	(*batch).Put(validatorHeightKey, hashValue)
 }
 
-func updateValidatorList(d *dvotedb.BadgerDB, c *websocket.Conn) {
+func updateValidatorList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 0)
 	latestValidatorCount := GetHeight(d, config.LatestValidatorCountKey, 0)
 	if latestBlockHeight.GetHeight() > 0 {
 		batch := d.NewBatch()
-		fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight(), c, batch)
+		fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight(), t, batch)
 		if err := batch.Write(); err != nil {
 			log.Error(err)
 		}
 	}
 }
 
-func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch dvotedb.Batch) {
+func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
-	resultValidators, err := rpc.Validators(c, &blockHeight, page, 100)
+	resultValidators, err := t.Validators(&blockHeight, page, 100)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		log.Error(err)
@@ -240,7 +239,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch
 				exit <- struct{}{}
 				return
 			}
-			resultValidators, err = rpc.Validators(c, &blockHeight, page, 100)
+			resultValidators, err = t.Validators(&blockHeight, page, 100)
 			if err == nil {
 				break
 			}
@@ -248,7 +247,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch
 	}
 	// Check if there are more validators.
 	for len(resultValidators.Validators) == maxPerPage {
-		moreValidators, err := rpc.Validators(c, &blockHeight, page, maxPerPage)
+		moreValidators, err := t.Validators(&blockHeight, page, maxPerPage)
 		// If error is returned, try the request more times, then fatal.
 		if err != nil {
 			log.Error(err)
@@ -258,7 +257,7 @@ func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch
 					exit <- struct{}{}
 					return
 				}
-				moreValidators, err = rpc.Validators(c, &blockHeight, page, maxPerPage)
+				moreValidators, err = t.Validators(&blockHeight, page, maxPerPage)
 				if err == nil {
 					break
 				}
@@ -300,12 +299,12 @@ func fetchValidators(blockHeight, validatorCount int64, c *websocket.Conn, batch
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, c *websocket.Conn, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
 	numTxs := int64(-1)
 	var blockHeight int64
 	for i, tx := range txs {
 		numTxs = int64(i)
-		txRes := api.GetTransaction(c, tx.Hash())
+		txRes := api.GetTransaction(t, tx.Hash())
 
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 		// Marshal TxResult to bytes for protobuf encoding
@@ -453,19 +452,20 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	heightMapMutex := new(sync.Mutex)
 	requestMutex := new(sync.Mutex)
 	numNewProcesses := 0
-	complete := make(chan struct{}, len(heightMap.Heights))
+	numEntities := len(heightMap.Heights)
+	complete := make(chan struct{}, numEntities)
 
 	batch := d.NewBatch()
 
 	for entity, localHeight := range heightMap.Heights {
 		go fetchProcesses(entity, localHeight, localProcessHeight, d, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
 	}
-	log.Debugf("Found %d stored entities", len(heightMap.Heights))
+	log.Debugf("Found %d stored entities", numEntities)
 
 	// Sync: wait here for all goroutines to complete
 	num := 0
 	for range complete {
-		if num >= len(heightMap.Heights)-1 {
+		if num >= numEntities-1 {
 			break
 		}
 		num++

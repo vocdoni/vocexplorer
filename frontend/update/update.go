@@ -5,12 +5,12 @@ import (
 
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	"nhooyr.io/websocket"
 )
 
 // Gateway API updates
@@ -165,9 +165,9 @@ func EntityProcessResults() {
 // Tendermint API updates
 
 //BlockchainStatus updates the blockchain statistics
-func BlockchainStatus(c *websocket.Conn) {
-	status := api.GetHealth(c)
-	genesis := api.GetGenesis(c)
+func BlockchainStatus(t *rpc.TendermintRPC) {
+	status := api.GetHealth(t)
+	genesis := api.GetGenesis(t)
 	dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
 	dispatcher.Dispatch(&actions.SetGenesis{Genesis: genesis})
 }

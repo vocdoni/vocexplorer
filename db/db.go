@@ -58,12 +58,13 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	batch.Write()
 
 	// Init tendermint client
-	tClient, ok := api.StartTendermint(tmHost)
+	tClient, ok := api.StartTendermint(tmHost, 100)
 	if !ok {
 		log.Warn("Cannot connect to tendermint api. Running as detached database")
 		return
 	}
 	log.Debugf("Connected to " + tmHost)
+	defer func() { tClient.Close() }()
 
 	// Init gateway client
 	gwClient, cancel, up := api.StartGateway(gwHost)
@@ -72,6 +73,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 		*detached = true
 		return
 	}
+	defer func() { gwClient.Close() }()
 	defer (*cancel)()
 	log.Debugf("Connected to %s", gwHost)
 

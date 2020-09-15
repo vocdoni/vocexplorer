@@ -2,12 +2,12 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/api"
-	"nhooyr.io/websocket"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 )
 
 //TendermintClientInit is the action to initialize the global tendermint rpc client
 type TendermintClientInit struct {
-	Client *websocket.Conn
+	Client *rpc.TendermintRPC
 }
 
 //GatewayClientInit is the action to initialize the global gateway websockets client

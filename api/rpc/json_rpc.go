@@ -3,7 +3,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -15,38 +15,40 @@ import (
 	"nhooyr.io/websocket"
 )
 
-var id rpctypes.JSONRPCIntID
+var id int32
 var cdc *amino.Codec
-var reqMutex *sync.Mutex
 
 func init() {
 	initCdc()
 }
 
-// NewClient initializes a jsonrpc client
-func NewClient(host string) (*websocket.Conn, error) {
-	reqMutex = new(sync.Mutex)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	c, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{})
-	if err != nil {
-		return nil, err
+// InitTendermintRPC initializes a TendermintRPC client
+func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
+	t := new(TendermintRPC)
+	for i := 0; i < conns; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		c, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{})
+		if err != nil {
+			return nil, err
+		}
+		// Set readLimit to the maximum read size, from tendermint/p2p/conn/connection.go
+		c.SetReadLimit(22020096)
+		t.AddConnection(c)
 	}
-	// Set readLimit to the maximum read size, from tendermint/p2p/conn/connection.go
-	c.SetReadLimit(22020096)
 	result := new(coretypes.ResultStatus)
-	_, err = call(c, "status", nil, result)
+	_, err := t.call("status", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "status")
 	}
 
-	return c, nil
+	return t, nil
 }
 
 // Status calls the tendermint status api
-func Status(c *websocket.Conn) (*coretypes.ResultStatus, error) {
+func (t *TendermintRPC) Status() (*coretypes.ResultStatus, error) {
 	result := new(coretypes.ResultStatus)
-	_, err := call(c, "status", nil, result)
+	_, err := t.call("status", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "status")
 	}
@@ -54,9 +56,9 @@ func Status(c *websocket.Conn) (*coretypes.ResultStatus, error) {
 }
 
 // Genesis calls the tendermint Genesis api
-func Genesis(c *websocket.Conn) (*coretypes.ResultGenesis, error) {
+func (t *TendermintRPC) Genesis() (*coretypes.ResultGenesis, error) {
 	result := new(coretypes.ResultGenesis)
-	_, err := call(c, "genesis", nil, result)
+	_, err := t.call("genesis", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "genesis")
 	}
@@ -64,12 +66,12 @@ func Genesis(c *websocket.Conn) (*coretypes.ResultGenesis, error) {
 }
 
 // Block calls the tendermint Block api
-func Block(c *websocket.Conn, height *int64) (*coretypes.ResultBlock, error) {
+func (t *TendermintRPC) Block(height *int64) (*coretypes.ResultBlock, error) {
 	result := new(coretypes.ResultBlock)
 	params := map[string]interface{}{
 		"height": height,
 	}
-	_, err := call(c, "block", params, result)
+	_, err := t.call("block", params, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "block")
 	}
@@ -77,13 +79,13 @@ func Block(c *websocket.Conn, height *int64) (*coretypes.ResultBlock, error) {
 }
 
 // Tx calls the tendermint Tx api
-func Tx(c *websocket.Conn, hash []byte, prove bool) (*coretypes.ResultTx, error) {
+func (t *TendermintRPC) Tx(hash []byte, prove bool) (*coretypes.ResultTx, error) {
 	result := new(coretypes.ResultTx)
 	params := map[string]interface{}{
 		"hash":  hash,
 		"prove": prove,
 	}
-	_, err := call(c, "tx", params, result)
+	_, err := t.call("tx", params, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "tx")
 	}
@@ -91,14 +93,14 @@ func Tx(c *websocket.Conn, hash []byte, prove bool) (*coretypes.ResultTx, error)
 }
 
 // Validators calls the tendermint Validators api
-func Validators(c *websocket.Conn, height *int64, page, perPage int) (*coretypes.ResultValidators, error) {
+func (t *TendermintRPC) Validators(height *int64, page, perPage int) (*coretypes.ResultValidators, error) {
 	result := new(coretypes.ResultValidators)
 	params := map[string]interface{}{
 		"height":   height,
 		"page":     page,
 		"per_page": perPage,
 	}
-	_, err := call(c, "validators", params, result)
+	_, err := t.call("validators", params, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "validators")
 	}
@@ -143,35 +145,28 @@ func bundleRequest(method string, params map[string]interface{}, id rpctypes.JSO
 	return req, nil
 }
 
-func call(c *websocket.Conn, method string, params map[string]interface{}, result interface{}) (interface{}, error) {
-	id++
-	myID := id
+func (t *TendermintRPC) call(method string, params map[string]interface{}, result interface{}) (interface{}, error) {
+	myID := rpctypes.JSONRPCIntID(atomic.AddInt32(&id, 1))
 	var err error
 	done := make(chan struct{})
-	go request(c, method, params, myID, result, &err, done)
+	go t.request(method, params, myID, result, &err, done)
 	<-done
 	return result, err
 }
 
-func request(c *websocket.Conn, method string, params map[string]interface{}, myID rpctypes.JSONRPCIntID, response interface{}, err *error, done chan struct{}) {
+func (t *TendermintRPC) request(method string, params map[string]interface{}, myID rpctypes.JSONRPCIntID, response interface{}, err *error, done chan struct{}) {
 	var req []byte
 	req, *err = bundleRequest(method, params, myID)
 	if *err != nil {
 		close(done)
 		return
 	}
-	reqMutex.Lock()
+	p := t.GetConnection()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	*err = c.Write(ctx, websocket.MessageText, req)
-	if *err != nil {
-		close(done)
-		reqMutex.Unlock()
-		return
-	}
 	var msg []byte
-	_, msg, *err = c.Read(ctx)
-	reqMutex.Unlock()
+	msg, *err = p.WriteRead(ctx, req)
+	p.Release()
 	if *err != nil {
 		close(done)
 		return

@@ -2,9 +2,9 @@ package store
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"nhooyr.io/websocket"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 	// GatewayClient is the global gateway client
 	GatewayClient *api.GatewayClient
 	// TendermintClient is the global tendermint client
-	TendermintClient *websocket.Conn
+	TendermintClient *rpc.TendermintRPC
 
 	// GatewayConnected is true if the gateway client is connected
 	GatewayConnected bool
