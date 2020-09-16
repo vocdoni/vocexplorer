@@ -63,11 +63,11 @@ Then in your favorite web browser navigate to localhost at the specified port.
 
 Options for `main.go`:
 - `--disableGzip`          use to disable gzip compression on web server
-- `--gatewayHost` `(string)`   gateway API host to connect to (default "ws://0.0.0.0:9090/dvote")
+- `--gatewayHost` `(string)`   gateway API host to connect to (default "ws://localhost:9090/dvote")
 - `--hostURL` `(string)`       url to host block explorer (default "http://localhost:8081")
 - `--logLevel` `(string)`      log level <debug, info, warn, error> (default "error")
 - `--refreshTime` `(int)`      Number of seconds between each content refresh (default 5)
-- `--vochainHost` `(string)`   gateway API host to connect to (default "http://0.0.0.0:26657/websocket")
+- `--vochainHost` `(string)`   gateway API host to connect to (default "ws://localhost/tendermint")
 #### Note: when updating to a new version of this program, you may need to refresh your data store:
 ~~~
 rm -rf DBPATH

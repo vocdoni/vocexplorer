@@ -30,8 +30,8 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://0.0.0.0:9090/dvote", "gateway API host to connect to")
-	cfg.Global.TendermintHost = *flag.String("tendermintHost", "http://0.0.0.0:26657/websocket", "gateway API host to connect to")
+	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://localhost:9090/dvote", "gateway API host to connect to")
+	cfg.Global.TendermintHost = *flag.String("tendermintHost", "ws://localhost/tendermint", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
 	cfg.Global.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
