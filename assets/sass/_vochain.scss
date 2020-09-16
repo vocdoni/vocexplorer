@@ -217,8 +217,9 @@ main {
     order: 2;
   }
 
-  .pagination-searchbar {
+  .pagination-searchbar input {
     order: 1;
+    @extend .form-control;
   }
 
   .pagination {
