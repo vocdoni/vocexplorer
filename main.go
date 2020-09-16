@@ -161,8 +161,11 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		h := gziphandler.GzipHandler(r)
-		s.Handler = h
+		h, err := gziphandler.NewGzipLevelHandler(9)
+		if err != nil {
+			log.Error(err)
+		}
+		s.Handler = h(r)
 		if err = s.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}

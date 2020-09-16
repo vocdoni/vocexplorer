@@ -103,7 +103,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 								vecty.If(syncing, elem.Span(
 									vecty.Markup(vecty.Class("badge", "badge-warning")),
 									vecty.Markup(
-										vecty.UnsafeHTML("Syncing ("+util.IntToString(store.Blocks.Count)+" blocks stored)"),
+										vecty.UnsafeHTML("Syncing ("+util.IntToString(store.Blocks.Count+1)+" blocks stored)"),
 									),
 								)),
 								vecty.If(!syncing, &bootstrap.Badge{

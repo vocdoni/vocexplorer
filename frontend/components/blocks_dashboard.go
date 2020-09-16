@@ -74,7 +74,6 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 					break blockloop
 				}
 			}
-			log.Println("index: " + util.IntToString(i))
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			oldBlocks := store.Blocks.Count
 			newHeight, _ := api.GetBlockHeight()
