@@ -740,8 +740,7 @@ func SearchBlocksByValidatorHandler(db *dvotedb.BadgerDB) func(w http.ResponseWr
 		validator := strings.ToLower(validators[0])
 
 		var err error
-		var items [][]byte
-		items = vocdb.SearchBlocksByValidator(db, config.ListSize, searchTerm, validator)
+		items := vocdb.SearchBlocksByValidator(db, config.ListSize, searchTerm, validator)
 		if len(items) == 0 {
 			log.Warn("Retrieved no items")
 			http.Error(w, "No items available", http.StatusInternalServerError)

@@ -375,6 +375,9 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	}
 	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
 	newEntities, err := c.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)))
+	if err != nil {
+		log.Warn(err)
+	}
 	if len(newEntities) < 1 {
 		log.Warn("No new entities fetched")
 		return
@@ -501,6 +504,9 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 
 	var lastRawProcess []byte
 	rawEntity, err := hex.DecodeString(util.TrimHex(entity))
+	if err != nil {
+		log.Warn(err)
+	}
 	// Get Entity|LocalHeight:ProcessHeight
 	entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
 	entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight-1))...)
@@ -508,19 +514,18 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	if err != nil {
 		log.Debugf("Height Key not found: %s", err.Error())
 		rawGlobalHeight = []byte{}
-	} else {
-		var globalHeight voctypes.Height
-		err = proto.Unmarshal(rawGlobalHeight, &globalHeight)
-		if err != nil {
-			globalHeight.Height = -1
-		}
-		// Get ProcessHeight:Process
-		lastProcessKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight.GetHeight())...)
-		lastRawProcess, err = db.Get(lastProcessKey)
-		if err != nil {
-			log.Debugf("Process Key not found: %s", err.Error())
-			lastRawProcess = []byte{}
-		}
+	}
+	var globalHeight voctypes.Height
+	err = proto.Unmarshal(rawGlobalHeight, &globalHeight)
+	if err != nil {
+		globalHeight.Height = -1
+	}
+	// Get ProcessHeight:Process
+	lastProcessKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight.GetHeight())...)
+	lastRawProcess, err = db.Get(lastProcessKey)
+	if err != nil {
+		log.Debugf("Process Key not found: %s", err.Error())
+		lastRawProcess = []byte{}
 	}
 	var lastProcess voctypes.Process
 	if len(lastRawProcess) > 0 {

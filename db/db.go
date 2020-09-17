@@ -22,7 +22,7 @@ var exit chan struct{}
 // NewDB initializes a badger database at the given path
 func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 	if chainID == "" {
-		return nil, errors.New("Chain ID empty, cannot initialize database. See --chainID config option if running in detached mode")
+		return nil, errors.New("chain ID empty, cannot initialize database. See --chainID config option if running in detached mode")
 	}
 	log.Infof("Initializing database at " + path + "/" + chainID)
 	return dvotedb.NewBadgerDB(path + "/" + chainID)
@@ -123,8 +123,8 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 
 func waitSync(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, hasSynced *bool, host string) {
 	sync := isSynced(d, t)
-	for sync == true {
-		if *hasSynced == false {
+	for sync {
+		if !*hasSynced {
 			*hasSynced = true
 			oldClient := *t
 			newClient, ok := api.StartTendermint(host, 2)
@@ -164,8 +164,5 @@ func isSynced(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) bool {
 		}
 	}
 	gwBlockHeight := status.SyncInfo.LatestBlockHeight
-	if gwBlockHeight-latestBlockHeight.GetHeight() < 1 {
-		return true
-	}
-	return false
+	return gwBlockHeight-latestBlockHeight.GetHeight() < 1
 }

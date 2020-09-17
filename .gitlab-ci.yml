@@ -28,6 +28,21 @@ go-test:
     - merge_requests
     - branches
 
+go-analyze:
+  image: golang:1.15.2
+  stage: test
+  tags:
+    - vocdoni
+  script:
+    - diff -u <(echo -n) <(gofmt -s -d $(git ls-files '*.go'))
+    - go vet ./...
+    - curl -L https://github.com/dominikh/go-tools/releases/download/2020.1.5/staticcheck_linux_amd64.tar.gz | tar -xzf -
+    - ./staticcheck/staticcheck ./...
+  only:
+    - merge_requests
+    - branches
+
+
 
 docker-release:
   image: docker:stable

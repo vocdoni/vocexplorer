@@ -194,7 +194,7 @@ func (t *TendermintRPC) request(method string, params map[string]interface{}, my
 		close(done)
 		return
 	}
-	response, *err = UnmarshalResponseBytes(cdc, msg, myID, response)
+	_, *err = UnmarshalResponseBytes(cdc, msg, myID, response)
 	if *err != nil {
 		close(done)
 		return

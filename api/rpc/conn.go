@@ -84,10 +84,7 @@ func (p *PoolConnection) Release() {
 
 // Status returns true if the connection is available
 func (p *PoolConnection) Status() bool {
-	if atomic.LoadInt32(&p.available) == free {
-		return true
-	}
-	return false
+	return atomic.LoadInt32(&p.available) == free
 }
 
 // WriteRead executes a write & read operation on the websocket connection
