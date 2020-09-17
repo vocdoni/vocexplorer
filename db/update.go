@@ -45,11 +45,9 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 			exit <- struct{}{}
 			return
 		}
-		log.Error(err)
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get status: %s", err.Error())
 				return
 			}
 			status, err = t.Status()
@@ -156,13 +154,15 @@ func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, comple
 	}()
 	// Thread-safe api request
 	res, err := t.Block(&height)
-	// If error is returned, try the request more times, then fatal.
+	// If error is returned, try the request more times, then exit
 	if err != nil {
-		log.Warn(err)
+		if strings.Contains(err.Error(), "closed") {
+			exit <- struct{}{}
+			return
+		}
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get block: %s", err.Error())
 				return
 			}
 			res, err = t.Block(&height)
@@ -236,11 +236,13 @@ func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, ba
 	resultValidators, err := t.Validators(&blockHeight, page, 100)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		if strings.Contains(err.Error(), "closed") {
+			exit <- struct{}{}
+			return
+		}
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get validators: %s", err.Error())
 				return
 			}
 			resultValidators, err = t.Validators(&blockHeight, page, 100)
@@ -254,11 +256,13 @@ func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, ba
 		moreValidators, err := t.Validators(&blockHeight, page, maxPerPage)
 		// If error is returned, try the request more times, then fatal.
 		if err != nil {
-			log.Error(err)
+			if strings.Contains(err.Error(), "closed") {
+				exit <- struct{}{}
+				return
+			}
 			for errs := 0; ; errs++ {
 				if errs > 10 {
-					log.Error("Gateway Disconnected")
-					exit <- struct{}{}
+					log.Errorf("Unable to get validators: %s", err.Error())
 					return
 				}
 				moreValidators, err = t.Validators(&blockHeight, page, maxPerPage)
@@ -352,11 +356,13 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	gatewayEntityHeight, err := c.GetEntityCount()
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		if strings.Contains(err.Error(), "closed") {
+			exit <- struct{}{}
+			return
+		}
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get entity height: %s", err.Error())
 				return
 			}
 			gatewayEntityHeight, err = c.GetEntityCount()
@@ -389,9 +395,11 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	i := 0
 	entity := ""
 	for i, entity = range newEntities {
+		log.Debug(entity)
 		// Write entityHeight:entityID
 		heightKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
-		rawEntity, err := hex.DecodeString(util.TrimHex(entity))
+		entity = util.TrimHex(entity)
+		rawEntity, err := hex.DecodeString(entity)
 		if err != nil {
 			log.Error(err)
 			break
@@ -436,11 +444,13 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	gatewayProcessHeight, err := c.GetProcessCount()
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		if strings.Contains(err.Error(), "closed") {
+			exit <- struct{}{}
+			return
+		}
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get process height: %s", err.Error())
 				return
 			}
 			gatewayProcessHeight, err = c.GetProcessCount()
@@ -536,18 +546,21 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	}
 	requestMutex.Lock()
 	lastPID := lastProcess.ID
-	log.Debugf("Getting processes from id %s", lastPID)
+	entity = strings.ToLower(util.TrimHex(entity))
+	log.Debugf("Getting processes from id %s, entity %s", lastPID, entity)
 	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
 		lastPID = ""
 	}
-	newProcessList, err := c.GetProcessList(entity, lastPID)
+	newProcessList, err := c.GetProcessList("0x"+entity, lastPID)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		if strings.Contains(err.Error(), "closed") {
+			exit <- struct{}{}
+			return
+		}
 		for errs := 0; ; errs++ {
 			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
+				log.Errorf("Unable to get process list: %s", err.Error())
 				return
 			}
 			newProcessList, err = c.GetProcessList(entity, lastPID)

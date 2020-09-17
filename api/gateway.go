@@ -141,7 +141,7 @@ func (c *GatewayClient) GetGatewayInfo() ([]string, int32, error) {
 		return nil, 0, err
 	}
 	if !resp.Ok {
-		return nil, 0, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, fmt.Errorf(resp.Message)
 	}
 	return resp.APIList, resp.Health, nil
 }
@@ -157,7 +157,7 @@ func (c *GatewayClient) GetBlockStatus() (*[5]int32, int32, int64, error) {
 		return nil, 0, 0, err
 	}
 	if !resp.Ok {
-		return nil, 0, 0, fmt.Errorf("cannot get gateway infos")
+		return nil, 0, 0, fmt.Errorf(resp.Message)
 	}
 	return resp.BlockTime, resp.BlockTimestamp, *resp.Height, nil
 }
@@ -175,7 +175,7 @@ func (c *GatewayClient) GetFinalProcessList(from int64) ([]string, error) {
 		return nil, err
 	}
 	if !resp.Ok {
-		return nil, fmt.Errorf("cannot get gateway infos")
+		return nil, fmt.Errorf(resp.Message)
 	}
 	return resp.ProcessIDs, nil
 }
@@ -193,7 +193,7 @@ func (c *GatewayClient) GetLiveProcessList(from int64) ([]string, error) {
 		return nil, err
 	}
 	if !resp.Ok {
-		return nil, fmt.Errorf("cannot get gateway infos")
+		return nil, fmt.Errorf(resp.Message)
 	}
 	return resp.ProcessIDs, nil
 }
@@ -211,7 +211,7 @@ func (c *GatewayClient) GetScrutinizerEntities(from string) ([]string, error) {
 		return nil, err
 	}
 	if !resp.Ok {
-		return nil, fmt.Errorf("cannot get gateway infos")
+		return nil, fmt.Errorf(resp.Message)
 	}
 	return resp.EntityIDs, nil
 }
@@ -232,7 +232,7 @@ func (c *GatewayClient) GetProcessList(entityID string, from string) ([]string, 
 		return nil, err
 	}
 	if !resp.Ok {
-		return nil, fmt.Errorf("cannot get gateway infos")
+		return nil, fmt.Errorf(resp.Message)
 	}
 	return resp.ProcessList, nil
 }
@@ -281,7 +281,7 @@ func (c *GatewayClient) GetProcessResults(processID string) (string, string, [][
 		return "", "", nil, err
 	}
 	if !resp.Ok {
-		return "", "", nil, fmt.Errorf(resp.Message)
+		return "", "", [][]uint32{}, fmt.Errorf(resp.Message)
 	}
 	return resp.Type, resp.State, resp.Results, nil
 }
@@ -299,7 +299,7 @@ func (c *GatewayClient) GetEnvelopeStatus(nullifier, processID string) (bool, er
 		return false, err
 	}
 	if !resp.Ok || resp.Registered == nil {
-		return false, fmt.Errorf("cannot check envelope (%s)", resp.Message)
+		return false, fmt.Errorf(resp.Message)
 	}
 	return *resp.Registered, nil
 }
@@ -317,7 +317,7 @@ func (c *GatewayClient) GetEnvelope(processID, nullifier string) (string, error)
 		return "", err
 	}
 	if !resp.Ok {
-		return "", fmt.Errorf("cannot get envelope contents")
+		return "", fmt.Errorf(resp.Message)
 	}
 	return resp.Payload, nil
 }
