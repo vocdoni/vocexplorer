@@ -8,7 +8,7 @@ COPY . .
 RUN apk add --no-cache nodejs yarn build-base
 
 RUN cd frontend && \
-    env GOARCH=wasm GOOS=js go build -o ../static/main.wasm && \
+    env GOARCH=wasm GOOS=js go build -ldflags "-s -w" -o ../static/main.wasm && \
     cp $GOROOT/misc/wasm/wasm_exec.js ../static
 
 RUN yarn && yarn gulp

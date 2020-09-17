@@ -21,7 +21,7 @@ That's it!
 
 On the commandline navigate into the directory `./frontend` and run 
 ~~~
-env GOARCH=wasm GOOS=js go build -o ../static/main.wasm
+env GOARCH=wasm GOOS=js go build -ldflags "-s -w" -o ../static/main.wasm
 ~~~
 to compile the frontend code into wasm.
 
