@@ -46,7 +46,7 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 			return
 		}
 		for errs := 0; ; errs++ {
-			if errs > 10 {
+			if errs > 2 {
 				log.Errorf("Unable to get status: %s", err.Error())
 				return
 			}
@@ -70,12 +70,13 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	numNewBlocks := util.Min(config.NumBlockUpdates, int(gwBlockHeight-latestBlockHeight.GetHeight()))
 	// Array of new tx id's. Each goroutine can only access its assigned index, making this array thread-safe as long as all goroutines exit before read access
 	txsList := make([]tmtypes.Txs, numNewBlocks)
-	complete := make(chan struct{}, config.NumBlockUpdates)
+	wg := new(sync.WaitGroup)
 	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
 	nextHeight := make(chan struct{})
 	myHeight := make(chan struct{})
 	for ; int(i) < numNewBlocks; i++ {
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, t, complete, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
+		wg.Add(1)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, t, wg, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
 		if i == 0 {
 			//Signal to the first block to start
 			close(myHeight)
@@ -84,35 +85,22 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 		nextHeight = make(chan struct{})
 	}
 
-	num := 0
 	if i > 0 {
 		// Sync: wait here for all goroutines to complete
-		for range complete {
-			if num >= numNewBlocks-1 {
-				break
-			}
-			num++
-		}
+		wg.Wait()
 		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
-		complete = make(chan struct{}, len(txsList))
+		wg := new(sync.WaitGroup)
 		for _, txs := range txsList {
 			if len(txs) > 0 {
-				go updateTxs(latestTxHeight.GetHeight(), txs, t, batch, complete, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
+				wg.Add(1)
+				go updateTxs(latestTxHeight.GetHeight(), txs, t, batch, wg, latestEnvelopeCount, procEnvHeightMap, procEnvHeightMapMutex)
 				latestTxHeight.Height += int64(len(txs))
-			} else {
-				complete <- struct{}{}
 			}
 		}
 
 		// Sync: wait here for all goroutines to complete
-		num = 0
-		for range complete {
-			if num >= len(txsList)-1 {
-				break
-			}
-			num++
-		}
+		wg.Wait()
 		rawValMap, err := proto.Marshal(valMap)
 		if err != nil {
 			log.Error(err)
@@ -147,11 +135,9 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, complete, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sync.WaitGroup, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
 	// Signal
-	defer func() {
-		complete <- struct{}{}
-	}()
+	defer wg.Done()
 	// Thread-safe api request
 	res, err := t.Block(&height)
 	// If error is returned, try the request more times, then exit
@@ -241,7 +227,7 @@ func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, ba
 			return
 		}
 		for errs := 0; ; errs++ {
-			if errs > 10 {
+			if errs > 2 {
 				log.Errorf("Unable to get validators: %s", err.Error())
 				return
 			}
@@ -261,7 +247,7 @@ func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, ba
 				return
 			}
 			for errs := 0; ; errs++ {
-				if errs > 10 {
+				if errs > 2 {
 					log.Errorf("Unable to get validators: %s", err.Error())
 					return
 				}
@@ -307,7 +293,8 @@ func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, ba
 	log.Debugf("Fetched %d validators at block height %d", len(resultValidators.Validators), blockHeight)
 }
 
-func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch dvotedb.Batch, complete chan<- struct{}, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
+func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch dvotedb.Batch, wg *sync.WaitGroup, envHeight *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex) {
+	defer wg.Done()
 	numTxs := int64(-1)
 	var blockHeight int64
 	for i, tx := range txs {
@@ -348,7 +335,6 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 	if numTxs > 0 {
 		log.Debugf("%d transactions logged at block %d, height %d", numTxs+1, blockHeight, startTxHeight)
 	}
-	complete <- struct{}{}
 }
 
 func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
@@ -361,7 +347,7 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 			return
 		}
 		for errs := 0; ; errs++ {
-			if errs > 10 {
+			if errs > 2 {
 				log.Errorf("Unable to get entity height: %s", err.Error())
 				return
 			}
@@ -395,7 +381,6 @@ func updateEntityList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	i := 0
 	entity := ""
 	for i, entity = range newEntities {
-		log.Debug(entity)
 		// Write entityHeight:entityID
 		heightKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
 		entity = util.TrimHex(entity)
@@ -449,7 +434,7 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 			return
 		}
 		for errs := 0; ; errs++ {
-			if errs > 10 {
+			if errs > 2 {
 				log.Errorf("Unable to get process height: %s", err.Error())
 				return
 			}
@@ -470,23 +455,18 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	requestMutex := new(sync.Mutex)
 	numNewProcesses := 0
 	numEntities := len(heightMap.Heights)
-	complete := make(chan struct{}, numEntities)
+	wg := new(sync.WaitGroup)
 
 	batch := d.NewBatch()
 
 	for entity, localHeight := range heightMap.Heights {
-		go fetchProcesses(entity, localHeight, localProcessHeight, d, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, complete)
+		wg.Add(1)
+		go fetchProcesses(entity, localHeight, localProcessHeight, d, batch, heightMap, heightMapMutex, requestMutex, &numNewProcesses, c, wg)
 	}
 	log.Debugf("Found %d stored entities", numEntities)
 
 	// Sync: wait here for all goroutines to complete
-	num := 0
-	for range complete {
-		if num >= numEntities-1 {
-			break
-		}
-		num++
-	}
+	wg.Wait()
 	log.Debugf("Fetched %d new processes", numNewProcesses)
 
 	// Write updated entity process height map
@@ -507,10 +487,8 @@ func updateProcessList(d *dvotedb.BadgerDB, c *api.GatewayClient) {
 	batch.Write()
 }
 
-func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.BadgerDB, batch dvotedb.Batch, heightMap *voctypes.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, complete chan struct{}) {
-	defer func() {
-		complete <- struct{}{}
-	}()
+func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.BadgerDB, batch dvotedb.Batch, heightMap *voctypes.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, c *api.GatewayClient, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	var lastRawProcess []byte
 	rawEntity, err := hex.DecodeString(util.TrimHex(entity))
@@ -551,16 +529,18 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
 		lastPID = ""
 	}
-	newProcessList, err := c.GetProcessList("0x"+entity, lastPID)
+	newProcessList, err := c.GetProcessList(entity, lastPID)
 	// If error is returned, try the request more times, then fatal.
 	if err != nil {
 		if strings.Contains(err.Error(), "closed") {
 			exit <- struct{}{}
+			requestMutex.Unlock()
 			return
 		}
 		for errs := 0; ; errs++ {
-			if errs > 10 {
+			if errs > 2 {
 				log.Errorf("Unable to get process list: %s", err.Error())
+				requestMutex.Unlock()
 				return
 			}
 			newProcessList, err = c.GetProcessList(entity, lastPID)

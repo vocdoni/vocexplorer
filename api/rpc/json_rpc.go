@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -42,6 +43,9 @@ func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 			break
 		}
 		num++
+	}
+	if t == nil || len(t.Conns) < 1 {
+		return nil, fmt.Errorf("cannot connect to websocket client")
 	}
 	result := new(coretypes.ResultStatus)
 	_, err := t.call("status", nil, result)
@@ -185,6 +189,10 @@ func (t *TendermintRPC) request(method string, params map[string]interface{}, my
 		return
 	}
 	p := t.GetConnection()
+	if p == nil {
+		close(done)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	var msg []byte

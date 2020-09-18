@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -29,6 +30,9 @@ func (t *TendermintRPC) AddConnection(c *websocket.Conn) {
 
 // GetConnection finds, locks, and returns the next available poolconnection. Caller is responsible for releasing the connection.
 func (t *TendermintRPC) GetConnection() *PoolConnection {
+	if t == nil || len(t.Conns) < 1 {
+		return nil
+	}
 	for i := int(atomic.LoadInt32(&t.index)); ; i++ {
 		if i >= len(t.Conns) {
 			i = 0
@@ -36,12 +40,14 @@ func (t *TendermintRPC) GetConnection() *PoolConnection {
 		// log.Debugf("index %d available %d free %t", i, t.Conns[i].available, t.Conns[i].Status())
 
 		// Non-thread-safe check status: faster check if resource is NOT available, then move on
-		if t.Conns[i].Status() {
-			// If resource is available, atomic check/lock to ensure it is available at time of locking
-			if t.Conns[i].Lock() {
-				// Store returned index to start looking for next connection, so that we can search from the last claimed connection rather than the first connection every time. That would result in clustering around the beginning of the array and not using the later connections.
-				atomic.StoreInt32(&t.index, int32(i))
-				return &t.Conns[i]
+		if i < len(t.Conns) {
+			if t.Conns[i].Status() {
+				// If resource is available, atomic check/lock to ensure it is available at time of locking
+				if t.Conns[i].Lock() {
+					// Store returned index to start looking for next connection, so that we can search from the last claimed connection rather than the first connection every time. That would result in clustering around the beginning of the array and not using the later connections.
+					atomic.StoreInt32(&t.index, int32(i))
+					return &t.Conns[i]
+				}
 			}
 		}
 	}
@@ -68,18 +74,25 @@ type PoolConnection struct {
 
 // Close safely closes the connection
 func (p *PoolConnection) Close() {
-	atomic.StoreInt32(&p.available, busy)
-	p.C.Close(websocket.StatusNormalClosure, "closed by caller")
+	if p != nil {
+		atomic.StoreInt32(&p.available, busy)
+		p.C.Close(websocket.StatusNormalClosure, "closed by caller")
+	}
 }
 
 // Lock returns false if the connection is already locked
 func (p *PoolConnection) Lock() bool {
-	return atomic.CompareAndSwapInt32(&p.available, free, busy)
+	if p != nil {
+		return atomic.CompareAndSwapInt32(&p.available, free, busy)
+	}
+	return false
 }
 
 // Release does not ensure that the connection is unavailable but sets it to be available either way.
 func (p *PoolConnection) Release() {
-	atomic.StoreInt32(&p.available, free)
+	if p != nil {
+		atomic.StoreInt32(&p.available, free)
+	}
 }
 
 // Status returns true if the connection is available
@@ -89,6 +102,9 @@ func (p *PoolConnection) Status() bool {
 
 // WriteRead executes a write & read operation on the websocket connection
 func (p *PoolConnection) WriteRead(ctx context.Context, request []byte) ([]byte, error) {
+	if p == nil {
+		return nil, fmt.Errorf("cannot send request to nil connection")
+	}
 	err := p.C.Write(ctx, websocket.MessageText, request)
 	if err != nil {
 		return nil, err

@@ -53,6 +53,9 @@ func requestBody(url string) (io.ReadCloser, bool) {
 		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get(url)
+	if resp == nil {
+		return nil, false
+	}
 	if err != nil {
 		log.Error(err)
 		return resp.Body, false
@@ -575,7 +578,9 @@ func GetProcessListByEntity(i int, entity string) ([config.ListSize]*types.Proce
 //GetStats gets the latest blockchain statistics
 func GetStats() (*VochainStats, bool) {
 	body, ok := requestBody("/api/stats")
-	defer body.Close()
+	if body != nil {
+		defer body.Close()
+	}
 	if !ok {
 		return &VochainStats{}, false
 	}

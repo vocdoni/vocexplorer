@@ -108,7 +108,7 @@ func main() {
 	if !cfg.Global.Detached {
 		// Get ChainID for db directory
 		tmClient, ok := api.StartTendermint(cfg.Global.TendermintHost, 1)
-		if !ok {
+		if !ok || tmClient == nil {
 			cfg.Global.Detached = true
 		} else {
 			gen, err := tmClient.Genesis()
