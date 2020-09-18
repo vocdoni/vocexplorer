@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"time"
+
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -26,4 +28,15 @@ type SetBlockStatus struct {
 	BlockTime      *[5]int32
 	BlockTimeStamp int32
 	Height         int64
+}
+
+//SetTransactionStats sets the transaction stats (avg, max, etc)
+type SetTransactionStats struct {
+	AvgTxsPerBlock    float64
+	AvgTxsPerMinute   float64
+	MaxTxsBlockHash   string
+	MaxTxsBlockHeight int64
+	MaxTxsMinute      time.Time
+	MaxTxsPerBlock    int64
+	MaxTxsPerMinute   int64
 }

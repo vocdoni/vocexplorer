@@ -79,4 +79,14 @@ const (
 	ProcessEnvelopeCountMapKey = "ProcEnvHeight"
 	//ValidatorHeightMapKey is the key for the map of validator block heights
 	ValidatorHeightMapKey = "ValHeightMap"
+	//MaxTxsPerBlockKey is the key for the maximum number of txs on one block
+	MaxTxsPerBlockKey = "MaxTxs"
+	//MaxTxsBlockIDKey is the key for the block ID with the largest nubmer of txs
+	MaxTxsBlockIDKey = "MaxBlock"
+	//MaxTxsBlockHeightKey is the key for the block Height with the largest nubmer of txs
+	MaxTxsBlockHeightKey = "MaxBlockHeight"
+	// MaxTxsPerMinuteKey is the key for the maximum number of transactions in one minute of time
+	MaxTxsPerMinuteKey = "MaxTxsMinute"
+	// MaxTxsMinuteID is the unix code for the start of the minute with the maximum number of txs
+	MaxTxsMinuteID = "MaxMinute"
 )

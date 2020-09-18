@@ -69,7 +69,8 @@ main {
   .card dl {
     font-size: $font-size-xs;
     flex-direction: column;
-    dd, dt {
+    dd,
+    dt {
       @extend .col-12;
     }
   }
@@ -100,7 +101,7 @@ main {
   border-left: 4px solid $green;
 
   &.addProcessKeys {
-    @include tile-color($cyan)
+    @include tile-color($cyan);
   }
 
   &.revealProcessKeys {
@@ -151,7 +152,9 @@ main {
     margin-top: 1rem;
   }
   @media (min-width: map-get($grid-breakpoints, "md")) {
-    .type > div, .contents > div, .details > div {
+    .type > div,
+    .contents > div,
+    .details > div {
       padding: 1rem;
     }
   }
@@ -205,9 +208,11 @@ main {
   @extend .d-flex;
   @extend .flex-nowrap;
   @extend .justify-content-between;
-  margin-bottom: .75rem;
+  margin-bottom: 0.75rem;
 
-  .page-count, .pagination-searchbar, .pagination {
+  .page-count,
+  .pagination-searchbar,
+  .pagination {
     @extend .d-flex;
     @extend .align-items-center;
     margin-bottom: 0;
@@ -227,9 +232,9 @@ main {
   }
 }
 
-
 .card {
-  dl, .detail {
+  dl,
+  .detail {
     @extend .row;
 
     dt {
@@ -277,7 +282,9 @@ main {
           }
         }
 
-        a, button, &:last-child button {
+        a,
+        button,
+        &:last-child button {
           @extend .col-12;
           @extend .nav-link;
           border-radius: 0;
@@ -286,7 +293,9 @@ main {
           border-bottom: 1px solid $gray-200;
           color: $gray-600;
 
-          &:hover, &:focus, &:active {
+          &:hover,
+          &:focus,
+          &:active {
             border-color: $gray-500;
             color: $brand-color;
           }
@@ -298,7 +307,7 @@ main {
         }
 
         &:last-child button/* ,
-        button.active  */{
+        button.active  */ {
           border-bottom-color: transparent;
         }
       }
@@ -307,7 +316,11 @@ main {
         padding-bottom: 0;
         li {
           margin-bottom: -1px;
-          a, button, + li button, button.active, &:last-child button {
+          a,
+          button,
+          + li button,
+          button.active,
+          &:last-child button {
             border-top-left-radius: $nav-tabs-border-radius;
             border-top-right-radius: $nav-tabs-border-radius;
             border-color: $nav-tabs-link-active-border-color;
@@ -473,15 +486,14 @@ main {
     @extend .col-md-3;
     border-bottom: 1px solid $gray-200;
     margin-bottom: $card-spacer-x;
-
   }
   .question {
     display: block;
     background: lighten($brand-color, 70%);
     color: $brand-color;
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
     font-weight: bold;
-    margin-bottom: .5rem;
+    margin-bottom: 0.5rem;
   }
   ol {
     list-style-type: lower-latin;
@@ -527,5 +539,19 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+}
+
+.stats {
+  @extend .table;
+  .row {
+    @extend tr;
+    .data {
+      @extend td;
+    }
+    .head {
+      font-weight: bold;
+      @extend th;
+    }
   }
 }

@@ -181,6 +181,15 @@ func statsActions(action interface{}) {
 		Stats.BlockTimeStamp = a.BlockTimeStamp
 		Stats.Height = a.Height
 
+	case *actions.SetTransactionStats:
+		Stats.AvgTxsPerBlock = a.AvgTxsPerBlock
+		Stats.AvgTxsPerMinute = a.AvgTxsPerMinute
+		Stats.MaxTxsBlockHash = a.MaxTxsBlockHash
+		Stats.MaxTxsBlockHeight = a.MaxTxsBlockHeight
+		Stats.MaxTxsMinute = a.MaxTxsMinute
+		Stats.MaxTxsPerBlock = a.MaxTxsPerBlock
+		Stats.MaxTxsPerMinute = a.MaxTxsPerMinute
+
 	default:
 		return // don't fire listeners
 	}

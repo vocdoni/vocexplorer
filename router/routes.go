@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -68,6 +69,18 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		processCount := vocdb.GetHeight(db, config.LatestProcessCountKey, 0)
 		transactionHeight := vocdb.GetHeight(db, config.LatestTxHeightKey, 1)
 		validatorCount := vocdb.GetHeight(db, config.LatestValidatorCountKey, 0)
+		maxTxsPerBlock := vocdb.GetInt64(db, config.MaxTxsPerBlockKey)
+		maxTxsPerMinute := vocdb.GetInt64(db, config.MaxTxsPerMinuteKey)
+		maxTxsBlockHeight := vocdb.GetInt64(db, config.MaxTxsBlockHeightKey)
+		rawMaxTxsBlockID, err := db.Get([]byte(config.MaxTxsBlockIDKey))
+		var maxTxsBlockID string
+		if err != nil {
+			maxTxsBlockID = ""
+		} else {
+			maxTxsBlockID = util.HexToString(rawMaxTxsBlockID)
+		}
+		rawMaxTxsMinute := vocdb.GetInt64(db, config.MaxTxsMinuteID)
+		maxTxsMinute := time.Unix(rawMaxTxsMinute, 0)
 
 		stats.BlockHeight = blockHeight.GetHeight()
 		stats.EntityCount = entityCount.GetHeight()
@@ -75,6 +88,13 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		stats.ProcessCount = processCount.GetHeight()
 		stats.TransactionHeight = transactionHeight.GetHeight()
 		stats.ValidatorCount = validatorCount.GetHeight()
+		stats.MaxTxsPerBlock = maxTxsPerBlock
+		stats.MaxTxsPerMinute = maxTxsPerMinute
+		stats.MaxTxsBlockHash = maxTxsBlockID
+		stats.MaxTxsBlockHeight = maxTxsBlockHeight
+		stats.MaxTxsMinute = maxTxsMinute
+		stats.AvgTxsPerBlock = float64(transactionHeight.GetHeight()-1) / float64(blockHeight.GetHeight()-1)
+		stats.AvgTxsPerMinute = float64(transactionHeight.GetHeight()-1) / float64(int(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Second())
 
 		msg, err := json.Marshal(stats)
 		if err != nil {

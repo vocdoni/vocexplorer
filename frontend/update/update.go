@@ -19,7 +19,6 @@ import (
 func DashboardInfo(c *api.GatewayClient) {
 	GatewayInfo(c)
 	BlockStatus(c)
-	// Counts(c)
 }
 
 // Counts calls gateway apis, updates total number of processes and entities

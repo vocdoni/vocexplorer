@@ -39,67 +39,71 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 					elem.Heading4(
 						vecty.Text("Blockchain information"),
 					),
-					elem.Table(
-						vecty.Markup(vecty.Class("table")),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("ID")),
-							elem.TableData(vecty.Text(store.Stats.Genesis.ChainID)),
+					Container(
+						vecty.Markup(vecty.Class("stats")),
+						row(
+							head(vecty.Text("ID")),
+							data(vecty.Text(store.Stats.Genesis.ChainID)),
+							head(vecty.Text("Version")),
+							data(vecty.Text(store.Stats.ResultStatus.NodeInfo.Version)),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Version")),
-							elem.TableData(vecty.Text(store.Stats.ResultStatus.NodeInfo.Version)),
-						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Max block size")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Stats.Genesis.ConsensusParams.Block.MaxBytes),
-							)),
-						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Latest block timestamp")),
-							elem.TableData(vecty.Text(
+						row(
+							head(vecty.Text("Max block size")),
+							data(vecty.Text(p.Sprintf("%d", store.Stats.Genesis.ConsensusParams.Block.MaxBytes))),
+							head(vecty.Text("Latest block timestamp")),
+							data(vecty.Text(
 								p.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
 							)),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Block height")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight),
-							)),
+						row(
+							head(vecty.Text("Block height")),
+							data(vecty.Text(p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight))),
+							head(vecty.Text("Total transactions")),
+							data(vecty.Text(p.Sprintf("%d", store.Transactions.Count))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Total transactions")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Transactions.Count),
-							)),
+						row(
+							head(vecty.Text("Total entities")),
+							data(vecty.Text(p.Sprintf("%d", store.Entities.Count))),
+							head(vecty.Text("Total processes")),
+							data(vecty.Text(p.Sprintf("%d", store.Processes.Count))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Total entities")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Entities.Count),
-							)),
+
+						row(
+							head(vecty.Text("Number of validators")),
+							data(vecty.Text(p.Sprintf("%d", len(store.Stats.Genesis.Validators)))),
+							head(vecty.Text("Total vote envelopes")),
+							data(vecty.Text(p.Sprintf("%d", store.Envelopes.Count))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Total processes")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Processes.Count),
-							)),
+						row(
+							head(vecty.Text("Average transactions per block")),
+							data(vecty.Text(p.Sprintf("%.2f", store.Stats.AvgTxsPerBlock))),
+
+							head(vecty.Text("Max transactions on one block")),
+							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerBlock))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Total vote envelopes")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", store.Envelopes.Count),
-							)),
+						row(
+							head(vecty.Text("Average transactions per minute")),
+							data(vecty.Text(p.Sprintf("%.2f", store.Stats.AvgTxsPerMinute))),
+							head(vecty.Text("Max transactions in one minute")),
+							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerMinute))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Number of validators")),
-							elem.TableData(vecty.Text(
-								p.Sprintf("%d", len(store.Stats.Genesis.Validators)),
-							)),
+						row(
+
+							head(vecty.Text("Block with the most transactions")),
+							data(
+								vecty.Markup(vecty.Class("text-truncate")),
+								Link(
+									"/block/"+util.IntToString(store.Stats.MaxTxsBlockHeight),
+									store.Stats.MaxTxsBlockHash[:util.Min(10, len(store.Stats.MaxTxsBlockHash))]+"...",
+									""),
+							),
+
+							head(vecty.Text("Minute with the most transactions")),
+							data(vecty.Text(p.Sprintf(store.Stats.MaxTxsMinute.Format("Mon Jan _2 15:04 UTC 2006")))),
 						),
-						elem.TableRow(
-							elem.TableHeader(vecty.Text("Sync status")),
-							elem.TableData(
+						row(
+							spanHead(vecty.Text("Sync status")),
+							spanData(
 								vecty.If(syncing, elem.Span(
 									vecty.Markup(vecty.Class("badge", "badge-warning")),
 									vecty.Markup(
@@ -117,4 +121,44 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 			},
 		),
 	)
+}
+
+func row(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
+	markup = append(
+		markup,
+		vecty.Markup(vecty.Class("row")),
+	)
+	return elem.Div(markup...)
+}
+
+func data(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
+	markup = append(
+		markup,
+		vecty.Markup(vecty.Class("col-6", "col-md-3", "data")),
+	)
+	return elem.Div(markup...)
+}
+
+func head(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
+	markup = append(
+		markup,
+		vecty.Markup(vecty.Class("col-6", "col-md-3", "head")),
+	)
+	return elem.Div(markup...)
+}
+
+func spanHead(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
+	markup = append(
+		markup,
+		vecty.Markup(vecty.Class("col-6", "col-md-6", "head")),
+	)
+	return elem.Div(markup...)
+}
+
+func spanData(markup ...vecty.MarkupOrChild) vecty.ComponentOrHTML {
+	markup = append(
+		markup,
+		vecty.Markup(vecty.Class("col-6", "col-md-6", "data")),
+	)
+	return elem.Div(markup...)
 }

@@ -44,7 +44,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading3(
-							vecty.Text("Block does not exist"),
+							vecty.Text("Loading block..."),
 						),
 					},
 				}),
@@ -81,6 +81,7 @@ func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
 	block := api.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
+	fmt.Println("got block")
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	var rawTx dvotetypes.Tx
 	var txHeights []int64
@@ -242,7 +243,7 @@ func preformattedBlockTransactions(block *tmtypes.Block) vecty.ComponentOrHTML {
 				"",
 			)
 		} else {
-			hashElement = elem.Div(vecty.Text(hashString))
+			hashElement = vecty.Text(hashString)
 		}
 		data = append(
 			data,

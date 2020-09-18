@@ -33,6 +33,15 @@ type VochainStats struct {
 	Network           string             `json:"network"`
 	Version           string             `json:"version"`
 	SyncInfo          coretypes.SyncInfo `json:"sync_info"`
+	AvgTxsPerBlock    float64            `json:"avg_txs_per_block"`
+	AvgTxsPerMinute   float64            `json:"avg_txs_per_minute"`
+	// The hash of the block with the most txs
+	MaxTxsBlockHash   string `json:"max_txs_block_hash"`
+	MaxTxsBlockHeight int64  `json:"max_txs_block_height"`
+	// The start of the minute with the most txs
+	MaxTxsMinute    time.Time `json:"max_txs_minute"`
+	MaxTxsPerBlock  int64     `json:"max_txs_per_block"`
+	MaxTxsPerMinute int64     `json:"max_txs_per_minute"`
 }
 
 //PingServer pings the web server

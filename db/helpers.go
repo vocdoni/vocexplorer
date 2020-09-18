@@ -2,6 +2,7 @@ package db
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"strings"
 
@@ -12,6 +13,27 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
 )
+
+// GetInt64 fetches a int64 value from the database corresponding to given key
+func GetInt64(d *dvotedb.BadgerDB, key string) int64 {
+	var val int64
+	var num int
+	has, err := d.Has([]byte(key))
+	if err != nil {
+		log.Error(err)
+	}
+	if has {
+		raw, err := d.Get([]byte(key))
+		if err != nil {
+			log.Error(err)
+		}
+		val, num = binary.Varint(raw)
+		if num < 1 {
+			log.Error("Could not decode int")
+		}
+	}
+	return val
+}
 
 // GetHeight fetches a height value from the database corresponding to given key
 func GetHeight(d *dvotedb.BadgerDB, key string, def int64) *voctypes.Height {

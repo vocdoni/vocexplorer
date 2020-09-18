@@ -29,6 +29,10 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
 	latestTxHeight := GetHeight(d, config.LatestTxHeightKey, 1)
 	latestEnvelopeCount := GetHeight(d, config.LatestEnvelopeCountKey, 0)
+	maxBlockTxs := GetInt64(d, config.MaxTxsPerBlockKey)
+	maxMinuteTxs := GetInt64(d, config.MaxTxsPerMinuteKey)
+	largestBlock := ""
+	largestBlockHeight := int64(0)
 
 	// Get Height maps: stored in map object so each update isn't slow db-write/get
 	// Map of validator:num blocks
@@ -74,9 +78,10 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
 	nextHeight := make(chan struct{})
 	myHeight := make(chan struct{})
+	txsByMinute := make(map[int64]int64)
 	for ; int(i) < numNewBlocks; i++ {
 		wg.Add(1)
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &batch, t, wg, myHeight, nextHeight, &txsList[i], valMap, valMapMutex)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &maxBlockTxs, &largestBlockHeight, &largestBlock, &batch, t, wg, myHeight, nextHeight, &txsList[i], valMap, valMapMutex, txsByMinute)
 		if i == 0 {
 			//Signal to the first block to start
 			close(myHeight)
@@ -101,6 +106,33 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 
 		// Sync: wait here for all goroutines to complete
 		wg.Wait()
+
+		// Update the max txs per minute
+		var maxTxMinute int64
+		for t, n := range txsByMinute {
+			if n > maxMinuteTxs {
+				maxMinuteTxs = n
+				maxTxMinute = t
+			}
+		}
+		if maxTxMinute != 0 {
+			batch.Put([]byte(config.MaxTxsPerMinuteKey), util.EncodeInt(maxMinuteTxs))
+			batch.Put([]byte(config.MaxTxsMinuteID), util.EncodeInt(maxTxMinute))
+		}
+
+		// write largestblock
+		if largestBlock != "" {
+			rawLargestBlock, err := hex.DecodeString(largestBlock)
+			if err != nil {
+				log.Warn(err)
+			}
+			rawLargestBlockHeight := util.EncodeInt(largestBlockHeight)
+			batch.Put([]byte(config.MaxTxsBlockIDKey), rawLargestBlock)
+			batch.Put([]byte(config.MaxTxsBlockHeightKey), rawLargestBlockHeight)
+		}
+		// write max txs per block
+		batch.Put([]byte(config.MaxTxsPerBlockKey), util.EncodeInt(maxBlockTxs))
+
 		rawValMap, err := proto.Marshal(valMap)
 		if err != nil {
 			log.Error(err)
@@ -135,7 +167,7 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 
 }
 
-func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sync.WaitGroup, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex) {
+func fetchBlock(height int64, maxBlockTxs, largestBlockHeight *int64, largestBlock *string, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sync.WaitGroup, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex, maxMinuteTxs map[int64]int64) {
 	// Signal
 	defer wg.Done()
 	// Thread-safe api request
@@ -179,7 +211,21 @@ func fetchBlock(height int64, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sy
 	<-myHeight
 	// Update height of validator block belongs to
 	valMapMutex.Lock()
-	height, ok := valMap.Heights[util.HexToString(block.Proposer)]
+	// If this block has the most txs, set the maxBlockTxs
+	if block.NumTxs > *maxBlockTxs {
+		*maxBlockTxs = block.NumTxs
+		*largestBlock = hex.EncodeToString(block.GetHash())
+		*largestBlockHeight = block.GetHeight()
+	}
+
+	// Add numTxs to this minute's total txs
+	prev, ok := maxMinuteTxs[(block.Time.GetSeconds()/60)*60]
+	if !ok {
+		prev = 0
+	}
+	maxMinuteTxs[(block.Time.GetSeconds()/60)*60] = prev + block.NumTxs
+
+	height, ok = valMap.Heights[util.HexToString(block.Proposer)]
 	if !ok {
 		height = 0
 	}
