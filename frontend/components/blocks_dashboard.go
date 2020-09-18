@@ -81,6 +81,7 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 			if i < 1 {
 				oldBlocks = store.Blocks.Count
 			}
+			fmt.Printf("update blocks to index %d\n", i)
 			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
 
 		case search := <-store.Blocks.Pagination.SearchChannel:

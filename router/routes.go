@@ -94,7 +94,7 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		stats.MaxTxsBlockHeight = maxTxsBlockHeight
 		stats.MaxTxsMinute = maxTxsMinute
 		stats.AvgTxsPerBlock = float64(transactionHeight.GetHeight()-1) / float64(blockHeight.GetHeight()-1)
-		stats.AvgTxsPerMinute = float64(transactionHeight.GetHeight()-1) / float64(int(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Second())
+		stats.AvgTxsPerMinute = float64(transactionHeight.GetHeight()-1) / (float64(int64(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Unix()) / float64(60))
 
 		msg, err := json.Marshal(stats)
 		if err != nil {

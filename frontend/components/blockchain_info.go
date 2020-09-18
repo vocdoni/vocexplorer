@@ -76,14 +76,14 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						),
 						row(
 							head(vecty.Text("Average transactions per block")),
-							data(vecty.Text(p.Sprintf("%.2f", store.Stats.AvgTxsPerBlock))),
+							data(vecty.Text(p.Sprintf("%.4f", store.Stats.AvgTxsPerBlock))),
 
 							head(vecty.Text("Max transactions on one block")),
 							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerBlock))),
 						),
 						row(
 							head(vecty.Text("Average transactions per minute")),
-							data(vecty.Text(p.Sprintf("%.2f", store.Stats.AvgTxsPerMinute))),
+							data(vecty.Text(p.Sprintf("%.4f", store.Stats.AvgTxsPerMinute))),
 							head(vecty.Text("Max transactions in one minute")),
 							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerMinute))),
 						),
