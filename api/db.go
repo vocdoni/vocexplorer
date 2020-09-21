@@ -82,16 +82,16 @@ func request(url string) ([]byte, bool) {
 	resp, err := c.Get(url)
 	if err != nil {
 		log.Error(err)
-		return []byte{}, false
+		return nil, false
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return []byte{}, false
+		return nil, false
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Error(err)
-		return []byte{}, false
+		return nil, false
 	}
 	return body, true
 }

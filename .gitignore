@@ -21,3 +21,4 @@ build.js
 *.vscode
 *.code-workspace
 *.DS_store
+*.svg

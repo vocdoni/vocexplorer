@@ -90,7 +90,9 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 				time.Sleep(30 * time.Second)
 				os.Exit(1)
 			}()
-			tClient.Close()
+			if tClient != nil {
+				tClient.Close()
+			}
 			gwClient.Close()
 			pprof.StopCPUProfile()
 			os.Exit(1)

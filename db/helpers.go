@@ -121,7 +121,7 @@ func SearchBlocksByValidator(d *dvotedb.BadgerDB, max int, term, validator strin
 	rawValidator, err := hex.DecodeString(validator)
 	if err != nil {
 		log.Warn(err)
-		return [][]byte{}
+		return nil
 	}
 	prefix := []byte(config.BlockHashPrefix)
 	if max > 64 {

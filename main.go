@@ -124,7 +124,9 @@ func main() {
 				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost)
 			}
 		}
-		tmClient.Close()
+		if tmClient != nil {
+			tmClient.Close()
+		}
 	}
 	if cfg.Global.Detached {
 		log.Infof("Running in detached mode")

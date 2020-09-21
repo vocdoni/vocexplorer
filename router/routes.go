@@ -791,12 +791,12 @@ func SearchTransactionsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter,
 			log.Debugf("Hash found: %X", hash)
 			rawTx, err := db.Get(append([]byte(config.TxHashPrefix), hash...))
 			if err != nil {
-				return []byte{}, err
+				return nil, err
 			}
 			var tx ptypes.StoreTx
 			err = proto.Unmarshal(rawTx, &tx)
 			if err != nil {
-				return []byte{}, err
+				return nil, err
 			}
 			send := ptypes.SendTx{
 				Hash:  hash,
@@ -804,7 +804,7 @@ func SearchTransactionsHandler(db *dvotedb.BadgerDB) func(w http.ResponseWriter,
 			}
 			rawSend, err := proto.Marshal(&send)
 			if err != nil {
-				return []byte{}, err
+				return nil, err
 			}
 			return rawSend, nil
 		},

@@ -18,11 +18,13 @@ import (
 	"nhooyr.io/websocket"
 )
 
-var id int32
-var cdc *amino.Codec
+var id uint64
+var cdc = amino.NewCodec()
 
 func init() {
-	initCdc()
+	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
+	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
+		ed25519.PubKeyAminoName, nil)
 }
 
 // InitTendermintRPC initializes a TendermintRPC client
@@ -139,22 +141,19 @@ func marshalParams(params map[string]interface{}) ([]byte, error) {
 	for name, value := range params {
 		valueJSON, err := cdc.MarshalJSON(value)
 		if err != nil {
-			return []byte{}, err
+			return nil, err
 		}
 		paramsMap[name] = valueJSON
 	}
 
 	payload, err := json.Marshal(paramsMap) // NOTE: Amino doesn't handle maps yet.
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 	return payload, nil
 }
 
 func bundleRequest(method string, params map[string]interface{}, id rpctypes.JSONRPCIntID) ([]byte, error) {
-	if params == nil {
-		params = map[string]interface{}{}
-	}
 	payload, err := marshalParams(params)
 	if err != nil {
 		return nil, err
@@ -173,46 +172,31 @@ func bundleRequest(method string, params map[string]interface{}, id rpctypes.JSO
 }
 
 func (t *TendermintRPC) call(method string, params map[string]interface{}, result interface{}) (interface{}, error) {
-	myID := rpctypes.JSONRPCIntID(atomic.AddInt32(&id, 1))
-	var err error
-	done := make(chan struct{})
-	go t.request(method, params, myID, result, &err, done)
-	<-done
+	myID := rpctypes.JSONRPCIntID(atomic.AddUint64(&id, 1))
+	err := t.request(method, params, myID, result)
 	return result, err
 }
 
-func (t *TendermintRPC) request(method string, params map[string]interface{}, myID rpctypes.JSONRPCIntID, response interface{}, err *error, done chan struct{}) {
-	var req []byte
-	req, *err = bundleRequest(method, params, myID)
-	if *err != nil {
-		close(done)
-		return
+func (t *TendermintRPC) request(method string, params map[string]interface{}, myID rpctypes.JSONRPCIntID, result interface{}) error {
+	req, err := bundleRequest(method, params, myID)
+	if err != nil {
+		return err
 	}
 	p := t.GetConnection()
 	if p == nil {
-		close(done)
-		return
+		return errors.Errorf("unable to get websocket connection from pool")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	var msg []byte
-	msg, *err = p.WriteRead(ctx, req)
+	msg, err = p.WriteRead(ctx, req)
 	p.Release()
-	if *err != nil {
-		close(done)
-		return
+	if err != nil {
+		return err
 	}
-	_, *err = UnmarshalResponseBytes(cdc, msg, myID, response)
-	if *err != nil {
-		close(done)
-		return
+	_, err = UnmarshalResponseBytes(cdc, msg, myID, result)
+	if err != nil {
+		return err
 	}
-	close(done)
-}
-
-func initCdc() {
-	cdc = amino.NewCodec()
-	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
-		ed25519.PubKeyAminoName, nil)
+	return nil
 }
