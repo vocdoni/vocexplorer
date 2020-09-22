@@ -1,5 +1,7 @@
 # Vochain Block Explorer
 
+Deployed at [https://explorer.vocdoni.net/](https://explorer.vocdoni.net/) and [https://explorer.dev.vocdoni.net/](https://explorer.dev.vocdoni.net/)
+
 ## Deps
 
 Golang 1.14+
