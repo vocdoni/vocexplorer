@@ -361,7 +361,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 			Index:    txRes.Index,
 		}
 		// If voteTx, get envelope nullifier
-		txStore.Nullifier = storeEnvelope(txStore.Tx, envHeight, procHeightMap, procHeightMapMutex, batch)
+		txStore.Nullifier = storeEnvelope(txStore.Tx, txStore.TxHeight, envHeight, procHeightMap, procHeightMapMutex, batch)
 		txVal, err := proto.Marshal(&txStore)
 		if err != nil {
 			log.Error(err)
@@ -641,7 +641,7 @@ func fetchProcesses(entity string, localHeight, height int64, db *dvotedb.Badger
 	}
 }
 
-func storeEnvelope(tx tmtypes.Tx, height *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) string {
+func storeEnvelope(tx tmtypes.Tx, txHeight int64, height *voctypes.Height, procHeightMap *voctypes.HeightMap, procHeightMapMutex *sync.Mutex, batch dvotedb.Batch) string {
 	var rawTx dvotetypes.Tx
 	err := json.Unmarshal(tx, &rawTx)
 	if err != nil {
@@ -657,9 +657,10 @@ func storeEnvelope(tx tmtypes.Tx, height *voctypes.Height, procHeightMap *voctyp
 
 		// Write vote package
 		votePackage := voctypes.Envelope{
-			ProcessID:    voteTx.ProcessID,
-			Package:      voteTx.VotePackage,
 			GlobalHeight: globalHeight,
+			Package:      voteTx.VotePackage,
+			ProcessID:    voteTx.ProcessID,
+			TxHeight:     txHeight,
 		}
 
 		// Update height of process env belongs to

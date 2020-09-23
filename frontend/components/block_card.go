@@ -12,8 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
 //BlockCard renders a single block card
@@ -26,7 +24,6 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 			log.Error(err)
 		}
 	}
-	p := message.NewPrinter(language.English)
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
 			"/block/"+util.IntToString(block.GetHeight()),
@@ -38,7 +35,7 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Span(
 					vecty.Markup(vecty.Class("mr-2")),
-					vecty.Text(p.Sprintf("%d transactions", block.GetNumTxs())),
+					vecty.Text(humanize.Comma(block.GetNumTxs())+" transactions"),
 				),
 				elem.Span(
 					vecty.Text(humanize.Time(tm)),

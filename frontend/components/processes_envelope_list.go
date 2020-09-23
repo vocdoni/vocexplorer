@@ -95,6 +95,17 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 							vecty.Text(envelope.GetNullifier()),
 						),
 					),
+					elem.Div(
+						elem.Div(
+							vecty.Markup(vecty.Class("dt")),
+							vecty.Text("Transaction"),
+						),
+						Link(
+							"/transaction/"+util.IntToString(envelope.TxHeight),
+							util.IntToString(envelope.TxHeight),
+							"hash",
+						),
+					),
 				),
 			),
 		),

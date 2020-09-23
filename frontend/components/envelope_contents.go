@@ -146,6 +146,12 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 				util.TrimHex(store.Envelopes.CurrentEnvelope.GetProcessID()),
 				"hash",
 			)),
+			elem.DefinitionTerm(vecty.Text("Packaged in transaction")),
+			elem.Description(Link(
+				"/transaction/"+util.IntToString(store.Envelopes.CurrentEnvelope.TxHeight),
+				util.IntToString(store.Envelopes.CurrentEnvelope.TxHeight),
+				"hash",
+			)),
 			elem.DefinitionTerm(vecty.Text("Position in process")),
 			elem.Description(vecty.Text(
 				humanize.Ordinal(int(store.Envelopes.CurrentEnvelope.GetProcessHeight())),

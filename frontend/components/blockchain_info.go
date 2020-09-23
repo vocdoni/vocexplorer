@@ -1,15 +1,15 @@
 package components
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
 //BlockchainInfo is the component to display blockchain information
@@ -29,7 +29,6 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
 	// Buffer of +- 1 block so syncing does not flash back/forth
 	syncing := int(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight)-store.Blocks.Count > 2
-	p := message.NewPrinter(language.English)
 
 	return elem.Section(
 		vecty.Markup(vecty.Class("blockchain-info")),
@@ -49,43 +48,43 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 						),
 						row(
 							head(vecty.Text("Max block size")),
-							data(vecty.Text(p.Sprintf("%d", store.Stats.Genesis.ConsensusParams.Block.MaxBytes))),
+							data(vecty.Text(humanize.Comma(store.Stats.Genesis.ConsensusParams.Block.MaxBytes))),
 							head(vecty.Text("Latest block timestamp")),
 							data(vecty.Text(
-								p.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
+								fmt.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
 							)),
 						),
 						row(
 							head(vecty.Text("Block height")),
-							data(vecty.Text(p.Sprintf("%d", store.Stats.ResultStatus.SyncInfo.LatestBlockHeight))),
+							data(vecty.Text(humanize.Comma(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight))),
 							head(vecty.Text("Total transactions")),
-							data(vecty.Text(p.Sprintf("%d", store.Transactions.Count))),
+							data(vecty.Text(humanize.Comma(int64(store.Transactions.Count)))),
 						),
 						row(
 							head(vecty.Text("Total entities")),
-							data(vecty.Text(p.Sprintf("%d", store.Entities.Count))),
+							data(vecty.Text(humanize.Comma(int64(store.Entities.Count)))),
 							head(vecty.Text("Total processes")),
-							data(vecty.Text(p.Sprintf("%d", store.Processes.Count))),
+							data(vecty.Text(humanize.Comma(int64(store.Processes.Count)))),
 						),
 
 						row(
 							head(vecty.Text("Number of validators")),
-							data(vecty.Text(p.Sprintf("%d", len(store.Stats.Genesis.Validators)))),
+							data(vecty.Text(humanize.Comma(int64(len(store.Stats.Genesis.Validators))))),
 							head(vecty.Text("Total vote envelopes")),
-							data(vecty.Text(p.Sprintf("%d", store.Envelopes.Count))),
+							data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
 						),
 						row(
 							head(vecty.Text("Average transactions per block")),
-							data(vecty.Text(p.Sprintf("%.4f", store.Stats.AvgTxsPerBlock))),
+							data(vecty.Text(fmt.Sprintf("%.4f", store.Stats.AvgTxsPerBlock))),
 
 							head(vecty.Text("Max transactions on one block")),
-							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerBlock))),
+							data(vecty.Text(humanize.Comma(store.Stats.MaxTxsPerBlock))),
 						),
 						row(
 							head(vecty.Text("Average transactions per minute")),
-							data(vecty.Text(p.Sprintf("%.4f", store.Stats.AvgTxsPerMinute))),
+							data(vecty.Text(fmt.Sprintf("%.4f", store.Stats.AvgTxsPerMinute))),
 							head(vecty.Text("Max transactions in one minute")),
-							data(vecty.Text(p.Sprintf("%d", store.Stats.MaxTxsPerMinute))),
+							data(vecty.Text(humanize.Comma(store.Stats.MaxTxsPerMinute))),
 						),
 						row(
 
@@ -99,7 +98,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 							),
 
 							head(vecty.Text("Minute with the most transactions")),
-							data(vecty.Text(p.Sprintf(store.Stats.MaxTxsMinute.Format("Mon Jan _2 15:04 UTC 2006")))),
+							data(vecty.Text(fmt.Sprintf(store.Stats.MaxTxsMinute.Format("Mon Jan _2 15:04 UTC 2006")))),
 						),
 						row(
 							spanHead(vecty.Text("Sync status")),

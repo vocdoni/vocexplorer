@@ -15,6 +15,7 @@ message Envelope {
     string Package = 4;
     int64 ProcessHeight = 5;
     int64 GlobalHeight = 6;
+    int64 TxHeight = 7;
 }
 
 message StoreBlock {
