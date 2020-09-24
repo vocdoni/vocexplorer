@@ -47,7 +47,7 @@ type VochainStats struct {
 //PingServer pings the web server
 func PingServer() bool {
 	c := &http.Client{
-		Timeout: 1 * time.Second,
+		Timeout: 5 * time.Second,
 	}
 	resp, err := c.Get("/ping")
 	if err != nil || resp == nil {

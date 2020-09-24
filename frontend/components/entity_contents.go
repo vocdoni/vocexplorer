@@ -50,12 +50,6 @@ func (dash *EntityContentsView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash == nil || store.GatewayClient == nil {
-		return Container(&bootstrap.Alert{
-			Type:     "warning",
-			Contents: "Connecting to blockchain client",
-		})
-	}
 
 	return Container(
 		renderGatewayConnectionBanner(),
@@ -103,8 +97,8 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 func UpdateEntityContents(d *EntityContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {
@@ -155,8 +149,8 @@ func UpdateEntityContents(d *EntityContentsView) {
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
 	index--
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {

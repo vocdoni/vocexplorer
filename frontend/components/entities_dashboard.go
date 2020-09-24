@@ -36,25 +36,17 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
-		return Container(
-			renderGatewayConnectionBanner(),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading2(vecty.Text("Entities")),
-						&EntityListView{},
-					},
-				}),
-			),
-		)
-	}
-	return elem.Div(
-		&bootstrap.Alert{
-			Contents: "Connecting to blockchain clients",
-			Type:     "warning",
-		},
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		elem.Section(
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading2(vecty.Text("Entities")),
+					&EntityListView{},
+				},
+			}),
+		),
 	)
 }
 
@@ -117,8 +109,8 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntities(d *EntitiesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Entities.Pagination.DisableUpdate {
 		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))

@@ -13,24 +13,14 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// StartGateway starts a gateway client and returns true if ok
-func StartGateway(host string) (*GatewayClient, *context.CancelFunc, bool) {
-	gwClient, cancel := InitGateway(host)
-	if gwClient == nil {
-		return nil, &cancel, false
-	}
-	return gwClient, &cancel, true
-}
-
-// InitGateway initializes a connection with the gateway
+// InitGateway initializes a connection with the gateway, with 10 attempts
 func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	// Init Gateway client
-	log.Infof("connecting to %s\n", host)
-	gwClient, cancel, err := New(host)
+	gwClient, cancel, err := InitGatewayClient(host)
 	if err != nil {
 		log.Warn(err.Error())
 		for i := 0; i < 10; i++ {
-			gwClient, cancel, err = New(host)
+			gwClient, cancel, err = InitGatewayClient(host)
 			if err != nil {
 				log.Warn(err.Error())
 			} else {
@@ -44,8 +34,9 @@ func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 	return gwClient, cancel
 }
 
-// New starts a connection with the given endpoint address. From unreleased go-dvote/client
-func New(addr string) (*GatewayClient, context.CancelFunc, error) {
+// InitGatewayClient starts a connection with the given endpoint address. From unreleased go-dvote/client
+func InitGatewayClient(addr string) (*GatewayClient, context.CancelFunc, error) {
+	log.Infof("connecting to %s\n", addr)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	conn, _, err := websocket.Dial(ctx, addr, nil)
 	if err != nil {

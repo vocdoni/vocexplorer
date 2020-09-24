@@ -19,7 +19,7 @@ func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 	if store.Stats.BlockTime == nil {
 		return &bootstrap.Alert{
 			Type:     "warning",
-			Contents: "Waiting for blocks data",
+			Contents: "Waiting for block times",
 		}
 	}
 

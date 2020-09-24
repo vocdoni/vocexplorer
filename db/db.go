@@ -71,13 +71,13 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	log.Debugf("Connected to " + tmHost)
 
 	// Init gateway client
-	gwClient, cancel, up := api.StartGateway(gwHost)
-	if !up {
+	gwClient, cancel := api.InitGateway(gwHost)
+	if gwClient == nil {
 		log.Warn("Cannot connect to gateway api. Running as detached database")
 		*detached = true
 		return
 	}
-	defer (*cancel)()
+	defer (cancel)()
 	log.Debugf("Connected to %s", gwHost)
 
 	// Interrupt signal should close clients

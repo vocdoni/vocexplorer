@@ -38,25 +38,17 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
-		return Container(
-			renderGatewayConnectionBanner(),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading2(vecty.Text("Processes")),
-						&ProcessListView{},
-					},
-				}),
-			),
-		)
-	}
-	return elem.Div(
-		&bootstrap.Alert{
-			Contents: "Connecting to blockchain clients",
-			Type:     "warning",
-		},
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		elem.Section(
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading2(vecty.Text("Processes")),
+					&ProcessListView{},
+				},
+			}),
+		),
 	)
 }
 
@@ -122,8 +114,8 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcesses(d *ProcessesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Processes.Pagination.DisableUpdate {
 		getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))

@@ -45,6 +45,8 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 
 	if store.Envelopes.CurrentEnvelope == nil || proto.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
 		return elem.Div(
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
 			elem.Main(vecty.Text("Envelope not available")),
 		)
 	}
@@ -88,10 +90,13 @@ func (contents *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	contents.DisplayPackage = displayPackage
 	contents.VotePackage = votePackage
 
-	return Container(DetailsView(
-		contents.EnvelopeView(),
-		contents.EnvelopeDetails(),
-	))
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		DetailsView(
+			contents.EnvelopeView(),
+			contents.EnvelopeDetails(),
+		))
 }
 
 type EnvelopeTab struct {

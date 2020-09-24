@@ -24,6 +24,7 @@ func main() {
 
 func initFrontend() {
 	var cfg *config.Cfg
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: true})
 	resp, err := http.Get("/config")
 	if err != nil {
 		log.Error(err)
@@ -33,7 +34,7 @@ func initFrontend() {
 		log.Error(err)
 	}
 	// Init clients with cfg so we don't have to wait for it to store
-	initClients(cfg)
+	go initClients(cfg)
 	dispatcher.Dispatch(&actions.StoreConfig{Config: *cfg})
 	if cfg == nil {
 		log.Fatal("Unable to get application configuraion")
@@ -41,7 +42,7 @@ func initFrontend() {
 	// Wait for store.Config to populate
 	i := 0
 	for ; store.Config.GatewayHost == "" && store.Config.RefreshTime == 0; i++ {
-		if i > 50 {
+		if i > 5 {
 			log.Fatal("Config could not be stored")
 		}
 	}
@@ -50,14 +51,18 @@ func initFrontend() {
 func initClients(cfg *config.Cfg) {
 	var tm *rpc.TendermintRPC
 	var gw *api.GatewayClient
-	for i := 0; i < 5 && tm == nil; i++ {
+	var err error
+	for i := 0; i < 2 && tm == nil; i++ {
 		tm = api.StartTendermintClient(cfg.TendermintHost, 2)
 	}
 	if tm == nil {
 		log.Error("Cannot connect to tendermint api")
 	}
-	for i := 0; i < 5 && gw == nil; i++ {
-		gw, _ = api.InitGateway(cfg.GatewayHost)
+	for i := 0; i < 2 && gw == nil; i++ {
+		gw, _, err = api.InitGatewayClient(cfg.GatewayHost)
+		if err != nil {
+			log.Warn(err)
+		}
 	}
 	if gw == nil {
 		log.Error("Cannot connect to gateway api")

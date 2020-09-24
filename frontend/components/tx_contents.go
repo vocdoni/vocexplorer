@@ -44,6 +44,8 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Transactions.CurrentTransaction == nil {
 		return Container(
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
@@ -81,7 +83,10 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 			),
 		))
 	}
-	return Container(contents)
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		contents)
 }
 
 //TransactionView renders a single transaction card with (most of) the tx information

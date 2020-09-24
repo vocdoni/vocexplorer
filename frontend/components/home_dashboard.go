@@ -9,7 +9,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
@@ -36,17 +35,11 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
-		return elem.Div(
-			renderGatewayConnectionBanner(),
-			renderServerConnectionBanner(),
-			&StatsView{},
-		)
-	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
-	}
+	return elem.Div(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		&StatsView{},
+	)
 }
 
 // UpdateHomeDashboard keeps the home dashboard data up to date
@@ -67,8 +60,8 @@ func UpdateHomeDashboard(d *DashboardView) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	update.BlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)

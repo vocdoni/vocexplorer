@@ -40,6 +40,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
+		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
@@ -68,7 +69,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 // UpdateValidatorContents keeps the validator contents page up to date
 func (contents *ValidatorContents) UpdateValidatorContents() {
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
@@ -132,7 +133,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})

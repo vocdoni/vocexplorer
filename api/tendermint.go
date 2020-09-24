@@ -9,7 +9,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 )
 
-//StartTendermint starts the tendermint client
+//StartTendermint starts the tendermint client, with 20 connection attempts
 func StartTendermint(host string, conns int) (*rpc.TendermintRPC, bool) {
 	for i := 0; ; i++ {
 		if i > 20 {

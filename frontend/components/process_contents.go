@@ -8,7 +8,6 @@ import (
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
@@ -34,12 +33,6 @@ func (dash *ProcessContentsView) Mount() {
 func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
-	}
-	if dash == nil || store.GatewayClient == nil {
-		return &bootstrap.Alert{
-			Contents: "Connecting to blockchain clients",
-			Type:     "warning",
-		}
 	}
 
 	if store.Processes.CurrentProcessResults.ProcessType == "" {
@@ -207,8 +200,8 @@ func UpdateProcessContents(d *ProcessContentsView) {
 }
 
 func updateProcessContents(d *ProcessContentsView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
 	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
 	if ok {

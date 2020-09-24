@@ -21,10 +21,7 @@ type BlockchainInfo struct {
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 
 	if store.Stats.ResultStatus == nil || store.Stats.Genesis == nil {
-		return &bootstrap.Alert{
-			Type:     "warning",
-			Contents: "Waiting for blocks data",
-		}
+		return nil
 	}
 
 	// Buffer of +- 1 block so syncing does not flash back/forth

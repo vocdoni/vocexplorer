@@ -60,7 +60,7 @@ func renderProcessItems() []vecty.MarkupOrChild {
 func ProcessBlock(process *proto.Process, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
 	if !ok || process == nil {
 		return elem.Div(
-			vecty.Markup(vecty.Class("tile", "empty")),
+			vecty.Markup(vecty.Class("tile")),
 			elem.Div(
 				vecty.Markup(vecty.Class("tile-body")),
 				elem.Div(
@@ -70,7 +70,15 @@ func ProcessBlock(process *proto.Process, ok bool, height int64, info storeutil.
 							vecty.Markup(vecty.Class("title")),
 							vecty.Text("Loading process..."),
 						),
+						elem.Span(
+							vecty.Markup(vecty.Class("status")),
+						),
 					),
+				),
+				elem.Div(
+					vecty.Markup(vecty.Class("contents")),
+					elem.Div(),
+					elem.Div(),
 				),
 			),
 		)

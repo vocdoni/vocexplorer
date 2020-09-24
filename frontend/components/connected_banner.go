@@ -18,7 +18,7 @@ func (b *ConnectedBanner) Render() vecty.ComponentOrHTML {
 	return elem.Div(
 		&bootstrap.Alert{
 			Type:     "warning",
-			Contents: "Disconnected from " + b.connection,
+			Contents: "Connecting to " + b.connection,
 		},
 	)
 }
@@ -26,7 +26,7 @@ func (b *ConnectedBanner) Render() vecty.ComponentOrHTML {
 func renderGatewayConnectionBanner() vecty.ComponentOrHTML {
 	if !store.GatewayConnected {
 		return &ConnectedBanner{
-			connection: "blockchain Gateway",
+			connection: "blockchain api's",
 		}
 	}
 	return nil

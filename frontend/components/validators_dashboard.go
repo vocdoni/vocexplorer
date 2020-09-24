@@ -99,8 +99,8 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {

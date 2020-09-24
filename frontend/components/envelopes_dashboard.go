@@ -38,25 +38,17 @@ func (dash *EnvelopesDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil && store.GatewayClient != nil && store.TendermintClient != nil {
-		return Container(
-			renderGatewayConnectionBanner(),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading2(vecty.Text("Envelopes")),
-						&EnvelopeList{},
-					},
-				}),
-			),
-		)
-	}
-	return elem.Div(
-		&bootstrap.Alert{
-			Contents: "Connecting to blockchain clients",
-			Type:     "warning",
-		},
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		elem.Section(
+			bootstrap.Card(bootstrap.CardParams{
+				Body: vecty.List{
+					elem.Heading2(vecty.Text("Envelopes")),
+					&EnvelopeList{},
+				},
+			}),
+		),
 	)
 }
 
@@ -122,8 +114,8 @@ func UpdateEnvelopesDashboard(d *EnvelopesDashboardView) {
 }
 
 func updateEnvelopes(d *EnvelopesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
 		getEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, 1))

@@ -40,6 +40,8 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Blocks.CurrentBlock == nil {
 		return Container(
+			renderGatewayConnectionBanner(),
+			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
@@ -52,6 +54,8 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 		)
 	}
 	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
 			elem.Div(
@@ -85,16 +89,18 @@ func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	var rawTx dvotetypes.Tx
 	var txHeights []int64
-	for _, tx := range store.Blocks.CurrentBlock.Block.Data.Txs {
-		err := json.Unmarshal(tx, &rawTx)
-		if err != nil {
-			log.Error(err)
+	if store.Blocks.CurrentBlock != nil {
+		for _, tx := range store.Blocks.CurrentBlock.Block.Data.Txs {
+			err := json.Unmarshal(tx, &rawTx)
+			if err != nil {
+				log.Error(err)
+			}
+			hashString := fmt.Sprintf("%X", tx.Hash())
+			txHeight, _ := api.GetTxHeightFromHash(hashString)
+			txHeights = append(txHeights, txHeight)
 		}
-		hashString := fmt.Sprintf("%X", tx.Hash())
-		txHeight, _ := api.GetTxHeightFromHash(hashString)
-		txHeights = append(txHeights, txHeight)
+		dispatcher.Dispatch(&actions.SetCurrentBlockTxHeights{Heights: txHeights})
 	}
-	dispatcher.Dispatch(&actions.SetCurrentBlockTxHeights{Heights: txHeights})
 }
 
 //BlockView renders a single block card

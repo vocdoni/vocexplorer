@@ -77,6 +77,11 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 						),
 					),
 				),
+				elem.Div(
+					vecty.Markup(vecty.Class("contents")),
+					elem.Div(),
+					elem.Div(),
+				),
 			),
 		)
 	}

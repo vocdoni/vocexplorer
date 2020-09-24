@@ -7,7 +7,6 @@ import (
 	"github.com/hexops/vecty"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
@@ -33,17 +32,11 @@ func (dash *StatsDashboardView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
 	}
-	if dash != nil {
-		return Container(
-			renderGatewayConnectionBanner(),
-			renderServerConnectionBanner(),
-			&BlockchainInfo{},
-		)
-	}
-	return &bootstrap.Alert{
-		Contents: "Connecting to blockchain clients",
-		Type:     "warning",
-	}
+	return Container(
+		renderGatewayConnectionBanner(),
+		renderServerConnectionBanner(),
+		&BlockchainInfo{},
+	)
 }
 
 // UpdateStatsDashboard keeps the stats dashboard updated
@@ -64,8 +57,8 @@ func UpdateStatsDashboard(d *StatsDashboardView) {
 }
 
 func updateStatsDashboard(d *StatsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
 	update.DashboardInfo(store.GatewayClient)
