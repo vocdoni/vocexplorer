@@ -144,6 +144,7 @@ func Link(route, text, class string) *vecty.HTML {
 		prop.Href(route),
 		event.Click(
 			func(e *vecty.Event) {
+				dispatcher.Dispatch(&actions.SetCurrentPage{Page: ""})
 				dispatcher.Dispatch(&actions.SignalRedirect{})
 				router.Redirect(route)
 			},

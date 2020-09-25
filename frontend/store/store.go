@@ -18,6 +18,8 @@ var (
 
 	// RedirectChan is the channel which signals a page redirect
 	RedirectChan chan struct{}
+	// CurrentPage holds the current page title, used in signaling updater goroutines to exit
+	CurrentPage string
 
 	// GatewayClient is the global gateway client
 	GatewayClient *api.GatewayClient

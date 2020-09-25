@@ -20,6 +20,8 @@ type BlockView struct {
 
 // Render renders the Block component
 func (home *BlockView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "block"})
+
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	if err != nil {
 		log.Error(err)

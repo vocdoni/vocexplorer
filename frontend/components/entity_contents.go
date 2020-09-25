@@ -97,23 +97,32 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 func UpdateEntityContents(d *EntityContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
+	if !update.CheckCurrentPage("entity", ticker) {
+		return
+	}
 	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("entity", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("entity", ticker) {
+				return
+			}
 			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
 		case i := <-store.Entities.ProcessPagination.PagChannel:
+			if !update.CheckCurrentPage("entity", ticker) {
+				return
+			}
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -149,8 +158,8 @@ func UpdateEntityContents(d *EntityContentsView) {
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
 	index--
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 	if ok {

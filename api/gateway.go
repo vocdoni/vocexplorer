@@ -53,7 +53,6 @@ func (c *GatewayClient) Ping() bool {
 
 	resp, err := c.Request(req)
 	if err != nil {
-		log.Error(err)
 		return false
 	}
 	if !resp.Ok {

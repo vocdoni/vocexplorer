@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -55,16 +56,25 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("entities", ticker) {
+		return
+	}
 	updateEntities(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("entities", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("entities", ticker) {
+				return
+			}
 			updateEntities(d)
 		case i := <-store.Entities.Pagination.PagChannel:
+			if !update.CheckCurrentPage("entities", ticker) {
+				return
+			}
 		entityLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -87,6 +97,9 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 				getEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index, 1))
 			}
 		case search := <-store.Entities.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("entities", ticker) {
+				return
+			}
 		entitySearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -109,8 +122,8 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntities(d *EntitiesDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Entities.Pagination.DisableUpdate {
 		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))

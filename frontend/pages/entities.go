@@ -4,7 +4,9 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
@@ -16,6 +18,7 @@ type EntitiesView struct {
 
 // Render renders the EntitiesView component
 func (home *EntitiesView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "entities"})
 	dash := new(components.EntitiesDashboardView)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

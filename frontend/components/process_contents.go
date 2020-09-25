@@ -164,16 +164,25 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("process", ticker) {
+		return
+	}
 	updateProcessContents(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("process", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("process", ticker) {
+				return
+			}
 			updateProcessContents(d)
 		case i := <-store.Processes.EnvelopePagination.PagChannel:
+			if !update.CheckCurrentPage("process", ticker) {
+				return
+			}
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -200,8 +209,8 @@ func UpdateProcessContents(d *ProcessContentsView) {
 }
 
 func updateProcessContents(d *ProcessContentsView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
 	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
 	if ok {

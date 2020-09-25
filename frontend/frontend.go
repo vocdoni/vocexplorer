@@ -27,7 +27,7 @@ func initFrontend() {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: true})
 	resp, err := http.Get("/config")
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	err = json.NewDecoder(resp.Body).Decode(&cfg)
 	if err != nil {
@@ -56,7 +56,7 @@ func initClients(cfg *config.Cfg) {
 		tm = api.StartTendermintClient(cfg.TendermintHost, 2)
 	}
 	if tm == nil {
-		log.Error("Cannot connect to tendermint api")
+		log.Warn("Cannot connect to tendermint api")
 	}
 	for i := 0; i < 2 && gw == nil; i++ {
 		gw, _, err = api.InitGatewayClient(cfg.GatewayHost)
@@ -65,10 +65,12 @@ func initClients(cfg *config.Cfg) {
 		}
 	}
 	if gw == nil {
-		log.Error("Cannot connect to gateway api")
+		log.Warn("Cannot connect to gateway api")
 	}
 	dispatcher.Dispatch(&actions.TendermintClientInit{Client: tm})
 	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: true})
+	store.RedirectChan <- struct{}{}
 }
 
 // Beforeunload cleans up before page unload

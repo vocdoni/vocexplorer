@@ -17,6 +17,7 @@ type EntityView struct {
 
 // Render renders the EntityView component
 func (home *EntityView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "entity"})
 	dash := new(components.EntityContentsView)
 	dispatcher.Dispatch(&actions.SetCurrentEntityID{EntityID: router.GetNamedVar(home)["id"]})
 	dash.Rendered = false

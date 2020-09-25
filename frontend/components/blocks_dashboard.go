@@ -48,16 +48,25 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("blocks", ticker) {
+		return
+	}
 	updateBlocksDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("blocks", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("blocks", ticker) {
+				return
+			}
 			updateBlocksDashboard(d)
 		case i := <-store.Blocks.Pagination.PagChannel:
+			if !update.CheckCurrentPage("blocks", ticker) {
+				return
+			}
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -78,6 +87,9 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
 
 		case search := <-store.Blocks.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("blocks", ticker) {
+				return
+			}
 		blocksearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -101,8 +113,8 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 }
 
 func updateBlocksDashboard(d *BlocksDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)

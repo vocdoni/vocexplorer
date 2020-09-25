@@ -48,16 +48,25 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("validators", ticker) {
+		return
+	}
 	updateValidatorsDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("validators", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("validators", ticker) {
+				return
+			}
 			updateValidatorsDashboard(d)
 		case i := <-store.Validators.Pagination.PagChannel:
+			if !update.CheckCurrentPage("validators", ticker) {
+				return
+			}
 		loop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -76,6 +85,9 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 			}
 			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, 1))
 		case search := <-store.Validators.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("validators", ticker) {
+				return
+			}
 		validatorSearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -99,8 +111,8 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {

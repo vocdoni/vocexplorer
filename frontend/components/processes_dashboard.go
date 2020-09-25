@@ -59,14 +59,21 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	updateProcesses(d)
 	for {
+
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("processes", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("processes", ticker) {
+				return
+			}
 			updateProcesses(d)
 		case i := <-store.Processes.Pagination.PagChannel:
+			if !update.CheckCurrentPage("processes", ticker) {
+				return
+			}
 		processLoop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -91,6 +98,9 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 				update.ProcessResults()
 			}
 		case search := <-store.Processes.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("processes", ticker) {
+				return
+			}
 		processSearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -114,8 +124,8 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcesses(d *ProcessesDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	actions.UpdateCounts()
 	if !store.Processes.Pagination.DisableUpdate {
 		getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))

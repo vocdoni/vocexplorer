@@ -46,22 +46,28 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 func UpdateHomeDashboard(d *DashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(util.Max(store.Config.RefreshTime, 1)) * time.Second)
+	if !update.CheckCurrentPage("home", ticker) {
+		return
+	}
 	updateHomeDashboardInfo(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("home", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("home", ticker) {
+				return
+			}
 			updateHomeDashboardInfo(d)
 		}
 	}
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	update.BlockchainStatus(store.TendermintClient)
 	update.DashboardInfo(store.GatewayClient)

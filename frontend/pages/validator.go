@@ -17,6 +17,7 @@ type ValidatorView struct {
 
 // Render renders the ValidatorView component
 func (home *ValidatorView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "validator"})
 	dispatcher.Dispatch(&actions.SetCurrentValidatorID{ID: router.GetNamedVar(home)["id"]})
 	dash := new(components.ValidatorContents)
 	dash.Rendered = false

@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
@@ -69,7 +70,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 // UpdateValidatorContents keeps the validator contents page up to date
 func (contents *ValidatorContents) UpdateValidatorContents() {
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
@@ -78,10 +79,27 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
+	if !update.CheckCurrentPage("validator", ticker) {
+		return
+	}
 	updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
 	for {
 		select {
+		case <-store.RedirectChan:
+			if !update.CheckCurrentPage("validator", ticker) {
+				return
+			}
+		case <-ticker.C:
+			if !update.CheckCurrentPage("validator", ticker) {
+				return
+			}
+			if !store.Validators.BlockPagination.DisableUpdate {
+				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
+			}
 		case i := <-store.Validators.BlockPagination.PagChannel:
+			if !update.CheckCurrentPage("validator", ticker) {
+				return
+			}
 		blockloop:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -102,6 +120,9 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			}
 			updateValidatorBlocks(contents, oldBlocks-store.Validators.BlockPagination.Index)
 		case search := <-store.Validators.BlockPagination.SearchChannel:
+			if !update.CheckCurrentPage("validator", ticker) {
+				return
+			}
 		blocksearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -120,20 +141,13 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			} else {
 				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
 			}
-		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
-		case <-ticker.C:
-			if !store.Validators.BlockPagination.DisableUpdate {
-				updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
-			}
+
 		}
 	}
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})

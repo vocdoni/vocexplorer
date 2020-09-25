@@ -4,7 +4,9 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
@@ -21,6 +23,7 @@ func (stats *Stats) Render() vecty.ComponentOrHTML {
 
 // Component returns the stats component
 func (stats *Stats) Component() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "stats"})
 	dash := new(components.StatsDashboardView)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

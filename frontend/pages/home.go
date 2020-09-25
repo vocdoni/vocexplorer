@@ -4,7 +4,9 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
@@ -16,6 +18,7 @@ type HomeView struct {
 
 // Render renders the HomeView component
 func (home *HomeView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "home"})
 	dash := new(components.DashboardView)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

@@ -20,6 +20,7 @@ type TxView struct {
 
 // Render renders the TxView component
 func (home *TxView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "tx"})
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	if err != nil {
 		log.Error(err)

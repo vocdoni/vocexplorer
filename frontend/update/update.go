@@ -1,7 +1,9 @@
 package update
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
@@ -25,11 +27,11 @@ func DashboardInfo(c *api.GatewayClient) {
 func Counts(c *api.GatewayClient) {
 	procs, err := c.GetProcessCount()
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	entities, err := c.GetEntityCount()
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	store.Processes.Count = int(procs)
 	store.Entities.Count = int(entities)
@@ -40,7 +42,7 @@ func Counts(c *api.GatewayClient) {
 func GatewayInfo(c *api.GatewayClient) {
 	apiList, health, err := c.GetGatewayInfo()
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	dispatcher.Dispatch(&actions.SetGatewayInfo{
 		APIList: apiList,
@@ -52,7 +54,7 @@ func GatewayInfo(c *api.GatewayClient) {
 func BlockStatus(c *api.GatewayClient) {
 	blockTime, blockTimeStamp, height, err := c.GetBlockStatus()
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	dispatcher.Dispatch(&actions.SetBlockStatus{
 		BlockTime:      blockTime,
@@ -67,7 +69,7 @@ func GetIDs(IDList *[]string, c *api.GatewayClient, getList func() ([]string, er
 	var err error
 	*IDList, err = getList()
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 }
 
@@ -80,7 +82,7 @@ func ProcessResults() {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
 					t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
 					if err != nil {
-						log.Error(err)
+						log.Warn(err)
 					} else {
 						dispatcher.Dispatch(&actions.SetProcessContents{
 							ID: ID,
@@ -105,7 +107,7 @@ func EnvelopeProcessResults() {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
 					t, st, res, err := store.GatewayClient.GetProcessResults(ID)
 					if err != nil {
-						log.Error(err)
+						log.Warn(err)
 					} else {
 						dispatcher.Dispatch(&actions.SetProcessContents{
 							ID: ID,
@@ -125,7 +127,7 @@ func EnvelopeProcessResults() {
 func CurrentProcessResults() {
 	t, st, res, err := store.GatewayClient.GetProcessResults(store.Processes.CurrentProcess.ID)
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	} else {
 		dispatcher.Dispatch(&actions.SetCurrentProcess{
 			Process: storeutil.Process{
@@ -145,7 +147,7 @@ func EntityProcessResults() {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
 					t, st, res, err := store.GatewayClient.GetProcessResults(strings.ToLower(ID))
 					if err != nil {
-						log.Error(err)
+						log.Warn(err)
 					} else {
 						dispatcher.Dispatch(&actions.SetProcessContents{
 							ID: ID,
@@ -169,4 +171,14 @@ func BlockchainStatus(t *rpc.TendermintRPC) {
 	genesis := api.GetGenesis(t)
 	dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
 	dispatcher.Dispatch(&actions.SetGenesis{Genesis: genesis})
+}
+
+// CheckCurrentPage returns true and stops ticker if the current page is title
+func CheckCurrentPage(title string, ticker *time.Ticker) bool {
+	if store.CurrentPage != title {
+		fmt.Println("redirecting")
+		ticker.Stop()
+		return false
+	}
+	return true
 }

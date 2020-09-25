@@ -152,9 +152,12 @@ func processActions(action interface{}) {
 
 // redirectActions is the handler for all redirect-related actions
 func redirectActions(action interface{}) {
-	switch action.(type) {
+	switch a := action.(type) {
 	case *actions.SignalRedirect:
 		RedirectChan <- struct{}{}
+
+	case *actions.SetCurrentPage:
+		CurrentPage = a.Page
 
 	default:
 		return // don't fire listeners

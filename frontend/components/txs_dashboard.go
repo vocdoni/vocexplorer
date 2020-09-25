@@ -46,16 +46,21 @@ func (dash *TxsDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateTxsDashboard keeps the transactions dashboard updated
 func UpdateTxsDashboard(d *TxsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("txs", ticker) {
+		return
+	}
 	updateTxsDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("txs", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("txs", ticker) {
+				return
+			}
 			updateTxsDashboard(d)
 		case i := <-store.Transactions.Pagination.PagChannel:
 		txloop:
@@ -67,6 +72,9 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 					break txloop
 				}
 			}
+			if !update.CheckCurrentPage("txs", ticker) {
+				return
+			}
 			dispatcher.Dispatch(&actions.TransactionsIndexChange{Index: i})
 			oldTxs := store.Transactions.Count
 			newHeight, _ := api.GetTxHeight()
@@ -77,6 +85,9 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 			updateTxs(d, util.Max(oldTxs-store.Transactions.Pagination.Index, 1))
 
 		case search := <-store.Transactions.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("txs", ticker) {
+				return
+			}
 		txsearch:
 			for {
 				// If many indices waiting in buffer, scan to last one.
@@ -100,8 +111,8 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 }
 
 func updateTxsDashboard(d *TxsDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
 	update.BlockchainStatus(store.TendermintClient)

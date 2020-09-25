@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hexops/vecty"
@@ -43,22 +42,28 @@ func (dash *StatsDashboardView) Render() vecty.ComponentOrHTML {
 func UpdateStatsDashboard(d *StatsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("stats", ticker) {
+		return
+	}
 	updateStatsDashboard(d)
 	for {
 		select {
 		case <-store.RedirectChan:
-			fmt.Println("Redirecting...")
-			ticker.Stop()
-			return
+			if !update.CheckCurrentPage("stats", ticker) {
+				return
+			}
 		case <-ticker.C:
+			if !update.CheckCurrentPage("stats", ticker) {
+				return
+			}
 			updateStatsDashboard(d)
 		}
 	}
 }
 
 func updateStatsDashboard(d *StatsDashboardView) {
-	go dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
-	go dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
+	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
 	update.DashboardInfo(store.GatewayClient)

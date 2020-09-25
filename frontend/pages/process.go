@@ -18,6 +18,7 @@ type ProcessView struct {
 
 // Render renders the ProcessView component
 func (home *ProcessView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "process"})
 	dash := new(components.ProcessContentsView)
 	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &proto.Process{ID: router.GetNamedVar(home)["id"]}})
 	dash.Rendered = false

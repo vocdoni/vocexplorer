@@ -20,6 +20,7 @@ type EnvelopeView struct {
 
 // Render renders the EnvelopeView component
 func (home *EnvelopeView) Render() vecty.ComponentOrHTML {
+	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "envelope"})
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	if err != nil {
 		log.Error(err)
