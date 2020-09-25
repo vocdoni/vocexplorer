@@ -24,6 +24,53 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func updateBlockchainInfo(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, g *api.GatewayClient) {
+	bc := new(voctypes.BlockchainInfo)
+
+	status := api.GetHealth(t)
+	if status == nil {
+		log.Warnf("Unable to get vochain status")
+	} else {
+		bc.Network = status.NodeInfo.Network
+		bc.Version = status.NodeInfo.Version
+		rawSync, err := json.Marshal(status.SyncInfo)
+		if err != nil {
+			log.Warn(err)
+		} else {
+			bc.SyncInfo = rawSync
+		}
+	}
+
+	genesis := api.GetGenesis(t)
+	if status == nil {
+		log.Warnf("Unable to get genesis block")
+	} else {
+		timeStamp, err := ptypes.TimestampProto(genesis.GenesisTime)
+		if err != nil {
+			log.Warn(err)
+		} else {
+			bc.GenesisTimeStamp = timeStamp
+		}
+		bc.ChainID = genesis.ChainID
+	}
+
+	blockTime, blockTimeStamp, height, err := g.GetBlockStatus()
+	if err != nil {
+		log.Warn(err)
+	} else {
+		bc.BlockTime = blockTime[:]
+		bc.BlockTimeStamp = blockTimeStamp
+		bc.Height = height
+	}
+
+	rawBlockchainInfo, err := proto.Marshal(bc)
+	if err != nil {
+		log.Warn(err)
+	} else {
+		d.Put([]byte(config.BlockchainInfoKey), rawBlockchainInfo)
+	}
+}
+
 func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	// Fetch latest block & tx heights
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)

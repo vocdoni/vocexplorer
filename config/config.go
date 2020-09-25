@@ -61,6 +61,8 @@ const (
 	ProcessIDPrefix = "pid"
 	//EntityIDPrefix is the key prefix for entity ID's as standalone keys (for iteration over keys)
 	EntityIDPrefix = "eid"
+	//BlockchainInfoKey is the key for the blockchain info storage
+	BlockchainInfoKey = "BlockchainInfo"
 	//LatestBlockHeightKey is the key for the value of the latest block height stored
 	LatestBlockHeightKey = "LatestBlockHeight"
 	//LatestTxHeightKey is the key for the value of the latest tx height stored

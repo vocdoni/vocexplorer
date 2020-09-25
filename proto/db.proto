@@ -4,6 +4,17 @@ package proto;
 import "google/protobuf/timestamp.proto";
 option go_package = "/proto";
 
+message BlockchainInfo {
+string Network = 1;
+string Version = 2;
+bytes SyncInfo = 3;
+google.protobuf.Timestamp GenesisTimeStamp = 4;
+string ChainID = 5;
+repeated int32 BlockTime = 6;
+int32 BlockTimeStamp = 7;
+int64 Height = 8;
+}
+
 message Height {
     int64 Height = 1;
 }

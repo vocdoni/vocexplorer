@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	prototypes "github.com/golang/protobuf/ptypes"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
@@ -30,38 +32,28 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Debugf("Serving statistics ")
 		stats := new(api.VochainStats)
+		blockchainInfo := new(ptypes.BlockchainInfo)
+		syncInfo := new(coretypes.SyncInfo)
 
-		if !cfg.Detached {
-			// If unable to get api information, don't return error so db information can still serve
-			t := api.StartTendermintClient(cfg.TendermintHost, 2)
-			status := api.GetHealth(t)
-			if status == nil {
-				log.Warnf("Unable to get vochain status")
-			} else {
-				stats.Network = status.NodeInfo.Network
-				stats.Version = status.NodeInfo.Version
-				stats.SyncInfo = status.SyncInfo
-			}
-
-			genesis := api.GetGenesis(t)
-			if status == nil {
-				log.Warnf("Unable to get genesis block")
-			} else {
-				stats.GenesisTimeStamp = genesis.GenesisTime
-				stats.ChainID = genesis.ChainID
-			}
-
-			gw, cancel := api.InitGateway(cfg.GatewayHost)
-			defer cancel()
-			blockTime, blockTimeStamp, height, err := gw.GetBlockStatus()
-			if err != nil {
-				log.Warn(err)
-			} else {
-				stats.BlockTime = blockTime
-				stats.BlockTimeStamp = blockTimeStamp
-				stats.Height = height
-			}
+		//get blockchainInfo
+		rawBlockchainInfo, err := db.Get([]byte(config.BlockchainInfoKey))
+		if err != nil {
+			log.Warn(err)
 		}
+		err = proto.Unmarshal(rawBlockchainInfo, blockchainInfo)
+		if err != nil {
+			log.Warn(err)
+		}
+		err = json.Unmarshal(blockchainInfo.GetSyncInfo(), syncInfo)
+		if err != nil {
+			log.Warn(err)
+		}
+		genesisTime, err := prototypes.Timestamp(blockchainInfo.GetGenesisTimeStamp())
+		if err != nil {
+			log.Warn(err)
+		}
+		var blockTime [5]int32
+		copy(blockTime[:], blockchainInfo.GetBlockTime())
 
 		blockHeight := vocdb.GetHeight(db, config.LatestBlockHeightKey, 1)
 		entityCount := vocdb.GetHeight(db, config.LatestEntityCountKey, 0)
@@ -81,6 +73,15 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		}
 		rawMaxTxsMinute := vocdb.GetInt64(db, config.MaxTxsMinuteID)
 		maxTxsMinute := time.Unix(rawMaxTxsMinute, 0)
+
+		stats.Network = blockchainInfo.GetNetwork()
+		stats.Version = blockchainInfo.GetVersion()
+		stats.SyncInfo = *syncInfo
+		stats.GenesisTimeStamp = genesisTime
+		stats.ChainID = blockchainInfo.GetChainID()
+		stats.BlockTime = &blockTime
+		stats.BlockTimeStamp = blockchainInfo.GetBlockTimeStamp()
+		stats.Height = blockchainInfo.GetHeight()
 
 		stats.BlockHeight = blockHeight.GetHeight()
 		stats.EntityCount = entityCount.GetHeight()

@@ -110,6 +110,7 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 		default:
 			// If synced, wait. If first time synced, reduce connections to 2.
 			waitSync(d, tClient, &hasSynced, tmHost)
+			updateBlockchainInfo(d, tClient, gwClient)
 			updateBlockList(d, tClient)
 			// Update validators less frequently than blocks
 			if i%40 == 0 {
