@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   dvotenode:
-    image: "vocdoni/go-dvote:latest"
+    image: "vocdoni/go-dvote:release-0.1"
     env_file: env
     volumes:
       - "dvotenode:/app/run"
