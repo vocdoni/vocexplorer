@@ -6,13 +6,12 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"gitlab.com/vocdoni/go-dvote/log"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dvotetypes"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -270,7 +269,7 @@ func UpdateTxContents(d *TxContents) {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
-	var txResult abci.ResponseDeliverTx
+	var txResult tmtypes.ResponseDeliverTx
 	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
 	if err != nil {
 		log.Error(err)
@@ -287,10 +286,7 @@ func UpdateTxContents(d *TxContents) {
 	var entityID string
 	var tm time.Time
 	if !proto.BlockIsEmpty(store.Transactions.CurrentBlock) {
-		tm, err = ptypes.Timestamp(store.Transactions.CurrentBlock.GetTime())
-		if err != nil {
-			log.Error(err)
-		}
+		tm = time.Unix(block.GetTime().Seconds, int64(block.GetTime().Nanos)).UTC()
 	}
 
 	switch rawTx.Type {
@@ -354,7 +350,7 @@ func UpdateTxContents(d *TxContents) {
 		log.Error("unable to retrieve envelope height, envelope may not exist")
 	}
 	var metadata []byte
-	if !txResult.Equal(abci.ResponseDeliverTx{}) {
+	if len(txResult.Data) > 0 || txResult.Info != "" || len(txResult.Events) > 0 {
 		metadata, err = json.MarshalIndent(txResult, "", "\t")
 		if err != nil {
 			log.Error(err)

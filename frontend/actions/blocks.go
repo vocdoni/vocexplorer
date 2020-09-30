@@ -1,7 +1,7 @@
 package actions
 
 import (
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )
@@ -28,7 +28,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *coretypes.ResultBlock
+	Block *tmtypes.ResultBlock
 }
 
 // SetCurrentBlockHeight is the action to set the current block height

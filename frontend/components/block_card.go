@@ -5,10 +5,8 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -17,12 +15,8 @@ import (
 //BlockCard renders a single block card
 func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 	var tm time.Time
-	var err error
 	if block.GetTime() != nil {
-		tm, err = ptypes.Timestamp(block.GetTime())
-		if err != nil {
-			log.Error(err)
-		}
+		tm = time.Unix(block.GetTime().Seconds, int64(block.GetTime().Nanos)).UTC()
 	}
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(

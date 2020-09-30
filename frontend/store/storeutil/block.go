@@ -1,7 +1,7 @@
 package storeutil
 
 import (
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )
@@ -10,7 +10,7 @@ import (
 type Blocks struct {
 	Blocks                [config.ListSize]*proto.StoreBlock
 	Count                 int
-	CurrentBlock          *coretypes.ResultBlock
+	CurrentBlock          *tmtypes.ResultBlock
 	CurrentBlockHeight    int64
 	CurrentBlockTxHeights []int64
 	Pagination            PageStore

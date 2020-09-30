@@ -3,13 +3,12 @@ package actions
 import (
 	"time"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 )
 
 //SetResultStatus is the action to set the blockchain stats result status
 type SetResultStatus struct {
-	Status *coretypes.ResultStatus
+	Status *tmtypes.ResultStatus
 }
 
 //SetGenesis is the action to set the blockchain genesis block

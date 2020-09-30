@@ -12,9 +12,9 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"nhooyr.io/websocket"
 )
 
@@ -49,7 +49,7 @@ func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	if t == nil || len(t.Conns) < 1 {
 		return nil, fmt.Errorf("cannot connect to websocket client")
 	}
-	result := new(coretypes.ResultStatus)
+	result := new(tmtypes.ResultStatus)
 	_, err := t.call("status", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "status")
@@ -75,8 +75,8 @@ func newConnection(done chan error, t *TendermintRPC, host string, connMutex *sy
 }
 
 // Status calls the tendermint status api
-func (t *TendermintRPC) Status() (*coretypes.ResultStatus, error) {
-	result := new(coretypes.ResultStatus)
+func (t *TendermintRPC) Status() (*tmtypes.ResultStatus, error) {
+	result := new(tmtypes.ResultStatus)
 	_, err := t.call("status", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "status")
@@ -85,8 +85,8 @@ func (t *TendermintRPC) Status() (*coretypes.ResultStatus, error) {
 }
 
 // Genesis calls the tendermint Genesis api
-func (t *TendermintRPC) Genesis() (*coretypes.ResultGenesis, error) {
-	result := new(coretypes.ResultGenesis)
+func (t *TendermintRPC) Genesis() (*tmtypes.ResultGenesis, error) {
+	result := new(tmtypes.ResultGenesis)
 	_, err := t.call("genesis", nil, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "genesis")
@@ -95,8 +95,8 @@ func (t *TendermintRPC) Genesis() (*coretypes.ResultGenesis, error) {
 }
 
 // Block calls the tendermint Block api
-func (t *TendermintRPC) Block(height *int64) (*coretypes.ResultBlock, error) {
-	result := new(coretypes.ResultBlock)
+func (t *TendermintRPC) Block(height *int64) (*tmtypes.ResultBlock, error) {
+	result := new(tmtypes.ResultBlock)
 	params := map[string]interface{}{
 		"height": height,
 	}
@@ -108,8 +108,8 @@ func (t *TendermintRPC) Block(height *int64) (*coretypes.ResultBlock, error) {
 }
 
 // Tx calls the tendermint Tx api
-func (t *TendermintRPC) Tx(hash []byte, prove bool) (*coretypes.ResultTx, error) {
-	result := new(coretypes.ResultTx)
+func (t *TendermintRPC) Tx(hash []byte, prove bool) (*tmtypes.ResultTx, error) {
+	result := new(tmtypes.ResultTx)
 	params := map[string]interface{}{
 		"hash":  hash,
 		"prove": prove,
@@ -122,8 +122,8 @@ func (t *TendermintRPC) Tx(hash []byte, prove bool) (*coretypes.ResultTx, error)
 }
 
 // Validators calls the tendermint Validators api
-func (t *TendermintRPC) Validators(height *int64, page, perPage int) (*coretypes.ResultValidators, error) {
-	result := new(coretypes.ResultValidators)
+func (t *TendermintRPC) Validators(height *int64, page, perPage int) (*tmtypes.ResultValidators, error) {
+	result := new(tmtypes.ResultValidators)
 	params := map[string]interface{}{
 		"height":   height,
 		"page":     page,

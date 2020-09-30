@@ -3,8 +3,7 @@ package storeutil
 import (
 	"time"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 )
 
 // Stats stores the blockchain statistics
@@ -24,5 +23,5 @@ type Stats struct {
 	MaxTxsMinute      time.Time
 	MaxTxsPerBlock    int64
 	MaxTxsPerMinute   int64
-	ResultStatus      *coretypes.ResultStatus
+	ResultStatus      *tmtypes.ResultStatus
 }

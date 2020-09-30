@@ -23,21 +23,6 @@ func DashboardInfo(c *api.GatewayClient) {
 	BlockStatus(c)
 }
 
-// Counts calls gateway apis, updates total number of processes and entities
-func Counts(c *api.GatewayClient) {
-	procs, err := c.GetProcessCount()
-	if err != nil {
-		log.Warn(err)
-	}
-	entities, err := c.GetEntityCount()
-	if err != nil {
-		log.Warn(err)
-	}
-	store.Processes.Count = int(procs)
-	store.Entities.Count = int(entities)
-
-}
-
 // GatewayInfo calls gateway api, updates gateway health info
 func GatewayInfo(c *api.GatewayClient) {
 	apiList, health, err := c.GetGatewayInfo()

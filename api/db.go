@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	types "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -19,22 +19,22 @@ import (
 
 // VochainStats is the type used by the public stats api
 type VochainStats struct {
-	BlockHeight       int64              `json:"block_height"`
-	EntityCount       int64              `json:"entity_count"`
-	EnvelopeCount     int64              `json:"envelope_count"`
-	ProcessCount      int64              `json:"process_count"`
-	TransactionHeight int64              `json:"transaction_height"`
-	ValidatorCount    int64              `json:"validator_count"`
-	BlockTime         *[5]int32          `json:"block_time"`
-	BlockTimeStamp    int32              `json:"block_time_stamp"`
-	ChainID           string             `json:"chain_id"`
-	GenesisTimeStamp  time.Time          `json:"genesis_time_stamp"`
-	Height            int64              `json:"height"`
-	Network           string             `json:"network"`
-	Version           string             `json:"version"`
-	SyncInfo          coretypes.SyncInfo `json:"sync_info"`
-	AvgTxsPerBlock    float64            `json:"avg_txs_per_block"`
-	AvgTxsPerMinute   float64            `json:"avg_txs_per_minute"`
+	BlockHeight       int64            `json:"block_height"`
+	EntityCount       int64            `json:"entity_count"`
+	EnvelopeCount     int64            `json:"envelope_count"`
+	ProcessCount      int64            `json:"process_count"`
+	TransactionHeight int64            `json:"transaction_height"`
+	ValidatorCount    int64            `json:"validator_count"`
+	BlockTime         *[5]int32        `json:"block_time"`
+	BlockTimeStamp    int32            `json:"block_time_stamp"`
+	ChainID           string           `json:"chain_id"`
+	GenesisTimeStamp  time.Time        `json:"genesis_time_stamp"`
+	Height            int64            `json:"height"`
+	Network           string           `json:"network"`
+	Version           string           `json:"version"`
+	SyncInfo          tmtypes.SyncInfo `json:"sync_info"`
+	AvgTxsPerBlock    float64          `json:"avg_txs_per_block"`
+	AvgTxsPerMinute   float64          `json:"avg_txs_per_minute"`
 	// The hash of the block with the most txs
 	MaxTxsBlockHash   string `json:"max_txs_block_hash"`
 	MaxTxsBlockHeight int64  `json:"max_txs_block_height"`

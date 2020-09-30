@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	dvoteutil "gitlab.com/vocdoni/go-dvote/util"
 	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dvotetypes"
 	"gitlab.com/vocdoni/vocexplorer/api/rpc"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -42,7 +42,7 @@ func updateBlockchainInfo(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, g *api.Gate
 	}
 
 	genesis := api.GetGenesis(t)
-	if status == nil {
+	if genesis == nil {
 		log.Warnf("Unable to get genesis block")
 	} else {
 		timeStamp, err := ptypes.TimestampProto(genesis.GenesisTime)
@@ -205,6 +205,7 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 		}
 
 		batch.Put([]byte(config.LatestTxHeightKey), encTxHeight)
+
 		batch.Put([]byte(config.LatestBlockHeightKey), encBlockHeight)
 		batch.Put([]byte(config.LatestEnvelopeCountKey), encEnvCount)
 		if err := batch.Write(); err != nil {

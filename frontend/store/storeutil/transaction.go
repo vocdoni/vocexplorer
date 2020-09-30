@@ -3,7 +3,7 @@ package storeutil
 import (
 	"time"
 
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/api/dvotetypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )

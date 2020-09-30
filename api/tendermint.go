@@ -3,10 +3,9 @@ package api
 import (
 	"time"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api/rpc"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 )
 
 //StartTendermint starts the tendermint client, with 20 connection attempts
@@ -50,7 +49,7 @@ func PingTendermint(t *rpc.TendermintRPC) bool {
 }
 
 // GetHealth calls the tendermint Health api
-func GetHealth(t *rpc.TendermintRPC) *coretypes.ResultStatus {
+func GetHealth(t *rpc.TendermintRPC) *tmtypes.ResultStatus {
 	if t == nil {
 		return nil
 	}
@@ -63,7 +62,7 @@ func GetHealth(t *rpc.TendermintRPC) *coretypes.ResultStatus {
 }
 
 // GetGenesis gets the first block
-func GetGenesis(t *rpc.TendermintRPC) *types.GenesisDoc {
+func GetGenesis(t *rpc.TendermintRPC) *tmtypes.GenesisDoc {
 	if t == nil {
 		return nil
 	}
@@ -76,7 +75,7 @@ func GetGenesis(t *rpc.TendermintRPC) *types.GenesisDoc {
 }
 
 // GetBlock returns the contents of one block
-func GetBlock(t *rpc.TendermintRPC, height int64) *coretypes.ResultBlock {
+func GetBlock(t *rpc.TendermintRPC, height int64) *tmtypes.ResultBlock {
 	if t == nil {
 		return nil
 	}
@@ -89,7 +88,7 @@ func GetBlock(t *rpc.TendermintRPC, height int64) *coretypes.ResultBlock {
 }
 
 // GetTransaction gets a transaction by hash
-func GetTransaction(t *rpc.TendermintRPC, hash []byte) *coretypes.ResultTx {
+func GetTransaction(t *rpc.TendermintRPC, hash []byte) *tmtypes.ResultTx {
 	if t == nil {
 		return nil
 	}

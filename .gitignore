@@ -16,6 +16,7 @@ wasm_exec.js
 
 node_modules
 css
+test/test
 *.lock
 build.js
 *.vscode

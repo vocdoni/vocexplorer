@@ -9,10 +9,10 @@ import (
 	"time"
 
 	prototypes "github.com/golang/protobuf/ptypes"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	vocdb "gitlab.com/vocdoni/vocexplorer/db"
 	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
@@ -33,7 +33,7 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		log.Debugf("Serving statistics ")
 		stats := new(api.VochainStats)
 		blockchainInfo := new(ptypes.BlockchainInfo)
-		syncInfo := new(coretypes.SyncInfo)
+		syncInfo := new(tmtypes.SyncInfo)
 
 		//get blockchainInfo
 		rawBlockchainInfo, err := db.Get([]byte(config.BlockchainInfoKey))
@@ -50,6 +50,7 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		}
 		genesisTime, err := prototypes.Timestamp(blockchainInfo.GetGenesisTimeStamp())
 		if err != nil {
+			genesisTime = time.Unix(1, 0)
 			log.Warn(err)
 		}
 		var blockTime [5]int32
