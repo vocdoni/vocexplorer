@@ -23,7 +23,7 @@ services:
         max-file: "10"
 
   vocexplorer:
-    image: "vocdoni/vocexplorer:latest"
+    image: "vocdoni/vocexplorer:release-0.1"
     build:
       context: ../..
     ports:
