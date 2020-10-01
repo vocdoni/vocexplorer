@@ -4,10 +4,9 @@ go 1.15
 
 require (
 	github.com/dustin/go-humanize v1.0.0
-	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/hexops/vecty v0.5.1-0.20200816075853-64e387e2b2b3
 	github.com/tendermint/tendermint v0.33.8 // indirect
-	gitlab.com/vocdoni/go-dvote v0.5.2
+	gitlab.com/vocdoni/go-dvote v0.6.1-0.20201001145348-80e3da95d667
 	gitlab.com/vocdoni/vocexplorer v0.0.0-20200903194749-046f8672292b
 	marwan.io/vecty-router v0.0.0-20200914150808-f30c81f0deb5
 )
