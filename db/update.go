@@ -393,7 +393,29 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 	var blockHeight int64
 	for i, tx := range txs {
 		numTxs = int64(i)
-		txRes := api.GetTransaction(t, tx.Hash())
+
+		txRes, err := t.Tx(tx.Hash(), false)
+		// If error is returned, try the request more times, then exit
+		if err != nil {
+			if strings.Contains(err.Error(), "closed") {
+				exit <- struct{}{}
+				return
+			}
+			for errs := 0; ; errs++ {
+				if errs > 10 {
+					log.Errorf("Unable to get transaction: %s", err.Error())
+					return
+				}
+				txRes, err = t.Tx(tx.Hash(), false)
+				if err == nil {
+					break
+				}
+			}
+		}
+
+		if txRes == nil {
+			return
+		}
 
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash()...)
 		// Marshal TxResult to bytes for protobuf encoding
