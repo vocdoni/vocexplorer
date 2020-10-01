@@ -87,7 +87,10 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 		elem.Heading2(vecty.Text(store.Entities.CurrentEntityID)),
 		elem.Anchor(
 			vecty.Markup(vecty.Class("hash")),
-			vecty.Markup(vecty.Attribute("href", "https://vocdoni.link/entities/0x"+store.Entities.CurrentEntityID)),
+			vecty.Markup(
+				vecty.Attribute("href", "https://vocdoni.link/entities/0x"+store.Entities.CurrentEntityID),
+				vecty.Property("target", store.Entities.CurrentEntityID),
+			),
 			vecty.Text("Entity Profile"),
 		),
 	}

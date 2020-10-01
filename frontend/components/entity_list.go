@@ -48,7 +48,10 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
 						elem.Anchor(
-							vecty.Markup(vecty.Attribute("href", "https://vocdoni.link/entities/0x"+ID)),
+							vecty.Markup(
+								vecty.Attribute("href", "https://vocdoni.link/entities/0x"+ID),
+								vecty.Property("target", ID),
+							),
 							vecty.Text("Entity Profile"),
 						),
 					),
