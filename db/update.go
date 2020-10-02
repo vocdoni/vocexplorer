@@ -392,7 +392,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 	numTxs := int64(-1)
 	var blockHeight int64
 	for i, tx := range txs {
-		numTxs = int64(i)
+		numTxs = int64(i + 1)
 
 		txRes, err := t.Tx(tx.Hash(), false)
 		// If error is returned, try the request more times, then exit
@@ -449,7 +449,7 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 		startTxHeight++
 	}
 	if numTxs > 0 {
-		log.Debugf("%d transactions logged at block %d, height %d", numTxs+1, blockHeight, startTxHeight)
+		log.Debugf("%d transactions logged at block %d, height %d", numTxs, blockHeight, startTxHeight)
 	}
 }
 
