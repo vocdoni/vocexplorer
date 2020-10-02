@@ -47,7 +47,7 @@ type VochainStats struct {
 //PingServer pings the web server
 func PingServer() bool {
 	c := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: 10 * time.Second,
 	}
 	resp, err := c.Get("/ping")
 	if err != nil || resp == nil {
@@ -59,7 +59,7 @@ func PingServer() bool {
 // For requests where we don't want to ReadAll the response body
 func requestBody(url string) (io.ReadCloser, bool) {
 	c := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 	resp, err := c.Get(url)
 	if resp == nil {
@@ -77,7 +77,7 @@ func requestBody(url string) (io.ReadCloser, bool) {
 
 func request(url string) ([]byte, bool) {
 	c := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 	resp, err := c.Get(url)
 	if err != nil {

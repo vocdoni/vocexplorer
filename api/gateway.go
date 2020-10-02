@@ -37,7 +37,7 @@ func InitGateway(host string) (*GatewayClient, context.CancelFunc) {
 // InitGatewayClient starts a connection with the given endpoint address. From unreleased go-dvote/client
 func InitGatewayClient(addr string) (*GatewayClient, context.CancelFunc, error) {
 	log.Infof("connecting to %s\n", addr)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	conn, _, err := websocket.Dial(ctx, addr, nil)
 	if err != nil {
 		return nil, cancel, err
@@ -336,7 +336,7 @@ func (c *GatewayClient) Request(req MetaRequest) (*MetaResponse, error) {
 	}
 
 	// Set context for request
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := c.Conn.Write(ctx, websocket.MessageText, reqBody); err != nil {

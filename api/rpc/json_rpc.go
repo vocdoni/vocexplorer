@@ -186,7 +186,7 @@ func (t *TendermintRPC) request(method string, params map[string]interface{}, my
 	if p == nil {
 		return errors.Errorf("unable to get websocket connection from pool")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	var msg []byte
 	msg, err = p.WriteRead(ctx, req)
