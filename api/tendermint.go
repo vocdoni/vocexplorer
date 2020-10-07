@@ -11,7 +11,7 @@ import (
 //StartTendermint starts the tendermint client, with 20 connection attempts
 func StartTendermint(host string, conns int) (*rpc.TendermintRPC, bool) {
 	for i := 0; ; i++ {
-		if i > 20 {
+		if i > 10 {
 			return nil, false
 		}
 		hostCopy := string([]byte(host))

@@ -30,45 +30,46 @@ func updateBlockchainInfo(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, g *api.Gate
 	status := api.GetHealth(t)
 	if status == nil {
 		log.Warnf("Unable to get vochain status")
+		return
+	}
+	bc.Network = status.NodeInfo.Network
+	bc.Version = status.NodeInfo.Version
+	rawSync, err := json.Marshal(status.SyncInfo)
+	if err != nil {
+		log.Warn(err)
 	} else {
-		bc.Network = status.NodeInfo.Network
-		bc.Version = status.NodeInfo.Version
-		rawSync, err := json.Marshal(status.SyncInfo)
-		if err != nil {
-			log.Warn(err)
-		} else {
-			bc.SyncInfo = rawSync
-		}
+		bc.SyncInfo = rawSync
 	}
 
 	genesis := api.GetGenesis(t)
 	if genesis == nil {
 		log.Warnf("Unable to get genesis block")
-	} else {
-		timeStamp, err := ptypes.TimestampProto(genesis.GenesisTime)
-		if err != nil {
-			log.Warn(err)
-		} else {
-			bc.GenesisTimeStamp = timeStamp
-		}
-		bc.ChainID = genesis.ChainID
+		return
 	}
+	timeStamp, err := ptypes.TimestampProto(genesis.GenesisTime)
+	if err != nil {
+		log.Warn(err)
+	} else {
+		bc.GenesisTimeStamp = timeStamp
+	}
+	bc.ChainID = genesis.ChainID
 
 	blockTime, blockTimeStamp, height, err := g.GetBlockStatus()
 	if err != nil {
 		log.Warn(err)
-	} else {
-		bc.BlockTime = blockTime[:]
-		bc.BlockTimeStamp = blockTimeStamp
-		bc.Height = height
+		return
 	}
+	bc.BlockTime = blockTime[:]
+	bc.BlockTimeStamp = blockTimeStamp
+	bc.Height = height
 
 	rawBlockchainInfo, err := proto.Marshal(bc)
 	if err != nil {
 		log.Warn(err)
-	} else {
-		d.Put([]byte(config.BlockchainInfoKey), rawBlockchainInfo)
+		return
 	}
+	d.Put([]byte(config.BlockchainInfoKey), rawBlockchainInfo)
+
 }
 
 func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {

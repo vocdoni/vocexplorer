@@ -47,11 +47,12 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		err = json.Unmarshal(blockchainInfo.GetSyncInfo(), syncInfo)
 		if err != nil {
 			log.Warn(err)
+			syncInfo = new(tmtypes.SyncInfo)
 		}
 		genesisTime, err := prototypes.Timestamp(blockchainInfo.GetGenesisTimeStamp())
 		if err != nil {
-			genesisTime = time.Unix(1, 0)
 			log.Warn(err)
+			genesisTime = time.Unix(1, 0)
 		}
 		var blockTime [5]int32
 		copy(blockTime[:], blockchainInfo.GetBlockTime())
@@ -95,12 +96,17 @@ func StatsHandler(db *dvotedb.BadgerDB, cfg *config.Cfg) func(w http.ResponseWri
 		stats.MaxTxsBlockHash = maxTxsBlockID
 		stats.MaxTxsBlockHeight = maxTxsBlockHeight
 		stats.MaxTxsMinute = maxTxsMinute
-		stats.AvgTxsPerBlock = float64(transactionHeight.GetHeight()-1) / float64(blockHeight.GetHeight()-1)
-		stats.AvgTxsPerMinute = float64(transactionHeight.GetHeight()-1) / (float64(int64(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Unix()) / float64(60))
+		if transactionHeight.GetHeight() > 1 && blockHeight.GetHeight() > 1 {
+			stats.AvgTxsPerBlock = float64(transactionHeight.GetHeight()-1) / float64(blockHeight.GetHeight()-1)
+		}
+		if transactionHeight.GetHeight() > 0 && int64(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Unix() > 0 {
+			stats.AvgTxsPerMinute = float64(transactionHeight.GetHeight()-1) / (float64(int64(stats.BlockTimeStamp)-stats.GenesisTimeStamp.Unix()) / float64(60))
+		}
 
 		msg, err := json.Marshal(stats)
 		if err != nil {
 			log.Warn(err)
+			log.Debugf("Stats: %+v", stats)
 			http.Error(w, "Unable to marshal stats", http.StatusInternalServerError)
 			return
 		}
