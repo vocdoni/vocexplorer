@@ -36,27 +36,24 @@ func StartTendermintClient(host string, conns int) *rpc.TendermintRPC {
 	return tClient
 }
 
-// PingTendermint pings the tendermint client and returns true if ok
-func PingTendermint(t *rpc.TendermintRPC) bool {
-	if t == nil {
-		return false
-	}
-	status, err := t.Status()
-	if err != nil || status == nil {
-		return false
-	}
-	return true
-}
-
 // GetHealth calls the tendermint Health api
 func GetHealth(t *rpc.TendermintRPC) *tmtypes.ResultStatus {
 	if t == nil {
 		return nil
 	}
 	status, err := t.Status()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
-		return nil
+		for errs := 0; ; errs++ {
+			if errs > 3 {
+				log.Error("Tendermint RPC disconnected: " + err.Error())
+				return nil
+			}
+			status, err = t.Status()
+			if err == nil {
+				return status
+			}
+		}
 	}
 	return status
 }
@@ -67,9 +64,18 @@ func GetGenesis(t *rpc.TendermintRPC) *tmtypes.GenesisDoc {
 		return nil
 	}
 	result, err := t.Genesis()
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
-		return nil
+		for errs := 0; ; errs++ {
+			if errs > 3 {
+				log.Error("Tendermint RPC disconnected: " + err.Error())
+				return nil
+			}
+			result, err = t.Genesis()
+			if err == nil {
+				return result.Genesis
+			}
+		}
 	}
 	return result.Genesis
 }
@@ -80,9 +86,18 @@ func GetBlock(t *rpc.TendermintRPC, height int64) *tmtypes.ResultBlock {
 		return nil
 	}
 	block, err := t.Block(&height)
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
-		return nil
+		for errs := 0; ; errs++ {
+			if errs > 3 {
+				log.Error("Tendermint RPC disconnected: " + err.Error())
+				return nil
+			}
+			block, err = t.Block(&height)
+			if err == nil {
+				return block
+			}
+		}
 	}
 	return block
 }
@@ -93,9 +108,40 @@ func GetTransaction(t *rpc.TendermintRPC, hash []byte) *tmtypes.ResultTx {
 		return nil
 	}
 	res, err := t.Tx(hash, false)
+	// If error is returned, try the request more times, then fatal.
 	if err != nil {
-		log.Error(err)
+		for errs := 0; ; errs++ {
+			if errs > 3 {
+				log.Error("Tendermint RPC disconnected: " + err.Error())
+				return nil
+			}
+			res, err = t.Tx(hash, false)
+			if err == nil {
+				return res
+			}
+		}
+	}
+	return res
+}
+
+// GetValidators gets a list of validatorss
+func GetValidators(t *rpc.TendermintRPC, blockHeight int64, page int) *tmtypes.ResultValidators {
+	if t == nil {
 		return nil
+	}
+	res, err := t.Validators(&blockHeight, page, 100)
+	// If error is returned, try the request more times, then fatal.
+	if err != nil {
+		for errs := 0; ; errs++ {
+			if errs > 3 {
+				log.Error("Tendermint RPC disconnected: " + err.Error())
+				return nil
+			}
+			res, err = t.Validators(&blockHeight, page, 100)
+			if err == nil {
+				return res
+			}
+		}
 	}
 	return res
 }

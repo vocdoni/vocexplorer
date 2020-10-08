@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
-	"strings"
 	"time"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
@@ -30,7 +29,7 @@ func NewDB(path, chainID string) (*dvotedb.BadgerDB, error) {
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
 func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
-	exit = make(chan struct{}, 100)
+	exit = make(chan struct{}, 200)
 
 	// Init height keys
 	batch := d.NewBatch()
@@ -100,13 +99,25 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 	}()
 
 	i := 0
+	restarts := 0
 	hasSynced := false
 	for {
 		select {
 		case <-exit:
-			*detached = true
-			log.Warnf("Gateway disconnected, converting to detached mode")
-			return
+			log.Warnf("Gateway disconnected, restarting connections")
+			exit = make(chan struct{}, 200)
+			tClient.Restart()
+			gwClient.Close()
+			gwClient, cancel = api.InitGateway(gwHost)
+			defer (cancel)()
+			restarts++
+			// if restarts more than 2 times in 3 rounds, something's wrong. Exit
+			if restarts > 2 {
+				log.Warnf("Gateway disconnected, converting to detached mode")
+				*detached = true
+				return
+			}
+			i++
 		default:
 			// If synced, wait. If first time synced, reduce connections to 2.
 			waitSync(d, tClient, &hasSynced, tmHost)
@@ -119,6 +130,9 @@ func UpdateDB(d *dvotedb.BadgerDB, detached *bool, tmHost, gwHost string) {
 			updateEntityList(d, gwClient)
 			updateProcessList(d, gwClient)
 			time.Sleep(config.DBWaitTime * time.Millisecond)
+			if i%3 == 0 {
+				restarts--
+			}
 			i++
 		}
 	}
@@ -146,25 +160,10 @@ func waitSync(d *dvotedb.BadgerDB, t *rpc.TendermintRPC, hasSynced *bool, host s
 
 func isSynced(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) bool {
 	latestBlockHeight := GetHeight(d, config.LatestBlockHeightKey, 1)
-	status, err := t.Status()
-	// If error is returned, try the request more times, then fatal.
-	if err != nil {
-		if strings.Contains(err.Error(), "WebSocket closed") {
-			exit <- struct{}{}
-			return false
-		}
-		log.Error(err)
-		for errs := 0; ; errs++ {
-			if errs > 10 {
-				log.Error("Gateway Disconnected")
-				exit <- struct{}{}
-				return false
-			}
-			status, err = t.Status()
-			if err == nil {
-				break
-			}
-		}
+	status := api.GetHealth(t)
+	if status == nil {
+		exit <- struct{}{}
+		return false
 	}
 	gwBlockHeight := status.SyncInfo.LatestBlockHeight
 	return gwBlockHeight-latestBlockHeight.GetHeight() < 1

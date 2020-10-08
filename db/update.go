@@ -90,23 +90,10 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	procEnvHeightMap := GetHeightMap(d, config.ProcessEnvelopeCountMapKey)
 	procEnvHeightMapMutex := new(sync.Mutex)
 
-	status, err := t.Status()
-	// If error is returned, try the request more times, then fatal.
-	if err != nil {
-		if strings.Contains(err.Error(), "WebSocket closed") {
-			exit <- struct{}{}
-			return
-		}
-		for errs := 0; ; errs++ {
-			if errs > 2 {
-				log.Errorf("Unable to get status: %s", err.Error())
-				return
-			}
-			status, err = t.Status()
-			if err == nil {
-				break
-			}
-		}
+	status := api.GetHealth(t)
+	if status == nil {
+		exit <- struct{}{}
+		return
 	}
 	gwBlockHeight := status.SyncInfo.LatestBlockHeight
 
@@ -126,10 +113,11 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	// nextHeight and myHeight channels synchronize goroutines before fetching validator block height, so blocks by validator are ordered by block height
 	nextHeight := make(chan struct{})
 	myHeight := make(chan struct{})
+	fault := int32(0)
 	txsByMinute := make(map[int64]int64)
 	for ; int(i) < numNewBlocks; i++ {
 		wg.Add(1)
-		go fetchBlock(i+latestBlockHeight.GetHeight(), &maxBlockTxs, &largestBlockHeight, &largestBlock, &batch, t, wg, myHeight, nextHeight, &txsList[i], valMap, valMapMutex, txsByMinute)
+		go fetchBlock(i+latestBlockHeight.GetHeight(), &maxBlockTxs, &largestBlockHeight, &largestBlock, &batch, t, wg, myHeight, nextHeight, &txsList[i], valMap, valMapMutex, txsByMinute, &fault)
 		if i == 0 {
 			//Signal to the first block to start
 			close(myHeight)
@@ -141,6 +129,10 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 	if i > 0 {
 		// Sync: wait here for all goroutines to complete
 		wg.Wait()
+		if fault == 1 {
+			log.Debugf("Could not fetch blocks")
+			return
+		}
 		log.Debugf("Setting block %d ", latestBlockHeight.GetHeight()+i)
 
 		wg := new(sync.WaitGroup)
@@ -216,27 +208,19 @@ func updateBlockList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 
 }
 
-func fetchBlock(height int64, maxBlockTxs, largestBlockHeight *int64, largestBlock *string, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sync.WaitGroup, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex, maxMinuteTxs map[int64]int64) {
+func fetchBlock(height int64, maxBlockTxs, largestBlockHeight *int64, largestBlock *string, batch *dvotedb.Batch, t *rpc.TendermintRPC, wg *sync.WaitGroup, myHeight, nextHeight chan struct{}, txs *tmtypes.Txs, valMap *voctypes.HeightMap, valMapMutex *sync.Mutex, maxMinuteTxs map[int64]int64, fault *int32) {
 	// Signal
 	defer wg.Done()
-	// Thread-safe api request
-	res, err := t.Block(&height)
-	// If error is returned, try the request more times, then exit
-	if err != nil {
-		if strings.Contains(err.Error(), "closed") {
-			exit <- struct{}{}
-			return
-		}
-		for errs := 0; ; errs++ {
-			if errs > 10 {
-				log.Errorf("Unable to get block: %s", err.Error())
-				return
-			}
-			res, err = t.Block(&height)
-			if err == nil {
-				break
-			}
-		}
+	if atomic.LoadInt32(fault) != 0 {
+		close(nextHeight)
+		return
+	}
+	res := api.GetBlock(t, height)
+	if res == nil {
+		atomic.StoreInt32(fault, 1)
+		exit <- struct{}{}
+		close(nextHeight)
+		return
 	}
 	var block voctypes.StoreBlock
 	block.NumTxs = int64(len(res.Block.Data.Txs))
@@ -258,6 +242,10 @@ func fetchBlock(height int64, maxBlockTxs, largestBlockHeight *int64, largestBlo
 
 	// Wait for myHeight channel to close, this means fetchBlock for previous block has been assigned a validator block height
 	<-myHeight
+	if atomic.LoadInt32(fault) != 0 {
+		close(nextHeight)
+		return
+	}
 	// Update height of validator block belongs to
 	valMapMutex.Lock()
 	// If this block has the most txs, set the maxBlockTxs
@@ -314,49 +302,22 @@ func updateValidatorList(d *dvotedb.BadgerDB, t *rpc.TendermintRPC) {
 func fetchValidators(blockHeight, validatorCount int64, t *rpc.TendermintRPC, batch dvotedb.Batch) {
 	maxPerPage := 100
 	page := 0
-	resultValidators, err := t.Validators(&blockHeight, page, 100)
-	// If error is returned, try the request more times, then fatal.
-	if err != nil {
-		if strings.Contains(err.Error(), "closed") {
-			exit <- struct{}{}
-			return
-		}
-		for errs := 0; ; errs++ {
-			if errs > 2 {
-				log.Errorf("Unable to get validators: %s", err.Error())
-				return
-			}
-			resultValidators, err = t.Validators(&blockHeight, page, 100)
-			if err == nil {
-				break
-			}
-		}
+	resultValidators := api.GetValidators(t, blockHeight, page)
+	if resultValidators == nil {
+		exit <- struct{}{}
+		return
 	}
 	// Check if there are more validators.
 	for len(resultValidators.Validators) == maxPerPage {
-		moreValidators, err := t.Validators(&blockHeight, page, maxPerPage)
-		// If error is returned, try the request more times, then fatal.
-		if err != nil {
-			if strings.Contains(err.Error(), "closed") {
-				exit <- struct{}{}
-				return
-			}
-			for errs := 0; ; errs++ {
-				if errs > 2 {
-					log.Errorf("Unable to get validators: %s", err.Error())
-					return
-				}
-				moreValidators, err = t.Validators(&blockHeight, page, maxPerPage)
-				if err == nil {
-					break
-				}
-			}
+		page++
+		moreValidators := api.GetValidators(t, blockHeight, page)
+		if moreValidators == nil {
+			exit <- struct{}{}
+			return
 		}
-
 		if len(moreValidators.Validators) > 0 {
 			resultValidators.Validators = append(resultValidators.Validators, moreValidators.Validators...)
 		}
-		page++
 	}
 	// Cast each validator as storage struct, marshal, write to batch
 	for i, validator := range resultValidators.Validators {
@@ -395,26 +356,9 @@ func updateTxs(startTxHeight int64, txs tmtypes.Txs, t *rpc.TendermintRPC, batch
 	for i, tx := range txs {
 		numTxs = int64(i + 1)
 
-		txRes, err := t.Tx(tx.Hash(), false)
-		// If error is returned, try the request more times, then exit
-		if err != nil {
-			if strings.Contains(err.Error(), "closed") {
-				exit <- struct{}{}
-				return
-			}
-			for errs := 0; ; errs++ {
-				if errs > 10 {
-					log.Errorf("Unable to get transaction: %s", err.Error())
-					return
-				}
-				txRes, err = t.Tx(tx.Hash(), false)
-				if err == nil {
-					break
-				}
-			}
-		}
-
+		txRes := api.GetTransaction(t, tx.Hash())
 		if txRes == nil {
+			exit <- struct{}{}
 			return
 		}
 

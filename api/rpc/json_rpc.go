@@ -30,10 +30,11 @@ func init() {
 // InitTendermintRPC initializes a TendermintRPC client
 func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	t := new(TendermintRPC)
+	t.host = host
 	tMutex := new(sync.Mutex)
 	done := make(chan error, conns)
 	for i := 0; i < conns; i++ {
-		go newConnection(done, t, host, tMutex)
+		go newConnection(done, t, tMutex)
 	}
 	// Sync: wait here for all goroutines to complete
 	num := 0
@@ -58,10 +59,10 @@ func InitTendermintRPC(host string, conns int) (*TendermintRPC, error) {
 	return t, nil
 }
 
-func newConnection(done chan error, t *TendermintRPC, host string, connMutex *sync.Mutex) {
+func newConnection(done chan error, t *TendermintRPC, connMutex *sync.Mutex) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	c, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{})
+	c, _, err := websocket.Dial(ctx, t.host, &websocket.DialOptions{})
 	if err != nil {
 		done <- err
 		return

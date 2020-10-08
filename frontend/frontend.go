@@ -67,9 +67,11 @@ func initClients(cfg *config.Cfg) {
 	if gw == nil {
 		log.Warn("Cannot connect to gateway api")
 	}
-	dispatcher.Dispatch(&actions.TendermintClientInit{Client: tm})
-	dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: true})
+	if tm != nil && gw != nil {
+		dispatcher.Dispatch(&actions.TendermintClientInit{Client: tm})
+		dispatcher.Dispatch(&actions.GatewayClientInit{Client: gw})
+		dispatcher.Dispatch(&actions.GatewayConnected{Connected: true})
+	}
 	store.RedirectChan <- struct{}{}
 }
 

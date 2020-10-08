@@ -3,6 +3,7 @@ package components
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -84,9 +85,15 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
+	for store.TendermintClient == nil {
+		time.Sleep(200 * time.Millisecond)
+	}
+	fmt.Println("getting block")
 	block := api.GetBlock(store.TendermintClient, store.Blocks.CurrentBlockHeight)
-	fmt.Println("got block")
-	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
+	if block != nil {
+		fmt.Println("got block")
+		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
+	}
 	var rawTx dvotetypes.Tx
 	var txHeights []int64
 	if store.Blocks.CurrentBlock != nil {
