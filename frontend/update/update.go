@@ -154,8 +154,12 @@ func EntityProcessResults() {
 func BlockchainStatus(t *rpc.TendermintRPC) {
 	status := api.GetHealth(t)
 	genesis := api.GetGenesis(t)
-	dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
-	dispatcher.Dispatch(&actions.SetGenesis{Genesis: genesis})
+	if status != nil {
+		dispatcher.Dispatch(&actions.SetResultStatus{Status: status})
+	}
+	if genesis != nil {
+		dispatcher.Dispatch(&actions.SetGenesis{Genesis: genesis})
+	}
 }
 
 // CheckCurrentPage returns true and stops ticker if the current page is title
