@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"strings"
+	"sync"
 
 	dvotedb "gitlab.com/vocdoni/go-dvote/db"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -13,6 +14,22 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"google.golang.org/protobuf/proto"
 )
+
+type BlockState struct {
+	batch                    dvotedb.Batch
+	blockHeight              int64
+	envelopeHeight           int64
+	fault                    int32
+	largestBlock             int64
+	largestBlockHash         string
+	maxBlockTxs              int64
+	maxMinuteTxs             int64
+	processEnvelopeHeightMap *voctypes.HeightMap
+	validatorBlockHeightMap  *voctypes.HeightMap
+	stateMutex               *sync.Mutex
+	txHeight                 int64
+	txsByMinute              map[int64]int64
+}
 
 // GetInt64 fetches a int64 value from the database corresponding to given key
 func GetInt64(d *dvotedb.BadgerDB, key string) int64 {
@@ -81,9 +98,6 @@ func GetHeightMap(d *dvotedb.BadgerDB, key string) *voctypes.HeightMap {
 
 // ListItemsByHeight returns a list of items given integer keys
 func ListItemsByHeight(d *dvotedb.BadgerDB, max, height int, prefix []byte) [][]byte {
-	if max > 64 {
-		max = 64
-	}
 	var hashList [][]byte
 	for ; max > 0 && height >= 0; max-- {
 		heightKey := util.EncodeInt(height)

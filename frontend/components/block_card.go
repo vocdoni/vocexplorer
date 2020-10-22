@@ -2,26 +2,21 @@ package components
 
 import (
 	"encoding/hex"
-	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
-	var tm time.Time
-	if block.GetTime() != nil {
-		tm = time.Unix(block.GetTime().Seconds, int64(block.GetTime().Nanos)).UTC()
-	}
+func BlockCard(block *dbtypes.StoreBlock) vecty.ComponentOrHTML {
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
-			"/block/"+util.IntToString(block.GetHeight()),
-			"#"+util.IntToString(block.GetHeight()),
+			"/block/"+util.IntToString(block.Height),
+			"#"+util.IntToString(block.Height),
 			"",
 		),
 		Body: vecty.List{
@@ -29,10 +24,10 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Span(
 					vecty.Markup(vecty.Class("mr-2")),
-					vecty.Text(humanize.Comma(block.GetNumTxs())+" transactions"),
+					vecty.Text(humanize.Comma(block.NumTxs)+" transactions"),
 				),
 				elem.Span(
-					vecty.Text(humanize.Time(tm)),
+					vecty.Text(humanize.Time(block.Time)),
 				),
 			),
 			elem.DescriptionList(
@@ -41,10 +36,10 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 				),
 				elem.Description(
 					vecty.Markup(
-						vecty.Attribute("title", hex.EncodeToString(block.GetHash())),
+						vecty.Attribute("title", hex.EncodeToString(block.Hash)),
 						vecty.Markup(vecty.Class("text-truncate")),
 					),
-					vecty.Text(hex.EncodeToString(block.GetHash())),
+					vecty.Text(hex.EncodeToString(block.Hash)),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Proposer Address"),
@@ -52,11 +47,11 @@ func BlockCard(block *proto.StoreBlock) vecty.ComponentOrHTML {
 				elem.Description(
 					vecty.Markup(
 						vecty.Class("text-truncate"),
-						vecty.Attribute("title", util.HexToString(block.GetProposer())),
+						vecty.Attribute("title", util.HexToString(block.Proposer)),
 					),
 					Link(
-						"/validator/"+util.HexToString(block.GetProposer()),
-						util.HexToString(block.GetProposer()),
+						"/validator/"+util.HexToString(block.Proposer),
+						util.HexToString(block.Proposer),
 						"",
 					),
 				),

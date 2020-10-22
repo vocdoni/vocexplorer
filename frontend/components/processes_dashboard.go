@@ -2,19 +2,19 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -39,7 +39,6 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
@@ -85,16 +84,14 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
-			oldProcesses := store.Processes.Count
-			newVal, ok := api.GetProcessCount()
-			if ok {
-				dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
-			}
 			if i < 1 {
-				oldProcesses = store.Processes.Count
+				newVal, ok := api.GetProcessCount()
+				if ok {
+					dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
+				}
 			}
 			if store.Processes.Count > 0 {
-				getProcesses(d, util.Max(oldProcesses-store.Processes.Pagination.Index, 1))
+				getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
 				update.ProcessResults()
 			}
 		case search := <-store.Processes.Pagination.SearchChannel:
@@ -110,13 +107,13 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 					break processSearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
 			list, ok := api.GetProcessSearch(search)
 			if ok {
 				dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*proto.Process{}})
+				dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*dbtypes.Process{}})
 			}
 			update.ProcessResults()
 		}
@@ -124,10 +121,9 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcesses(d *ProcessesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	actions.UpdateCounts()
 	if !store.Processes.Pagination.DisableUpdate {
+		actions.UpdateCounts()
 		getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
 		update.ProcessResults()
 	}
@@ -135,7 +131,7 @@ func updateProcesses(d *ProcessesDashboardView) {
 
 func getProcesses(d *ProcessesDashboardView, index int) {
 	// index--
-	fmt.Printf("Getting processes from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting processes from index %d\n", index))
 	list, ok := api.GetProcessList(index)
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})

@@ -2,8 +2,8 @@ package storeutil
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // Processes stores the current processes information
@@ -11,17 +11,17 @@ type Processes struct {
 	Count                 int
 	ProcessResults        map[string]Process
 	ProcessKeys           map[string]*api.Pkeys
-	Processes             [config.ListSize]*proto.Process
+	Processes             [config.ListSize]*dbtypes.Process
 	Pagination            PageStore
 	EnvelopePagination    PageStore
 	EnvelopeHeights       map[string]int64
 	CurrentProcessResults Process
-	CurrentProcess        *proto.Process
+	CurrentProcess        *dbtypes.Process
 }
 
 // Process holds info about one vochain process, including votes and results
 type Process struct {
-	Envelopes     [config.ListSize]*proto.Envelope
+	Envelopes     [config.ListSize]*dbtypes.Envelope
 	EnvelopeCount int
 	ProcessType   string
 	Results       [][]uint32

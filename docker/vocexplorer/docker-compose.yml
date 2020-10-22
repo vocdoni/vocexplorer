@@ -1,39 +1,23 @@
 version: "3.4"
 
 services:
-  dvotenode:
-    image: "vocdoni/go-dvote:latest"
-    env_file: env
-    volumes:
-      - "dvotenode:/app/run"
+  vocexplorer:
+    image: "vocdoni/vocexplorer:latest"
+    build:
+      context: ../..
     ports:
+      - "26656:26656"      
       - "9090:9090"
       - "9091:9091"
       - "4001:4001"
       - "4171:4171"
       - "5001:5001"
       - "9096:9096"
-      - "26656:26656"
-      - "26657:26657"
-    restart: always
-    logging:
-      driver: json-file
-      options:
-        max-size: "20m"
-        max-file: "10"
-
-  vocexplorer:
-    image: "vocdoni/vocexplorer:latest"
-    build:
-      context: ../..
-    ports:
       - "8081:8081"
     env_file: env
     volumes:
       - "vocexplorer:/data/vocexplorer"
     restart: always
-    depends_on:
-      - dvotenode
     logging:
       driver: json-file
       options:
@@ -41,5 +25,4 @@ services:
         max-file: "10"
 
 volumes:
-  dvotenode: {}
   vocexplorer: {}

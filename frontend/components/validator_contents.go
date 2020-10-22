@@ -2,19 +2,19 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -39,9 +39,21 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
 		return LoadingBar()
 	}
-
+	if store.Validators.CurrentValidator == nil {
+		return Container(
+			renderServerConnectionBanner(),
+			elem.Section(
+				bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.List{
+						elem.Heading3(
+							vecty.Text("Loading validator..."),
+						),
+					},
+				}),
+			),
+		)
+	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
@@ -110,15 +122,13 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 				}
 			}
 			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: i})
-			oldBlocks := store.Validators.CurrentBlockCount
-			newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
-			if ok {
-				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
-			}
 			if i < 1 {
-				oldBlocks = store.Validators.CurrentBlockCount
+				newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+				if ok {
+					dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
+				}
 			}
-			updateValidatorBlocks(contents, oldBlocks-store.Validators.BlockPagination.Index)
+			updateValidatorBlocks(contents, store.Validators.CurrentBlockCount-store.Validators.BlockPagination.Index)
 		case search := <-store.Validators.BlockPagination.SearchChannel:
 			if !update.CheckCurrentPage("validator", ticker) {
 				return
@@ -132,14 +142,14 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 					break blocksearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: 0})
 			list, ok := api.GetBlocksByValidatorSearch(search, store.Validators.CurrentValidatorID)
 			if ok {
 				reverseBlockList(&list)
 				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
+				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
 			}
 
 		}
@@ -153,7 +163,7 @@ func updateValidatorBlocks(contents *ValidatorContents, i int) {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
 	if newVal > 0 {
-		newList, ok := api.GetBlockListByValidator(i, store.Validators.CurrentValidator.GetAddress())
+		newList, ok := api.GetBlockListByValidator(i, store.Validators.CurrentValidator.Address)
 		if ok {
 			reverseBlockList(&newList)
 			dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: newList})
@@ -161,6 +171,7 @@ func updateValidatorBlocks(contents *ValidatorContents, i int) {
 	}
 }
 
+// ValidatorView renders a single validator
 func ValidatorView() vecty.List {
 	return vecty.List{
 		elem.Heading1(
@@ -170,7 +181,7 @@ func ValidatorView() vecty.List {
 		elem.Heading2(
 			vecty.Text(fmt.Sprintf(
 				"Validator address: %x",
-				store.Validators.CurrentValidator.GetAddress(),
+				store.Validators.CurrentValidator.Address,
 			)),
 		),
 		elem.Div(
@@ -184,11 +195,11 @@ func ValidatorView() vecty.List {
 		elem.DescriptionList(
 			elem.DefinitionTerm(vecty.Text("Address")),
 			elem.Description(vecty.Text(
-				fmt.Sprintf("%x", store.Validators.CurrentValidator.GetAddress()),
+				fmt.Sprintf("%x", store.Validators.CurrentValidator.Address),
 			)),
 			elem.DefinitionTerm(vecty.Text("Public key")),
 			elem.Description(vecty.Text(
-				fmt.Sprintf("%x", store.Validators.CurrentValidator.GetPubKey()),
+				fmt.Sprintf("%x", store.Validators.CurrentValidator.PubKey),
 			)),
 			elem.DefinitionTerm(vecty.Text("Blocks")),
 			elem.Description(vecty.Text(
@@ -196,16 +207,17 @@ func ValidatorView() vecty.List {
 			)),
 			elem.DefinitionTerm(vecty.Text("Proposing priority")),
 			elem.Description(vecty.Text(
-				fmt.Sprintf("%d", store.Validators.CurrentValidator.GetProposerPriority()),
+				fmt.Sprintf("%d", store.Validators.CurrentValidator.ProposerPriority),
 			)),
 			elem.DefinitionTerm(vecty.Text("Voting power")),
 			elem.Description(vecty.Text(
-				fmt.Sprintf("%d", store.Validators.CurrentValidator.GetVotingPower()),
+				fmt.Sprintf("%d", store.Validators.CurrentValidator.VotingPower),
 			)),
 		),
 	}
 }
 
+// ValidatorDetails renders the details of a validator contents
 func ValidatorDetails() vecty.ComponentOrHTML {
 	if store.Validators.CurrentBlockCount <= 0 {
 		return elem.Preformatted(
@@ -239,12 +251,12 @@ func ValidatorDetails() vecty.ComponentOrHTML {
 	)
 }
 
-func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBlock) vecty.ComponentOrHTML {
+func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*dbtypes.StoreBlock) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	empty := config.ListSize
 	for i := len(blocks) - 1; i >= len(blocks)-config.ListSize; i-- {
-		if proto.BlockIsEmpty(blocks[i]) {
+		if dbtypes.BlockIsEmpty(blocks[i]) {
 			empty--
 		} else {
 			block := blocks[i]
@@ -256,7 +268,7 @@ func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*proto.StoreBl
 	}
 	if empty == 0 {
 		if *p.Searching {
-			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
+			return elem.Div(vecty.Text("No blocks found"))
 		}
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

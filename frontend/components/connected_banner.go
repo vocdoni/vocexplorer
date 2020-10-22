@@ -23,14 +23,6 @@ func (b *ConnectedBanner) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func renderGatewayConnectionBanner() vecty.ComponentOrHTML {
-	if !store.GatewayConnected {
-		return &ConnectedBanner{
-			connection: "blockchain api's",
-		}
-	}
-	return nil
-}
 func renderServerConnectionBanner() vecty.ComponentOrHTML {
 	if !store.ServerConnected {
 		return &ConnectedBanner{

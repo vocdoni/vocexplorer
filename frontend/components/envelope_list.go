@@ -6,9 +6,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -43,7 +43,7 @@ func renderEnvelopes(p *Pagination, index int) []vecty.MarkupOrChild {
 	empty := p.ListSize
 	var elemList []vecty.MarkupOrChild
 	for i := len(store.Envelopes.Envelopes) - 1; i >= len(store.Envelopes.Envelopes)-p.ListSize; i-- {
-		if proto.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
+		if dbtypes.EnvelopeIsEmpty(store.Envelopes.Envelopes[i]) {
 			empty--
 		} else {
 			envelope := store.Envelopes.Envelopes[i]
@@ -52,15 +52,15 @@ func renderEnvelopes(p *Pagination, index int) []vecty.MarkupOrChild {
 	}
 	if empty == 0 || len(elemList) < 1 {
 		if *p.Searching {
-			return []vecty.MarkupOrChild{vecty.Text("No Envelopes Found With Given ID")}
+			return []vecty.MarkupOrChild{vecty.Text("No envelopes found")}
 		}
-		return []vecty.MarkupOrChild{vecty.Text("Loading envelopes...")}
+		return []vecty.MarkupOrChild{vecty.Text("No envelopes available")}
 	}
 	return elemList
 }
 
 // EnvelopeBlock renders a single envelope block
-func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
+func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	if processResults.EnvelopeCount < 1 && processResults.ProcessType == "" && processResults.State == "" {
@@ -94,7 +94,7 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text("#"+util.IntToString(envelope.GetGlobalHeight())),
+						vecty.Text("#"+util.IntToString(envelope.GlobalHeight)),
 					),
 					vecty.If(
 						processResults.ProcessType != "",
@@ -118,7 +118,7 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 					elem.Div(
 						elem.Div(
 							Link(
-								"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
+								"/envelope/"+util.IntToString(envelope.GlobalHeight),
 								envelope.Nullifier,
 								"hash",
 							),
@@ -136,11 +136,11 @@ func EnvelopeBlock(envelope *proto.Envelope) vecty.ComponentOrHTML {
 							vecty.Markup(vecty.Class("text-truncate")),
 							vecty.If(
 								processEnvelopeCount < 1,
-								vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" envelope on process "),
+								vecty.Text(humanize.Ordinal(int(envelope.ProcessHeight))+" envelope on process "),
 							),
 							vecty.If(
 								processEnvelopeCount > 1,
-								vecty.Text(humanize.Ordinal(int(envelope.GetProcessHeight()))+" of "+util.IntToString(processEnvelopeCount)+" envelopes on process "),
+								vecty.Text(humanize.Ordinal(int(envelope.ProcessHeight))+" of "+util.IntToString(processEnvelopeCount)+" envelopes on process "),
 							),
 							vecty.If(
 								processEnvelopeCount == 1,

@@ -4,10 +4,10 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -48,7 +48,7 @@ func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int)
 
 	empty := p.ListSize
 	for i := len(process.Envelopes) - 1; i >= len(process.Envelopes)-p.ListSize; i-- {
-		if proto.EnvelopeIsEmpty(process.Envelopes[i]) {
+		if dbtypes.EnvelopeIsEmpty(process.Envelopes[i]) {
 			empty--
 		} else {
 			envelope := process.Envelopes[i]
@@ -57,9 +57,9 @@ func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int)
 	}
 	if empty == 0 {
 		if *p.Searching {
-			return elem.Div(vecty.Text("No Envelopes Found With Given ID"))
+			return elem.Div(vecty.Text("No envelopes found"))
 		}
-		return elem.Div(vecty.Text("Loading envelopes..."))
+		return elem.Div(vecty.Text("No envelopes available"))
 	}
 	EnvelopeList = append(EnvelopeList, vecty.Markup(vecty.Class("responsive-card-deck")))
 	return elem.Div(
@@ -67,14 +67,14 @@ func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int)
 	)
 }
 
-func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
 				Link(
-					"/envelope/"+util.IntToString(envelope.GetGlobalHeight()),
-					util.IntToString(envelope.GetProcessHeight()),
+					"/envelope/"+util.IntToString(envelope.GlobalHeight),
+					util.IntToString(envelope.ProcessHeight),
 					"",
 				),
 			),
@@ -83,7 +83,7 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GetGlobalHeight()))+" envelope on the blockchain"),
+						vecty.Text(humanize.Ordinal(int(envelope.GlobalHeight))+" envelope on the blockchain"),
 					),
 					elem.Div(
 						elem.Div(
@@ -92,7 +92,7 @@ func renderProcessEnvelope(envelope *proto.Envelope) vecty.ComponentOrHTML {
 						),
 						elem.Div(
 							vecty.Markup(vecty.Class("dd")),
-							vecty.Text(envelope.GetNullifier()),
+							vecty.Text(envelope.Nullifier),
 						),
 					),
 					elem.Div(

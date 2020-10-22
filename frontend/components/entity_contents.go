@@ -12,6 +12,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -52,7 +53,6 @@ func (dash *EntityContentsView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
@@ -100,7 +100,6 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 func UpdateEntityContents(d *EntityContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
@@ -136,16 +135,12 @@ func UpdateEntityContents(d *EntityContentsView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
-			oldProcesses := store.Entities.CurrentEntity.ProcessCount
-			newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-			if ok {
+			if i < 1 {
+				newCount, _ := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
 				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 			}
-			if i < 1 {
-				oldProcesses = store.Entities.CurrentEntity.ProcessCount
-			}
-			index := util.Max(oldProcesses-store.Entities.ProcessPagination.Index, 1)
-			fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
+			index := util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1)
+			logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
 			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
 			if ok {
 				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
@@ -161,15 +156,14 @@ func UpdateEntityContents(d *EntityContentsView) {
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
 	index--
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
-	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-	if ok {
-		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
-	}
 	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.ProcessPagination.DisableUpdate {
-		fmt.Printf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index)
+		newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
+		if ok {
+			dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+		}
+		logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
 		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
 		if ok {
 			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})

@@ -12,7 +12,6 @@ type StatsView struct {
 
 // Render renders the StatsView component
 func (b *StatsView) Render() vecty.ComponentOrHTML {
-	// if store.Stats.ResultStatus != nil || len(store.Stats.APIList) > 0 || store.Stats.Genesis != nil {
 	return elem.Section(
 		&Jumbotron{},
 		Container(
@@ -21,6 +20,4 @@ func (b *StatsView) Render() vecty.ComponentOrHTML {
 			&AverageBlockTimes{},
 		),
 	)
-	// }
-	// return elem.Div(vecty.Text("Waiting for blockchain statistics..."))
 }

@@ -2,17 +2,17 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -37,7 +37,6 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		&ValidatorListView{},
 	)
@@ -77,13 +76,11 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
-			oldValidators := store.Validators.Count
-			newHeight, _ := api.GetValidatorCount()
-			dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight)})
 			if i < 1 {
-				oldValidators = store.Validators.Count
+				newHeight, _ := api.GetValidatorCount()
+				dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight)})
 			}
-			updateValidators(d, util.Max(oldValidators-store.Validators.Pagination.Index, 1))
+			updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
 		case search := <-store.Validators.Pagination.SearchChannel:
 			if !update.CheckCurrentPage("validators", ticker) {
 				return
@@ -97,31 +94,29 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 					break validatorSearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
 			list, ok := api.GetValidatorSearch(search)
 			if ok {
 				reverseValidatorList(&list)
 				dispatcher.Dispatch(&actions.SetValidatorList{List: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetValidatorList{List: [config.ListSize]*proto.Validator{}})
+				dispatcher.Dispatch(&actions.SetValidatorList{List: [config.ListSize]*dbtypes.Validator{}})
 			}
 		}
 	}
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	actions.UpdateCounts()
-	update.BlockchainStatus(store.TendermintClient)
 	if !store.Validators.Pagination.DisableUpdate {
+		actions.UpdateCounts()
 		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
 	}
 }
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
-	fmt.Printf("Getting Validators from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting Validators from index %d\n", index))
 	list, ok := api.GetValidatorList(index)
 	if ok {
 		reverseValidatorList(&list)
@@ -133,7 +128,7 @@ func updateValidators(d *ValidatorsDashboardView, index int) {
 	}
 }
 
-func reverseValidatorList(list *[config.ListSize]*proto.Validator) {
+func reverseValidatorList(list *[config.ListSize]*dbtypes.Validator) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

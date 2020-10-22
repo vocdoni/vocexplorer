@@ -1,8 +1,8 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // TransactionTabChange is the action to change between tabs in transaction view details
@@ -17,7 +17,7 @@ type EnvelopesIndexChange struct {
 
 // SetEnvelopeList is the action to set the envelope list
 type SetEnvelopeList struct {
-	EnvelopeList [config.ListSize]*proto.Envelope
+	EnvelopeList [config.ListSize]*dbtypes.Envelope
 }
 
 // SetEnvelopeCount is the action to set the Envelope count
@@ -27,7 +27,7 @@ type SetEnvelopeCount struct {
 
 // SetCurrentEnvelope is the action to set the current envelope
 type SetCurrentEnvelope struct {
-	Envelope *proto.Envelope
+	Envelope *dbtypes.Envelope
 }
 
 // SetCurrentEnvelopeHeight is the action to set the current envelope height

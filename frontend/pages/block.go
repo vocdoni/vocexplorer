@@ -5,11 +5,11 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	router "marwan.io/vecty-router"
 )
 
@@ -24,7 +24,7 @@ func (home *BlockView) Render() vecty.ComponentOrHTML {
 
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 	dispatcher.Dispatch(&actions.SetCurrentBlockHeight{Height: height})
 	dash := new(components.BlockContents)

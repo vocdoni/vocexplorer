@@ -1,8 +1,8 @@
 package storeutil
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // Entities stores the current entities information
@@ -19,5 +19,5 @@ type Entities struct {
 // Entity holds info about one vochain entity
 type Entity struct {
 	ProcessCount int
-	Processes    [config.ListSize]*proto.Process
+	Processes    [config.ListSize]*dbtypes.Process
 }

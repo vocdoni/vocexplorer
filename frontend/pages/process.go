@@ -3,11 +3,11 @@ package pages
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 	router "marwan.io/vecty-router"
 )
 
@@ -20,7 +20,7 @@ type ProcessView struct {
 func (home *ProcessView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "process"})
 	dash := new(components.ProcessContentsView)
-	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &proto.Process{ID: router.GetNamedVar(home)["id"]}})
+	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &dbtypes.Process{ID: router.GetNamedVar(home)["id"], EntityID: "loading..."}})
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
 	if !store.Listeners.Has(dash) {

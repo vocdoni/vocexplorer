@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -43,7 +44,6 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		DetailsView(
 			dash.ProcessDetails(),
@@ -68,6 +68,14 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(
+			elem.DefinitionTerm(vecty.Text("Host entity")),
+			elem.Description(
+				Link(
+					"/entity/"+store.Processes.CurrentProcess.EntityID,
+					store.Processes.CurrentProcess.EntityID,
+					"",
+				),
+			),
 			elem.DefinitionTerm(vecty.Text("Process type")),
 			elem.Description(vecty.Text(store.Processes.CurrentProcessResults.ProcessType)),
 			elem.DefinitionTerm(vecty.Text("State")),
@@ -163,6 +171,10 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
+	process, ok := api.GetProcess(store.Processes.CurrentProcess.ID)
+	if ok {
+		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: process})
+	}
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	if !update.CheckCurrentPage("process", ticker) {
 		return
@@ -193,23 +205,20 @@ func UpdateProcessContents(d *ProcessContentsView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
-			oldEnvelopes := store.Processes.CurrentProcessResults.EnvelopeCount
-			newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
-			if ok {
-				dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
-			}
 			if i < 1 {
-				oldEnvelopes = store.Processes.CurrentProcessResults.EnvelopeCount
+				newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
+				if ok {
+					dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
+				}
 			}
 			if store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
-				updateProcessEnvelopes(d, util.Max(oldEnvelopes-store.Processes.EnvelopePagination.Index, 1))
+				updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcessResults.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
 			}
 		}
 	}
 }
 
 func updateProcessContents(d *ProcessContentsView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
 	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
@@ -222,7 +231,7 @@ func updateProcessContents(d *ProcessContentsView) {
 }
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {
-	fmt.Printf("Getting envelopes from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting envelopes from index %d\n", index))
 	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcess.ID)
 	if ok {
 		reverseEnvelopeList(&list)

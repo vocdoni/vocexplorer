@@ -3,10 +3,10 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // BlockList is the block list component
@@ -51,7 +51,7 @@ func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-p.ListSize; i-- {
-		if proto.BlockIsEmpty(store.Blocks.Blocks[i]) {
+		if dbtypes.BlockIsEmpty(store.Blocks.Blocks[i]) {
 			continue
 		}
 		blockList = append(blockList, elem.Div(
@@ -61,7 +61,7 @@ func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	}
 	if len(blockList) == 0 {
 		if *p.Searching {
-			return elem.Div(vecty.Text("No Blocks Found With Given ID"))
+			return elem.Div(vecty.Text("No blocks found"))
 		}
 		return elem.Div(vecty.Text("Loading Blocks..."))
 	}

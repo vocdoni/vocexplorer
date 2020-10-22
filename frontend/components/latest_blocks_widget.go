@@ -3,9 +3,9 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 //LatestBlocksWidget is a component for a widget of recent blocks
@@ -20,7 +20,7 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 
 	max := 4
 	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-max; i-- {
-		if proto.BlockIsEmpty(store.Blocks.Blocks[i]) {
+		if dbtypes.BlockIsEmpty(store.Blocks.Blocks[i]) {
 			continue
 		}
 		blockList = append(blockList, elem.Div(

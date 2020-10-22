@@ -6,6 +6,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 )
 
+// DetailsView renders blockchain details
 func DetailsView(details, tabs vecty.ComponentOrHTML) vecty.ComponentOrHTML {
 	contents := vecty.List{
 		elem.Section(

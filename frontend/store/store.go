@@ -2,7 +2,6 @@ package store
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/rpc"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
@@ -10,8 +9,6 @@ import (
 var (
 	// Config stores the application configuration
 	Config config.Cfg
-	// CurrentBlockHeight stores the latest known block height
-	CurrentBlockHeight int64
 
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
@@ -21,13 +18,6 @@ var (
 	// CurrentPage holds the current page title, used in signaling updater goroutines to exit
 	CurrentPage string
 
-	// GatewayClient is the global gateway client
-	GatewayClient *api.GatewayClient
-	// TendermintClient is the global tendermint client
-	TendermintClient *rpc.TendermintRPC
-
-	// GatewayConnected is true if the gateway client is connected
-	GatewayConnected bool
 	// ServerConnected is true if the webserver is connected
 	ServerConnected bool
 
@@ -38,7 +28,7 @@ var (
 	// Envelopes holds all entity information
 	Envelopes storeutil.Envelopes
 	// Stats holds all blockchain stats
-	Stats storeutil.Stats
+	Stats api.VochainStats
 	// Blocks holds all blockchain Blocks
 	Blocks storeutil.Blocks
 	// Transactions holds all blockchain transactions
@@ -61,6 +51,7 @@ func init() {
 	Processes.EnvelopePagination.PagChannel = make(chan int, 50)
 	Envelopes.Pagination.PagChannel = make(chan int, 50)
 	Blocks.Pagination.PagChannel = make(chan int, 50)
+	Blocks.TransactionPagination.PagChannel = make(chan int, 50)
 	Transactions.Pagination.PagChannel = make(chan int, 50)
 	Validators.Pagination.PagChannel = make(chan int, 50)
 	Validators.BlockPagination.PagChannel = make(chan int, 50)
@@ -71,6 +62,7 @@ func init() {
 	Processes.EnvelopePagination.SearchChannel = make(chan string, 50)
 	Envelopes.Pagination.SearchChannel = make(chan string, 50)
 	Blocks.Pagination.SearchChannel = make(chan string, 50)
+	Blocks.TransactionPagination.SearchChannel = make(chan string, 50)
 	Transactions.Pagination.SearchChannel = make(chan string, 50)
 	Validators.Pagination.SearchChannel = make(chan string, 50)
 	Validators.BlockPagination.SearchChannel = make(chan string, 50)
@@ -81,6 +73,7 @@ func init() {
 	Processes.EnvelopePagination.Search = false
 	Envelopes.Pagination.Search = false
 	Blocks.Pagination.Search = false
+	Blocks.TransactionPagination.Search = false
 	Transactions.Pagination.Search = false
 	Validators.Pagination.Search = false
 	Validators.BlockPagination.Search = false
@@ -91,7 +84,6 @@ func init() {
 	Entities.ProcessHeights = make(map[string]int64)
 	Validators.BlockHeights = make(map[string]int64)
 
-	GatewayConnected = true
 	ServerConnected = true
 
 	Reduce()

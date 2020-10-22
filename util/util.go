@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/vocdoni/go-dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 )
 
 // MsToString turns a milliseconds int32 to a readable string
@@ -68,7 +68,7 @@ func EncodeInt(val interface{}) []byte {
 		val64 = int64(i)
 		goto encode
 	} else {
-		log.Error("Cannot encode value: type is not integer")
+		logger.Error(fmt.Errorf("cannot encode value: type is not integer"))
 	}
 encode:
 	binary.PutVarint(buf, val64)
@@ -108,7 +108,7 @@ func SearchSlice(source []string, search string) []string {
 func TrimSlice(slice []string, lim int, page *int) []string {
 	if *page < 0 {
 		*page = 0
-		fmt.Println("Invalid page number")
+		logger.Info("Invalid page number")
 	}
 	len := len(slice)
 	if (*page+1)*lim > len+lim-1 {

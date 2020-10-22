@@ -1,13 +1,18 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // BlocksIndexChange is the action to set the pagination index
 type BlocksIndexChange struct {
+	Index int
+}
+
+// BlockTransactionsIndexChange is the action to set the pagination index
+type BlockTransactionsIndexChange struct {
 	Index int
 }
 
@@ -18,7 +23,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList [config.ListSize]*proto.StoreBlock
+	BlockList [config.ListSize]*dbtypes.StoreBlock
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -36,7 +41,7 @@ type SetCurrentBlockHeight struct {
 	Height int64
 }
 
-// SetCurrentBlockTxHeights is the action to set the current block transaction height list
-type SetCurrentBlockTxHeights struct {
-	Heights []int64
+// SetCurrentBlockTransactionList is the action to set the current list of transactions
+type SetCurrentBlockTransactionList struct {
+	TransactionList [config.ListSize]*dbtypes.Transaction
 }

@@ -5,11 +5,11 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	router "marwan.io/vecty-router"
 )
 
@@ -23,7 +23,7 @@ func (home *TxView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "tx"})
 	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 	dispatcher.Dispatch(&actions.SetCurrentTransactionHeight{Height: height})
 	dash := new(components.TxContents)

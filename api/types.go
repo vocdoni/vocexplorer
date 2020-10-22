@@ -1,101 +1,51 @@
 package api
 
 import (
-	"encoding/json"
-)
+	"time"
 
-// Key is a cryptographic key
-type Key struct {
-	Idx int    `json:"idx"`
-	Key string `json:"key"`
-}
+	"gitlab.com/vocdoni/go-dvote/types"
+)
 
 // Pkeys is the set of cryptographic keys for a process
 type Pkeys struct {
-	Pub  []Key
-	Priv []Key
-	Comm []Key
-	Rev  []Key
+	Pub  []types.Key
+	Priv []types.Key
+	Comm []types.Key
+	Rev  []types.Key
 }
 
-// RequestMessage holds a decoded request but does not decode the body. from go-dvote
-type RequestMessage struct {
-	ID          string          `json:"id"`
-	MetaRequest json.RawMessage `json:"request"`
-	Signature   string          `json:"signature"`
+// VochainStats is the type used by the public stats api
+type VochainStats struct {
+	BlockHeight       int64     `json:"block_height"`
+	EntityCount       int64     `json:"entity_count"`
+	EnvelopeCount     int64     `json:"envelope_count"`
+	ProcessCount      int64     `json:"process_count"`
+	TransactionHeight int64     `json:"transaction_height"`
+	ValidatorCount    int64     `json:"validator_count"`
+	BlockTime         *[5]int32 `json:"block_time"`
+	BlockTimeStamp    int32     `json:"block_time_stamp"`
+	ChainID           string    `json:"chain_id"`
+	GenesisTimeStamp  time.Time `json:"genesis_time_stamp"`
+	Height            int64     `json:"height"`
+	Network           string    `json:"network"`
+	Version           string    `json:"version"`
+	LatestBlockHeight int64     `json:"latest_block_height"`
+	AvgTxsPerBlock    float64   `json:"avg_txs_per_block"`
+	AvgTxsPerMinute   float64   `json:"avg_txs_per_minute"`
+	// The hash of the block with the most txs
+	MaxBytes          int64  `json:"max_bytes"`
+	MaxTxsBlockHash   string `json:"max_txs_block_hash"`
+	MaxTxsBlockHeight int64  `json:"max_txs_block_height"`
+	// The start of the minute with the most txs
+	MaxTxsMinute    time.Time `json:"max_txs_minute"`
+	MaxTxsPerBlock  int64     `json:"max_txs_per_block"`
+	MaxTxsPerMinute int64     `json:"max_txs_per_minute"`
+	Syncing         bool      `json:"syncing"`
 }
 
-// MetaRequest holds a gateway api request, from go-dvote/types
-type MetaRequest struct {
-	CensusID   string   `json:"censusId,omitempty"`
-	CensusURI  string   `json:"censusUri,omitempty"`
-	ClaimData  string   `json:"claimData,omitempty"`
-	ClaimsData []string `json:"claimsData,omitempty"`
-	Content    string   `json:"content,omitempty"`
-	Digested   bool     `json:"digested,omitempty"`
-	EntityID   string   `json:"entityId,omitempty"`
-	From       int64    `json:"from,omitempty"`
-	FromID     string   `json:"fromId,omitempty"`
-	ListSize   int64    `json:"listSize,omitempty"`
-	Method     string   `json:"method"`
-	Name       string   `json:"name,omitempty"`
-	Nullifier  string   `json:"nullifier,omitempty"`
-	ProcessID  string   `json:"processId,omitempty"`
-	ProofData  string   `json:"proofData,omitempty"`
-	PubKeys    []string `json:"pubKeys,omitempty"`
-	RawTx      string   `json:"rawTx,omitempty"`
-	RootHash   string   `json:"rootHash,omitempty"`
-	Signature  string   `json:"signature,omitempty"`
-	Timestamp  int32    `json:"timestamp"`
-	Type       string   `json:"type,omitempty"`
-	URI        string   `json:"uri,omitempty"`
-}
-
-// ResponseMessage wraps an api response, from go-dvote/types
-type ResponseMessage struct {
-	MetaResponse json.RawMessage `json:"response"`
-
-	ID        string `json:"id"`
-	Signature string `json:"signature"`
-}
-
-// MetaResponse holds a gateway api response, from go-dvote/types
-type MetaResponse struct {
-	APIList              []string   `json:"apiList,omitempty"`
-	BlockTime            *[5]int32  `json:"blockTime,omitempty"`
-	BlockTimestamp       int32      `json:"blockTimestamp,omitempty"`
-	CensusID             string     `json:"censusId,omitempty"`
-	CensusList           []string   `json:"censusList,omitempty"`
-	ClaimsData           []string   `json:"claimsData,omitempty"`
-	Content              string     `json:"content,omitempty"`
-	EntityID             string     `json:"entityId,omitempty"`
-	EntityIDs            []string   `json:"entityIds,omitempty"`
-	Files                []byte     `json:"files,omitempty"`
-	Finished             *bool      `json:"finished,omitempty"`
-	Health               int32      `json:"health,omitempty"`
-	Height               *int64     `json:"height,omitempty"`
-	InvalidClaims        []int      `json:"invalidClaims,omitempty"`
-	Message              string     `json:"message,omitempty"`
-	Nullifier            string     `json:"nullifier,omitempty"`
-	Nullifiers           *[]string  `json:"nullifiers,omitempty"`
-	Ok                   bool       `json:"ok"`
-	Paused               *bool      `json:"paused,omitempty"`
-	Payload              string     `json:"payload,omitempty"`
-	ProcessIDs           []string   `json:"processIds,omitempty"`
-	ProcessList          []string   `json:"processList,omitempty"`
-	Registered           *bool      `json:"registered,omitempty"`
-	Request              string     `json:"request"`
-	Results              [][]uint32 `json:"results,omitempty"`
-	Root                 string     `json:"root,omitempty"`
-	Siblings             string     `json:"siblings,omitempty"`
-	Size                 *int64     `json:"size,omitempty"`
-	State                string     `json:"state,omitempty"`
-	Timestamp            int32      `json:"timestamp"`
-	Type                 string     `json:"type,omitempty"`
-	URI                  string     `json:"uri,omitempty"`
-	ValidProof           *bool      `json:"validProof,omitempty"`
-	CommitmentKeys       []Key      `json:"commitmentKeys,omitempty"`
-	EncryptionPrivKeys   []Key      `json:"encryptionPrivKeys,omitempty"`
-	RevealKeys           []Key      `json:"revealKeys,omitempty"`
-	EncryptionPublicKeys []Key      `json:"encryptionPubKeys,omitempty"`
+// ProcessResults holds the results of a process
+type ProcessResults struct {
+	State   string
+	Type    string
+	Results [][]uint32
 }

@@ -3,21 +3,19 @@ package components
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -43,7 +41,6 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Transactions.CurrentTransaction == nil {
 		return Container(
-			renderGatewayConnectionBanner(),
 			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
@@ -83,7 +80,6 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 		))
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		contents)
 }
@@ -98,7 +94,7 @@ func TransactionView() vecty.List {
 		elem.Heading2(
 			vecty.Text(fmt.Sprintf(
 				"Transaction height: %d",
-				store.Transactions.CurrentTransaction.Store.TxHeight,
+				store.Transactions.CurrentTransaction.TxHeight,
 			)),
 		),
 	}
@@ -108,12 +104,12 @@ func TransactionView() vecty.List {
 			elem.Div(
 				vecty.Markup(vecty.Class("details")),
 				elem.Span(
-					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Store.Index+1))+" transaction on "),
+					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Index+1))+" transaction on "),
 					vecty.If(
-						!proto.BlockIsEmpty(store.Transactions.CurrentBlock),
+						!dbtypes.BlockIsEmpty(store.Transactions.CurrentBlock),
 						Link(
-							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
-							"block "+util.IntToString(store.Transactions.CurrentTransaction.Store.Height),
+							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Height),
+							"block "+util.IntToString(store.Transactions.CurrentTransaction.Height),
 							"",
 						),
 					),
@@ -136,7 +132,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Hash"),
 				),
 				elem.Description(
-					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.GetHash())),
+					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.Hash)),
 				),
 				vecty.If(
 					store.Transactions.CurrentDecodedTransaction.EntityID != "",
@@ -208,23 +204,17 @@ func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
 		Text:  "Contents",
 		Alias: "contents",
 	}}
-	metadata := &TransactionTab{&Tab{
-		Text:  "Transaction Log",
-		Alias: "metadata",
-	}}
 
 	return vecty.List{
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(t, contents),
-				TabLink(t, metadata),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(contents, preformattedTransactionContents()),
-			TabContents(metadata, preformattedTransactionMetadata()),
 		),
 	}
 }
@@ -241,18 +231,6 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 	))
 }
 
-func preformattedTransactionMetadata() vecty.ComponentOrHTML {
-	if len(store.Transactions.CurrentDecodedTransaction.Metadata) <= 0 {
-		return elem.Preformatted(
-			vecty.Markup(vecty.Class("empty")),
-			vecty.Text("Empty transaction log"),
-		)
-	}
-	return elem.Preformatted(elem.Code(
-		vecty.Text(string(store.Transactions.CurrentDecodedTransaction.Metadata)),
-	))
-}
-
 // UpdateTxContents keeps the transaction contents up to date
 func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
@@ -264,77 +242,67 @@ func UpdateTxContents(d *TxContents) {
 		return
 	}
 	// Set block associated with transaction
-	block, ok := api.GetStoreBlock(store.Transactions.CurrentTransaction.Store.Height)
+	block, ok := api.GetStoreBlock(store.Transactions.CurrentTransaction.Height)
 	if ok {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
-	var txResult tmtypes.ResponseDeliverTx
-	err := json.Unmarshal(tx.GetStore().GetTxResult(), &txResult)
-	if err != nil {
-		log.Error(err)
-	}
-
 	var rawTx dvotetypes.Tx
-	err = json.Unmarshal(tx.Store.Tx, &rawTx)
+	err := json.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 	var txContents []byte
 	var processID string
 	var nullifier string
 	var entityID string
-	var tm time.Time
-	if !proto.BlockIsEmpty(store.Transactions.CurrentBlock) {
-		tm = time.Unix(block.GetTime().Seconds, int64(block.GetTime().Nanos)).UTC()
-	}
 
 	switch rawTx.Type {
 	case "vote":
 		var typedTx dvotetypes.VoteTx
-		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
-		typedTx.Nullifier = tx.Store.Nullifier
+		typedTx.Nullifier = tx.Nullifier
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		processID = typedTx.ProcessID
 		nullifier = typedTx.Nullifier
 	case "newProcess":
 		var typedTx dvotetypes.NewProcessTx
-		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		processID = typedTx.ProcessID
 		entityID = typedTx.EntityID
 	case "cancelProcess":
 		var typedTx dvotetypes.CancelProcessTx
-		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		processID = typedTx.ProcessID
 	case "admin", "addValidator", "removeValidator", "addOracle", "removeOracle", "addProcessKeys", "revealProcessKeys":
 		var typedTx dvotetypes.AdminTx
-		err = json.Unmarshal(tx.Store.Tx, &typedTx)
+		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 		processID = typedTx.ProcessID
 	}
@@ -347,21 +315,13 @@ func UpdateTxContents(d *TxContents) {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
 	}
 	if !ok {
-		log.Error("unable to retrieve envelope height, envelope may not exist")
-	}
-	var metadata []byte
-	if len(txResult.Data) > 0 || txResult.Info != "" || len(txResult.Events) > 0 {
-		metadata, err = json.MarshalIndent(txResult, "", "\t")
-		if err != nil {
-			log.Error(err)
-		}
+		logger.Error(fmt.Errorf("unable to retrieve envelope height, envelope may not exist"))
 	}
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{
-			Metadata:       metadata,
 			RawTxContents:  txContents,
 			RawTx:          rawTx,
-			Time:           tm,
+			Time:           block.Time,
 			EnvelopeHeight: envelopeHeight,
 			ProcessID:      processID,
 			EntityID:       entityID,

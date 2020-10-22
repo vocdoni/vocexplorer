@@ -2,9 +2,9 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // ProcessesIndexChange is the action to set the pagination index
@@ -24,7 +24,7 @@ type ProcessTabChange struct {
 
 // SetProcessList is the action to set the process list
 type SetProcessList struct {
-	Processes [config.ListSize]*proto.Process
+	Processes [config.ListSize]*dbtypes.Process
 }
 
 // SetProcessCount is the action to set the process count
@@ -64,17 +64,17 @@ type SetCurrentProcessEnvelopeHeight struct {
 	Height int
 }
 
-// SetCurrentProcess is the action to set the current process
-type SetCurrentProcess struct {
+// SetCurrentProcessResults is the action to set the current process results
+type SetCurrentProcessResults struct {
 	Process storeutil.Process
 }
 
 // SetCurrentProcessStruct is the action to set the current process
 type SetCurrentProcessStruct struct {
-	Process *proto.Process
+	Process *dbtypes.Process
 }
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList [config.ListSize]*proto.Envelope
+	EnvelopeList [config.ListSize]*dbtypes.Envelope
 }

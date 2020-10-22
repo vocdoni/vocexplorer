@@ -32,7 +32,6 @@ func (dash *StatsDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		&BlockchainInfo{},
 	)
@@ -62,10 +61,7 @@ func UpdateStatsDashboard(d *StatsDashboardView) {
 }
 
 func updateStatsDashboard(d *StatsDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	actions.UpdateCounts()
-	update.DashboardInfo(store.GatewayClient)
-	update.BlockchainStatus(store.TendermintClient)
 }

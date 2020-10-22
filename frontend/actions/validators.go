@@ -1,8 +1,8 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // ValidatorsIndexChange is the action to set the pagination index
@@ -17,7 +17,7 @@ type ValidatorBlocksIndexChange struct {
 
 // SetValidatorList is the action to set the validator list
 type SetValidatorList struct {
-	List [config.ListSize]*proto.Validator
+	List [config.ListSize]*dbtypes.Validator
 }
 
 // SetValidatorCount is the action to set the Validator count
@@ -27,7 +27,7 @@ type SetValidatorCount struct {
 
 // SetCurrentValidator is the action to set the currently displayed validator
 type SetCurrentValidator struct {
-	Validator *proto.Validator
+	Validator *dbtypes.Validator
 }
 
 // SetCurrentValidatorID is the action to set the currently displayed validator ID
@@ -42,7 +42,7 @@ type SetCurrentValidatorBlockCount struct {
 
 // SetCurrentValidatorBlockList is the action to set the list of blocks belonging to the current validator
 type SetCurrentValidatorBlockList struct {
-	BlockList [config.ListSize]*proto.StoreBlock
+	BlockList [config.ListSize]*dbtypes.StoreBlock
 }
 
 // SetValidatorBlockHeightMap is the action to set the map of block heights associated with each validator

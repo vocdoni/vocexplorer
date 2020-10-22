@@ -2,19 +2,19 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -39,7 +39,6 @@ func (dash *EnvelopesDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
@@ -86,16 +85,14 @@ func UpdateEnvelopesDashboard(d *EnvelopesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EnvelopesIndexChange{Index: i})
-			oldEnvelopes := store.Envelopes.Count
-			newVal, ok := api.GetEnvelopeCount()
-			if ok {
-				dispatcher.Dispatch(&actions.SetEnvelopeCount{Count: int(newVal)})
-			}
 			if i < 1 {
-				oldEnvelopes = store.Envelopes.Count
+				newVal, ok := api.GetEnvelopeCount()
+				if ok {
+					dispatcher.Dispatch(&actions.SetEnvelopeCount{Count: int(newVal)})
+				}
 			}
 			if store.Envelopes.Count > 0 {
-				getEnvelopes(d, util.Max(oldEnvelopes-store.Envelopes.Pagination.Index, 1))
+				getEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, 1))
 				update.EnvelopeProcessResults()
 			}
 		case search := <-store.Envelopes.Pagination.SearchChannel:
@@ -111,14 +108,14 @@ func UpdateEnvelopesDashboard(d *EnvelopesDashboardView) {
 					break envelopeSearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.EnvelopesIndexChange{Index: 0})
 			list, ok := api.GetEnvelopeSearch(search)
 			if ok {
 				reverseEnvelopeList(&list)
 				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: [config.ListSize]*proto.Envelope{}})
+				dispatcher.Dispatch(&actions.SetEnvelopeList{EnvelopeList: [config.ListSize]*dbtypes.Envelope{}})
 			}
 			update.EnvelopeProcessResults()
 		}
@@ -126,17 +123,16 @@ func UpdateEnvelopesDashboard(d *EnvelopesDashboardView) {
 }
 
 func updateEnvelopes(d *EnvelopesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	actions.UpdateCounts()
 	if !store.Envelopes.Pagination.DisableUpdate {
+		actions.UpdateCounts()
 		getEnvelopes(d, util.Max(store.Envelopes.Count-store.Envelopes.Pagination.Index, 1))
 		update.EnvelopeProcessResults()
 	}
 }
 
 func getEnvelopes(d *EnvelopesDashboardView, index int) {
-	fmt.Printf("Getting envelopes from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting envelopes from index %d\n", index))
 	list, ok := api.GetEnvelopeList(index)
 	if ok {
 		reverseEnvelopeList(&list)
@@ -144,7 +140,7 @@ func getEnvelopes(d *EnvelopesDashboardView, index int) {
 	}
 }
 
-func reverseEnvelopeList(list *[config.ListSize]*proto.Envelope) {
+func reverseEnvelopeList(list *[config.ListSize]*dbtypes.Envelope) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

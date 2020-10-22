@@ -6,10 +6,10 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -57,7 +57,7 @@ func renderProcessItems() []vecty.MarkupOrChild {
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(process *proto.Process, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
 	if !ok || process == nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile")),
@@ -113,19 +113,19 @@ func ProcessBlock(process *proto.Process, ok bool, height int64, info storeutil.
 					elem.Div(
 						vecty.If(
 							entityHeight < 1,
-							vecty.Text(humanize.Ordinal(int(process.GetLocalHeight().GetHeight()+1))+" process hosted by entity "),
+							vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" process hosted by entity "),
 						),
 						vecty.If(
 							entityHeight > 1,
-							vecty.Text(humanize.Ordinal(int(process.GetLocalHeight().GetHeight()+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
+							vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
 						),
 						vecty.If(
 							entityHeight == 1,
 							vecty.Text("only process hosted by entity "),
 						),
 						Link(
-							"/entity/"+util.TrimHex(process.GetEntityID()),
-							util.TrimHex(process.GetEntityID()),
+							"/entity/"+util.TrimHex(process.EntityID),
+							util.TrimHex(process.EntityID),
 							"hash",
 						),
 					),

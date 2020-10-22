@@ -19,57 +19,41 @@ type BlockchainInfo struct {
 
 //Render renders the BlockchainInfo component
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
-
-	// if store.Stats.ResultStatus == nil || store.Stats.Genesis == nil {
-	// 	return nil
-	// }
-	syncing := true
-	// Buffer of +- 1 block so syncing does not flash back/forth
-	if store.Stats.ResultStatus != nil {
-		syncing = int(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight)-store.Blocks.Count > 2
-	}
+	syncing := store.Stats.Syncing
 
 	rows := []vecty.MarkupOrChild{vecty.Markup(vecty.Class("stats"))}
-	if store.Stats.ResultStatus != nil && store.Stats.Genesis != nil {
-		rows = append(rows, row(
-			head(vecty.Text("ID")),
-			data(vecty.Text(store.Stats.Genesis.ChainID)),
-			head(vecty.Text("Version")),
-			data(vecty.Text(store.Stats.ResultStatus.NodeInfo.Version)),
-		))
-	}
-	if store.Stats.Genesis != nil {
-		rows = append(rows, row(
-			head(vecty.Text("Max block size")),
-			data(vecty.Text(humanize.Comma(store.Stats.Genesis.ConsensusParams.Block.MaxBytes))),
-			head(vecty.Text("Latest block timestamp")),
-			data(vecty.Text(
-				fmt.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
-			)),
-		))
-	}
-	if store.Stats.ResultStatus != nil {
-		rows = append(rows, row(
-			head(vecty.Text("Block height")),
-			data(vecty.Text(humanize.Comma(store.Stats.ResultStatus.SyncInfo.LatestBlockHeight))),
-			head(vecty.Text("Total transactions")),
-			data(vecty.Text(humanize.Comma(int64(store.Transactions.Count)))),
-		))
-	}
+	rows = append(rows, row(
+		head(vecty.Text("ID")),
+		data(vecty.Text(store.Stats.ChainID)),
+		head(vecty.Text("Version")),
+		data(vecty.Text(store.Stats.Version)),
+	))
+	rows = append(rows, row(
+		head(vecty.Text("Max block size")),
+		data(vecty.Text(humanize.Comma(store.Stats.MaxBytes))),
+		head(vecty.Text("Latest block timestamp")),
+		data(vecty.Text(
+			fmt.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
+		)),
+	))
+	rows = append(rows, row(
+		head(vecty.Text("Block height")),
+		data(vecty.Text(humanize.Comma(store.Stats.LatestBlockHeight))),
+		head(vecty.Text("Total transactions")),
+		data(vecty.Text(humanize.Comma(int64(store.Transactions.Count)))),
+	))
 	rows = append(rows, row(
 		head(vecty.Text("Total entities")),
 		data(vecty.Text(humanize.Comma(int64(store.Entities.Count)))),
 		head(vecty.Text("Total processes")),
 		data(vecty.Text(humanize.Comma(int64(store.Processes.Count)))),
 	))
-	if store.Stats.Genesis != nil {
-		rows = append(rows, row(
-			head(vecty.Text("Number of validators")),
-			data(vecty.Text(humanize.Comma(int64(len(store.Stats.Genesis.Validators))))),
-			head(vecty.Text("Total vote envelopes")),
-			data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
-		))
-	}
+	rows = append(rows, row(
+		head(vecty.Text("Number of validators")),
+		data(vecty.Text(humanize.Comma(int64(store.Stats.ValidatorCount)))),
+		head(vecty.Text("Total vote envelopes")),
+		data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
+	))
 	rows = append(rows, row(
 		head(vecty.Text("Average transactions per block")),
 		data(vecty.Text(fmt.Sprintf("%.4f", store.Stats.AvgTxsPerBlock))),

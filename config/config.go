@@ -1,25 +1,22 @@
 package config
 
+import dvotecfg "gitlab.com/vocdoni/go-dvote/config"
+
 //Cfg is the global config to be served to pages
 type Cfg struct {
-	// Detached is the detached state of the database
-	Detached bool `json:"detached"`
-	// GatewayHost is gateway websockets url
-	GatewayHost string `json:"gatewayHost"`
-	// TendermintHost is tendermint api url
-	TendermintHost string `json:"tendermintHost"`
 	// RefreshTime is the number of seconds between page data refresh
 	RefreshTime int `json:"refreshTime"`
 }
 
 //MainCfg includes backend and frontend config
 type MainCfg struct {
-	DataDir     string
-	DisableGzip bool
-	Global      Cfg
-	HostURL     string
-	ChainID     string
-	LogLevel    string
+	Chain         string
+	DataDir       string
+	DisableGzip   bool
+	Global        Cfg
+	HostURL       string
+	LogLevel      string
+	VochainConfig *dvotecfg.VochainCfg
 }
 
 const (
@@ -29,8 +26,8 @@ const (
 	HomeWidgetBlocksListSize = 4
 	//NumBlockUpdates is the number of blocks updated per db batch
 	NumBlockUpdates = 100
-	//DBWaitTime is the number of seconds the backend waits before batching another set of blocks
-	DBWaitTime = 0
+	//DBWaitTime is the number of milliseconds the backend waits before batching another set of blocks
+	DBWaitTime = 2000
 	//ProcessHeightPrefix is the key prefix for processes by height
 	ProcessHeightPrefix = "ph_"
 	//EntityHeightPrefix is the key prefix for entity id's by height

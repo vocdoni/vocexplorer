@@ -2,17 +2,17 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -37,7 +37,6 @@ func (dash *BlocksDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		&BlockList{},
 	)
@@ -77,14 +76,12 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
-			oldBlocks := store.Blocks.Count
-			newHeight, _ := api.GetBlockHeight()
-			dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
-			if i < 1 {
-				oldBlocks = store.Blocks.Count
+			if i < 1 { // If on first page, update counts
+				newHeight, _ := api.GetBlockHeight()
+				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
 			}
-			fmt.Printf("update blocks to index %d\n", i)
-			updateBlocks(d, util.Max(oldBlocks-store.Blocks.Pagination.Index, 1))
+			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
+			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 
 		case search := <-store.Blocks.Pagination.SearchChannel:
 			if !update.CheckCurrentPage("blocks", ticker) {
@@ -99,32 +96,29 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 					break blocksearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
 			list, ok := api.GetBlockSearch(search)
 			if ok {
 				reverseBlockList(&list)
 				dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 			} else {
-				dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*proto.StoreBlock{nil}})
+				dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
 			}
 		}
 	}
 }
 
 func updateBlocksDashboard(d *BlocksDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-
-	actions.UpdateCounts()
-	update.BlockchainStatus(store.TendermintClient)
 	if !store.Blocks.Pagination.DisableUpdate {
+		actions.UpdateCounts()
 		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 	}
 }
 
 func updateBlocks(d *BlocksDashboardView, index int) {
-	fmt.Printf("Getting Blocks from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting Blocks from index %d\n", index))
 	list, ok := api.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)
@@ -132,7 +126,7 @@ func updateBlocks(d *BlocksDashboardView, index int) {
 	}
 }
 
-func reverseBlockList(list *[config.ListSize]*proto.StoreBlock) {
+func reverseBlockList(list *[config.ListSize]*dbtypes.StoreBlock) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]

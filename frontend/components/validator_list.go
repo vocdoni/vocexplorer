@@ -3,10 +3,10 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // ValidatorListView is the validator list component
@@ -50,8 +50,8 @@ func (b *ValidatorListView) Render() vecty.ComponentOrHTML {
 func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 	var validatorElems []vecty.MarkupOrChild
 
-	for i := len(store.Validators.Validators) - 1; i >= len(store.Validators.Validators)-p.ListSize; i-- {
-		if proto.ValidatorIsEmpty(store.Validators.Validators[i]) {
+	for i := len(store.Validators.Validators) - 1; i >= 0; i-- {
+		if dbtypes.ValidatorIsEmpty(store.Validators.Validators[i]) {
 			continue
 		}
 		validatorElems = append(validatorElems, elem.Div(
@@ -60,6 +60,9 @@ func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 		))
 	}
 	if len(validatorElems) == 0 {
+		if *p.Searching {
+			return elem.Div(vecty.Text("No validators found"))
+		}
 		return elem.Div(vecty.Text("Loading Validators..."))
 	}
 	validatorElems = append(validatorElems, vecty.Markup(vecty.Class("row")))

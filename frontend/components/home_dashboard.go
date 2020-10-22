@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hexops/vecty"
@@ -12,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -36,7 +36,6 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return elem.Div(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		&StatsView{},
 	)
@@ -66,17 +65,13 @@ func UpdateHomeDashboard(d *DashboardView) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-
-	update.BlockchainStatus(store.TendermintClient)
-	update.DashboardInfo(store.GatewayClient)
 	actions.UpdateCounts()
 	updateHomeBlocks(d, util.Max(store.Blocks.Count, config.HomeWidgetBlocksListSize))
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {
-	fmt.Println("Getting blocks from index " + util.IntToString(index))
+	logger.Info("Getting blocks from index " + util.IntToString(index))
 	list, ok := api.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)

@@ -134,7 +134,7 @@ func processActions(action interface{}) {
 	case *actions.SetCurrentProcessEnvelopeHeight:
 		Processes.CurrentProcessResults.EnvelopeCount = a.Height
 
-	case *actions.SetCurrentProcess:
+	case *actions.SetCurrentProcessResults:
 		Processes.CurrentProcessResults = a.Process
 
 	case *actions.SetCurrentProcessStruct:
@@ -169,29 +169,9 @@ func redirectActions(action interface{}) {
 // statsActions is the handler for all stats-related store actions
 func statsActions(action interface{}) {
 	switch a := action.(type) {
-	case *actions.SetResultStatus:
-		Stats.ResultStatus = a.Status
 
-	case *actions.SetGenesis:
-		Stats.Genesis = a.Genesis
-
-	case *actions.SetGatewayInfo:
-		Stats.APIList = a.APIList
-		Stats.Health = a.Health
-
-	case *actions.SetBlockStatus:
-		Stats.BlockTime = a.BlockTime
-		Stats.BlockTimeStamp = a.BlockTimeStamp
-		Stats.Height = a.Height
-
-	case *actions.SetTransactionStats:
-		Stats.AvgTxsPerBlock = a.AvgTxsPerBlock
-		Stats.AvgTxsPerMinute = a.AvgTxsPerMinute
-		Stats.MaxTxsBlockHash = a.MaxTxsBlockHash
-		Stats.MaxTxsBlockHeight = a.MaxTxsBlockHeight
-		Stats.MaxTxsMinute = a.MaxTxsMinute
-		Stats.MaxTxsPerBlock = a.MaxTxsPerBlock
-		Stats.MaxTxsPerMinute = a.MaxTxsPerMinute
+	case *actions.SetStats:
+		Stats = *a.Stats
 
 	default:
 		return // don't fire listeners
@@ -274,15 +254,6 @@ func validatorActions(action interface{}) {
 // clientActions is the handler for all connection-related store actions
 func clientActions(action interface{}) {
 	switch a := action.(type) {
-	case *actions.TendermintClientInit:
-		TendermintClient = a.Client
-
-	case *actions.GatewayClientInit:
-		GatewayClient = a.Client
-
-	case *actions.GatewayConnected:
-		GatewayConnected = a.Connected
-
 	case *actions.ServerConnected:
 		ServerConnected = a.Connected
 
@@ -299,6 +270,9 @@ func blockActions(action interface{}) {
 	case *actions.BlocksIndexChange:
 		Blocks.Pagination.Index = a.Index
 
+	case *actions.BlockTransactionsIndexChange:
+		Blocks.TransactionPagination.Index = a.Index
+
 	case *actions.BlocksTabChange:
 		Blocks.Pagination.Tab = a.Tab
 
@@ -314,8 +288,8 @@ func blockActions(action interface{}) {
 	case *actions.SetCurrentBlockHeight:
 		Blocks.CurrentBlockHeight = a.Height
 
-	case *actions.SetCurrentBlockTxHeights:
-		Blocks.CurrentBlockTxHeights = a.Heights
+	case *actions.SetCurrentBlockTransactionList:
+		Blocks.CurrentTxs = a.TransactionList
 
 	default:
 		return // don't fire listeners

@@ -2,7 +2,6 @@ package components
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hexops/vecty"
@@ -14,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -38,7 +38,6 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
-		renderGatewayConnectionBanner(),
 		renderServerConnectionBanner(),
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
@@ -85,16 +84,12 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
-			oldEntities := store.Entities.Count
-			newVal, ok := api.GetEntityCount()
-			if ok {
+			if i < 1 {
+				newVal, _ := api.GetEntityCount()
 				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
-			if i < 1 {
-				oldEntities = store.Entities.Count
-			}
 			if store.Entities.Count > 0 {
-				getEntities(d, util.Max(oldEntities-store.Entities.Pagination.Index, 1))
+				getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
 			}
 		case search := <-store.Entities.Pagination.SearchChannel:
 			if !update.CheckCurrentPage("entities", ticker) {
@@ -109,7 +104,7 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 					break entitySearch
 				}
 			}
-			log.Println("search: " + search)
+			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: 0})
 			list, ok := api.GetEntitySearch(search)
 			if ok {
@@ -122,17 +117,16 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntities(d *EntitiesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{Connected: store.GatewayClient.Ping()})
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	actions.UpdateCounts()
 	if !store.Entities.Pagination.DisableUpdate {
+		actions.UpdateCounts()
 		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
 	}
 }
 
 func getEntities(d *EntitiesDashboardView, index int) {
 	index--
-	fmt.Printf("Getting entities from index %d\n", index)
+	logger.Info(fmt.Sprintf("Getting entities from index %d\n", index))
 	list, ok := api.GetEntityList(index)
 	if ok {
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})

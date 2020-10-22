@@ -18,8 +18,8 @@ func (b *BlockchainVersion) Render() vecty.ComponentOrHTML {
 	return &bootstrap.Alert{
 		Contents: fmt.Sprintf(
 			"Connected to blockchain \"<i>%s</i>\" (version %s)",
-			store.Stats.Genesis.ChainID,
-			store.Stats.ResultStatus.NodeInfo.Version,
+			store.Stats.ChainID,
+			store.Stats.Version,
 		),
 	}
 }

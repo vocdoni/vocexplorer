@@ -13,9 +13,8 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	dvotedb "gitlab.com/vocdoni/go-dvote/db"
+	dvotecfg "gitlab.com/vocdoni/go-dvote/config"
 	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	"gitlab.com/vocdoni/vocexplorer/router"
@@ -29,14 +28,21 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.GatewayHost = *flag.String("gatewayHost", "ws://localhost:9090/dvote", "gateway API host to connect to")
-	cfg.Global.TendermintHost = *flag.String("tendermintHost", "ws://localhost/tendermint", "gateway API host to connect to")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
-	cfg.Global.Detached = *flag.Bool("detached", false, "run database in detached mode")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
-	cfg.ChainID = *flag.String("chainID", "", "chain ID to fall back on if running in detached mode")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
+	cfg.Chain = *flag.String("chain", "main", "vochain network to connect to (eg. main, dev")
+
+	// Vochain config
+	cfg.VochainConfig = new(dvotecfg.VochainCfg)
+	cfg.VochainConfig.P2PListen = *flag.String("vochainP2PListen", "0.0.0.0:26656", "p2p host and port to listent for the voting chain")
+	cfg.VochainConfig.CreateGenesis = *flag.Bool("vochainCreateGenesis", false, "create own/testing genesis file on vochain")
+	cfg.VochainConfig.Genesis = *flag.String("vochainGenesis", "", "use alternative genesis file for the voting chain")
+	cfg.VochainConfig.LogLevel = *flag.String("vochainLogLevel", "error", "voting chain node log level")
+	cfg.VochainConfig.Peers = *flag.StringArray("vochainPeers", []string{}, "coma separated list of p2p peers")
+	cfg.VochainConfig.Seeds = *flag.StringArray("vochainSeeds", []string{}, "coma separated list of p2p seed nodes")
+	cfg.VochainConfig.NodeKey = *flag.String("vochainNodeKey", "", "user alternative vochain private key (hexstring[64])")
 	flag.Parse()
 
 	// setting up viper
@@ -54,14 +60,19 @@ func newConfig() (*config.MainCfg, error) {
 	// Add viper config path (now we know it)
 	viper.AddConfigPath(cfg.DataDir)
 
-	viper.BindPFlag("global.detached", flag.Lookup("detached"))
-	viper.BindPFlag("global.gatewayHost", flag.Lookup("gatewayHost"))
-	viper.BindPFlag("global.tendermintHost", flag.Lookup("tendermintHost"))
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
-	viper.BindPFlag("chainID", flag.Lookup("chainID"))
+	viper.BindPFlag("chain", flag.Lookup("chain"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
+
+	viper.BindPFlag("vochainConfig.P2PListen", flag.Lookup("vochainP2PListen"))
+	viper.BindPFlag("vochainConfig.CreateGenesis", flag.Lookup("vochainCreateGenesis"))
+	viper.BindPFlag("vochainConfig.Genesis", flag.Lookup("vochainGenesis"))
+	viper.BindPFlag("vochainConfig.LogLevel", flag.Lookup("vochainLogLevel"))
+	viper.BindPFlag("vochainConfig.Peers", flag.Lookup("vochainPeers"))
+	viper.BindPFlag("vochainConfig.Seeds", flag.Lookup("vochainSeeds"))
+	viper.BindPFlag("vochainConfig.NodeKey", flag.Lookup("vochainNodeKey"))
 
 	var cfgError error
 	_, err = os.Stat(cfg.DataDir + "/vocexplorer.yml")
@@ -103,42 +114,8 @@ func main() {
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
 	}
-
-	var d *dvotedb.BadgerDB
-	if !cfg.Global.Detached {
-		// Get ChainID for db directory
-		tmClient, ok := api.StartTendermint(cfg.Global.TendermintHost, 1)
-		if !ok || tmClient == nil {
-			cfg.Global.Detached = true
-		} else {
-			gen, err := tmClient.Genesis()
-			if err != nil {
-				log.Fatal(err)
-			}
-			cfg.ChainID = gen.Genesis.ChainID
-			d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
-			if err != nil {
-				log.Error(err)
-				cfg.Global.Detached = true
-			} else {
-				go db.UpdateDB(d, &cfg.Global.Detached, cfg.Global.TendermintHost, cfg.Global.GatewayHost)
-			}
-		}
-		if tmClient != nil {
-			tmClient.Close()
-		}
-	}
-	if cfg.Global.Detached {
-		log.Infof("Running in detached mode")
-		d, err = db.NewDB(cfg.DataDir, cfg.ChainID)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	//Convert host url to localhost if using internal docker network
-	cfg.Global.GatewayHost = strings.Replace(cfg.Global.GatewayHost, "dvotenode", "localhost", 1)
-	cfg.Global.TendermintHost = strings.Replace(cfg.Global.TendermintHost, "dvotenode", "localhost", 1)
+	d := db.NewDB(cfg)
+	go d.UpdateDB()
 
 	urlR, err := url.Parse(cfg.HostURL)
 	if err != nil {

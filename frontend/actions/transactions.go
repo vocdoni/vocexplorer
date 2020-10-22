@@ -1,9 +1,9 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // TransactionTabChange is the action to change between tabs in transaction view details
@@ -18,7 +18,7 @@ type TransactionsIndexChange struct {
 
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
-	TransactionList [config.ListSize]*proto.SendTx
+	TransactionList [config.ListSize]*dbtypes.Transaction
 }
 
 // SetTransactionCount is the action to set the Transaction count
@@ -33,12 +33,12 @@ type SetCurrentTransactionHeight struct {
 
 // SetCurrentTransaction is the action to set the current transaction
 type SetCurrentTransaction struct {
-	Transaction *proto.SendTx
+	Transaction *dbtypes.Transaction
 }
 
 // SetTransactionBlock is the action to set the block associated with the current transaction
 type SetTransactionBlock struct {
-	Block *proto.StoreBlock
+	Block *dbtypes.StoreBlock
 }
 
 // SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction

@@ -1,7 +1,6 @@
 package tmtypes
 
 import (
-	"encoding/json"
 	"math/bits"
 	"time"
 
@@ -18,24 +17,6 @@ var (
 
 // Address is hex bytes.
 type Address = crypto.Address
-
-// GenesisValidator is an initial validator.
-type GenesisValidator struct {
-	Address Address       `json:"address"`
-	PubKey  crypto.PubKey `json:"pub_key"`
-	Power   int64         `json:"power"`
-	Name    string        `json:"name"`
-}
-
-// GenesisDoc defines the initial conditions for a tendermint blockchain, in particular its validator set.
-type GenesisDoc struct {
-	GenesisTime     time.Time          `json:"genesis_time"`
-	ChainID         string             `json:"chain_id"`
-	ConsensusParams *ConsensusParams   `json:"consensus_params,omitempty"`
-	Validators      []GenesisValidator `json:"validators,omitempty"`
-	AppHash         tmbytes.HexBytes   `json:"app_hash"`
-	AppState        json.RawMessage    `json:"app_state,omitempty"`
-}
 
 // ConsensusParams contains consensus critical parameters that determine the
 // validity of blocks.
@@ -78,6 +59,12 @@ type Tx []byte
 // Hash computes the TMHASH hash of the wire encoded transaction.
 func (tx Tx) Hash() []byte {
 	return tmhash.Sum(tx)
+}
+
+// ResultBlock is a Single block (with meta)
+type ResultBlock struct {
+	BlockID BlockID `json:"block_id"`
+	Block   *Block  `json:"block"`
 }
 
 // Block defines the atomic unit of a Tendermint blockchain.

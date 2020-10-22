@@ -4,25 +4,24 @@ import (
 	"time"
 
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
 	Count                     int
 	CurrentTransactionHeight  int64
-	CurrentTransaction        *proto.SendTx
+	CurrentTransaction        *dbtypes.Transaction
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *proto.StoreBlock
+	CurrentBlock              *dbtypes.StoreBlock
 	Pagination                PageStore
-	Transactions              [config.ListSize]*proto.SendTx
+	Transactions              [config.ListSize]*dbtypes.Transaction
 }
 
 // DecodedTransaction stores human-readable decoded transaction data
 type DecodedTransaction struct {
 	EnvelopeHeight int64
-	Metadata       []byte
 	RawTxContents  []byte
 	RawTx          dvotetypes.Tx
 	Time           time.Time

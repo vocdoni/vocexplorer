@@ -5,6 +5,7 @@ import (
 	"github.com/hexops/vecty/elem"
 )
 
+// Footer renders the page footer
 func Footer() vecty.ComponentOrHTML {
 	return elem.Footer(
 		Container(
