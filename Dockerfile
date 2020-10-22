@@ -5,7 +5,7 @@ WORKDIR /src
 
 COPY . .
 
-RUN apk add --no-cache nodejs yarn build-base
+RUN apk add --no-cache nodejs yarn linux-headers build-base
 
 RUN cd frontend && \
     env GOARCH=wasm GOOS=js go build -ldflags "-s -w" -trimpath -o ../static/main.wasm && \
