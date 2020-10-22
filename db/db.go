@@ -88,11 +88,10 @@ func (d *ExplorerDB) UpdateDB() {
 		}
 	}()
 
-	waitTime := 0
 	i := 0
 	for {
 		// If synced, wait.
-		d.waitSync(&waitTime)
+		d.waitSync()
 		d.updateBlockchainInfo()
 		d.updateBlockList()
 		// Update validators less frequently than blocks
@@ -101,16 +100,15 @@ func (d *ExplorerDB) UpdateDB() {
 		}
 		d.updateEntityList()
 		d.updateProcessList()
-		time.Sleep(time.Duration(waitTime) * time.Millisecond)
+		time.Sleep(config.DBWaitTime * time.Millisecond)
 		i++
 	}
 }
 
-func (d *ExplorerDB) waitSync(waitTime *int) {
+func (d *ExplorerDB) waitSync() {
 	sync := d.isSynced()
 	for sync {
-		*waitTime = config.DBWaitTime
-		time.Sleep(1 * time.Second)
+		time.Sleep(2 * time.Second)
 		sync = d.isSynced()
 	}
 }
@@ -118,5 +116,5 @@ func (d *ExplorerDB) waitSync(waitTime *int) {
 func (d *ExplorerDB) isSynced() bool {
 	localBlockHeight := GetHeight(d.Db, config.LatestBlockHeightKey, 1)
 	globalBlockHeight := d.Vs.GetBlockHeight()
-	return globalBlockHeight-localBlockHeight.GetHeight() < 1
+	return globalBlockHeight-localBlockHeight.GetHeight() < 2
 }

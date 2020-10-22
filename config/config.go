@@ -27,7 +27,7 @@ const (
 	//NumBlockUpdates is the number of blocks updated per db batch
 	NumBlockUpdates = 100
 	//DBWaitTime is the number of milliseconds the backend waits before batching another set of blocks
-	DBWaitTime = 2000
+	DBWaitTime = 0
 	//ProcessHeightPrefix is the key prefix for processes by height
 	ProcessHeightPrefix = "ph_"
 	//EntityHeightPrefix is the key prefix for entity id's by height
