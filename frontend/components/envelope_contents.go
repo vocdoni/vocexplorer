@@ -187,8 +187,10 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			)),
 			elem.DefinitionTerm(vecty.Text("Vote type")),
 			elem.Description(vecty.Text(
-				store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessType,
+				util.GetEnvelopeName(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessType),
 			)),
+			elem.DefinitionTerm(vecty.Text("Process status")),
+			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].State))),
 			elem.DefinitionTerm(vecty.Text("Decryption status")),
 			elem.Description(vecty.Text(
 				c.DecryptionStatus,

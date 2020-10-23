@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hexops/vecty"
@@ -37,10 +38,10 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	}
 
 	if store.Processes.CurrentProcessResults.ProcessType == "" {
-		dispatcher.Dispatch(&actions.SetProcessType{Type: "unknown"})
+		dispatcher.Dispatch(&actions.SetProcessType{Type: "Unknown"})
 	}
 	if store.Processes.CurrentProcessResults.State == "" {
-		dispatcher.Dispatch(&actions.SetProcessState{State: "unknown"})
+		dispatcher.Dispatch(&actions.SetProcessState{State: "Unknown"})
 	}
 
 	return Container(
@@ -63,7 +64,7 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
 				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcessResults.State)),
-				vecty.Text(store.Processes.CurrentProcessResults.State),
+				vecty.Text(strings.Title(store.Processes.CurrentProcessResults.State)),
 			),
 		),
 		elem.HorizontalRule(),
@@ -77,9 +78,9 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 				),
 			),
 			elem.DefinitionTerm(vecty.Text("Process type")),
-			elem.Description(vecty.Text(store.Processes.CurrentProcessResults.ProcessType)),
+			elem.Description(vecty.Text(util.GetProcessName(store.Processes.CurrentProcessResults.ProcessType))),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(store.Processes.CurrentProcessResults.State)),
+			elem.Description(vecty.Text(strings.Title(store.Processes.CurrentProcessResults.State))),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
 			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcessResults.EnvelopeCount))),
 		),

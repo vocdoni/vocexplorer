@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 )
 
@@ -130,4 +131,31 @@ func TrimHex(str string) string {
 //HexToString converts an array of hexbytes to a string
 func HexToString(bytes []byte) string {
 	return strings.ToLower(hex.EncodeToString(bytes))
+}
+
+// GetTransactionName translates a raw transaction type to a name
+func GetTransactionName(raw string) string {
+	name, ok := config.TransactionTypeMap[raw]
+	if ok {
+		return name
+	}
+	return raw
+}
+
+// GetProcessName translates a raw process type to a name
+func GetProcessName(raw string) string {
+	name, ok := config.ProcessTypeMap[raw]
+	if ok {
+		return name
+	}
+	return raw
+}
+
+// GetEnvelopeName translates a raw envelope type to a name
+func GetEnvelopeName(raw string) string {
+	name, ok := config.EnvelopeTypeMap[raw]
+	if ok {
+		return name
+	}
+	return raw
 }

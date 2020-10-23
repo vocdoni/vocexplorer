@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -93,11 +94,11 @@ func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeuti
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(info.ProcessType),
+						vecty.Text(util.GetProcessName(info.ProcessType)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(info.State),
+						vecty.Text(strings.Title(info.State)),
 					),
 				),
 			),

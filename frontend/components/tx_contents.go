@@ -126,7 +126,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Transaction Type"),
 				),
 				elem.Description(
-					vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTx.Type),
+					vecty.Text(util.GetTransactionName(store.Transactions.CurrentDecodedTransaction.RawTx.Type)),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Hash"),
@@ -258,7 +258,7 @@ func UpdateTxContents(d *TxContents) {
 	var entityID string
 
 	switch rawTx.Type {
-	case "vote":
+	case dvotetypes.TxVote:
 		var typedTx dvotetypes.VoteTx
 		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
@@ -271,7 +271,7 @@ func UpdateTxContents(d *TxContents) {
 		}
 		processID = typedTx.ProcessID
 		nullifier = typedTx.Nullifier
-	case "newProcess":
+	case dvotetypes.TxNewProcess:
 		var typedTx dvotetypes.NewProcessTx
 		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
@@ -283,7 +283,7 @@ func UpdateTxContents(d *TxContents) {
 		}
 		processID = typedTx.ProcessID
 		entityID = typedTx.EntityID
-	case "cancelProcess":
+	case dvotetypes.TxCancelProcess:
 		var typedTx dvotetypes.CancelProcessTx
 		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {
@@ -294,7 +294,7 @@ func UpdateTxContents(d *TxContents) {
 			logger.Error(err)
 		}
 		processID = typedTx.ProcessID
-	case "admin", "addValidator", "removeValidator", "addOracle", "removeOracle", "addProcessKeys", "revealProcessKeys":
+	case dvotetypes.TxAddValidator, dvotetypes.TxRemoveValidator, dvotetypes.TxAddOracle, dvotetypes.TxRemoveOracle, dvotetypes.TxAddProcessKeys, dvotetypes.TxRevealProcessKeys:
 		var typedTx dvotetypes.AdminTx
 		err := json.Unmarshal(tx.Tx, &typedTx)
 		if err != nil {

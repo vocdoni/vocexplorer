@@ -100,14 +100,14 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 						processResults.ProcessType != "",
 						elem.Span(
 							vecty.Markup(vecty.Class("title")),
-							vecty.Text(processResults.ProcessType),
+							vecty.Text(util.GetEnvelopeName(processResults.ProcessType)),
 						),
 					),
 					vecty.If(
 						processResults.State != "",
 						elem.Span(
 							vecty.Markup(vecty.Class("status")),
-							vecty.Text(processResults.State),
+							vecty.Text("Process "+processResults.State),
 						),
 					),
 				),

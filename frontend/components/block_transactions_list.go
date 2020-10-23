@@ -97,7 +97,7 @@ func renderBlockTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(rawTx.Type),
+						vecty.Text(util.GetTransactionName(rawTx.Type)),
 					),
 				),
 			),

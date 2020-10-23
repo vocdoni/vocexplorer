@@ -160,6 +160,7 @@ main {
   }
 
   .type {
+    min-width: 180px;
     @extend .col-md-2;
     @extend .d-flex;
     word-wrap: anywhere;
