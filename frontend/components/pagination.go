@@ -41,6 +41,8 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if p.RenderSearchBar {
 		searchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
+				vecty.Markup(vecty.Attribute("aria-label", "Search by height, id")),
+				vecty.Markup(vecty.Attribute("type", "search")),
 				// Trigger when 'enter' is pressed
 				event.Change(func(e *vecty.Event) {
 					search := e.Target.Get("value").String()
@@ -103,6 +105,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Navigation(
 			vecty.Markup(vecty.Class("pagination-wrapper")),
+			vecty.Markup(vecty.Attribute("aria-label", "Item list navigation")),
 			elem.Div(
 				vecty.Markup(vecty.Class("page-count")),
 				vecty.If(

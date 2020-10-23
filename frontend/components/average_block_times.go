@@ -47,9 +47,12 @@ func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 	return elem.Section(
 		bootstrap.Card(bootstrap.CardParams{
 			Body: vecty.List{
-				elem.Heading4(vecty.Text("Average block times: ")),
+				elem.Heading2(vecty.Text("Average block times: ")),
 				elem.Table(
-					vecty.Markup(vecty.Class("table")),
+					vecty.Markup(
+						vecty.Class("table"),
+						vecty.Attribute("aria-label", "Table of average block times for given time periods."),
+					),
 					elem.TableHead(
 						elem.TableRow(
 							elem.TableHeader(vecty.Text("Time period")),

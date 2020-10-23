@@ -45,6 +45,7 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		DetailsView(
 			dash.ProcessDetails(),
@@ -115,6 +116,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 
 	return vecty.List{
 		elem.Navigation(
+			vecty.Markup(vecty.Attribute("aria-label", "Tab navigation: results and envelopes")),
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(dash, results),

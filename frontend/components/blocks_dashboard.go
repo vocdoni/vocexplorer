@@ -37,6 +37,7 @@ func (dash *BlocksDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		&BlockList{},
 	)

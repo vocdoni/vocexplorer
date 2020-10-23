@@ -41,6 +41,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Validators.CurrentValidator == nil {
 		return Container(
+			vecty.Markup(vecty.Attribute("id", "main")),
 			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
@@ -54,6 +55,7 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 		)
 	}
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
@@ -244,7 +246,7 @@ func ValidatorDetails() vecty.ComponentOrHTML {
 	}
 
 	return elem.Div(
-		elem.Heading3(
+		elem.Heading2(
 			vecty.Text("Blocks"),
 		),
 		p,

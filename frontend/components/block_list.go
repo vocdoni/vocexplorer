@@ -36,7 +36,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("list", "paginated")),
 			bootstrap.Card(bootstrap.CardParams{
 				Body: vecty.List{
-					elem.Heading3(
+					elem.Heading1(
 						vecty.Text("Blocks"),
 					),
 					p,

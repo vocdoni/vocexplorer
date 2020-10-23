@@ -38,11 +38,12 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		elem.Section(
 			bootstrap.Card(bootstrap.CardParams{
 				Body: vecty.List{
-					elem.Heading2(vecty.Text("Entities")),
+					elem.Heading1(vecty.Text("Entities")),
 					&EntityListView{},
 				},
 			}),

@@ -23,6 +23,10 @@ main {
   > div {
     flex: 1;
   }
+  > h1 {
+    flex: 1;
+    font-size: medium;
+  }
 }
 
 .container > section {
@@ -555,4 +559,42 @@ footer {
       @extend th;
     }
   }
+}
+
+// Accessibility stylings
+
+.invisible {
+  // visibility: hidden;
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.dash-heading {
+  text-align: center;
+  text-decoration: wavy;
+  text-shadow: 2px 2px 3px #ffffff;
+  font-size: xx-large;
+}
+
+.bold-link{
+  font-weight: bold;
+}
+
+.skip-to-content-link {
+  background: $brand-color;
+  height: 30px;
+  left: 1%;
+  top: 4em;
+  padding: 8px;
+  position: absolute;
+  transform: translateY(-200px);
+  transition: transform 0.3s;
+  z-index:100;
+}
+
+.skip-to-content-link:focus {
+  transform: translateY(0%);
 }

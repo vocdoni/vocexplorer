@@ -53,6 +53,7 @@ func (dash *EntityContentsView) Render() vecty.ComponentOrHTML {
 	}
 
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),
@@ -91,6 +92,7 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 				vecty.Attribute("href", "https://vocdoni.link/entities/0x"+store.Entities.CurrentEntityID),
 				vecty.Property("target", store.Entities.CurrentEntityID),
 			),
+			vecty.Markup(vecty.Attribute("aria-label", "Link to entity "+store.Entities.CurrentEntityID+"'s profile page")),
 			vecty.Text("Entity Profile"),
 		),
 	}

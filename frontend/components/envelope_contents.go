@@ -48,6 +48,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 
 	if store.Envelopes.CurrentEnvelope == nil || dbtypes.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
 		return elem.Div(
+			vecty.Markup(vecty.Attribute("id", "main")),
 			renderServerConnectionBanner(),
 			elem.Main(vecty.Text("Envelope not available")),
 		)
@@ -99,6 +100,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	c.VotePackage = votePackage
 
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		DetailsView(
 			c.EnvelopeView(),
@@ -214,6 +216,7 @@ func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
 
 	return vecty.List{
 		elem.Navigation(
+			vecty.Markup(vecty.Attribute("aria-label", "Tab navigation")),
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(c, cTab),

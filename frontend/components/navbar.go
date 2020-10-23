@@ -25,6 +25,15 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 		vecty.Markup(
 			vecty.Class("navbar", "navbar-expand-lg", "navbar-dark", "bg-dark"),
 		),
+		vecty.Markup(vecty.Attribute("aria-label", "Application-wide navigation bar")),
+		elem.Anchor(
+			vecty.Markup(vecty.Class("skip-to-content-link")),
+			vecty.Markup(
+				vecty.Attribute("href", "#main"),
+			),
+			vecty.Markup(vecty.Attribute("aria-label", "Skip to content")),
+			vecty.Text("Link to content"),
+		),
 		elem.Div(
 			vecty.Markup(vecty.Class("container-fluid")),
 			Link("/", "Vochain Explorer", "navbar-brand"),

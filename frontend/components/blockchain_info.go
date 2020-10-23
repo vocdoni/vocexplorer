@@ -15,6 +15,7 @@ import (
 //BlockchainInfo is the component to display blockchain information
 type BlockchainInfo struct {
 	vecty.Core
+	header bool
 }
 
 //Render renders the BlockchainInfo component
@@ -95,14 +96,19 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 		),
 	))
 
+	var header *vecty.HTML
+	if b.header {
+		header = elem.Heading1(vecty.Text("Blockchain information"))
+	} else {
+		header = elem.Heading2(vecty.Text("Blockchain information"))
+	}
+
 	return elem.Section(
 		vecty.Markup(vecty.Class("blockchain-info")),
 		bootstrap.Card(
 			bootstrap.CardParams{
 				Body: vecty.List{
-					elem.Heading4(
-						vecty.Text("Blockchain information"),
-					),
+					header,
 					Container(
 						rows...,
 					),

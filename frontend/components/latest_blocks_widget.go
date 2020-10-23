@@ -37,7 +37,7 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 		vecty.Markup(vecty.Class("recent-blocks")),
 		bootstrap.Card(bootstrap.CardParams{
 			Body: vecty.List{
-				elem.Heading4(vecty.Text("Latest blocks")),
+				elem.Heading2(vecty.Text("Latest blocks")),
 				elem.Div(
 					blockList...,
 				),

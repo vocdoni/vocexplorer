@@ -32,7 +32,7 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 
 		return elem.Div(
 			vecty.Markup(vecty.Class("recent-processes")),
-			elem.Heading3(
+			elem.Heading2(
 				vecty.Text("Processes"),
 			),
 			p,

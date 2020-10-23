@@ -45,11 +45,12 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Blocks.CurrentBlock == nil {
 		return Container(
+			vecty.Markup(vecty.Attribute("id", "main")),
 			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
-						elem.Heading3(
+						elem.Heading2(
 							vecty.Text("Loading block..."),
 						),
 					},
@@ -58,6 +59,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 		)
 	}
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		elem.Section(
 			vecty.Markup(vecty.Class("details-view", "no-column")),

@@ -41,12 +41,13 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 	}
 	if store.Transactions.CurrentTransaction == nil {
 		return Container(
+			vecty.Markup(vecty.Attribute("id", "main")),
 			renderServerConnectionBanner(),
 			elem.Section(
 				bootstrap.Card(bootstrap.CardParams{
 					Body: vecty.List{
 						elem.Heading3(
-							vecty.Text("Transaction does not exist"),
+							vecty.Text("Loading transaction..."),
 						),
 					},
 				}),
@@ -80,6 +81,7 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 		))
 	}
 	return Container(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		contents)
 }
@@ -110,7 +112,7 @@ func TransactionView() vecty.List {
 						Link(
 							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Height),
 							"block "+util.IntToString(store.Transactions.CurrentTransaction.Height),
-							"",
+							"bold-link",
 						),
 					),
 				),
@@ -207,6 +209,7 @@ func (t *TxContents) TransactionDetails() vecty.ComponentOrHTML {
 
 	return vecty.List{
 		elem.Navigation(
+			vecty.Markup(vecty.Attribute("aria-label", "Tab navigation")),
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(t, contents),

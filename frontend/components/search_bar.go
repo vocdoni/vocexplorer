@@ -32,6 +32,7 @@ func (s *SearchBar) Render() vecty.ComponentOrHTML {
 			),
 			elem.Input(
 				vecty.Markup(vecty.Class("form-control", "mr-sm-2")),
+				vecty.Markup(vecty.Attribute("aria-label", "Table of average block times for given time periods.")),
 				vecty.Markup(vecty.Attribute("type", "search")),
 				vecty.Markup(vecty.Attribute("placeholder", "Search by process, entity, transaction, block height or address")),
 			),

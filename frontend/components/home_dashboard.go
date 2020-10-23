@@ -36,6 +36,7 @@ func (dash *DashboardView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	return elem.Div(
+		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
 		&StatsView{},
 	)

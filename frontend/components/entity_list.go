@@ -52,6 +52,7 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 								vecty.Attribute("href", "https://vocdoni.link/entities/0x"+ID),
 								vecty.Property("target", ID),
 							),
+							vecty.Markup(vecty.Attribute("aria-label", "Link to entity "+store.Entities.CurrentEntityID+"'s profile page")),
 							vecty.Text("Entity Profile"),
 						),
 					),
