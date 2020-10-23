@@ -37,9 +37,26 @@ func GetTxList(from int) ([config.ListSize]*types.Transaction, bool) {
 	return txList, true
 }
 
-//GetTx returns a transaction from the database
-func GetTx(height int64) (*types.Transaction, bool) {
-	body, ok := requestBody("/api/tx/?id=" + util.IntToString(height))
+//GetTxByHash returns a transaction from the database
+func GetTxByHash(hash string) (*types.Transaction, bool) {
+	body, ok := requestBody("/api/txbyhash/?id=" + hash)
+	if body != nil {
+		defer body.Close()
+	}
+	if !ok {
+		return &types.Transaction{}, false
+	}
+	var tx types.Transaction
+	err := json.NewDecoder(body).Decode(&tx)
+	if err != nil {
+		logger.Error(err)
+	}
+	return &tx, true
+}
+
+//GetTxByHeight returns a transaction from the database
+func GetTxByHeight(height int64) (*types.Transaction, bool) {
+	body, ok := requestBody("/api/txbyheight/?id=" + util.IntToString(height))
 	if body != nil {
 		defer body.Close()
 	}

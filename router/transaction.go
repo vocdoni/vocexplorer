@@ -55,8 +55,8 @@ func ListTxsHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// GetTxHandler writes the tx corresponding to given height key
-func GetTxHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
+// GetTxByHeightHandler writes the tx corresponding to given height key
+func GetTxByHeightHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()["id"]
 		if !ok || len(ids[0]) < 1 {
@@ -85,6 +85,11 @@ func GetTxHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request)
 		w.Write(packTransaction(raw))
 		log.Debugf("Sent tx %d", height)
 	}
+}
+
+// GetTxByHashHandler writes the tx corresponding to given hash key
+func GetTxByHashHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
+	return buildItemByIDHandler(d, "id", config.TxHashPrefix, nil, packTransaction)
 }
 
 // TxHeightFromHashHandler indirects the given tx hash

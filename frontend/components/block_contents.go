@@ -3,6 +3,7 @@ package components
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -129,18 +130,24 @@ func updateBlockTransactions() {
 		maxIndex = util.Min(util.Max(maxIndex-store.Blocks.TransactionPagination.Index, 0), maxIndex)
 		var rawTx dvotetypes.Tx
 		var transactions [config.ListSize]*dbtypes.Transaction
+		wg := new(sync.WaitGroup)
 		for i := 0; i < config.ListSize && maxIndex-i >= 0; i++ {
 			err := json.Unmarshal(store.Blocks.CurrentBlock.Block.Data.Txs[maxIndex-i], &rawTx)
 			if err != nil {
 				logger.Error(err)
 			}
-			hashString := fmt.Sprintf("%X", store.Blocks.CurrentBlock.Block.Data.Txs[maxIndex-i].Hash())
-			txHeight, _ := api.GetTxHeightFromHash(hashString)
-			fullTransaction, ok := api.GetTx(txHeight)
-			if ok {
-				transactions[i] = fullTransaction
-			}
+			// Asynchronously fetch all txs
+			wg.Add(1)
+			go func(index int) {
+				hashString := fmt.Sprintf("%X", store.Blocks.CurrentBlock.Block.Data.Txs[maxIndex-index].Hash())
+				fullTransaction, ok := api.GetTxByHash(hashString)
+				if ok {
+					transactions[index] = fullTransaction
+				}
+				wg.Done()
+			}(i)
 		}
+		wg.Wait()
 		reverseTxList(&transactions)
 		dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{TransactionList: transactions})
 	}

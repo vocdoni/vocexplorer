@@ -235,7 +235,7 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
-	tx, ok := api.GetTx(store.Transactions.CurrentTransactionHeight)
+	tx, ok := api.GetTxByHeight(store.Transactions.CurrentTransactionHeight)
 	if ok && tx != nil {
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
 	} else {

@@ -42,7 +42,8 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg, d *db.ExplorerDB) {
 	m.HandleFunc("/api/validatorblocksearch/", SearchBlocksByValidatorHandler(d))
 
 	// Transactions
-	m.HandleFunc("/api/tx/", GetTxHandler(d))
+	m.HandleFunc("/api/txbyheight/", GetTxByHeightHandler(d))
+	m.HandleFunc("/api/txbyhash/", GetTxByHashHandler(d))
 	m.HandleFunc("/api/listtxs/", ListTxsHandler(d))
 	m.HandleFunc("/api/txhash/", TxHeightFromHashHandler(d))
 	m.HandleFunc("/api/transactionsearch/", SearchTransactionsHandler(d))
