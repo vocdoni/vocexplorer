@@ -1,8 +1,9 @@
 package vochain
 
 import (
-	"encoding/hex"
+	"bytes"
 	"errors"
+	"fmt"
 
 	"gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/util"
@@ -12,11 +13,7 @@ import (
 
 // GetProcessKeys gets process keys
 func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
-	pid, err := hex.DecodeString(processID)
-	if err != nil {
-		return nil, err
-	}
-	p, err := vs.app.State.Process(pid, true)
+	p, err := vs.app.State.Process(processID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -57,19 +54,19 @@ func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
 }
 
 // GetProcListResults gets list of finished processes on the Vochain
-func (vs *VochainService) GetProcListResults(fromID string, listSize int64) ([]string, error) {
+func (vs *VochainService) GetProcListResults(fromID string, listSize int64) []string {
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	return vs.scrut.ProcessListWithResults(listSize, fromID)
+	return vs.scrut.List(listSize, util.TrimHex(fromID), types.ScrutinizerResultsPrefix)
 }
 
 // GetProcListLiveResults gets list of live processes on the Vochain
-func (vs *VochainService) GetProcListLiveResults(fromID string, listSize int64) ([]string, error) {
+func (vs *VochainService) GetProcListLiveResults(fromID string, listSize int64) []string {
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	return vs.scrut.ProcessListWithLiveResults(listSize, fromID)
+	return vs.scrut.List(listSize, util.TrimHex(fromID), types.ScrutinizerLiveProcessPrefix)
 }
 
 // GetProcessList gets list of processes for a given entity, starting at from
@@ -86,21 +83,29 @@ func (vs *VochainService) GetProcessList(entityID, fromID string, listSize int64
 	if len(fromID) > 0 {
 		fromID = util.TrimHex(fromID)
 		if !util.IsHexEncodedStringWithLength(fromID, types.ProcessIDsize) {
-			return nil, errors.New("cannot get process list: (malformed entityId)")
+			return nil, errors.New("cannot get process list: (malformed fromID)")
 		}
 	}
-	eid, err := hex.DecodeString(entityID)
+	fullProcessList, err := vs.scrut.Storage.Get([]byte(types.ScrutinizerEntityPrefix + entityID))
 	if err != nil {
-		return nil, errors.New("cannot decode entityID")
+		return nil, fmt.Errorf("cannot get entity process list: (%s)", err)
 	}
-	fromIDBytes := []byte{}
-	if fromID != "" {
-		fromIDBytes, err = hex.DecodeString(fromID)
-		if err != nil {
-			return nil, errors.New("cannot decode fromID")
+	var processList []string
+	fromLock := len(fromID) > 0
+	for _, process := range bytes.Split(fullProcessList, []byte(types.ScrutinizerEntityProcessSeparator)) {
+		if listSize < 1 || len(process) < 1 {
+			break
+		}
+		if !fromLock {
+			processList = append(processList, string(process))
+			listSize--
+		}
+		if fromLock && fromID == string(process) {
+			fromLock = false
 		}
 	}
-	return vs.scrut.ProcessList(eid, fromIDBytes, listSize)
+
+	return processList, nil
 }
 
 // GetProcessResults gets the results of a given process
@@ -112,11 +117,7 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	}
 
 	// Get process info
-	pid, err := hex.DecodeString(processID)
-	if err != nil {
-		return "", "", nil, errors.New("cannot decode processID")
-	}
-	procInfo, err := vs.scrut.ProcessInfo(pid)
+	procInfo, err := vs.scrut.ProcessInfo(processID)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -130,7 +131,7 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	}
 
 	// Get results info
-	vr, err := vs.scrut.VoteResult(pid)
+	vr, err := vs.scrut.VoteResult(processID)
 	if err != nil && err != scrutinizer.ErrNoResultsYet {
 		return procInfo.Type, state, nil, err
 	}

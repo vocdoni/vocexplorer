@@ -1,7 +1,6 @@
 package vochain
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -18,11 +17,7 @@ func (vs *VochainService) GetEnvelopeList(processID string, from int64, listSize
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return nil, errors.New("cannot get envelope list: (malformed processId)")
 	}
-	pid, err := hex.DecodeString(processID)
-	if err != nil {
-		return nil, errors.New("cannot decode processID")
-	}
-	nullifiers := vs.app.State.EnvelopeList(pid, from, listSize, true)
+	nullifiers := vs.app.State.EnvelopeList(processID, from, listSize, true)
 	strnull := []string{}
 	for _, n := range nullifiers {
 		strnull = append(strnull, fmt.Sprintf("%x", n))
@@ -41,15 +36,7 @@ func (vs *VochainService) GetEnvelope(processID, nullifier string) (*types.Vote,
 	if !util.IsHexEncodedStringWithLength(nullifier, types.VoteNullifierSize) {
 		return nil, errors.New("cannot get envelope: (malformed nullifier)")
 	}
-	pid, err := hex.DecodeString(util.TrimHex(processID))
-	if err != nil {
-		return nil, err
-	}
-	nullifierBytes, err := hex.DecodeString(util.TrimHex(nullifier))
-	if err != nil {
-		return nil, err
-	}
-	envelope, err := vs.app.State.Envelope(pid, nullifierBytes, true)
+	envelope, err := vs.app.State.Envelope(processID+"_"+util.TrimHex(nullifier), true)
 	if err != nil {
 		return nil, err
 	}

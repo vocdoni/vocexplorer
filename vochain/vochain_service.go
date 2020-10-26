@@ -25,13 +25,12 @@ func InitVochain(cfg *config.MainCfg) (*VochainService, error) {
 	var err error
 	vs := VochainService{}
 	cfg.VochainConfig.DataDir = cfg.DataDir + "/vochain"
-	cfg.VochainConfig.Chain = cfg.Chain
 	if cfg.Chain != "dev" {
 		cfg.VochainConfig.Dev = false
 	} else {
 		cfg.VochainConfig.Dev = true
 	}
-	vs.app, vs.scrut, vs.info, err = service.Vochain(cfg.VochainConfig, true, false, nil, nil)
+	vs.app, vs.scrut, vs.info, err = service.Vochain(cfg.VochainConfig, cfg.VochainConfig.Dev, true, false, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -56,5 +55,4 @@ func (vs *VochainService) Close() {
 	vs.app.Node.Stop()
 	vs.app.Node.Wait()
 	vs.scrut.Storage.Close()
-	vs.app.State.Store.Close()
 }

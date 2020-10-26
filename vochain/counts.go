@@ -1,7 +1,6 @@
 package vochain
 
 import (
-	"encoding/hex"
 	"errors"
 
 	"gitlab.com/vocdoni/go-dvote/types"
@@ -10,7 +9,7 @@ import (
 
 // GetEntityCount gets number of entities
 func (vs *VochainService) GetEntityCount() int64 {
-	return vs.scrut.EntityCount()
+	return int64(len(vs.scrut.List(int64(^uint(0)>>1), "", types.ScrutinizerEntityPrefix))) - 1
 }
 
 // GetProcessCount gets number of processes
@@ -25,11 +24,7 @@ func (vs *VochainService) GetEnvelopeCount(processID string) (int64, error) {
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return 0, errors.New("cannot get envelope height: (malformed processId)")
 	}
-	pid, err := hex.DecodeString(processID)
-	if err != nil {
-		return 0, err
-	}
-	votes := vs.app.State.CountVotes(pid, true)
+	votes := vs.app.State.CountVotes(processID, true)
 	return votes, nil
 }
 
@@ -40,16 +35,9 @@ func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
 	listSize := int64(100)
 	for {
 		// Get all live processes, sum envelopes
-		newPIDs, err := vs.GetProcListLiveResults(from, listSize)
-		if err != nil {
-			return 0, err
-		}
+		newPIDs := vs.GetProcListLiveResults(from, listSize)
 		for _, pid := range newPIDs {
-			rawPid, err := hex.DecodeString(pid)
-			if err != nil {
-				return 0, err
-			}
-			votes += vs.app.State.CountVotes(rawPid, true)
+			votes += vs.app.State.CountVotes(pid, true)
 		}
 		if len(newPIDs) < int(listSize) {
 			break
@@ -58,16 +46,9 @@ func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
 	}
 	for {
 		// Do the same for ended processes
-		newPIDs, err := vs.GetProcListResults(from, listSize)
-		if err != nil {
-			return 0, err
-		}
+		newPIDs := vs.GetProcListResults(from, listSize)
 		for _, pid := range newPIDs {
-			rawPid, err := hex.DecodeString(pid)
-			if err != nil {
-				return 0, err
-			}
-			votes += vs.app.State.CountVotes(rawPid, true)
+			votes += vs.app.State.CountVotes(pid, true)
 		}
 		if len(newPIDs) < int(listSize) {
 			break

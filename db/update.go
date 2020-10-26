@@ -315,15 +315,24 @@ func (d *ExplorerDB) updateEntityList() {
 		latestEntity = []byte{}
 	}
 	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
-	newEntities, err := d.Vs.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)), 100)
-	if err != nil {
-		log.Warn(err)
-	}
-	if len(newEntities) < 1 {
-		log.Warn("No new entities retrieved")
+	entities := d.Vs.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)), 100)
+	if len(entities) < 1 {
+		log.Warn("No entities retrieved")
 		return
 	}
+	log.Debugf("Entities: %v", entities)
 	heightMap := GetHeightMap(d.Db, config.EntityProcessCountMapKey)
+
+	// Make sure we are only storing newly-fetched entities. This is needed if fromID is not working.
+	var newEntities []string
+	for _, entity := range entities {
+		if _, ok := heightMap.GetHeights()[entity]; !ok {
+			if !util.StringInSlice(entity, newEntities) {
+				newEntities = append(newEntities, entity)
+			}
+		}
+	}
+	log.Debugf("New Entities: %v", newEntities)
 
 	// write new entities to db
 	batch := d.Db.NewBatch()
@@ -560,11 +569,11 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Errorf("cannot extract address from public key: (%s)", err)
 		}
-		rawPID, err := hex.DecodeString(votePackage.ProcessID)
+		nullifier, err := vochain.GenerateNullifier(addr, votePackage.ProcessID)
 		if err != nil {
-			log.Errorf("cannot generate nullifier: (%s)", err)
+			log.Errorf("cannot generate envelope nullifier: (%s)", err)
 		}
-		votePackage.Nullifier = hex.EncodeToString(vochain.GenerateNullifier(addr, rawPID))
+		votePackage.Nullifier = util.TrimHex(nullifier)
 		for _, index := range voteTx.EncryptionKeyIndexes {
 			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
 		}
@@ -580,10 +589,6 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		// Write nullifier:globalHeight
 		storeHeight := voctypes.Height{Height: state.envelopeHeight}
 		rawHeight, err := proto.Marshal(&storeHeight)
-		if err != nil {
-			log.Error(err)
-		}
-		nullifier, err := hex.DecodeString(util.TrimHex(votePackage.Nullifier))
 		if err != nil {
 			log.Error(err)
 		}
