@@ -1,7 +1,6 @@
 FROM golang:1.15.2-alpine AS builder
 
 ENV GOROOT /usr/local/go
-ENV CGO_ENABLED=0
 WORKDIR /src
 
 COPY . .
