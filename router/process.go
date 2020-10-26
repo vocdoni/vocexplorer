@@ -78,8 +78,8 @@ func GetProcessResultsHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *h
 		t, state, results, err := d.Vs.GetProcessResults(id)
 		if err != nil {
 			log.Warn(err)
-			http.Error(w, "Cannot get results for process "+id, http.StatusInternalServerError)
-			return
+			// http.Error(w, "Cannot get results for process "+id, http.StatusInternalServerError)
+			// return
 		}
 		json.NewEncoder(w).Encode(&api.ProcessResults{
 			Type:    t,

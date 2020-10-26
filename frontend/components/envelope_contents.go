@@ -85,14 +85,14 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 			decryptionStatus = "Unable to decrypt: no keys available"
 			displayPackage = false
 		}
-		if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
-			var err error
-			votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
-			if err != nil {
-				logger.Error(err)
-				decryptionStatus = "Unable to decode vote"
-				displayPackage = false
-			}
+	}
+	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
+		var err error
+		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
+		if err != nil {
+			logger.Error(err)
+			decryptionStatus = "Unable to decode vote"
+			displayPackage = false
 		}
 	}
 	c.DecryptionStatus = decryptionStatus

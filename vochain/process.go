@@ -121,6 +121,8 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 		return "", "", nil, err
 	}
 	var state string
+
+	// TODO update to smart contracts v2. No canceled boolean
 	if procInfo.Canceled {
 		state = "canceled"
 	} else {
@@ -130,10 +132,10 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	// Get results info
 	vr, err := vs.scrut.VoteResult(pid)
 	if err != nil && err != scrutinizer.ErrNoResultsYet {
-		return "", "", nil, err
+		return procInfo.Type, state, nil, err
 	}
 	if err == scrutinizer.ErrNoResultsYet {
-		return "", "", nil, errors.New(scrutinizer.ErrNoResultsYet.Error())
+		return procInfo.Type, state, nil, errors.New(scrutinizer.ErrNoResultsYet.Error())
 	}
 	return procInfo.Type, state, vr, nil
 }

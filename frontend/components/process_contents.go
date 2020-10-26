@@ -62,6 +62,19 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		),
 		elem.Heading2(vecty.Text(store.Processes.CurrentProcess.ID)),
 		elem.Div(
+			elem.Span(
+				vecty.Markup(vecty.Class("title")),
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", "https://app.vocdoni.net/processes/#/0x"+store.Processes.CurrentProcess.EntityID+"/0x"+store.Processes.CurrentProcess.ID),
+						vecty.Property("target", store.Processes.CurrentProcess.ID),
+					),
+					vecty.Markup(vecty.Attribute("aria-label", "Link to process "+store.Processes.CurrentProcess.ID+"'s profile page")),
+					vecty.Text("Process Profile"),
+				),
+			),
+		),
+		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
 				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcessResults.State)),
