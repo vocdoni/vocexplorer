@@ -3,8 +3,8 @@ package vochain
 import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/tendermint/tendermint/p2p"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
@@ -30,6 +30,7 @@ func (vs *VochainService) GetStatus() *proto.BlockchainInfo {
 }
 
 // GetValidators the list of validators
-func (vs *VochainService) GetValidators() ([]types.GenesisValidator, error) {
-	return vs.scrut.VochainState.Validators(false)
+func (vs *VochainService) GetValidators() ([]*tmtypes.Validator, error) {
+	validators := vs.app.Node.ConsensusState().Validators
+	return validators.Validators, nil
 }

@@ -232,34 +232,27 @@ func (d *ExplorerDB) fetchBlock(height int64, wg *sync.WaitGroup, myHeight, next
 
 func (d *ExplorerDB) updateValidatorList() {
 	latestBlockHeight := GetHeight(d.Db, config.LatestBlockHeightKey, 0)
-	latestValidatorCount := GetHeight(d.Db, config.LatestValidatorCountKey, 0)
 	if latestBlockHeight.GetHeight() > 0 {
-		d.fetchValidators(latestBlockHeight.GetHeight(), latestValidatorCount.GetHeight())
-
+		d.fetchValidators(latestBlockHeight.GetHeight())
 	}
 }
 
-func (d *ExplorerDB) fetchValidators(blockHeight, validatorCount int64) {
+func (d *ExplorerDB) fetchValidators(blockHeight int64) {
+	validatorCount := int64(0)
 	resultValidators, err := d.Vs.GetValidators()
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	if len(resultValidators) < int(validatorCount) {
-		return
-	}
 	batch := d.Db.NewBatch()
 	// Cast each validator as storage struct, marshal, write to batch
-	for i, validator := range resultValidators {
-		if i < int(validatorCount) {
-			continue
-		}
+	for _, validator := range resultValidators {
 		validatorCount++
 		var storeValidator voctypes.Validator
 		storeValidator.Address = validator.Address
 		storeValidator.Height = &voctypes.Height{Height: validatorCount}
-		// storeValidator.ProposerPriority = TODO
-		storeValidator.VotingPower = validator.Power
+		storeValidator.ProposerPriority = validator.ProposerPriority
+		storeValidator.VotingPower = validator.VotingPower
 		storeValidator.PubKey = validator.PubKey.Bytes()
 		encValidator, err := proto.Marshal(&storeValidator)
 		if err != nil {
