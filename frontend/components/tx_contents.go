@@ -23,7 +23,8 @@ import (
 type TxContents struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered bool
+	Rendered    bool
+	Unavailable bool
 }
 
 // Mount triggers when TxContents renders
@@ -39,20 +40,11 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 	if !t.Rendered {
 		return LoadingBar()
 	}
+	if t.Unavailable {
+		return Unavailable("Transaction unavailable")
+	}
 	if store.Transactions.CurrentTransaction == nil {
-		return Container(
-			vecty.Markup(vecty.Attribute("id", "main")),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading3(
-							vecty.Text("Loading transaction..."),
-						),
-					},
-				}),
-			),
-		)
+		return Unavailable("Loading transaction...")
 	}
 	contents := vecty.List{
 		elem.Section(
@@ -236,12 +228,16 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 
 // UpdateTxContents keeps the transaction contents up to date
 func UpdateTxContents(d *TxContents) {
+	dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
 	tx, ok := api.GetTxByHeight(store.Transactions.CurrentTransactionHeight)
 	if ok && tx != nil {
+		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
 	} else {
+		d.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 		return
 	}
 	// Set block associated with transaction

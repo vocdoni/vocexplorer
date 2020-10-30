@@ -20,7 +20,7 @@ type ProcessView struct {
 func (home *ProcessView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "process"})
 	dash := new(components.ProcessContentsView)
-	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &dbtypes.Process{ID: router.GetNamedVar(home)["id"], EntityID: "loading..."}})
+	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &dbtypes.Process{ID: router.GetNamedVar(home)["id"]}})
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
 	if !store.Listeners.Has(dash) {

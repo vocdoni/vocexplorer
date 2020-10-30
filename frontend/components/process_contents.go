@@ -20,7 +20,8 @@ import (
 type ProcessContentsView struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered bool
+	Rendered    bool
+	Unavailable bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
@@ -35,6 +36,12 @@ func (dash *ProcessContentsView) Mount() {
 func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	if !dash.Rendered {
 		return LoadingBar()
+	}
+	if dash.Unavailable {
+		return Unavailable("Process unavailable")
+	}
+	if store.Processes.CurrentProcess == nil || store.Processes.CurrentProcess.EntityID == "" {
+		return Unavailable("Loading process...")
 	}
 
 	if store.Processes.CurrentProcessResults.ProcessType == "" {
@@ -188,8 +195,13 @@ func renderResults(results [][]uint32) vecty.ComponentOrHTML {
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	process, ok := api.GetProcess(store.Processes.CurrentProcess.ID)
-	if ok {
+	if ok && process != nil {
+		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: process})
+	} else {
+		d.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
+		return
 	}
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	if !update.CheckCurrentPage("process", ticker) {
@@ -237,10 +249,6 @@ func UpdateProcessContents(d *ProcessContentsView) {
 func updateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	update.CurrentProcessResults()
-	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
-	if ok {
-		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
-	}
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
 		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcessResults.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
 	}

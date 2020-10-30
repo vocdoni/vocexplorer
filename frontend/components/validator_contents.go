@@ -22,7 +22,8 @@ import (
 type ValidatorContents struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered bool
+	Rendered    bool
+	Unavailable bool
 }
 
 // Mount triggers when ValidatorContents renders
@@ -39,21 +40,13 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 	if !contents.Rendered {
 		return LoadingBar()
 	}
-	if store.Validators.CurrentValidator == nil {
-		return Container(
-			vecty.Markup(vecty.Attribute("id", "main")),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading3(
-							vecty.Text("Loading validator..."),
-						),
-					},
-				}),
-			),
-		)
+	if contents.Unavailable {
+		return Unavailable("Validator unavailable")
 	}
+	if store.Validators.CurrentValidator == nil {
+		return Unavailable("Loading validator...")
+	}
+
 	return Container(
 		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
@@ -83,11 +76,20 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 
 // UpdateValidatorContents keeps the validator contents page up to date
 func (contents *ValidatorContents) UpdateValidatorContents() {
+	dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: nil})
+	dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: 0})
+	dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
+
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
-	if ok {
+	if ok && validator != nil {
+		contents.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
+	} else {
+		contents.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: nil})
+		return
 	}
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {

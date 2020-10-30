@@ -7,6 +7,7 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -100,6 +101,8 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 
 // UpdateEntityContents keeps the dashboard data up to date
 func UpdateEntityContents(d *EntityContentsView) {
+	// Set entity process list to nil so previous list is not displayed
+	dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: [10]*dbtypes.Process{}})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})

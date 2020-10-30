@@ -27,7 +27,8 @@ import (
 type BlockContents struct {
 	vecty.Core
 	vecty.Mounter
-	Rendered bool
+	Rendered    bool
+	Unavailable bool
 }
 
 // Mount triggers when BlockContents renders
@@ -43,20 +44,11 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 	if !c.Rendered {
 		return LoadingBar()
 	}
+	if c.Unavailable {
+		return Unavailable("Block unavailable")
+	}
 	if store.Blocks.CurrentBlock == nil {
-		return Container(
-			vecty.Markup(vecty.Attribute("id", "main")),
-			renderServerConnectionBanner(),
-			elem.Section(
-				bootstrap.Card(bootstrap.CardParams{
-					Body: vecty.List{
-						elem.Heading2(
-							vecty.Text("Loading block..."),
-						),
-					},
-				}),
-			),
-		)
+		return Unavailable("Loading block...")
 	}
 	return Container(
 		vecty.Markup(vecty.Attribute("id", "main")),
@@ -87,13 +79,19 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 
 // UpdateBlockContents keeps the block contents up to date
 func UpdateBlockContents(d *BlockContents) {
+	// Set block to nil so previous block is not displayed
+	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
 	logger.Info("getting block")
 	block, ok := api.GetBlock(store.Blocks.CurrentBlockHeight)
 	if block != nil && ok {
-		logger.Info("got block")
+		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
+	} else {
+		d.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
+		return
 	}
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	if !update.CheckCurrentPage("block", ticker) {

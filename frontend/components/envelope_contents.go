@@ -30,6 +30,7 @@ type EnvelopeContents struct {
 	DisplayPackage   bool
 	VotePackage      *dvotetypes.VotePackage
 	Rendered         bool
+	Unavailable      bool
 }
 
 // Mount triggers EnvelopeContents  renders
@@ -45,14 +46,13 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	if !c.Rendered {
 		return LoadingBar()
 	}
-
-	if store.Envelopes.CurrentEnvelope == nil || dbtypes.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
-		return elem.Div(
-			vecty.Markup(vecty.Attribute("id", "main")),
-			renderServerConnectionBanner(),
-			elem.Main(vecty.Text("Envelope not available")),
-		)
+	if c.Unavailable {
+		return Unavailable("Envelope unavailable")
 	}
+	if store.Envelopes.CurrentEnvelope == nil || dbtypes.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
+		return Unavailable("Loading envelope...")
+	}
+
 	// Decode vote package
 	var decryptionStatus string
 	displayPackage := false
@@ -124,11 +124,19 @@ func (t *EnvelopeTab) dispatch() interface{} {
 
 // UpdateEnvelopeContents keeps the envelope contents up to date
 func UpdateEnvelopeContents(d *EnvelopeContents) {
+	// Set current envelope to nil so previous one is not displayed
+	dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch actual envelope contents
 	envelope, ok := api.GetEnvelope(store.Envelopes.CurrentEnvelopeHeight)
 	if ok {
+		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: envelope})
+	}
+	if store.Envelopes.CurrentEnvelope == nil || !ok {
+		d.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: nil})
+		return
 	}
 	// Ensure process keys are stored
 	if _, ok := store.Processes.ProcessKeys[store.Envelopes.CurrentEnvelope.ProcessID]; !ok {

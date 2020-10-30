@@ -62,12 +62,20 @@ func EnvelopeProcessResults() {
 // CurrentProcessResults updates current process information
 func CurrentProcessResults() {
 	results, ok := api.GetProcessResults(strings.ToLower(store.Processes.CurrentProcess.ID))
+	if !ok || results == nil {
+		return
+	}
+	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
+	if !ok {
+		return
+	}
 	if ok && results != nil {
 		dispatcher.Dispatch(&actions.SetCurrentProcessResults{
 			Process: storeutil.Process{
-				ProcessType: results.Type,
-				State:       results.State,
-				Results:     results.Results},
+				EnvelopeCount: int(newVal),
+				ProcessType:   results.Type,
+				State:         results.State,
+				Results:       results.Results},
 		})
 	}
 }
