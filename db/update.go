@@ -315,15 +315,24 @@ func (d *ExplorerDB) updateEntityList() {
 		latestEntity = []byte{}
 	}
 	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
-	newEntities, err := d.Vs.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)), 100)
+	entities, err := d.Vs.GetScrutinizerEntities(config.MaxListSize)
 	if err != nil {
 		log.Warn(err)
 	}
-	if len(newEntities) < 1 {
-		log.Warn("No new entities retrieved")
+	if len(entities) < 1 {
+		log.Warn("No entities retrieved")
 		return
 	}
 	heightMap := GetHeightMap(d.Db, config.EntityProcessCountMapKey)
+
+	// Make sure we are only storing newly-fetched entities.
+	var newEntities []string
+	for _, entity := range entities {
+		if _, ok := heightMap.GetHeights()[entity]; !ok {
+			newEntities = append(newEntities, entity)
+		}
+	}
+	log.Debugf("New Entities: %v", newEntities)
 
 	// write new entities to db
 	batch := d.Db.NewBatch()
@@ -382,6 +391,20 @@ func (d *ExplorerDB) updateProcessList() {
 
 	// Get height map for list of entities, current heights stored
 	heightMap := GetHeightMap(d.Db, config.EntityProcessCountMapKey)
+	processList := new(voctypes.StringList)
+	has, err := d.Db.Has([]byte(config.GlobalProcessListKey))
+	if err != nil {
+		log.Warn(err)
+		return
+	}
+	if has {
+		rawProcessList, err := d.Db.Get([]byte(config.GlobalProcessListKey))
+		if err != nil {
+			log.Warn(err)
+			return
+		}
+		proto.Unmarshal(rawProcessList, processList)
+	}
 	// Initialize concurrency helper variables
 	heightMapMutex := new(sync.Mutex)
 	requestMutex := new(sync.Mutex)
@@ -391,7 +414,7 @@ func (d *ExplorerDB) updateProcessList() {
 
 	for entity, localHeight := range heightMap.Heights {
 		wg.Add(1)
-		go d.fetchProcesses(entity, localHeight, localProcessHeight, heightMap, heightMapMutex, requestMutex, &numNewProcesses, wg)
+		go d.fetchProcesses(entity, localHeight, localProcessHeight, processList, heightMap, heightMapMutex, requestMutex, &numNewProcesses, wg)
 	}
 	log.Debugf("Found %d stored entities", numEntities)
 
@@ -407,6 +430,12 @@ func (d *ExplorerDB) updateProcessList() {
 	}
 	heightMapKey := []byte(config.EntityProcessCountMapKey)
 	batch.Put(heightMapKey, rawHeightMap)
+	// write global process list
+	encProcessList, err := proto.Marshal(processList)
+	if err != nil {
+		log.Error(err)
+	}
+	batch.Put([]byte(config.GlobalProcessListKey), encProcessList)
 	// Write global process height
 	encHeight := voctypes.Height{Height: localProcessHeight + int64(numNewProcesses)}
 	rawHeight, err := proto.Marshal(&encHeight)
@@ -418,7 +447,7 @@ func (d *ExplorerDB) updateProcessList() {
 	batch.Write()
 }
 
-func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, heightMap *voctypes.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, wg *sync.WaitGroup) {
+func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, processList *voctypes.StringList, heightMap *voctypes.HeightMap, heightMapMutex, requestMutex *sync.Mutex, numNew *int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	batch := d.Db.NewBatch()
 
@@ -461,16 +490,31 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, he
 	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
 		lastPID = ""
 	}
-	newProcessList, err := d.Vs.GetProcessList(entity, lastPID, 100)
+	processes, err := d.Vs.GetProcessList(entity, config.MaxListSize)
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
+	if len(processes) < 1 {
+		log.Warn("No processes retrieved")
+		return
+	}
+
+	// Make sure we are only storing newly-fetched entities.
+	var newProcesses []string
+	for _, process := range processes {
+		if !util.StringInSlice(process, processList.GetItems()) {
+			newProcesses = append(newProcesses, process)
+			processList.Items = append(processList.GetItems(), process)
+		}
+	}
+	log.Debugf("New Entities: %v", newProcesses)
+
 	requestMutex.Unlock()
-	if len(newProcessList) < 1 {
+	if len(newProcesses) < 1 {
 		return
 	}
 	var process voctypes.Process
-	for _, processID := range newProcessList {
+	for _, processID := range newProcesses {
 		heightMapMutex.Lock()
 		*numNew++
 		globalHeight := int(height) + *numNew
@@ -562,7 +606,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		}
 		rawPID, err := hex.DecodeString(votePackage.ProcessID)
 		if err != nil {
-			log.Errorf("cannot generate nullifier: (%s)", err)
+			log.Errorf("cannot decode process id: (%s)", err)
 		}
 		votePackage.Nullifier = hex.EncodeToString(vochain.GenerateNullifier(addr, rawPID))
 		for _, index := range voteTx.EncryptionKeyIndexes {

@@ -52,6 +52,10 @@ message ItemList {
     repeated bytes items = 1;
 }
 
+message StringList {
+    repeated string items = 1;
+}
+
 message Validator {
     bytes Address = 1;
     // Bytes-representation of PubKey. Could be nested pubkey struct

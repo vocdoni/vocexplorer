@@ -6,6 +6,7 @@ import (
 
 	"gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/go-dvote/util"
+	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
 // GetEntityCount gets number of entities
@@ -35,12 +36,11 @@ func (vs *VochainService) GetEnvelopeCount(processID string) (int64, error) {
 
 // GetTotalEnvelopeCount gets number of envelopes
 func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
-	from := ""
 	votes := int64(0)
-	listSize := int64(100)
+	listSize := int64(config.MaxListSize)
 	for {
 		// Get all live processes, sum envelopes
-		newPIDs, err := vs.GetProcListLiveResults(from, listSize)
+		newPIDs, err := vs.GetProcListLiveResults(listSize)
 		if err != nil {
 			return 0, err
 		}
@@ -54,11 +54,10 @@ func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
 		if len(newPIDs) < int(listSize) {
 			break
 		}
-		from = newPIDs[len(newPIDs)]
 	}
 	for {
 		// Do the same for ended processes
-		newPIDs, err := vs.GetProcListResults(from, listSize)
+		newPIDs, err := vs.GetProcListResults(listSize)
 		if err != nil {
 			return 0, err
 		}
@@ -72,19 +71,17 @@ func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
 		if len(newPIDs) < int(listSize) {
 			break
 		}
-		from = newPIDs[len(newPIDs)]
 	}
 	return votes, nil
 }
 
 // GetEntityProcessCount gets number of processes for a given entity
 func (vs *VochainService) GetEntityProcessCount(eid string) (int64, error) {
-	from := ""
 	processes := int64(0)
 	listSize := int64(100)
 	for {
 		// Get all live processes, sum envelopes
-		newPIDs, err := vs.GetProcessList(eid, from, listSize)
+		newPIDs, err := vs.GetProcessList(eid, listSize)
 		if err != nil {
 			return 0, err
 		}
@@ -92,7 +89,6 @@ func (vs *VochainService) GetEntityProcessCount(eid string) (int64, error) {
 		if len(newPIDs) < int(listSize) {
 			break
 		}
-		from = newPIDs[len(newPIDs)]
 	}
 	return processes, nil
 }

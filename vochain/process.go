@@ -57,50 +57,31 @@ func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
 }
 
 // GetProcListResults gets list of finished processes on the Vochain
-func (vs *VochainService) GetProcListResults(fromID string, listSize int64) ([]string, error) {
-	if listSize > MaxListIterations || listSize <= 0 {
-		listSize = MaxListIterations
-	}
-	return vs.scrut.ProcessListWithResults(listSize, fromID)
+func (vs *VochainService) GetProcListResults(listSize int64) ([]string, error) {
+	return vs.scrut.ProcessListWithResults(listSize, "")
 }
 
 // GetProcListLiveResults gets list of live processes on the Vochain
-func (vs *VochainService) GetProcListLiveResults(fromID string, listSize int64) ([]string, error) {
-	if listSize > MaxListIterations || listSize <= 0 {
-		listSize = MaxListIterations
-	}
-	return vs.scrut.ProcessListWithLiveResults(listSize, fromID)
+func (vs *VochainService) GetProcListLiveResults(listSize int64) ([]string, error) {
+	return vs.scrut.ProcessListWithLiveResults(listSize, "")
 }
 
-// GetProcessList gets list of processes for a given entity, starting at from
-func (vs *VochainService) GetProcessList(entityID, fromID string, listSize int64) ([]string, error) {
+// GetProcessList gets list of processes for a given entity
+func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([]string, error) {
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	// check/sanitize eid and fromId
+	// check/sanitize eid
 	entityID = util.TrimHex(entityID)
 	if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
 		!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
 		return nil, errors.New("cannot get process list: (malformed entityId)")
 	}
-	if len(fromID) > 0 {
-		fromID = util.TrimHex(fromID)
-		if !util.IsHexEncodedStringWithLength(fromID, types.ProcessIDsize) {
-			return nil, errors.New("cannot get process list: (malformed entityId)")
-		}
-	}
 	eid, err := hex.DecodeString(entityID)
 	if err != nil {
 		return nil, errors.New("cannot decode entityID")
 	}
-	fromIDBytes := []byte{}
-	if fromID != "" {
-		fromIDBytes, err = hex.DecodeString(fromID)
-		if err != nil {
-			return nil, errors.New("cannot decode fromID")
-		}
-	}
-	return vs.scrut.ProcessList(eid, fromIDBytes, listSize)
+	return vs.scrut.ProcessList(eid, []byte{}, listSize)
 }
 
 // GetProcessResults gets the results of a given process

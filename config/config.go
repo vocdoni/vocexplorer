@@ -22,6 +22,8 @@ type MainCfg struct {
 const (
 	//ListSize is the number of cards shown in list of blocks/processes/etc
 	ListSize = 10
+	//MaxListSize is the largest number of elements in a list
+	MaxListSize = 1 << 32
 	//HomeWidgetBlocksListSize is the number of blocks shown on the homepage
 	HomeWidgetBlocksListSize = 4
 	//NumBlockUpdates is the number of blocks updated per db batch
@@ -88,4 +90,6 @@ const (
 	MaxTxsPerMinuteKey = "MaxTxsMinute"
 	// MaxTxsMinuteID is the unix code for the start of the minute with the maximum number of txs
 	MaxTxsMinuteID = "MaxMinute"
+	// GlobalProcessListKey is the key for the global list of processes
+	GlobalProcessListKey = "ProcList"
 )

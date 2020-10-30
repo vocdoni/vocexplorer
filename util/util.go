@@ -105,6 +105,16 @@ func SearchSlice(source []string, search string) []string {
 	return results
 }
 
+// StringInSlice returns true if given string is in the list of strings
+func StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 // TrimSlice trims a slice of strings to lim elements. If rev is set to true, trims from beginning rather than end.
 func TrimSlice(slice []string, lim int, page *int) []string {
 	if *page < 0 {
