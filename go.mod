@@ -11,7 +11,7 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.5
-	gitlab.com/vocdoni/go-dvote v0.6.1-0.20201027083657-e5f05536b78c
+	gitlab.com/vocdoni/go-dvote v0.6.1-0.20201111164931-643153a682a4
 	golang.org/x/tools v0.0.0-20200729181040-64cdafbe085c // indirect
 	google.golang.org/protobuf v1.25.0
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
