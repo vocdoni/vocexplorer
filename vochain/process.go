@@ -67,7 +67,7 @@ func (vs *VochainService) GetProcListLiveResults(listSize int64) ([]string, erro
 }
 
 // GetProcessList gets list of processes for a given entity
-func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([]string, error) {
+func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]byte, error) {
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}

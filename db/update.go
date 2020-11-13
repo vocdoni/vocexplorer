@@ -323,6 +323,7 @@ func (d *ExplorerDB) updateEntityList() {
 		log.Warn("No entities retrieved")
 		return
 	}
+
 	heightMap := GetHeightMap(d.Db, config.EntityProcessCountMapKey)
 
 	// Make sure we are only storing newly-fetched entities.
@@ -502,12 +503,13 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, pr
 	// Make sure we are only storing newly-fetched entities.
 	var newProcesses []string
 	for _, process := range processes {
-		if !util.StringInSlice(process, processList.GetItems()) {
-			newProcesses = append(newProcesses, process)
-			processList.Items = append(processList.GetItems(), process)
+		processString := hex.EncodeToString(process)
+		if !util.StringInSlice(processString, processList.GetItems()) {
+			newProcesses = append(newProcesses, processString)
+			processList.Items = append(processList.GetItems(), processString)
 		}
 	}
-	log.Debugf("New Entities: %v", newProcesses)
+	log.Debugf("New Processes: %v", newProcesses)
 
 	requestMutex.Unlock()
 	if len(newProcesses) < 1 {
@@ -604,7 +606,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Errorf("cannot extract address from public key: (%s)", err)
 		}
-		rawPID, err := hex.DecodeString(votePackage.ProcessID)
+		rawPID, err := hex.DecodeString(util.TrimHex(votePackage.ProcessID))
 		if err != nil {
 			log.Errorf("cannot decode process id: (%s)", err)
 		}

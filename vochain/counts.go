@@ -11,7 +11,8 @@ import (
 
 // GetEntityCount gets number of entities
 func (vs *VochainService) GetEntityCount() int64 {
-	return vs.scrut.EntityCount()
+	list, _ := vs.scrut.EntityList(config.MaxListSize, "")
+	return int64(len(list))
 }
 
 // GetProcessCount gets number of processes
