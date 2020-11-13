@@ -141,7 +141,7 @@ func processActions(action interface{}) {
 		Processes.CurrentProcess = a.Process
 
 	case *actions.SetCurrentProcessEnvelopes:
-		Processes.CurrentProcessResults.Envelopes = a.EnvelopeList
+		Processes.CurrentProcessEnvelopes = a.EnvelopeList
 
 	default:
 		return // don't fire listeners

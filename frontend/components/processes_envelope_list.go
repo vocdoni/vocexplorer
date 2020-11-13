@@ -7,7 +7,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
@@ -31,7 +30,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			RenderSearchBar: false,
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
-			return renderProcessEnvelopes(p, store.Processes.CurrentProcessResults, index)
+			return renderProcessEnvelopes(p, index)
 		}
 		return elem.Div(
 			p,
@@ -43,15 +42,16 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelopes(p *Pagination, process storeutil.Process, index int) vecty.ComponentOrHTML {
+func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
+
 	var EnvelopeList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(process.Envelopes) - 1; i >= len(process.Envelopes)-p.ListSize; i-- {
-		if dbtypes.EnvelopeIsEmpty(process.Envelopes[i]) {
+	for i := len(store.Processes.CurrentProcessEnvelopes) - 1; i >= len(store.Processes.CurrentProcessEnvelopes)-p.ListSize; i-- {
+		if dbtypes.EnvelopeIsEmpty(store.Processes.CurrentProcessEnvelopes[i]) {
 			empty--
 		} else {
-			envelope := process.Envelopes[i]
+			envelope := store.Processes.CurrentProcessEnvelopes[i]
 			EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
 		}
 	}

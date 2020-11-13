@@ -8,15 +8,16 @@ import (
 
 // Processes stores the current processes information
 type Processes struct {
-	Count                 int
-	ProcessResults        map[string]Process
-	ProcessKeys           map[string]*api.Pkeys
-	Processes             [config.ListSize]*dbtypes.Process
-	Pagination            PageStore
-	EnvelopePagination    PageStore
-	EnvelopeHeights       map[string]int64
-	CurrentProcessResults Process
-	CurrentProcess        *dbtypes.Process
+	Count                   int
+	ProcessResults          map[string]Process
+	ProcessKeys             map[string]*api.Pkeys
+	Processes               [config.ListSize]*dbtypes.Process
+	Pagination              PageStore
+	EnvelopePagination      PageStore
+	EnvelopeHeights         map[string]int64
+	CurrentProcessResults   Process
+	CurrentProcess          *dbtypes.Process
+	CurrentProcessEnvelopes [config.ListSize]*dbtypes.Envelope
 }
 
 // Process holds info about one vochain process, including votes and results
