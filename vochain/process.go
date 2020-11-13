@@ -12,7 +12,7 @@ import (
 
 // GetProcessKeys gets process keys
 func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
-	pid, err := hex.DecodeString(processID)
+	pid, err := hex.DecodeString(util.TrimHex(processID))
 	if err != nil {
 		return nil, err
 	}
