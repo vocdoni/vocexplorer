@@ -1,9 +1,11 @@
 package proto
 
 import (
+	"encoding/hex"
+
 	"github.com/golang/protobuf/ptypes"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"go.vocdoni.io/dvote/log"
 )
 
 // Mirror returns the mirrored type
@@ -39,9 +41,9 @@ func (t *Height) Mirror() *dbtypes.Height {
 func (t *Envelope) Mirror() *dbtypes.Envelope {
 	m := &dbtypes.Envelope{
 		EncryptionKeyIndexes: t.EncryptionKeyIndexes,
-		Nullifier:            t.Nullifier,
-		ProcessID:            t.ProcessID,
-		Package:              t.Package,
+		Nullifier:            hex.EncodeToString(t.Nullifier),
+		ProcessID:            hex.EncodeToString(t.ProcessID),
+		Package:              hex.EncodeToString(t.Package),
 		ProcessHeight:        t.ProcessHeight,
 		GlobalHeight:         t.GlobalHeight,
 		TxHeight:             t.TxHeight,
@@ -72,7 +74,7 @@ func (t *Transaction) Mirror() *dbtypes.Transaction {
 		Index:     t.Index,
 		Tx:        t.Tx,
 		TxHeight:  t.TxHeight,
-		Nullifier: t.Nullifier,
+		Nullifier: hex.EncodeToString(t.Nullifier),
 		Hash:      t.Hash,
 	}
 	return m

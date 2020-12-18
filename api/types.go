@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"gitlab.com/vocdoni/go-dvote/types"
+	"go.vocdoni.io/dvote/types"
 )
 
 // Pkeys is the set of cryptographic keys for a process

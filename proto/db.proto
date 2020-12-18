@@ -23,9 +23,9 @@ message Height {
 
 message Envelope {
     repeated int32 EncryptionKeyIndexes = 1;
-    string Nullifier = 2;
-    string ProcessID = 3;
-    string Package = 4;
+    bytes Nullifier = 2;
+    bytes ProcessID = 3;
+    bytes Package = 4;
     int64 ProcessHeight = 5;
     int64 GlobalHeight = 6;
     int64 TxHeight = 7;
@@ -44,7 +44,7 @@ message Transaction {
     uint32 Index = 2;
     bytes Tx = 3;
     int64 TxHeight = 4;
-    string Nullifier = 5;
+    bytes Nullifier = 5;
     bytes Hash = 6;
 }
 

@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/logger"
+	"go.vocdoni.io/dvote/types"
 )
 
 // MsToString turns a milliseconds int32 to a readable string
@@ -141,6 +143,23 @@ func TrimHex(str string) string {
 //HexToString converts an array of hexbytes to a string
 func HexToString(bytes []byte) string {
 	return strings.ToLower(hex.EncodeToString(bytes))
+}
+
+// GetTransactionType translates a raw transaction to a type string
+func GetTransactionType(raw models.Tx) string {
+	switch raw.Payload.(type) {
+	case *models.Tx_Vote:
+		return types.TxVote
+	case *models.Tx_NewProcess:
+		return types.TxNewProcess
+	case *models.Tx_CancelProcess:
+		return types.TxCancelProcess
+	case *models.Tx_Admin:
+		return "admin"
+	case *models.Tx_SetProcess:
+		return "setProcess"
+	}
+	return "unknown"
 }
 
 // GetTransactionName translates a raw transaction type to a name

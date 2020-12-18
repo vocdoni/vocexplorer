@@ -1,6 +1,6 @@
 package config
 
-import dvotecfg "gitlab.com/vocdoni/go-dvote/config"
+import dvotecfg "go.vocdoni.io/dvote/config"
 
 //Cfg is the global config to be served to pages
 type Cfg struct {

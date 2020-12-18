@@ -3,20 +3,22 @@ package db
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
-	"gitlab.com/vocdoni/go-dvote/log"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	dvoteutil "gitlab.com/vocdoni/go-dvote/util"
-	"gitlab.com/vocdoni/go-dvote/vochain"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/crypto/ethereum"
+	"go.vocdoni.io/dvote/log"
+	dvotetypes "go.vocdoni.io/dvote/types"
+	dvoteutil "go.vocdoni.io/dvote/util"
+	"go.vocdoni.io/dvote/vochain"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -285,6 +287,9 @@ func (d *ExplorerDB) logTxs(txs []*voctypes.Transaction, state *BlockState) {
 		tx.TxHeight = state.txHeight
 		// If voteTx, get envelope nullifier
 		tx.Nullifier = d.storeEnvelope(tx, state)
+		if tx.Nullifier == nil {
+			break
+		}
 		txVal, err := proto.Marshal(tx)
 		if err != nil {
 			log.Error(err)
@@ -558,47 +563,48 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, pr
 	batch.Write()
 }
 
-func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) string {
-	var rawTx dvotetypes.Tx
-	err := json.Unmarshal(tx.Tx, &rawTx)
+func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) []byte {
+	var rawTx models.Tx
+	err := proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		log.Error(err)
 	}
-	if rawTx.Type == "vote" {
-		state.envelopeHeight++
-		var voteTx dvotetypes.VoteTx
-		err = json.Unmarshal(tx.Tx, &voteTx)
-		if err != nil {
-			log.Error(err)
-		}
+	switch rawTx.Payload.(type) {
+	case *models.Tx_Vote:
+		break
+	default:
+		return nil
+	}
+	voteTx := rawTx.GetVote()
 
-		// Write vote package
-		votePackage := voctypes.Envelope{
-			GlobalHeight: state.envelopeHeight,
-			Package:      voteTx.VotePackage,
-			ProcessID:    voteTx.ProcessID,
-			TxHeight:     tx.TxHeight,
-		}
+	state.envelopeHeight++
+	// Write vote package
+	votePackage := voctypes.Envelope{
+		GlobalHeight: state.envelopeHeight,
+		Package:      voteTx.VotePackage,
+		ProcessID:    voteTx.ProcessId,
+		TxHeight:     tx.TxHeight,
+	}
 
-		// Update height of process env belongs to
-		procHeight, ok := state.processEnvelopeHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())]
-		if !ok {
-			procHeight = 0
-		}
-		procHeight++
-		state.processEnvelopeHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())] = procHeight
+	// Update height of process env belongs to
+	procHeight, ok := state.processEnvelopeHeightMap.Heights[hex.EncodeToString(votePackage.GetProcessID())]
+	if !ok {
+		procHeight = 0
+	}
+	procHeight++
+	state.processEnvelopeHeightMap.Heights[hex.EncodeToString(votePackage.GetProcessID())] = procHeight
 
-		votePackage.ProcessHeight = procHeight
+	votePackage.ProcessHeight = procHeight
 
+	if len(voteTx.Nullifier) > 0 {
+		votePackage.Nullifier = voteTx.Nullifier
+	} else {
 		// Generate nullifier as in go-dvote vochain/transaction.go
-		signature := voteTx.Signature
-		voteTx.Signature = ""
-		voteTx.Type = ""
 		voteBytes, err := json.Marshal(&voteTx)
 		if err != nil {
 			log.Error(err)
 		}
-		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, signature)
+		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, fmt.Sprintf("%x", rawTx.Signature))
 		if err != nil {
 			log.Errorf("cannot extract public key from signature (%s)", err)
 		}
@@ -606,47 +612,34 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Errorf("cannot extract address from public key: (%s)", err)
 		}
-		rawPID, err := hex.DecodeString(util.TrimHex(votePackage.ProcessID))
-		if err != nil {
-			log.Errorf("cannot decode process id: (%s)", err)
-		}
-		votePackage.Nullifier = hex.EncodeToString(vochain.GenerateNullifier(addr, rawPID))
-		for _, index := range voteTx.EncryptionKeyIndexes {
-			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
-		}
-
-		// Write globalHeight:package
-		rawEnvelope, err := proto.Marshal(&votePackage)
-		if err != nil {
-			log.Error(err)
-		}
-		packageKey := append([]byte(config.EnvPackagePrefix), util.EncodeInt(state.envelopeHeight)...)
-		state.batch.Put(packageKey, rawEnvelope)
-
-		// Write nullifier:globalHeight
-		storeHeight := voctypes.Height{Height: state.envelopeHeight}
-		rawHeight, err := proto.Marshal(&storeHeight)
-		if err != nil {
-			log.Error(err)
-		}
-		nullifier, err := hex.DecodeString(util.TrimHex(votePackage.Nullifier))
-		if err != nil {
-			log.Error(err)
-		}
-		nullifierKey := append([]byte(config.EnvNullifierPrefix), nullifier...)
-		state.batch.Put(nullifierKey, rawHeight)
-
-		// Write pid|heightbyPID:globalHeight
-		heightBytes := util.EncodeInt(procHeight)
-		PIDBytes, err := hex.DecodeString(util.TrimHex(votePackage.ProcessID))
-		if err != nil {
-			log.Error(err)
-		}
-		heightKey := append([]byte(config.EnvPIDPrefix), PIDBytes...)
-		heightKey = append(heightKey, heightBytes...)
-		state.batch.Put(heightKey, rawHeight)
-
-		return votePackage.Nullifier
+		votePackage.Nullifier = vochain.GenerateNullifier(addr, votePackage.ProcessID)
 	}
-	return ""
+	for _, index := range voteTx.EncryptionKeyIndexes {
+		votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
+	}
+
+	// Write globalHeight:package
+	rawEnvelope, err := proto.Marshal(&votePackage)
+	if err != nil {
+		log.Error(err)
+	}
+	packageKey := append([]byte(config.EnvPackagePrefix), util.EncodeInt(state.envelopeHeight)...)
+	state.batch.Put(packageKey, rawEnvelope)
+
+	// Write nullifier:globalHeight
+	storeHeight := voctypes.Height{Height: state.envelopeHeight}
+	rawHeight, err := proto.Marshal(&storeHeight)
+	if err != nil {
+		log.Error(err)
+	}
+	nullifierKey := append([]byte(config.EnvNullifierPrefix), votePackage.Nullifier...)
+	state.batch.Put(nullifierKey, rawHeight)
+
+	// Write pid|heightbyPID:globalHeight
+	heightBytes := util.EncodeInt(procHeight)
+	heightKey := append([]byte(config.EnvPIDPrefix), votePackage.ProcessID...)
+	heightKey = append(heightKey, heightBytes...)
+	state.batch.Put(heightKey, rawHeight)
+
+	return votePackage.Nullifier
 }

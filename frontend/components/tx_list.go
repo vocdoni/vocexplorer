@@ -1,19 +1,19 @@
 package components
 
 import (
-	"encoding/json"
 	"fmt"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 // TxList is the tx list component
@@ -73,13 +73,14 @@ func renderTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 }
 
 func renderTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
-	var rawTx dvotetypes.Tx
-	err := json.Unmarshal(tx.Tx, &rawTx)
+	var rawTx models.Tx
+	err := proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}
+	txType := util.GetTransactionType(rawTx)
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", rawTx.Type)),
+		vecty.Markup(vecty.Class("tile", txType)),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -90,7 +91,7 @@ func renderTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetTransactionName(rawTx.Type)),
+						vecty.Text(util.GetTransactionName(txType)),
 					),
 				),
 			),

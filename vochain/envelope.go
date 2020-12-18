@@ -4,12 +4,13 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/go-dvote/util"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
+	"go.vocdoni.io/dvote/types"
+	"go.vocdoni.io/dvote/util"
 )
 
 // GetEnvelope gets contents of given envelope
-func (vs *VochainService) GetEnvelope(processID, nullifier string) (*types.Vote, error) {
+func (vs *VochainService) GetEnvelope(processID, nullifier string) (*models.Vote, error) {
 	// check pid
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return nil, errors.New("cannot get envelope: (malformed processId)")

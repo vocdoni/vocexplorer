@@ -3,7 +3,7 @@ package storeutil
 import (
 	"time"
 
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
@@ -23,7 +23,7 @@ type Transactions struct {
 type DecodedTransaction struct {
 	EnvelopeHeight int64
 	RawTxContents  []byte
-	RawTx          dvotetypes.Tx
+	RawTx          models.Tx
 	Time           time.Time
 	ProcessID      string
 	EntityID       string

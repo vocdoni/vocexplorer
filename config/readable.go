@@ -1,6 +1,6 @@
 package config
 
-import "gitlab.com/vocdoni/go-dvote/types"
+import "go.vocdoni.io/dvote/types"
 
 // Maps to turn raw data into human readable
 
@@ -16,6 +16,9 @@ var (
 		types.TxRemoveOracle:      "Remove oracle",
 		types.TxAddProcessKeys:    "Add process keys",
 		types.TxRevealProcessKeys: "Reveal process keys",
+		"setProcess":              "Set process metadata",
+		"admin":                   "Admin",
+		"unknown":                 "Unknown",
 	}
 
 	// ProcessTypeMap maps process types to readable descriptions

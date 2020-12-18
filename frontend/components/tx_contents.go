@@ -7,7 +7,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -17,6 +17,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 // TxContents renders tx contents
@@ -120,7 +121,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Transaction Type"),
 				),
 				elem.Description(
-					vecty.Text(util.GetTransactionName(store.Transactions.CurrentDecodedTransaction.RawTx.Type)),
+					vecty.Text(util.GetTransactionName(util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx))),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Hash"),
@@ -159,7 +160,7 @@ func TransactionView() vecty.List {
 					},
 				),
 				vecty.If(
-					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && store.Transactions.CurrentDecodedTransaction.RawTx.Type == "vote",
+					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx) == "vote",
 					elem.DefinitionTerm(
 						vecty.Text("Contains vote envelope"),
 					),
@@ -246,8 +247,8 @@ func UpdateTxContents(d *TxContents) {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
-	var rawTx dvotetypes.Tx
-	err := json.Unmarshal(tx.Tx, &rawTx)
+	var rawTx models.Tx
+	err := proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -256,54 +257,45 @@ func UpdateTxContents(d *TxContents) {
 	var nullifier string
 	var entityID string
 
-	switch rawTx.Type {
-	case dvotetypes.TxVote:
-		var typedTx dvotetypes.VoteTx
-		err := json.Unmarshal(tx.Tx, &typedTx)
-		if err != nil {
-			logger.Error(err)
-		}
-		typedTx.Nullifier = tx.Nullifier
+	switch rawTx.Payload.(type) {
+	case *models.Tx_Vote:
+		typedTx := rawTx.GetVote()
+		// typedTx.Nullifier = tx.Nullifier
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = typedTx.ProcessID
-		nullifier = typedTx.Nullifier
-	case dvotetypes.TxNewProcess:
-		var typedTx dvotetypes.NewProcessTx
-		err := json.Unmarshal(tx.Tx, &typedTx)
-		if err != nil {
-			logger.Error(err)
-		}
+		processID = string(typedTx.GetProcessId())
+		nullifier = string(typedTx.GetNullifier())
+	case *models.Tx_NewProcess:
+		typedTx := rawTx.GetNewProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = typedTx.ProcessID
-		entityID = typedTx.EntityID
-	case dvotetypes.TxCancelProcess:
-		var typedTx dvotetypes.CancelProcessTx
-		err := json.Unmarshal(tx.Tx, &typedTx)
-		if err != nil {
-			logger.Error(err)
-		}
+		processID = string(typedTx.Process.GetProcessId())
+		entityID = string(typedTx.Process.GetEntityId())
+	case *models.Tx_CancelProcess:
+		typedTx := rawTx.GetCancelProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = typedTx.ProcessID
-	case dvotetypes.TxAddValidator, dvotetypes.TxRemoveValidator, dvotetypes.TxAddOracle, dvotetypes.TxRemoveOracle, dvotetypes.TxAddProcessKeys, dvotetypes.TxRevealProcessKeys:
-		var typedTx dvotetypes.AdminTx
-		err := json.Unmarshal(tx.Tx, &typedTx)
-		if err != nil {
-			logger.Error(err)
-		}
+		processID = string(typedTx.GetProcessId())
+	case *models.Tx_Admin:
+		typedTx := rawTx.GetAdmin()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = typedTx.ProcessID
+		processID = string(typedTx.GetProcessId())
+	case *models.Tx_SetProcess:
+		typedTx := rawTx.GetSetProcess()
+		txContents, err = json.MarshalIndent(typedTx, "", "\t")
+		if err != nil {
+			logger.Error(err)
+		}
+		processID = string(typedTx.GetProcessId())
 	}
 
 	entityID = util.TrimHex(entityID)

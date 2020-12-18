@@ -1,8 +1,8 @@
 package storeutil
 
 import (
+	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
@@ -10,7 +10,7 @@ import (
 type Blocks struct {
 	Blocks                [config.ListSize]*dbtypes.StoreBlock
 	Count                 int
-	CurrentBlock          *tmtypes.ResultBlock
+	CurrentBlock          *tmtypes.Block
 	CurrentBlockHeight    int64
 	CurrentTxs            [config.ListSize]*dbtypes.Transaction
 	TransactionPagination PageStore

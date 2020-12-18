@@ -9,10 +9,10 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -21,6 +21,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"google.golang.org/protobuf/proto"
 )
 
 // BlockContents renders block contents
@@ -60,7 +61,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
 					bootstrap.Card(bootstrap.CardParams{
-						Body: BlockView(store.Blocks.CurrentBlock.Block),
+						Body: BlockView(store.Blocks.CurrentBlock),
 					}),
 				),
 			),
@@ -126,20 +127,20 @@ func UpdateBlockContents(d *BlockContents) {
 
 func updateBlockTransactions() {
 	if store.Blocks.CurrentBlock != nil {
-		maxIndex := len(store.Blocks.CurrentBlock.Block.Data.Txs) - 1
+		maxIndex := len(store.Blocks.CurrentBlock.Data.Txs) - 1
 		maxIndex = util.Min(util.Max(maxIndex-store.Blocks.TransactionPagination.Index, 0), maxIndex)
-		var rawTx dvotetypes.Tx
+		var rawTx models.Tx
 		var transactions [config.ListSize]*dbtypes.Transaction
 		wg := new(sync.WaitGroup)
 		for i := 0; i < config.ListSize && maxIndex-i >= 0; i++ {
-			err := json.Unmarshal(store.Blocks.CurrentBlock.Block.Data.Txs[maxIndex-i], &rawTx)
+			err := proto.Unmarshal(store.Blocks.CurrentBlock.Data.Txs[maxIndex-i], &rawTx)
 			if err != nil {
 				logger.Error(err)
 			}
 			// Asynchronously fetch all txs
 			wg.Add(1)
 			go func(index int) {
-				hashString := fmt.Sprintf("%X", store.Blocks.CurrentBlock.Block.Data.Txs[maxIndex-index].Hash())
+				hashString := fmt.Sprintf("%X", store.Blocks.CurrentBlock.Data.Txs[maxIndex-index].Hash())
 				fullTransaction, ok := api.GetTxByHash(hashString)
 				if ok {
 					transactions[index] = fullTransaction
@@ -271,9 +272,9 @@ func (c *BlockContents) BlockDetails() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(transactions, &BlockTransactionsListView{}),
-			TabContents(header, preformattedBlockHeader(store.Blocks.CurrentBlock.Block)),
-			TabContents(evidence, preformattedBlockEvidence(store.Blocks.CurrentBlock.Block)),
-			TabContents(lastCommit, preformattedBlockLastCommit(store.Blocks.CurrentBlock.Block)),
+			TabContents(header, preformattedBlockHeader(store.Blocks.CurrentBlock)),
+			TabContents(evidence, preformattedBlockEvidence(store.Blocks.CurrentBlock)),
+			TabContents(lastCommit, preformattedBlockLastCommit(store.Blocks.CurrentBlock)),
 		),
 	}
 }

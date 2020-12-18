@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/log"
 	"google.golang.org/protobuf/proto"
 )
 

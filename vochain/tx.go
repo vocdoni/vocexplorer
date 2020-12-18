@@ -2,9 +2,7 @@ package vochain
 
 import (
 	"fmt"
-	"reflect"
 
-	"gitlab.com/vocdoni/vocexplorer/api/tmtypes"
 	"gitlab.com/vocdoni/vocexplorer/proto"
 )
 
@@ -16,12 +14,11 @@ func (vs *VochainService) GetTransactions(blockHeight int64) ([]*proto.Transacti
 	}
 	var txList []*proto.Transaction
 	for i, tmTx := range block.Txs {
-		var tx tmtypes.Tx = reflect.ValueOf(tmTx).Bytes()
 		txList = append(txList, &proto.Transaction{
-			Hash:   tx.Hash(),
+			Hash:   tmTx.Hash(),
 			Height: blockHeight,
 			Index:  uint32(i),
-			Tx:     tx,
+			Tx:     tmTx,
 		})
 	}
 	return txList, nil

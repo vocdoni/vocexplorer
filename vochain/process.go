@@ -4,10 +4,10 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/go-dvote/util"
-	"gitlab.com/vocdoni/go-dvote/vochain/scrutinizer"
 	"gitlab.com/vocdoni/vocexplorer/api"
+	"go.vocdoni.io/dvote/types"
+	"go.vocdoni.io/dvote/util"
+	"go.vocdoni.io/dvote/vochain/scrutinizer"
 )
 
 // GetProcessKeys gets process keys
@@ -101,22 +101,34 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	if err != nil {
 		return "", "", nil, err
 	}
+	var procType string
 	var state string
 
-	// TODO update to smart contracts v2. No canceled boolean
-	if procInfo.Canceled {
-		state = "canceled"
+	if procInfo.EnvelopeType.Anonymous {
+		procType = "anonymous"
 	} else {
-		state = "active"
+		procType = "poll"
 	}
+	if procInfo.EnvelopeType.EncryptedVotes {
+		procType = procType + " encrypted"
+	} else {
+		procType = procType + " open"
+	}
+	if procInfo.EnvelopeType.Serial {
+		procType = procType + " serial"
+	} else {
+		procType = procType + " single"
+	}
+	state = procInfo.Status.String()
 
 	// Get results info
 	vr, err := vs.scrut.VoteResult(pid)
 	if err != nil && err != scrutinizer.ErrNoResultsYet {
-		return procInfo.Type, state, nil, err
+		return procType, state, nil, err
 	}
 	if err == scrutinizer.ErrNoResultsYet {
-		return procInfo.Type, state, nil, errors.New(scrutinizer.ErrNoResultsYet.Error())
+		return procType, state, nil, errors.New(scrutinizer.ErrNoResultsYet.Error())
 	}
-	return procInfo.Type, state, vr, nil
+	results := vs.scrut.GetFriendlyResults(vr)
+	return procType, state, results, nil
 }

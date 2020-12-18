@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"gitlab.com/vocdoni/go-dvote/types"
-	"gitlab.com/vocdoni/go-dvote/util"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/dvote/types"
+	"go.vocdoni.io/dvote/util"
 )
 
 // GetEntityCount gets number of entities
@@ -21,7 +21,7 @@ func (vs *VochainService) GetProcessCount() int64 {
 }
 
 // GetEnvelopeCount gets number of envelopes in a given process
-func (vs *VochainService) GetEnvelopeCount(processID string) (int64, error) {
+func (vs *VochainService) GetEnvelopeCount(processID string) (uint32, error) {
 	// check pid
 	processID = util.TrimHex(processID)
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
@@ -36,8 +36,8 @@ func (vs *VochainService) GetEnvelopeCount(processID string) (int64, error) {
 }
 
 // GetTotalEnvelopeCount gets number of envelopes
-func (vs *VochainService) GetTotalEnvelopeCount() (int64, error) {
-	votes := int64(0)
+func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
+	votes := uint32(0)
 	listSize := int64(config.MaxListSize)
 	for {
 		// Get all live processes, sum envelopes

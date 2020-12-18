@@ -3,12 +3,12 @@ package vochain
 import (
 	"time"
 
-	"gitlab.com/vocdoni/go-dvote/log"
-	"gitlab.com/vocdoni/go-dvote/service"
-	"gitlab.com/vocdoni/go-dvote/vochain"
-	"gitlab.com/vocdoni/go-dvote/vochain/scrutinizer"
-	"gitlab.com/vocdoni/go-dvote/vochain/vochaininfo"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/dvote/log"
+	"go.vocdoni.io/dvote/service"
+	"go.vocdoni.io/dvote/vochain"
+	"go.vocdoni.io/dvote/vochain/scrutinizer"
+	"go.vocdoni.io/dvote/vochain/vochaininfo"
 )
 
 const MaxListIterations = int64(64)
@@ -26,6 +26,7 @@ func InitVochain(cfg *config.MainCfg) (*VochainService, error) {
 	vs := VochainService{}
 	cfg.VochainConfig.DataDir = cfg.DataDir + "/vochain"
 	cfg.VochainConfig.Chain = cfg.Chain
+	cfg.VochainConfig.LogLevelMemPool = "info"
 	if cfg.Chain != "dev" {
 		cfg.VochainConfig.Dev = false
 	} else {

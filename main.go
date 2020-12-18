@@ -13,11 +13,11 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	dvotecfg "gitlab.com/vocdoni/go-dvote/config"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	"gitlab.com/vocdoni/vocexplorer/router"
+	dvotecfg "go.vocdoni.io/dvote/config"
+	"go.vocdoni.io/dvote/log"
 )
 
 func newConfig() (*config.MainCfg, error) {

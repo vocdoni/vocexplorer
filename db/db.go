@@ -6,11 +6,11 @@ import (
 	"runtime/pprof"
 	"time"
 
-	dvotedb "gitlab.com/vocdoni/go-dvote/db"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/vochain"
+	dvotedb "go.vocdoni.io/dvote/db"
+	"go.vocdoni.io/dvote/log"
 	"google.golang.org/protobuf/proto"
 )
 

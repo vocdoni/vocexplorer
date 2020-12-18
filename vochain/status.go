@@ -4,8 +4,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"gitlab.com/vocdoni/go-dvote/log"
 	"gitlab.com/vocdoni/vocexplorer/proto"
+	"go.vocdoni.io/dvote/log"
 )
 
 // GetStatus gets the basic blockchain status
@@ -16,7 +16,7 @@ func (vs *VochainService) GetStatus() *proto.BlockchainInfo {
 	}
 	status := &proto.BlockchainInfo{
 		BlockTime:         vs.info.BlockTimes()[:],
-		BlockTimeStamp:    int32(vs.app.State.Header(true).Time.Unix()),
+		BlockTimeStamp:    int32(vs.app.State.Header(true).Timestamp),
 		ChainID:           vs.app.Node.GenesisDoc().ChainID,
 		GenesisTimeStamp:  genesisTime,
 		Height:            vs.app.State.Header(true).Height,

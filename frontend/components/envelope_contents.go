@@ -9,9 +9,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/go-dvote/crypto/nacl"
-	"gitlab.com/vocdoni/go-dvote/types"
-	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -20,6 +17,9 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/crypto/nacl"
+	"go.vocdoni.io/dvote/types"
+	dvotetypes "go.vocdoni.io/dvote/types"
 )
 
 // EnvelopeContents renders envelope contents
@@ -61,7 +61,8 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	results := store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID]
 	keys := []string{}
 	// If package is encrypted
-	if !types.ProcessIsEncrypted[results.ProcessType] {
+	// if !types.ProcessIsEncrypted[results.ProcessType] {
+	if results.ProcessType != types.EncryptedPoll {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else { // process is/was encrypted
