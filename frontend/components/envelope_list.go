@@ -86,7 +86,7 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 		)
 	}
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", processResults.State)),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(processResults.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -107,7 +107,7 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 						processResults.State != "",
 						elem.Span(
 							vecty.Markup(vecty.Class("status")),
-							vecty.Text("Process "+processResults.State),
+							vecty.Text("Process "+strings.ToLower(processResults.State)),
 						),
 					),
 				),

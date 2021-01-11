@@ -280,7 +280,6 @@ func (d *ExplorerDB) logTxs(txs []*voctypes.Transaction, state *BlockState) {
 	var blockHeight int64
 	for i, tx := range txs {
 		numTxs = int64(i + 1)
-		log.Infof("Logging tx, local height numtx: %d", numTxs)
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash...)
 		tx.TxHeight = state.txHeight
 		// If voteTx, get envelope nullifier. Otherwise, nullifier will be nil
@@ -606,14 +605,10 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		}
 		votePackage.Nullifier = vochain.GenerateNullifier(addr, votePackage.ProcessID)
 	}
-	print("\nEncryption keys: ")
-	log.Infof("%v", voteTx.EncryptionKeyIndexes)
 
 	for _, index := range voteTx.EncryptionKeyIndexes {
 		votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
 	}
-	print("\nEncryption keys stored: ")
-	log.Infof("%v", votePackage.EncryptionKeyIndexes)
 
 	// Write globalHeight:package
 	rawEnvelope, err := proto.Marshal(&votePackage)

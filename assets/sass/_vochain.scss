@@ -104,11 +104,13 @@ main {
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
 
-  &.addProcessKeys {
+  &.addProcessKeys,
+  &.results {
     @include tile-color($cyan);
   }
 
-  &.revealProcessKeys {
+  &.revealProcessKeys,
+  &.ended {
     @include tile-color($teal);
   }
 
@@ -132,10 +134,12 @@ main {
       margin-bottom: -1px;
     }
 
-    &.addProcessKeys {
+    &.addProcessKeys, 
+    &.results {
       @include desktop-tile-color($cyan);
     }
-    &.revealProcessKeys {
+    &.revealProcessKeys, 
+    &.ended {
       @include desktop-tile-color($teal);
     }
     &.cancelProcess,

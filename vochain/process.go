@@ -3,6 +3,7 @@ package vochain
 import (
 	"encoding/hex"
 	"errors"
+	"strings"
 
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"go.vocdoni.io/dvote/types"
@@ -104,22 +105,17 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	var procType string
 	var state string
 
-	if procInfo.EnvelopeType.Anonymous {
-		procType = "anonymous"
-	} else {
-		procType = "poll"
-	}
 	if procInfo.EnvelopeType.EncryptedVotes {
-		procType = procType + " encrypted"
+		procType = "Encrypted"
 	} else {
-		procType = procType + " open"
+		procType = "Open"
 	}
-	if procInfo.EnvelopeType.Serial {
-		procType = procType + " serial"
+	if procInfo.EnvelopeType.Anonymous {
+		procType = procType + " anonymous process"
 	} else {
-		procType = procType + " single"
+		procType = procType + " poll"
 	}
-	state = procInfo.Status.String()
+	state = strings.Title(strings.ToLower(procInfo.Status.String()))
 
 	// Get results info
 	vr, err := vs.scrut.VoteResult(pid)
