@@ -34,7 +34,7 @@ type Envelope struct {
 	EncryptionKeyIndexes []int32 `json:"EncryptionKeyIndexes,omitempty"`
 	Nullifier            string  `json:"Nullifier,omitempty"`
 	ProcessID            string  `json:"ProcessID,omitempty"`
-	Package              string  `json:"Package,omitempty"`
+	Package              []byte  `json:"Package,omitempty"`
 	ProcessHeight        int64   `json:"ProcessHeight,omitempty"`
 	GlobalHeight         int64   `json:"GlobalHeight,omitempty"`
 	TxHeight             int64   `json:"TxHeight,omitempty"`

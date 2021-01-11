@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"go.vocdoni.io/dvote/types"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // MsToString turns a milliseconds int32 to a readable string

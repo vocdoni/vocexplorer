@@ -1,7 +1,6 @@
 package components
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -18,7 +17,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/nacl"
-	"go.vocdoni.io/dvote/types"
 	dvotetypes "go.vocdoni.io/dvote/types"
 )
 
@@ -61,8 +59,9 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	results := store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID]
 	keys := []string{}
 	// If package is encrypted
-	// if !types.ProcessIsEncrypted[results.ProcessType] {
-	if results.ProcessType != types.EncryptedPoll {
+	logger.Info(fmt.Sprintf("Indexes %v", store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes))
+
+	if !strings.Contains(results.ProcessType, "encrypted") {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else { // process is/was encrypted
@@ -87,6 +86,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 			displayPackage = false
 		}
 	}
+	logger.Info(fmt.Sprintf("Keys %v", keys))
 	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
 		var err error
 		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
@@ -252,12 +252,10 @@ func (c *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
 }
 
 // From go-dvote keykeepercli.go
-func unmarshalVote(votePackage string, keys []string) (*dvotetypes.VotePackage, error) {
-	rawVote, err := base64.StdEncoding.DecodeString(votePackage)
-	if err != nil {
-		return nil, err
-	}
+func unmarshalVote(votePackage []byte, keys []string) (*dvotetypes.VotePackage, error) {
 	var vote dvotetypes.VotePackage
+	rawVote := make([]byte, len(votePackage))
+	copy(rawVote, votePackage)
 	// if encryption keys, decrypt the vote
 	if len(keys) > 0 {
 		for i := len(keys) - 1; i >= 0; i-- {
@@ -272,7 +270,7 @@ func unmarshalVote(votePackage string, keys []string) (*dvotetypes.VotePackage, 
 		}
 	}
 	if err := json.Unmarshal(rawVote, &vote); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot unmarshal vote: %w", err)
 	}
 	return &vote, nil
 }

@@ -57,13 +57,13 @@ func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
 }
 
 // GetProcListResults gets list of finished processes on the Vochain
-func (vs *VochainService) GetProcListResults(listSize int64) ([]string, error) {
-	return vs.scrut.ProcessListWithResults(listSize, "")
+func (vs *VochainService) GetProcListResults(listSize int64) []string {
+	return vs.scrut.ProcessListWithResults(listSize, []byte{})
 }
 
 // GetProcListLiveResults gets list of live processes on the Vochain
-func (vs *VochainService) GetProcListLiveResults(listSize int64) ([]string, error) {
-	return vs.scrut.ProcessListWithLiveResults(listSize, "")
+func (vs *VochainService) GetProcListLiveResults(listSize int64) []string {
+	return vs.scrut.ProcessListWithLiveResults(listSize, []byte{})
 }
 
 // GetProcessList gets list of processes for a given entity
@@ -73,10 +73,10 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 	}
 	// check/sanitize eid
 	entityID = util.TrimHex(entityID)
-	if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
-		!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
-		return nil, errors.New("cannot get process list: (malformed entityId)")
-	}
+	// if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
+	// 	!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
+	// 	return nil, errors.New("cannot get process list: (malformed entityId)")
+	// }
 	eid, err := hex.DecodeString(entityID)
 	if err != nil {
 		return nil, errors.New("cannot decode entityID")
@@ -88,9 +88,9 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint32, error) {
 	var err error
 	processID = util.TrimHex(processID)
-	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
-		return "", "", nil, errors.New("cannot get results: (malformed processId)")
-	}
+	// if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
+	// 	return "", "", nil, errors.New("cannot get results: (malformed processId)")
+	// }
 
 	// Get process info
 	pid, err := hex.DecodeString(processID)

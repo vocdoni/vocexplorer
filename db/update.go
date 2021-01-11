@@ -3,22 +3,19 @@ package db
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
-	dvotetypes "go.vocdoni.io/dvote/types"
-	dvoteutil "go.vocdoni.io/dvote/util"
 	"go.vocdoni.io/dvote/vochain"
+	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -283,13 +280,11 @@ func (d *ExplorerDB) logTxs(txs []*voctypes.Transaction, state *BlockState) {
 	var blockHeight int64
 	for i, tx := range txs {
 		numTxs = int64(i + 1)
+		log.Infof("Logging tx, local height numtx: %d", numTxs)
 		txHashKey := append([]byte(config.TxHashPrefix), tx.Hash...)
 		tx.TxHeight = state.txHeight
-		// If voteTx, get envelope nullifier
+		// If voteTx, get envelope nullifier. Otherwise, nullifier will be nil
 		tx.Nullifier = d.storeEnvelope(tx, state)
-		if tx.Nullifier == nil {
-			break
-		}
 		txVal, err := proto.Marshal(tx)
 		if err != nil {
 			log.Error(err)
@@ -320,10 +315,7 @@ func (d *ExplorerDB) updateEntityList() {
 		latestEntity = []byte{}
 	}
 	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
-	entities, err := d.Vs.GetScrutinizerEntities(config.MaxListSize)
-	if err != nil {
-		log.Warn(err)
-	}
+	entities := d.Vs.GetScrutinizerEntities(config.MaxListSize)
 	if len(entities) < 1 {
 		log.Warn("No entities retrieved")
 		return
@@ -493,9 +485,9 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, pr
 	lastPID := lastProcess.ID
 	entity = strings.ToLower(util.TrimHex(entity))
 	log.Debugf("Getting processes from id %s, entity %s", lastPID, entity)
-	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
-		lastPID = ""
-	}
+	// if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
+	// 	lastPID = ""
+	// }
 	processes, err := d.Vs.GetProcessList(entity, config.MaxListSize)
 	if err != nil {
 		log.Warn(err)
@@ -604,7 +596,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Error(err)
 		}
-		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, fmt.Sprintf("%x", rawTx.Signature))
+		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, rawTx.Signature)
 		if err != nil {
 			log.Errorf("cannot extract public key from signature (%s)", err)
 		}
@@ -614,9 +606,14 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		}
 		votePackage.Nullifier = vochain.GenerateNullifier(addr, votePackage.ProcessID)
 	}
+	print("\nEncryption keys: ")
+	log.Infof("%v", voteTx.EncryptionKeyIndexes)
+
 	for _, index := range voteTx.EncryptionKeyIndexes {
 		votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
 	}
+	print("\nEncryption keys stored: ")
+	log.Infof("%v", votePackage.EncryptionKeyIndexes)
 
 	// Write globalHeight:package
 	rawEnvelope, err := proto.Marshal(&votePackage)

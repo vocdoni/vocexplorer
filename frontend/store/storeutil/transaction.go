@@ -3,9 +3,9 @@ package storeutil
 import (
 	"time"
 
-	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Transactions stores all data about blockchain transactions

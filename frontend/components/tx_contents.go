@@ -1,13 +1,13 @@
 package components
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/dvote-protobuf/build/go/models"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -17,6 +17,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -265,37 +266,37 @@ func UpdateTxContents(d *TxContents) {
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = string(typedTx.GetProcessId())
-		nullifier = string(typedTx.GetNullifier())
+		processID = hex.EncodeToString(typedTx.GetProcessId())
+		nullifier = hex.EncodeToString(typedTx.GetNullifier())
 	case *models.Tx_NewProcess:
 		typedTx := rawTx.GetNewProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = string(typedTx.Process.GetProcessId())
-		entityID = string(typedTx.Process.GetEntityId())
+		processID = hex.EncodeToString(typedTx.Process.GetProcessId())
+		entityID = hex.EncodeToString(typedTx.Process.GetEntityId())
 	case *models.Tx_CancelProcess:
 		typedTx := rawTx.GetCancelProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = string(typedTx.GetProcessId())
+		processID = hex.EncodeToString(typedTx.GetProcessId())
 	case *models.Tx_Admin:
 		typedTx := rawTx.GetAdmin()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = string(typedTx.GetProcessId())
+		processID = hex.EncodeToString(typedTx.GetProcessId())
 	case *models.Tx_SetProcess:
 		typedTx := rawTx.GetSetProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
-		processID = string(typedTx.GetProcessId())
+		processID = hex.EncodeToString(typedTx.GetProcessId())
 	}
 
 	entityID = util.TrimHex(entityID)

@@ -18,7 +18,7 @@ func TxIsEmpty(s *Transaction) bool {
 
 //EnvelopeIsEmpty returns true if env is empty
 func EnvelopeIsEmpty(e *Envelope) bool {
-	if e == nil || e.Nullifier == "" && e.Package == "" {
+	if e == nil || e.Nullifier == "" && len(e.Package) == 0 {
 		return true
 	}
 	return false

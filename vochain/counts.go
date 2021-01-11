@@ -2,16 +2,14 @@ package vochain
 
 import (
 	"encoding/hex"
-	"errors"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/dvote/util"
 )
 
 // GetEntityCount gets number of entities
 func (vs *VochainService) GetEntityCount() int64 {
-	list, _ := vs.scrut.EntityList(config.MaxListSize, "")
+	list := vs.scrut.EntityList(config.MaxListSize, []byte{})
 	return int64(len(list))
 }
 
@@ -24,9 +22,9 @@ func (vs *VochainService) GetProcessCount() int64 {
 func (vs *VochainService) GetEnvelopeCount(processID string) (uint32, error) {
 	// check pid
 	processID = util.TrimHex(processID)
-	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
-		return 0, errors.New("cannot get envelope height: (malformed processId)")
-	}
+	// if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
+	// 	return 0, errors.New("cannot get envelope height: (malformed processId)")
+	// }
 	pid, err := hex.DecodeString(processID)
 	if err != nil {
 		return 0, err
@@ -41,10 +39,7 @@ func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
 	listSize := int64(config.MaxListSize)
 	for {
 		// Get all live processes, sum envelopes
-		newPIDs, err := vs.GetProcListLiveResults(listSize)
-		if err != nil {
-			return 0, err
-		}
+		newPIDs := vs.GetProcListLiveResults(listSize)
 		for _, pid := range newPIDs {
 			rawPid, err := hex.DecodeString(pid)
 			if err != nil {
@@ -58,10 +53,7 @@ func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
 	}
 	for {
 		// Do the same for ended processes
-		newPIDs, err := vs.GetProcListResults(listSize)
-		if err != nil {
-			return 0, err
-		}
+		newPIDs := vs.GetProcListResults(listSize)
 		for _, pid := range newPIDs {
 			rawPid, err := hex.DecodeString(pid)
 			if err != nil {

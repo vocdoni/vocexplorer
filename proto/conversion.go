@@ -43,7 +43,7 @@ func (t *Envelope) Mirror() *dbtypes.Envelope {
 		EncryptionKeyIndexes: t.EncryptionKeyIndexes,
 		Nullifier:            hex.EncodeToString(t.Nullifier),
 		ProcessID:            hex.EncodeToString(t.ProcessID),
-		Package:              hex.EncodeToString(t.Package),
+		Package:              t.Package,
 		ProcessHeight:        t.ProcessHeight,
 		GlobalHeight:         t.GlobalHeight,
 		TxHeight:             t.TxHeight,
