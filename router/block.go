@@ -110,7 +110,7 @@ func SearchBlocksByValidatorHandler(d *db.ExplorerDB) func(w http.ResponseWriter
 		}
 		var itemList ptypes.ItemList
 		for _, rawItem := range items {
-			itemList.Items = append(itemList.GetItems(), rawItem)
+			itemList.Items = append(itemList.GetItems(), packBlock(rawItem))
 		}
 
 		msg, err := json.Marshal(&itemList)

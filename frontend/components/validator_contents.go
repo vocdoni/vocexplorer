@@ -257,7 +257,6 @@ func ValidatorDetails() vecty.ComponentOrHTML {
 
 func renderValidatorBlocks(p *Pagination, blocks [config.ListSize]*dbtypes.StoreBlock) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
-
 	empty := config.ListSize
 	for i := len(blocks) - 1; i >= len(blocks)-config.ListSize; i-- {
 		if dbtypes.BlockIsEmpty(blocks[i]) {
