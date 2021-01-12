@@ -49,3 +49,17 @@ type ProcessResults struct {
 	Type    string
 	Results [][]uint32
 }
+
+// Block stores all block fields used by frontend, mimics tendermint block type
+type Block struct {
+	Data            [][]byte
+	Evidence        string
+	Hash            string
+	Header          string
+	Height          int64
+	LastBlockID     string
+	LastCommit      string
+	ProposerAddress string
+	Size            int
+	Time            time.Time
+}

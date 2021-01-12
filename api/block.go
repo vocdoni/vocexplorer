@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 
-	tmtypes "github.com/tendermint/tendermint/types"
 	types "gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/logger"
@@ -11,15 +10,15 @@ import (
 )
 
 //GetBlock fetches a single block from the vochain node
-func GetBlock(height int64) (*tmtypes.Block, bool) {
+func GetBlock(height int64) (*Block, bool) {
 	body, ok := requestBody("/api/block/?height=" + util.IntToString(height))
 	if body != nil {
 		defer body.Close()
 	}
 	if !ok {
-		return &tmtypes.Block{}, false
+		return &Block{}, false
 	}
-	block := new(tmtypes.Block)
+	block := new(Block)
 	err := json.NewDecoder(body).Decode(&block)
 	if err != nil {
 		logger.Error(err)

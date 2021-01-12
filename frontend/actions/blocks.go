@@ -1,7 +1,7 @@
 package actions
 
 import (
-	tmtypes "github.com/tendermint/tendermint/types"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
@@ -33,7 +33,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *tmtypes.Block
+	Block *api.Block
 }
 
 // SetCurrentBlockHeight is the action to set the current block height

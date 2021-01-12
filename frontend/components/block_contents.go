@@ -1,7 +1,7 @@
 package components
 
 import (
-	"encoding/json"
+	"crypto/sha256"
 	"fmt"
 	"sync"
 	"time"
@@ -9,7 +9,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -127,20 +126,20 @@ func UpdateBlockContents(d *BlockContents) {
 
 func updateBlockTransactions() {
 	if store.Blocks.CurrentBlock != nil {
-		maxIndex := len(store.Blocks.CurrentBlock.Data.Txs) - 1
+		maxIndex := len(store.Blocks.CurrentBlock.Data) - 1
 		maxIndex = util.Min(util.Max(maxIndex-store.Blocks.TransactionPagination.Index, 0), maxIndex)
 		var rawTx models.Tx
 		var transactions [config.ListSize]*dbtypes.Transaction
 		wg := new(sync.WaitGroup)
 		for i := 0; i < config.ListSize && maxIndex-i >= 0; i++ {
-			err := proto.Unmarshal(store.Blocks.CurrentBlock.Data.Txs[maxIndex-i], &rawTx)
+			err := proto.Unmarshal(store.Blocks.CurrentBlock.Data[maxIndex-i], &rawTx)
 			if err != nil {
 				logger.Error(err)
 			}
 			// Asynchronously fetch all txs
 			wg.Add(1)
 			go func(index int) {
-				hashString := fmt.Sprintf("%X", store.Blocks.CurrentBlock.Data.Txs[maxIndex-index].Hash())
+				hashString := fmt.Sprintf("%X", txHash(store.Blocks.CurrentBlock.Data[maxIndex-index]))
 				fullTransaction, ok := api.GetTxByHash(hashString)
 				if ok {
 					transactions[index] = fullTransaction
@@ -155,25 +154,25 @@ func updateBlockTransactions() {
 }
 
 //BlockView renders a single block card
-func BlockView(block *tmtypes.Block) vecty.List {
+func BlockView(block *api.Block) vecty.List {
 	return vecty.List{
 		elem.Heading1(
 			vecty.Markup(vecty.Class("card-title")),
 			vecty.Text("Block details"),
 		),
 		elem.Heading2(
-			vecty.Text(fmt.Sprintf("Block Height: %d", block.Header.Height)),
+			vecty.Text(fmt.Sprintf("Block Height: %d", block.Height)),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("details")),
 			elem.Span(
-				vecty.Text(fmt.Sprintf("%d transactions", len(block.Data.Txs))),
+				vecty.Text(fmt.Sprintf("%d transactions", len(block.Data))),
 			),
 			elem.Span(
-				vecty.Text(humanize.Bytes(uint64(block.Size()))),
+				vecty.Text(humanize.Bytes(uint64(block.Size))),
 			),
 			elem.Span(vecty.Text(
-				humanize.Time(block.Header.Time),
+				humanize.Time(block.Time),
 			)),
 		),
 		elem.HorizontalRule(),
@@ -182,15 +181,15 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Hash"),
 			),
 			elem.Description(
-				vecty.Text(block.Header.Hash().String()),
+				vecty.Text(block.Hash),
 			),
 			elem.DefinitionTerm(
 				vecty.Text("Parent hash"),
 			),
 			elem.Description(
 				Link(
-					fmt.Sprintf("/block/%d", block.Header.Height-1),
-					block.Header.LastBlockID.Hash.String(),
+					fmt.Sprintf("/block/%d", block.Height-1),
+					block.LastBlockID,
 					"",
 				),
 			),
@@ -199,8 +198,8 @@ func BlockView(block *tmtypes.Block) vecty.List {
 			),
 			elem.Description(
 				Link(
-					"/validator/"+block.ProposerAddress.String(),
-					block.ProposerAddress.String(),
+					"/validator/"+block.ProposerAddress,
+					block.ProposerAddress,
 					"",
 				),
 			),
@@ -208,19 +207,19 @@ func BlockView(block *tmtypes.Block) vecty.List {
 				vecty.Text("Total transactions"),
 			),
 			elem.Description(
-				vecty.Text(fmt.Sprintf("%d", (len(block.Data.Txs)))),
+				vecty.Text(fmt.Sprintf("%d", (len(block.Data)))),
 			),
 			elem.DefinitionTerm(
 				vecty.Text("Block size"),
 			),
 			elem.Description(
-				vecty.Text(fmt.Sprintf("%d bytes", block.Size())),
+				vecty.Text(fmt.Sprintf("%d bytes", block.Size)),
 			),
 			elem.DefinitionTerm(
 				vecty.Text("Time"),
 			),
 			elem.Description(
-				vecty.Text(block.Header.Time.UTC().String()),
+				vecty.Text(block.Time.UTC().String()),
 			),
 		),
 	}
@@ -279,39 +278,28 @@ func (c *BlockContents) BlockDetails() vecty.List {
 	}
 }
 
-func preformattedBlockEvidence(block *tmtypes.Block) vecty.ComponentOrHTML {
-	var evidence []byte
-	var err error
+func preformattedBlockEvidence(block *api.Block) vecty.ComponentOrHTML {
 
-	if len(block.Evidence.Evidence) <= 0 {
+	if len(block.Evidence) <= 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),
 			vecty.Text("No evidence"),
 		)
 	}
 
-	evidence, err = json.MarshalIndent(block.Evidence, "", "\t")
-	if err != nil {
-		logger.Error(err)
-	}
-
-	return elem.Preformatted(elem.Code(vecty.Text(string(evidence))))
+	return elem.Preformatted(elem.Code(vecty.Text(block.Evidence)))
 }
 
-func preformattedBlockLastCommit(block *tmtypes.Block) vecty.ComponentOrHTML {
-	commit, err := json.MarshalIndent(block.LastCommit, "", "\t")
-	if err != nil {
-		logger.Error(err)
-	}
-
-	return elem.Preformatted(elem.Code(vecty.Text(string(commit))))
+func preformattedBlockLastCommit(block *api.Block) vecty.ComponentOrHTML {
+	return elem.Preformatted(elem.Code(vecty.Text(string(block.LastCommit))))
 }
 
-func preformattedBlockHeader(block *tmtypes.Block) vecty.ComponentOrHTML {
-	header, err := json.MarshalIndent(block.Header, "", "\t")
-	if err != nil {
-		logger.Error(err)
-	}
+func preformattedBlockHeader(block *api.Block) vecty.ComponentOrHTML {
+	return elem.Preformatted(elem.Code(vecty.Text(string(block.Header))))
+}
 
-	return elem.Preformatted(elem.Code(vecty.Text(string(header))))
+func txHash(tx []byte) []byte {
+	// Sum returns the SHA256 of the bz.
+	h := sha256.Sum256(tx)
+	return h[:]
 }

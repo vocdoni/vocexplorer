@@ -2,10 +2,13 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"gitlab.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/db"
 	ptypes "gitlab.com/vocdoni/vocexplorer/proto"
@@ -47,7 +50,8 @@ func GetBlockHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "Cannot get block at height "+util.IntToString(height), http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(block.Block)
+		newBlock := packTmBlock(block)
+		json.NewEncoder(w).Encode(newBlock)
 	}
 }
 
@@ -135,4 +139,34 @@ func packBlock(raw []byte) []byte {
 		log.Error(err)
 	}
 	return new
+}
+
+func packTmBlock(tmBlock *coretypes.ResultBlock) api.Block {
+	var newBlock api.Block
+	header, err := json.MarshalIndent(tmBlock.Block.Header, "", "\t")
+	if err != nil {
+		log.Warnf("Error marshalling block header: %s", err.Error())
+		header = []byte{}
+	}
+	lastCommit, err := json.MarshalIndent(tmBlock.Block.LastCommit, "", "\t")
+	if err != nil {
+		log.Warnf("Error marshalling block evidence: %s", err.Error())
+		lastCommit = []byte{}
+	}
+	evidence, err := json.MarshalIndent(tmBlock.Block.Evidence, "", "\t")
+	if err != nil {
+		log.Warnf("Error marshalling block evidence: %s", err.Error())
+		evidence = []byte{}
+	}
+	newBlock.Data = tmBlock.Block.Data.ToProto().Txs
+	newBlock.Evidence = string(evidence)
+	newBlock.Hash = fmt.Sprintf("%X", tmBlock.Block.Hash())
+	newBlock.Header = string(header)
+	newBlock.Height = tmBlock.Block.Header.Height
+	newBlock.LastBlockID = tmBlock.Block.LastBlockID.Hash.String()
+	newBlock.LastCommit = string(lastCommit)
+	newBlock.ProposerAddress = tmBlock.Block.ProposerAddress.String()
+	newBlock.Size = tmBlock.Block.Size()
+	newBlock.Time = tmBlock.Block.Time
+	return newBlock
 }
