@@ -17,6 +17,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
@@ -96,6 +97,8 @@ func TransactionView() vecty.List {
 	}
 
 	if store.Transactions.CurrentDecodedTransaction != nil {
+		logger.Info("nullifier: " + store.Transactions.CurrentDecodedTransaction.Nullifier)
+		logger.Info("type: " + util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx))
 		contents = append(contents, vecty.List{
 			elem.Div(
 				vecty.Markup(vecty.Class("details")),
@@ -122,7 +125,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Transaction Type"),
 				),
 				elem.Description(
-					vecty.Text(util.GetTransactionName(util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx))),
+					vecty.Text(util.GetTransactionName(util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx))),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Hash"),
@@ -161,7 +164,7 @@ func TransactionView() vecty.List {
 					},
 				),
 				vecty.If(
-					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx) == "vote",
+					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx) == types.TxVote,
 					elem.DefinitionTerm(
 						vecty.Text("Contains vote envelope"),
 					),
@@ -267,7 +270,7 @@ func UpdateTxContents(d *TxContents) {
 			logger.Error(err)
 		}
 		processID = hex.EncodeToString(typedTx.GetProcessId())
-		nullifier = hex.EncodeToString(typedTx.GetNullifier())
+		nullifier = tx.Nullifier
 	case *models.Tx_NewProcess:
 		typedTx := rawTx.GetNewProcess()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")
@@ -302,6 +305,7 @@ func UpdateTxContents(d *TxContents) {
 	entityID = util.TrimHex(entityID)
 	processID = util.TrimHex(processID)
 	nullifier = util.TrimHex(nullifier)
+	logger.Info(fmt.Sprintf("generated Nullifier: %s", nullifier))
 	var envelopeHeight int64
 	if nullifier != "" {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)

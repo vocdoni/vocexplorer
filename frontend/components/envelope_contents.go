@@ -61,7 +61,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	// If package is encrypted
 	logger.Info(fmt.Sprintf("Indexes %v", store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes))
 
-	if !strings.Contains(results.ProcessType, "encrypted") {
+	if !strings.Contains(strings.ToLower(results.ProcessType), "encrypted") {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else { // process is/was encrypted

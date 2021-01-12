@@ -146,7 +146,7 @@ func HexToString(bytes []byte) string {
 }
 
 // GetTransactionType translates a raw transaction to a type string
-func GetTransactionType(raw models.Tx) string {
+func GetTransactionType(raw *models.Tx) string {
 	switch raw.Payload.(type) {
 	case *models.Tx_Vote:
 		return types.TxVote

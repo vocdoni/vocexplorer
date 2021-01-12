@@ -78,7 +78,7 @@ func renderTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
 	if err != nil {
 		logger.Error(err)
 	}
-	txType := util.GetTransactionType(rawTx)
+	txType := util.GetTransactionType(&rawTx)
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", txType)),
 		elem.Div(
