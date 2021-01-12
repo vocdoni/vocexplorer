@@ -72,9 +72,11 @@ func (dash *EntityContentsView) Render() vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("row")),
 			elem.Div(
 				vecty.Markup(vecty.Class("col-12")),
-				bootstrap.Card(bootstrap.CardParams{
-					Body: &EntityProcessListView{},
-				}),
+				vecty.If(store.Entities.CurrentEntity.ProcessCount > 0,
+					bootstrap.Card(bootstrap.CardParams{
+						Body: &EntityProcessListView{}})),
+				vecty.If(store.Entities.CurrentEntity.ProcessCount == 0, bootstrap.Card(bootstrap.CardParams{
+					Body: vecty.Text("This entity has no processes")})),
 			),
 		),
 	)

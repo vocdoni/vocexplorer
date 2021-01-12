@@ -155,7 +155,7 @@ func GetTransactionType(raw *models.Tx) string {
 	case *models.Tx_CancelProcess:
 		return types.TxCancelProcess
 	case *models.Tx_Admin:
-		return "admin"
+		return raw.Payload.(*models.Tx_Admin).Admin.GetTxtype().String()
 	case *models.Tx_SetProcess:
 		return "setProcess"
 	}
