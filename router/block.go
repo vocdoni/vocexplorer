@@ -47,7 +47,7 @@ func GetBlockHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "Cannot get block at height "+util.IntToString(height), http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(block)
+		json.NewEncoder(w).Encode(block.Block)
 	}
 }
 
