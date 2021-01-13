@@ -99,6 +99,8 @@ func newConfig() (*config.MainCfg, error) {
 		cfgError = fmt.Errorf("cannot unmarshal loaded config file: %s", err)
 	}
 
+	cfg.Global.Dev = cfg.Chain == "dev"
+
 	return &cfg, cfgError
 }
 

@@ -5,7 +5,8 @@ import dvotecfg "go.vocdoni.io/dvote/config"
 //Cfg is the global config to be served to pages
 type Cfg struct {
 	// RefreshTime is the number of seconds between page data refresh
-	RefreshTime int `json:"refreshTime"`
+	RefreshTime int  `json:"refreshTime"`
+	Dev         bool `json:"dev"`
 }
 
 //MainCfg includes backend and frontend config

@@ -2,11 +2,10 @@ package vochain
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/vocdoni/vocexplorer/api"
-	"go.vocdoni.io/dvote/log"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/dvote/util"
 	"go.vocdoni.io/dvote/vochain/scrutinizer"
@@ -75,13 +74,9 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 	}
 	// check/sanitize eid
 	entityID = util.TrimHex(entityID)
-	// if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
-	// 	!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
-	// 	return nil, errors.New("cannot get process list: (malformed entityId)")
-	// }
 	eid, err := hex.DecodeString(entityID)
 	if err != nil {
-		return nil, errors.New("cannot decode entityID")
+		return nil, fmt.Errorf("cannot decode entityID")
 	}
 	return vs.scrut.ProcessList(eid, []byte{}, listSize)
 }
@@ -90,20 +85,15 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint32, error) {
 	var err error
 	processID = util.TrimHex(processID)
-	// if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
-	// 	return "", "", nil, errors.New("cannot get results: (malformed processId)")
-	// }
-
 	// Get process info
 	pid, err := hex.DecodeString(processID)
 	if err != nil {
-		return "", "", nil, errors.New("cannot decode processID")
+		return "", "", nil, fmt.Errorf("cannot decode processID")
 	}
 	procInfo, err := vs.scrut.ProcessInfo(pid)
 	if err != nil {
 		return "", "", nil, err
 	}
-	log.Debugf("Results for process %s: %+v", processID, procInfo)
 	var procType string
 	var state string
 
@@ -125,7 +115,7 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 		return procType, state, nil, err
 	}
 	if err == scrutinizer.ErrNoResultsYet {
-		return procType, state, nil, errors.New(scrutinizer.ErrNoResultsYet.Error())
+		return procType, state, nil, fmt.Errorf(scrutinizer.ErrNoResultsYet.Error())
 	}
 	results := vs.scrut.GetFriendlyResults(vr)
 	return procType, state, results, nil

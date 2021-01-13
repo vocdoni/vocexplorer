@@ -73,7 +73,7 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 				vecty.Markup(vecty.Class("title")),
 				elem.Anchor(
 					vecty.Markup(
-						vecty.Attribute("href", "https://app.vocdoni.net/processes/#/0x"+store.Processes.CurrentProcess.EntityID+"/0x"+store.Processes.CurrentProcess.ID),
+						vecty.Attribute("href", store.ProcessDomain+store.Processes.CurrentProcess.EntityID+"/0x"+store.Processes.CurrentProcess.ID),
 						vecty.Property("target", store.Processes.CurrentProcess.ID),
 					),
 					vecty.Markup(vecty.Attribute("aria-label", "Link to process "+store.Processes.CurrentProcess.ID+"'s profile page")),
