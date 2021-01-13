@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/frontend/actions"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/frontend/store"
+	"github.com/vocdoni/vocexplorer/frontend/update"
 )
 
 // StatsDashboardView renders the dashboard landing page

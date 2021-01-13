@@ -3,7 +3,7 @@ package vochain
 import (
 	"fmt"
 
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"github.com/vocdoni/vocexplorer/proto"
 )
 
 // GetTransactions retrieves all transactions from a single block

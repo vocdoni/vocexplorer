@@ -8,8 +8,8 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/prop"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/frontend/actions"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
 	router "marwan.io/vecty-router"
 )
 

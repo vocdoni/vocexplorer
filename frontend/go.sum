@@ -1358,6 +1358,8 @@ github.com/urfave/cli/v2 v2.0.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
 github.com/vocdoni/eth-storage-proof v0.1.4-0.20201128112323-de7513ce5e25/go.mod h1:NLA1A55raZ1VNMmKulPUm+Lu9CVetCDVuDCYk5bSYrE=
+github.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da h1:qEKse/C/gOACneRkXQQZLgXjXEe8aaxzcuS60KwUX78=
+github.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da/go.mod h1:IRX9TEuQAK5j8yDceSak55G0gu8S52aeK++NJuAyYSY=
 github.com/warpfork/go-wish v0.0.0-20180510122957-5ad1f5abf436/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/warpfork/go-wish v0.0.0-20190328234359-8b3e70f8e830/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/warpfork/go-wish v0.0.0-20200122115046-b9ea61034e4a/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
@@ -1389,7 +1391,6 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/xtaci/kcp-go v5.4.20+incompatible/go.mod h1:bN6vIwHQbfHaHtFpEssmWsN45a+AZwO7eyRCmEIbtvE=
 github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae/go.mod h1:gXtu8J62kEgmN++bm9BVICuT/e8yiLI2KFobd/TRFsE=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-gitlab.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da h1:qEKse/C/gOACneRkXQQZLgXjXEe8aaxzcuS60KwUX78=
 gitlab.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da/go.mod h1:IRX9TEuQAK5j8yDceSak55G0gu8S52aeK++NJuAyYSY=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

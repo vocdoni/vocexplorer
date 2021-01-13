@@ -1,8 +1,8 @@
 package store
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/frontend/actions"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
 // Reduce registers all storage actions

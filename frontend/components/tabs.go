@@ -4,7 +4,7 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
 // TabAction is the interface for a tab action

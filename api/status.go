@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 
-	"gitlab.com/vocdoni/vocexplorer/logger"
+	"github.com/vocdoni/vocexplorer/logger"
 )
 
 //GetStats gets the latest statistics

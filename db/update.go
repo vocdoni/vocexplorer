@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
-	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
-	"gitlab.com/vocdoni/vocexplorer/util"
+	"github.com/vocdoni/vocexplorer/config"
+	voctypes "github.com/vocdoni/vocexplorer/proto"
+	"github.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
 	"go.vocdoni.io/dvote/vochain"

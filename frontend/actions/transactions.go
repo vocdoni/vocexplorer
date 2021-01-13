@@ -1,9 +1,9 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
 
 // TransactionTabChange is the action to change between tabs in transaction view details

@@ -13,9 +13,9 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/db"
-	"gitlab.com/vocdoni/vocexplorer/router"
+	"github.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/db"
+	"github.com/vocdoni/vocexplorer/router"
 	dvotecfg "go.vocdoni.io/dvote/config"
 	"go.vocdoni.io/dvote/log"
 )

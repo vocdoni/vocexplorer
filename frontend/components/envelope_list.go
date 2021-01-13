@@ -6,10 +6,10 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/util"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/frontend/store"
+	"github.com/vocdoni/vocexplorer/util"
 )
 
 // EnvelopeList renders the envelope list pane

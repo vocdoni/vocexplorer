@@ -6,9 +6,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/util"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"github.com/vocdoni/vocexplorer/util"
 )
 
 //BlockCard renders a single block card

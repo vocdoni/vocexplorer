@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
 )
 
 // DetailsView renders blockchain details

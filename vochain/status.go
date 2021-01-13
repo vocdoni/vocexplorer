@@ -4,7 +4,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"gitlab.com/vocdoni/vocexplorer/proto"
+	"github.com/vocdoni/vocexplorer/proto"
 	"go.vocdoni.io/dvote/log"
 )
 

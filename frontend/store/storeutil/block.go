@@ -1,9 +1,9 @@
 package storeutil
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/config"
 )
 
 // Blocks stores all data abotu blockchain blocks

@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/golang/protobuf/ptypes"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 	"go.vocdoni.io/dvote/log"
 )
 

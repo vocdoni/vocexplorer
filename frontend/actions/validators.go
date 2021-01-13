@@ -1,8 +1,8 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"github.com/vocdoni/vocexplorer/config"
 )
 
 // ValidatorsIndexChange is the action to set the pagination index

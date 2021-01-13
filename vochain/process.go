@@ -5,7 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"gitlab.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api"
+	"go.vocdoni.io/dvote/log"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/dvote/util"
 	"go.vocdoni.io/dvote/vochain/scrutinizer"
@@ -102,6 +103,7 @@ func (vs *VochainService) GetProcessResults(processID string) (string, string, [
 	if err != nil {
 		return "", "", nil, err
 	}
+	log.Debugf("Results for process %s: %+v", processID, procInfo)
 	var procType string
 	var state string
 

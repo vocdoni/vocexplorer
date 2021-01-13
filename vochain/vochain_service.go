@@ -3,7 +3,7 @@ package vochain
 import (
 	"time"
 
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/config"
 	"go.vocdoni.io/dvote/log"
 	"go.vocdoni.io/dvote/service"
 	"go.vocdoni.io/dvote/vochain"

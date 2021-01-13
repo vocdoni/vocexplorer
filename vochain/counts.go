@@ -3,7 +3,7 @@ package vochain
 import (
 	"encoding/hex"
 
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/config"
 	"go.vocdoni.io/dvote/util"
 )
 

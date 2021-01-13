@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"github.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // StatsView renders the stats pane

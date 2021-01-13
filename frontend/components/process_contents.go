@@ -7,13 +7,13 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/frontend/update"
-	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/frontend/actions"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/frontend/store"
+	"github.com/vocdoni/vocexplorer/frontend/update"
+	"github.com/vocdoni/vocexplorer/logger"
+	"github.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessContentsView renders the processes dashboard page

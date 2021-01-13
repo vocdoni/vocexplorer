@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
-	"gitlab.com/vocdoni/vocexplorer/config"
-	"gitlab.com/vocdoni/vocexplorer/db"
+	"github.com/vocdoni/vocexplorer/config"
+	"github.com/vocdoni/vocexplorer/db"
 )
 
 // ListEntitiesHandler writes a list of entities from 'from'

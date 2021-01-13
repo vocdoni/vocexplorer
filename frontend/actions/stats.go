@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api"
 )
 
 //SetStats is the action to set the blockchain statistics

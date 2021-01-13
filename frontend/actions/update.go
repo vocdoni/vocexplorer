@@ -1,8 +1,8 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
 )
 
 // DisableUpdate is the action to set the disable update status for given disableupdate boolean
