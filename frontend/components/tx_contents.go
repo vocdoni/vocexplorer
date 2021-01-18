@@ -310,9 +310,9 @@ func UpdateTxContents(d *TxContents) {
 		processID = typedTx.ProcessID
 	}
 
-	entityID = util.TrimHex(entityID)
+	entityID = entityID
 	processID = util.TrimHex(processID)
-	nullifier = util.TrimHex(nullifier)
+	nullifier = nullifier
 	var envelopeHeight int64
 	if nullifier != "" {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)

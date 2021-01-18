@@ -89,7 +89,7 @@ func GetTxByHeightHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.
 
 // GetTxByHashHandler writes the tx corresponding to given hash key
 func GetTxByHashHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByIDHandler(d, "id", config.TxHashPrefix, nil, packTransaction)
+	return buildItemByIDHandler(d, "id", config.TxHashPrefix, nil, packTransaction, true)
 }
 
 // TxHeightFromHashHandler indirects the given tx hash
@@ -160,7 +160,7 @@ func SearchTransactionsHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *
 			}
 			return rawTx, nil
 		},
-		packTransaction,
+		packTransaction, true,
 	)
 }
 

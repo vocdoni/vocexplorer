@@ -13,7 +13,6 @@ func (vs *VochainService) GetEnvelopeList(processID string, from int64, listSize
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	processID = util.TrimHex(processID)
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return nil, errors.New("cannot get envelope list: (malformed processId)")
 	}

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func buildItemByIDHandler(d *db.ExplorerDB, IDName, itemPrefix string, getItem func(key []byte) ([]byte, error), pack func([]byte) []byte) func(w http.ResponseWriter, r *http.Request) {
+func buildItemByIDHandler(d *db.ExplorerDB, IDName, itemPrefix string, getItem func(key []byte) ([]byte, error), pack func([]byte) []byte, decodeHex bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ids, ok := r.URL.Query()[IDName]
 		if !ok || len(ids[0]) < 1 {
@@ -25,9 +25,15 @@ func buildItemByIDHandler(d *db.ExplorerDB, IDName, itemPrefix string, getItem f
 			return
 		}
 		id := ids[0]
-		addressBytes, err := hex.DecodeString(id)
-		if err != nil {
-			log.Warn(err)
+		var addressBytes []byte
+		var err error
+		if decodeHex {
+			addressBytes, err = hex.DecodeString(id)
+			if err != nil {
+				log.Warn(err)
+			}
+		} else {
+			addressBytes = []byte(id)
 		}
 		key := append([]byte(itemPrefix), addressBytes...)
 		raw, err := d.Db.Get(key)
@@ -42,6 +48,7 @@ func buildItemByIDHandler(d *db.ExplorerDB, IDName, itemPrefix string, getItem f
 				return
 			}
 		}
+		log.Debugf("Got tx %s: %X", id)
 		if pack != nil {
 			raw = pack(raw)
 		}
@@ -139,7 +146,7 @@ func buildListItemsHandler(d *db.ExplorerDB, key string, getItem func(key []byte
 	}
 }
 
-func buildSearchHandler(d *db.ExplorerDB, key string, getKey bool, getItem func(key []byte) ([]byte, error), pack func(key []byte) []byte) func(w http.ResponseWriter, r *http.Request) {
+func buildSearchHandler(d *db.ExplorerDB, key string, getKey bool, getItem func(key []byte) ([]byte, error), pack func(key []byte) []byte, decodeHex bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		terms, ok := r.URL.Query()["term"]
 		if !ok || len(terms[0]) < 1 {
@@ -152,10 +159,10 @@ func buildSearchHandler(d *db.ExplorerDB, key string, getKey bool, getItem func(
 		var err error
 		var items [][]byte
 		if getKey {
-			items = db.SearchKeys(d.Db, config.ListSize, searchTerm, []byte(key))
+			items = db.SearchKeys(d.Db, config.ListSize, searchTerm, []byte(key), decodeHex)
 			// items = db.SearchKeys(d.Db, config.ListSize, term, []byte(key))
 		} else {
-			items = db.SearchItems(d.Db, config.ListSize, searchTerm, []byte(key))
+			items = db.SearchItems(d.Db, config.ListSize, searchTerm, []byte(key), decodeHex)
 			// items = db.SearchItems(d.Db, config.ListSize, term, []byte(key))
 		}
 		if len(items) == 0 {
@@ -190,7 +197,7 @@ func buildSearchHandler(d *db.ExplorerDB, key string, getKey bool, getItem func(
 	}
 }
 
-func buildListItemsByParent(d *db.ExplorerDB, parentName, heightMapKey, getHeightPrefix, itemPrefix string, marshalHeight bool, pack func(key []byte) []byte) func(w http.ResponseWriter, r *http.Request) {
+func buildListItemsByParent(d *db.ExplorerDB, parentName, heightMapKey, getHeightPrefix, itemPrefix string, marshalHeight bool, pack func(key []byte) []byte, decodeHex bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		froms, ok := r.URL.Query()["from"]
 		if !ok || len(froms[0]) < 1 {
@@ -219,9 +226,14 @@ func buildListItemsByParent(d *db.ExplorerDB, parentName, heightMapKey, getHeigh
 		from = util.Min(from, int(itemHeight))
 
 		// Get keys
-		parentBytes, err := hex.DecodeString(parents[0])
-		if err != nil {
-			log.Warn(err)
+		var parentBytes []byte
+		if decodeHex {
+			parentBytes, err = hex.DecodeString(parents[0])
+			if err != nil {
+				log.Warn(err)
+			}
+		} else {
+			parentBytes = []byte(parents[0])
 		}
 		keys := db.ListItemsByHeight(d.Db, config.ListSize, from, append([]byte(getHeightPrefix), parentBytes...))
 		if len(keys) == 0 {

@@ -10,7 +10,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ProcessResults updates auxilary info for all currently displayed process id's
@@ -40,7 +39,7 @@ func ProcessResults() {
 func EnvelopeProcessResults() {
 	for _, envelope := range store.Envelopes.Envelopes {
 		if envelope != nil {
-			ID := strings.ToLower(util.TrimHex(envelope.ProcessID))
+			ID := envelope.ProcessID
 			if ID != "" {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
 					results, ok := api.GetProcessResults(strings.ToLower(ID))

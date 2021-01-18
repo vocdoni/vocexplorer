@@ -30,7 +30,7 @@ func GetProcessHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Req
 			}
 			return rawItem, nil
 		},
-		packProcess)
+		packProcess, false)
 }
 
 // ListProcessesHandler writes a list of processes from 'from'
@@ -40,7 +40,7 @@ func ListProcessesHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.
 
 // ListProcessesByEntityHandler writes a list of processes belonging to 'entity'
 func ListProcessesByEntityHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(d, "entity", config.EntityProcessCountMapKey, config.ProcessByEntityPrefix, config.ProcessHeightPrefix, true, packProcess)
+	return buildListItemsByParent(d, "entity", config.EntityProcessCountMapKey, config.ProcessByEntityPrefix, config.ProcessHeightPrefix, true, packProcess, false)
 }
 
 // ProcessHeightByEntityHandler writes the number of processes which share the given entity
@@ -61,7 +61,7 @@ func SearchProcessesHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *htt
 			}
 			return d.Db.Get(append([]byte(config.ProcessHeightPrefix), util.EncodeInt(height.GetHeight())...))
 		},
-		packProcess,
+		packProcess, false,
 	)
 }
 

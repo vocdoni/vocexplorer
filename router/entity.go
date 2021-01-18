@@ -18,6 +18,6 @@ func SearchEntitiesHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http
 		config.EntityIDPrefix,
 		true,
 		nil,
-		nil,
+		nil, false,
 	)
 }

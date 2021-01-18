@@ -20,7 +20,6 @@ func (vs *VochainService) GetProcessCount() int64 {
 // GetEnvelopeCount gets number of envelopes in a given process
 func (vs *VochainService) GetEnvelopeCount(processID string) (int64, error) {
 	// check pid
-	processID = util.TrimHex(processID)
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return 0, errors.New("cannot get envelope height: (malformed processId)")
 	}

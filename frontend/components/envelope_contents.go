@@ -61,11 +61,21 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	results := store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID]
 	keys := []string{}
 	// If package is encrypted
-	if !types.ProcessIsEncrypted[results.ProcessType] {
+	if results.ProcessType == "" {
+		decryptionStatus = ""
+	} else if !types.ProcessIsEncrypted[results.ProcessType] {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
+		var err error
+		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
+		if err != nil {
+			logger.Error(err)
+			decryptionStatus = "Unable to decode vote"
+			displayPackage = false
+		}
 	} else { // process is/was encrypted
-		if pkeys != nil {
+		decryptionStatus = "Vote encrypted, attempting to decrypt"
+		if pkeys != nil && len(pkeys.Priv) > 0 {
 		indexLoop:
 			for _, index := range store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes {
 				for _, key := range pkeys.Priv {
@@ -78,21 +88,21 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 						break indexLoop
 					}
 				}
-				decryptionStatus = "Vote decrypted"
-				displayPackage = true
 			}
 		} else {
-			decryptionStatus = "Unable to decrypt: no keys available"
+			decryptionStatus = "Process is " + results.State + ", no keys available. Vote cannot be decrypted"
 			displayPackage = false
 		}
-	}
-	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
-		var err error
-		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
-		if err != nil {
-			logger.Error(err)
-			decryptionStatus = "Unable to decode vote"
-			displayPackage = false
+		if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
+			decryptionStatus = "Vote decrypted"
+			displayPackage = true
+			var err error
+			votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
+			if err != nil {
+				logger.Error(err)
+				decryptionStatus = "Unable to decode vote"
+				displayPackage = false
+			}
 		}
 	}
 	c.DecryptionStatus = decryptionStatus
@@ -169,8 +179,8 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 		elem.DescriptionList(
 			elem.DefinitionTerm(vecty.Text("Belongs to process")),
 			elem.Description(Link(
-				"/process/"+util.TrimHex(store.Envelopes.CurrentEnvelope.ProcessID),
-				util.TrimHex(store.Envelopes.CurrentEnvelope.ProcessID),
+				"/process/"+store.Envelopes.CurrentEnvelope.ProcessID,
+				store.Envelopes.CurrentEnvelope.ProcessID,
 				"hash",
 			)),
 			elem.DefinitionTerm(vecty.Text("Packaged in transaction")),

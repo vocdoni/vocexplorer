@@ -88,12 +88,18 @@ func (t *ItemList) Mirror() *dbtypes.ItemList {
 
 // Mirror returns the mirrored type
 func (t *Validator) Mirror() *dbtypes.Validator {
+	if t == nil {
+		return &dbtypes.Validator{}
+	}
 	m := &dbtypes.Validator{
 		Address:          t.Address,
 		PubKey:           t.PubKey,
 		VotingPower:      t.VotingPower,
 		ProposerPriority: t.ProposerPriority,
 		Height:           t.Height.Mirror(),
+	}
+	if t.Height != nil {
+		m.Height = t.Height.Mirror()
 	}
 	return m
 }

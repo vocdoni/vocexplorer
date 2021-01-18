@@ -61,8 +61,8 @@ func renderEnvelopes(p *Pagination, index int) []vecty.MarkupOrChild {
 
 // EnvelopeBlock renders a single envelope block
 func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
-	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
-	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
+	processResults := store.Processes.ProcessResults[strings.ToLower(envelope.ProcessID)]
+	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(envelope.ProcessID)]
 	if processResults.EnvelopeCount < 1 && processResults.ProcessType == "" && processResults.State == "" {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile", "empty")),
@@ -147,8 +147,8 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 								vecty.Text("only envelope on process "),
 							),
 							Link(
-								"/process/"+util.TrimHex(envelope.ProcessID),
-								util.TrimHex(envelope.ProcessID),
+								"/process/"+envelope.ProcessID,
+								envelope.ProcessID,
 								"hash",
 							),
 						),

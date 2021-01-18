@@ -13,7 +13,7 @@ import (
 
 // GetValidatorHandler writes the validator corresponding to given address key
 func GetValidatorHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildItemByIDHandler(d, "id", config.ValidatorPrefix, nil, packValidator)
+	return buildItemByIDHandler(d, "id", config.ValidatorPrefix, nil, packValidator, true)
 }
 
 // ListValidatorsHandler writes a list of validators from 'from'
@@ -33,7 +33,7 @@ func SearchValidatorsHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *ht
 		config.ValidatorPrefix,
 		false,
 		nil,
-		packValidator,
+		packValidator, true,
 	)
 }
 

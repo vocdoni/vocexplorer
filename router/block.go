@@ -64,7 +64,7 @@ func ListBlocksHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Req
 
 // ListBlocksByValidatorHandler writes a list of blocks which share the given proposer
 func ListBlocksByValidatorHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(d, "proposer", config.ValidatorHeightMapKey, config.BlockByValidatorPrefix, config.BlockHashPrefix, false, packBlock)
+	return buildListItemsByParent(d, "proposer", config.ValidatorHeightMapKey, config.BlockByValidatorPrefix, config.BlockHashPrefix, false, packBlock, true)
 }
 
 // NumBlocksByValidatorHandler writes the number of blocks which share the given proposer
@@ -78,7 +78,7 @@ func SearchBlocksHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.R
 		config.BlockHashPrefix,
 		false,
 		nil,
-		packBlock,
+		packBlock, true,
 	)
 }
 

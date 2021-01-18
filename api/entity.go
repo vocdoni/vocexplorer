@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"strings"
 
 	types "gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -27,7 +26,7 @@ func GetEntityList(i int) ([config.ListSize]string, bool) {
 	var entityList [config.ListSize]string
 	for i, rawEntity := range rawEntityList.Items {
 		if len(rawEntity) > 0 {
-			entity := strings.ToLower(util.HexToString(rawEntity))
+			entity := string(rawEntity)
 			entityList[i] = entity
 		}
 	}

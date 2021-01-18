@@ -58,7 +58,7 @@ func (vs *VochainService) GetProcListResults(fromID string, listSize int64) []st
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	return vs.scrut.List(listSize, util.TrimHex(fromID), types.ScrutinizerResultsPrefix)
+	return vs.scrut.List(listSize, fromID, types.ScrutinizerResultsPrefix)
 }
 
 // GetProcListLiveResults gets list of live processes on the Vochain
@@ -66,7 +66,7 @@ func (vs *VochainService) GetProcListLiveResults(fromID string, listSize int64) 
 	if listSize > MaxListIterations || listSize <= 0 {
 		listSize = MaxListIterations
 	}
-	return vs.scrut.List(listSize, util.TrimHex(fromID), types.ScrutinizerLiveProcessPrefix)
+	return vs.scrut.List(listSize, fromID, types.ScrutinizerLiveProcessPrefix)
 }
 
 // GetProcessList gets list of processes for a given entity, starting at from
@@ -75,17 +75,17 @@ func (vs *VochainService) GetProcessList(entityID, fromID string, listSize int64
 		listSize = MaxListIterations
 	}
 	// check/sanitize eid and fromId
-	entityID = util.TrimHex(entityID)
-	if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
-		!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
-		return nil, errors.New("cannot get process list: (malformed entityId)")
-	}
-	if len(fromID) > 0 {
-		fromID = util.TrimHex(fromID)
-		if !util.IsHexEncodedStringWithLength(fromID, types.ProcessIDsize) {
-			return nil, errors.New("cannot get process list: (malformed fromID)")
-		}
-	}
+	// entityID = util.TrimHex(entityID)
+	// if !util.IsHexEncodedStringWithLength(entityID, types.EntityIDsize) &&
+	// 	!util.IsHexEncodedStringWithLength(entityID, types.EntityIDsizeV2) {
+	// 	return nil, errors.New("cannot get process list: (malformed entityId)")
+	// }
+	// if len(fromID) > 0 {
+	// 	fromID = util.TrimHex(fromID)
+	// 	if !util.IsHexEncodedStringWithLength(fromID, types.ProcessIDsize) {
+	// 		return nil, errors.New("cannot get process list: (malformed fromID)")
+	// 	}
+	// }
 	fullProcessList, err := vs.scrut.Storage.Get([]byte(types.ScrutinizerEntityPrefix + entityID))
 	if err != nil {
 		return nil, fmt.Errorf("cannot get entity process list: (%s)", err)
@@ -111,7 +111,6 @@ func (vs *VochainService) GetProcessList(entityID, fromID string, listSize int64
 // GetProcessResults gets the results of a given process
 func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint32, error) {
 	var err error
-	processID = util.TrimHex(processID)
 	if !util.IsHexEncodedStringWithLength(processID, types.ProcessIDsize) {
 		return "", "", nil, errors.New("cannot get results: (malformed processId)")
 	}

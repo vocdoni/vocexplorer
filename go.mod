@@ -19,7 +19,7 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.7
-	gitlab.com/vocdoni/go-dvote v0.6.3-0.20201008152553-71fdf6c55798
+	gitlab.com/vocdoni/go-dvote v0.6.3
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0 // indirect
 	golang.org/x/net v0.0.0-20201002202402-0a1ea396d57c // indirect
 	golang.org/x/sys v0.0.0-20201005065044-765f4ea38db3 // indirect

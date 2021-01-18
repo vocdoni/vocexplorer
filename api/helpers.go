@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	types "gitlab.com/vocdoni/vocexplorer/api/dbtypes"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //PingServer pings the web server
@@ -150,7 +148,7 @@ func getItemList(itemType interface{}, url string) (interface{}, bool) {
 		itemList := [config.ListSize]string{}
 		for i, rawItem := range rawItemList.Items {
 			if len(rawItem) > 0 {
-				item := strings.ToLower(util.HexToString(rawItem))
+				item := string(rawItem)
 				itemList[i] = item
 			}
 		}

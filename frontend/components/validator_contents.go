@@ -89,6 +89,9 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
 	}
+	if store.Validators.CurrentValidator == nil {
+		return
+	}
 	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})

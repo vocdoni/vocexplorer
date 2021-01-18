@@ -12,7 +12,6 @@ import (
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
 	dvotetypes "gitlab.com/vocdoni/go-dvote/types"
-	dvoteutil "gitlab.com/vocdoni/go-dvote/util"
 	"gitlab.com/vocdoni/go-dvote/vochain"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	voctypes "gitlab.com/vocdoni/vocexplorer/proto"
@@ -314,8 +313,8 @@ func (d *ExplorerDB) updateEntityList() {
 	if err != nil {
 		latestEntity = []byte{}
 	}
-	log.Debugf("Getting entities from id %s", util.HexToString(latestEntity))
-	entities := d.Vs.GetScrutinizerEntities(strings.ToLower(util.HexToString(latestEntity)), 100)
+	log.Debugf("Getting entities from id %s", string(latestEntity))
+	entities := d.Vs.GetScrutinizerEntities(strings.ToLower(string((latestEntity))), 100)
 	if len(entities) < 1 {
 		log.Warn("No entities retrieved")
 		return
@@ -341,12 +340,7 @@ func (d *ExplorerDB) updateEntityList() {
 	for i, entity = range newEntities {
 		// Write entityHeight:entityID
 		heightKey := append([]byte(config.EntityHeightPrefix), util.EncodeInt(int(localEntityHeight)+i)...)
-		entity = util.TrimHex(entity)
-		rawEntity, err := hex.DecodeString(entity)
-		if err != nil {
-			log.Error(err)
-			break
-		}
+		rawEntity := []byte(entity)
 		batch.Put(heightKey, rawEntity)
 
 		// Write entityID:[]
@@ -432,16 +426,13 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, he
 	batch := d.Db.NewBatch()
 
 	var lastRawProcess []byte
-	rawEntity, err := hex.DecodeString(util.TrimHex(entity))
-	if err != nil {
-		log.Warn(err)
-	}
+	rawEntity := []byte(entity)
 	// Get Entity|LocalHeight:ProcessHeight
 	entityProcessKey := append([]byte(config.ProcessByEntityPrefix), rawEntity...)
 	entityProcessKey = append(entityProcessKey, util.EncodeInt(int(localHeight-1))...)
 	rawGlobalHeight, err := d.Db.Get(entityProcessKey)
 	if err != nil {
-		log.Debugf("Height Key not found: %s", err.Error())
+		log.Debugf("Process height Key not found: %s", err.Error())
 		rawGlobalHeight = []byte{}
 	}
 	var globalHeight voctypes.Height
@@ -465,15 +456,17 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, he
 	}
 	requestMutex.Lock()
 	lastPID := lastProcess.ID
-	entity = strings.ToLower(util.TrimHex(entity))
+	entity = string(entity)
+	// entity = strings.ToLower(string(entity))
 	log.Debugf("Getting processes from id %s, entity %s", lastPID, entity)
-	if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
-		lastPID = ""
-	}
+	// if !dvoteutil.IsHexEncodedStringWithLength(lastPID, dvotetypes.ProcessIDsize) {
+	// 	lastPID = ""
+	// }
 	newProcessList, err := d.Vs.GetProcessList(entity, lastPID, 100)
 	if err != nil {
 		log.Error(err)
 	}
+	log.Debugf("New processes: %v", newProcessList)
 	requestMutex.Unlock()
 	if len(newProcessList) < 1 {
 		return
@@ -494,10 +487,7 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, he
 		if err != nil {
 			log.Error(err)
 		}
-		rawPID, err := hex.DecodeString(util.TrimHex(processID))
-		if err != nil {
-			log.Error(err)
-		}
+		rawPID := []byte(processID)
 
 		// Write Height:Process
 		processKey := append([]byte(config.ProcessHeightPrefix), util.EncodeInt(globalHeight)...)
@@ -539,17 +529,17 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		votePackage := voctypes.Envelope{
 			GlobalHeight: state.envelopeHeight,
 			Package:      voteTx.VotePackage,
-			ProcessID:    voteTx.ProcessID,
+			ProcessID:    util.TrimHex(voteTx.ProcessID),
 			TxHeight:     tx.TxHeight,
 		}
 
 		// Update height of process env belongs to
-		procHeight, ok := state.processEnvelopeHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())]
+		procHeight, ok := state.processEnvelopeHeightMap.Heights[votePackage.GetProcessID()]
 		if !ok {
 			procHeight = 0
 		}
 		procHeight++
-		state.processEnvelopeHeightMap.Heights[util.TrimHex(votePackage.GetProcessID())] = procHeight
+		state.processEnvelopeHeightMap.Heights[votePackage.GetProcessID()] = procHeight
 
 		votePackage.ProcessHeight = procHeight
 
@@ -573,7 +563,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Errorf("cannot generate envelope nullifier: (%s)", err)
 		}
-		votePackage.Nullifier = util.TrimHex(nullifier)
+		votePackage.Nullifier = nullifier
 		for _, index := range voteTx.EncryptionKeyIndexes {
 			votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))
 		}
@@ -597,10 +587,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 
 		// Write pid|heightbyPID:globalHeight
 		heightBytes := util.EncodeInt(procHeight)
-		PIDBytes, err := hex.DecodeString(util.TrimHex(votePackage.ProcessID))
-		if err != nil {
-			log.Error(err)
-		}
+		PIDBytes := []byte(votePackage.ProcessID)
 		heightKey := append([]byte(config.EnvPIDPrefix), PIDBytes...)
 		heightKey = append(heightKey, heightBytes...)
 		state.batch.Put(heightKey, rawHeight)

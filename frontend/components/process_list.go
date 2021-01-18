@@ -125,8 +125,8 @@ func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeuti
 							vecty.Text("only process hosted by entity "),
 						),
 						Link(
-							"/entity/"+util.TrimHex(process.EntityID),
-							util.TrimHex(process.EntityID),
+							"/entity/"+process.EntityID,
+							process.EntityID,
 							"hash",
 						),
 					),

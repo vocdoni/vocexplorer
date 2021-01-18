@@ -1,7 +1,6 @@
 package router
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"net/http"
 
@@ -20,7 +19,7 @@ func GetEnvelopeHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Re
 
 // ListEnvelopesByProcessHandler writes a list of envelopes which share the given process
 func ListEnvelopesByProcessHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *http.Request) {
-	return buildListItemsByParent(d, "process", config.ProcessEnvelopeCountMapKey, config.EnvPIDPrefix, config.EnvPackagePrefix, true, packEnvelope)
+	return buildListItemsByParent(d, "process", config.ProcessEnvelopeCountMapKey, config.EnvPIDPrefix, config.EnvPackagePrefix, true, packEnvelope, false)
 }
 
 // ListEnvelopesHandler writes a list of envelopes
@@ -43,12 +42,7 @@ func EnvelopeHeightFromNullifierHandler(d *db.ExplorerDB) func(w http.ResponseWr
 			return
 		}
 		id := ids[0]
-		hash, err := hex.DecodeString(id)
-		if err != nil {
-			log.Warn(err)
-			http.Error(w, "Unable to decode nullifier", http.StatusInternalServerError)
-			return
-		}
+		hash := []byte(id)
 		key := append([]byte(config.EnvNullifierPrefix), hash...)
 		has, err := d.Db.Has(key)
 		if err != nil {
@@ -92,7 +86,7 @@ func SearchEnvelopesHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *htt
 			}
 			return d.Db.Get(append([]byte(config.EnvPackagePrefix), util.EncodeInt(height.GetHeight())...))
 		},
-		packEnvelope,
+		packEnvelope, false,
 	)
 }
 
