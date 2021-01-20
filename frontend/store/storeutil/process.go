@@ -25,6 +25,6 @@ type Process struct {
 	Envelopes     [config.ListSize]*dbtypes.Envelope
 	EnvelopeCount int
 	ProcessType   string
-	Results       [][]uint32
+	Results       [][]uint64
 	State         string
 }

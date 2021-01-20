@@ -82,7 +82,7 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 }
 
 // GetProcessResults gets the results of a given process
-func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint32, error) {
+func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint64, error) {
 	var err error
 	processID = util.TrimHex(processID)
 	// Get process info

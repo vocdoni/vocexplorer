@@ -151,7 +151,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 	}
 }
 
-func renderPollAnswers(answers []uint32) vecty.ComponentOrHTML {
+func renderPollAnswers(answers []uint64) vecty.ComponentOrHTML {
 	items := vecty.List{}
 	for _, a := range answers {
 		items = append(items, elem.ListItem(
@@ -162,7 +162,7 @@ func renderPollAnswers(answers []uint32) vecty.ComponentOrHTML {
 	return items
 }
 
-func renderResults(results [][]uint32) vecty.ComponentOrHTML {
+func renderResults(results [][]uint64) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),

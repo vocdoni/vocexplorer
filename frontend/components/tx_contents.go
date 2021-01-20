@@ -279,13 +279,6 @@ func UpdateTxContents(d *TxContents) {
 		}
 		processID = hex.EncodeToString(typedTx.Process.GetProcessId())
 		entityID = hex.EncodeToString(typedTx.Process.GetEntityId())
-	case *models.Tx_CancelProcess:
-		typedTx := rawTx.GetCancelProcess()
-		txContents, err = json.MarshalIndent(typedTx, "", "\t")
-		if err != nil {
-			logger.Error(err)
-		}
-		processID = hex.EncodeToString(typedTx.GetProcessId())
 	case *models.Tx_Admin:
 		typedTx := rawTx.GetAdmin()
 		txContents, err = json.MarshalIndent(typedTx, "", "\t")

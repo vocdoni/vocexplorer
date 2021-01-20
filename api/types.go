@@ -47,7 +47,7 @@ type VochainStats struct {
 type ProcessResults struct {
 	State   string
 	Type    string
-	Results [][]uint32
+	Results [][]uint64
 }
 
 // Block stores all block fields used by frontend, mimics tendermint block type

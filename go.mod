@@ -9,9 +9,9 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
-	github.com/tendermint/tendermint v0.34.1
-	go.vocdoni.io/dvote v0.6.1-0.20210119170108-1fa41219aafb
-	go.vocdoni.io/proto v0.1.4
+	github.com/tendermint/tendermint v0.34.3
+	go.vocdoni.io/dvote v0.6.1-0.20210120170748-fdfa49fe5328
+	go.vocdoni.io/proto v0.1.6
 	google.golang.org/protobuf v1.25.0
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
