@@ -86,7 +86,7 @@ func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeuti
 	}
 	entityHeight := store.Entities.ProcessHeights[process.EntityID]
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(info.State))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(info.ProcessInfo.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -94,11 +94,11 @@ func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeuti
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetProcessName(info.ProcessType)),
+						vecty.Text(util.GetProcessName(info.ProcessInfo.Type)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(strings.Title(info.State)),
+						vecty.Text(strings.Title(info.ProcessInfo.State)),
 					),
 				),
 			),

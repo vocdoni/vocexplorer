@@ -64,8 +64,8 @@ type SetCurrentProcessEnvelopeHeight struct {
 	Height int
 }
 
-// SetCurrentProcessResults is the action to set the current process results
-type SetCurrentProcessResults struct {
+// SetCurrentProcessInfo is the action to set the current process info
+type SetCurrentProcessInfo struct {
 	Process storeutil.Process
 }
 

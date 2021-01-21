@@ -61,7 +61,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	// If package is encrypted
 	logger.Info(fmt.Sprintf("Indexes %v", store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes))
 
-	if !strings.Contains(strings.ToLower(results.ProcessType), "encrypted") {
+	if !strings.Contains(strings.ToLower(results.ProcessInfo.Type), "encrypted") {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else { // process is/was encrypted
@@ -73,7 +73,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 						keys = append(keys, key.Key)
 						break
 					} else {
-						decryptionStatus = "Process is " + results.State + ", vote cannot be decrypted"
+						decryptionStatus = "Process is " + results.ProcessInfo.State + ", vote cannot be decrypted"
 						displayPackage = false
 						break indexLoop
 					}
@@ -153,9 +153,7 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 			dispatcher.Dispatch(&actions.SetProcessContents{
 				ID: store.Envelopes.CurrentEnvelope.ProcessID,
 				Process: storeutil.Process{
-					ProcessType: results.Type,
-					State:       results.State,
-					Results:     results.Results},
+					ProcessInfo: *results},
 			})
 		}
 	}
@@ -198,10 +196,10 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			)),
 			elem.DefinitionTerm(vecty.Text("Vote type")),
 			elem.Description(vecty.Text(
-				util.GetEnvelopeName(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessType),
+				util.GetEnvelopeName(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.Type),
 			)),
 			elem.DefinitionTerm(vecty.Text("Process status")),
-			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].State))),
+			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.State))),
 			elem.DefinitionTerm(vecty.Text("Decryption status")),
 			elem.Description(vecty.Text(
 				c.DecryptionStatus,
@@ -216,8 +214,13 @@ func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
 		Text:  "Contents",
 		Alias: "contents",
 	}}
+	details := &EnvelopeTab{&Tab{
+		Text:  "Details",
+		Alias: "details",
+	}}
 
 	contents := c.renderVotePackage()
+	envelopeDetails := elem.Div(vecty.Markup(vecty.Class("poll-details")), renderEnvelopeType(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.EnvelopeType))
 
 	if contents == nil {
 		return nil
@@ -229,11 +232,13 @@ func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(c, cTab),
+				TabLink(c, details),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(cTab, contents),
+			TabContents(details, envelopeDetails),
 		),
 	}
 }

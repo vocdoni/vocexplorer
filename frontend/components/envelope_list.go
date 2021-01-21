@@ -63,7 +63,7 @@ func renderEnvelopes(p *Pagination, index int) []vecty.MarkupOrChild {
 func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 	processResults := store.Processes.ProcessResults[strings.ToLower(util.TrimHex(envelope.ProcessID))]
 	processEnvelopeCount := store.Processes.EnvelopeHeights[strings.ToLower(util.TrimHex(envelope.ProcessID))]
-	if processResults.EnvelopeCount < 1 && processResults.ProcessType == "" && processResults.State == "" {
+	if processResults.EnvelopeCount < 1 && processResults.ProcessInfo.Type == "" && processResults.ProcessInfo.State == "" {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile", "empty")),
 			elem.Div(
@@ -86,7 +86,7 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 		)
 	}
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(processResults.State))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(processResults.ProcessInfo.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -97,17 +97,17 @@ func EnvelopeBlock(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 						vecty.Text("#"+util.IntToString(envelope.GlobalHeight)),
 					),
 					vecty.If(
-						processResults.ProcessType != "",
+						processResults.ProcessInfo.Type != "",
 						elem.Span(
 							vecty.Markup(vecty.Class("title")),
-							vecty.Text(util.GetEnvelopeName(processResults.ProcessType)),
+							vecty.Text(util.GetEnvelopeName(processResults.ProcessInfo.Type)),
 						),
 					),
 					vecty.If(
-						processResults.State != "",
+						processResults.ProcessInfo.State != "",
 						elem.Span(
 							vecty.Markup(vecty.Class("status")),
-							vecty.Text("Process "+strings.ToLower(processResults.State)),
+							vecty.Text("Process "+strings.ToLower(processResults.ProcessInfo.State)),
 						),
 					),
 				),

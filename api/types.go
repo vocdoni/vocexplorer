@@ -44,10 +44,42 @@ type VochainStats struct {
 }
 
 // ProcessResults holds the results of a process
-type ProcessResults struct {
-	State   string
-	Type    string
-	Results [][]uint64
+type ProcessResults struct { // Set to mirror proto/build/go/models/vochain.pb.go
+	CensusOrigin string
+	CensusRoot   []byte
+	EndBlock     uint32
+	EnvelopeType EnvelopeType
+	Mode         ProcessMode
+	Results      [][]uint64
+	StartBlock   uint32
+	State        string
+	Type         string
+	VoteOptions  ProcessVoteOptions
+}
+
+// EnvelopeType holds the EnvelopeType flags
+type EnvelopeType struct {
+	Serial         bool
+	Anonymous      bool
+	EncryptedVotes bool
+	UniqueValues   bool
+}
+
+// ProcessMode holds the ProcessMode flags
+type ProcessMode struct {
+	AutoStart         bool
+	Interruptible     bool
+	DynamicCensus     bool
+	EncryptedMetaData bool
+}
+
+// ProcessVoteOptions holds the ProcessVoteOptions flags
+type ProcessVoteOptions struct {
+	MaxCount          uint32
+	MaxValue          uint32
+	MaxVoteOverwrites uint32
+	MaxTotalCost      uint32
+	CostExponent      uint32
 }
 
 // Block stores all block fields used by frontend, mimics tendermint block type

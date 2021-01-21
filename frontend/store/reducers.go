@@ -126,15 +126,15 @@ func processActions(action interface{}) {
 		Processes.ProcessKeys[a.ID] = a.Keys
 
 	case *actions.SetProcessState:
-		Processes.CurrentProcessResults.State = a.State
+		Processes.CurrentProcessResults.ProcessInfo.State = a.State
 
 	case *actions.SetProcessType:
-		Processes.CurrentProcessResults.ProcessType = a.Type
+		Processes.CurrentProcessResults.ProcessInfo.Type = a.Type
 
 	case *actions.SetCurrentProcessEnvelopeHeight:
 		Processes.CurrentProcessResults.EnvelopeCount = a.Height
 
-	case *actions.SetCurrentProcessResults:
+	case *actions.SetCurrentProcessInfo:
 		Processes.CurrentProcessResults = a.Process
 
 	case *actions.SetCurrentProcessStruct:

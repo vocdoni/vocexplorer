@@ -23,11 +23,8 @@ func ProcessResults() {
 					results, ok := api.GetProcessResults(strings.ToLower(ID))
 					if ok && results != nil {
 						dispatcher.Dispatch(&actions.SetProcessContents{
-							ID: ID,
-							Process: storeutil.Process{
-								ProcessType: results.Type,
-								State:       results.State,
-								Results:     results.Results},
+							ID:      ID,
+							Process: storeutil.Process{ProcessInfo: *results},
 						})
 					}
 				}
@@ -48,9 +45,7 @@ func EnvelopeProcessResults() {
 						dispatcher.Dispatch(&actions.SetProcessContents{
 							ID: ID,
 							Process: storeutil.Process{
-								ProcessType: results.Type,
-								State:       results.State,
-								Results:     results.Results},
+								ProcessInfo: *results},
 						})
 					}
 				}
@@ -70,12 +65,10 @@ func CurrentProcessResults() {
 		return
 	}
 	if ok && results != nil {
-		dispatcher.Dispatch(&actions.SetCurrentProcessResults{
+		dispatcher.Dispatch(&actions.SetCurrentProcessInfo{
 			Process: storeutil.Process{
 				EnvelopeCount: int(newVal),
-				ProcessType:   results.Type,
-				State:         results.State,
-				Results:       results.Results},
+				ProcessInfo:   *results},
 		})
 	}
 }
@@ -92,9 +85,7 @@ func EntityProcessResults() {
 						dispatcher.Dispatch(&actions.SetProcessContents{
 							ID: ID,
 							Process: storeutil.Process{
-								ProcessType: results.Type,
-								State:       results.State,
-								Results:     results.Results},
+								ProcessInfo: *results},
 						})
 					}
 				}

@@ -44,10 +44,10 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 		return Unavailable("Loading process...")
 	}
 
-	if store.Processes.CurrentProcessResults.ProcessType == "" {
+	if store.Processes.CurrentProcessResults.ProcessInfo.Type == "" {
 		dispatcher.Dispatch(&actions.SetProcessType{Type: "Unknown"})
 	}
-	if store.Processes.CurrentProcessResults.State == "" {
+	if store.Processes.CurrentProcessResults.ProcessInfo.State == "" {
 		dispatcher.Dispatch(&actions.SetProcessState{State: "Unknown"})
 	}
 
@@ -84,8 +84,8 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
-				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcessResults.State)),
-				vecty.Text(strings.Title(store.Processes.CurrentProcessResults.State)),
+				vecty.Markup(vecty.Class("badge", store.Processes.CurrentProcessResults.ProcessInfo.State)),
+				vecty.Text(strings.Title(store.Processes.CurrentProcessResults.ProcessInfo.State)),
 			),
 		),
 		elem.HorizontalRule(),
@@ -99,9 +99,9 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 				),
 			),
 			elem.DefinitionTerm(vecty.Text("Process type")),
-			elem.Description(vecty.Text(util.GetProcessName(store.Processes.CurrentProcessResults.ProcessType))),
+			elem.Description(vecty.Text(util.GetProcessName(store.Processes.CurrentProcessResults.ProcessInfo.Type))),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(strings.Title(store.Processes.CurrentProcessResults.State))),
+			elem.Description(vecty.Text(strings.Title(store.Processes.CurrentProcessResults.ProcessInfo.State))),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
 			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcessResults.EnvelopeCount))),
 		),
@@ -133,20 +133,26 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 		Text:  "Envelopes",
 		Alias: "envelopes",
 	}}
+	processDetails := &ProcessTab{&Tab{
+		Text:  "Details",
+		Alias: "details",
+	}}
 
 	return vecty.List{
 		elem.Navigation(
-			vecty.Markup(vecty.Attribute("aria-label", "Tab navigation: results and envelopes")),
+			vecty.Markup(vecty.Attribute("aria-label", "Tab navigation: results, envelopes and details")),
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(dash, results),
 				TabLink(dash, envelopes),
+				TabLink(dash, processDetails),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(results, renderResults(store.Processes.CurrentProcessResults.Results)),
+			TabContents(results, renderResults(store.Processes.CurrentProcessResults.ProcessInfo.Results)),
 			TabContents(envelopes, &ProcessesEnvelopeListView{}),
+			TabContents(processDetails, renderProcessDetails(store.Processes.CurrentProcessResults.ProcessInfo)),
 		),
 	}
 }
@@ -189,6 +195,75 @@ func renderResults(results [][]uint64) vecty.ComponentOrHTML {
 		vecty.Markup(vecty.Class("poll-results")),
 		content,
 	)
+}
+
+func renderProcessDetails(details api.ProcessResults) vecty.ComponentOrHTML {
+	content := vecty.List{}
+
+	// Add EnvelopeType
+	content = append(content, renderEnvelopeType(details.EnvelopeType))
+	content = append(content, renderProcessMode(details.Mode))
+	content = append(content, renderProcessVoteOptions(details.VoteOptions))
+	content = append(content, renderProcessConfigs(details))
+
+	return elem.Div(
+		vecty.Markup(vecty.Class("poll-details")),
+		content,
+	)
+}
+
+func renderEnvelopeType(envelopeType api.EnvelopeType) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Envelope Type"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Serial: %t", envelopeType.Serial))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Anonymous: %t", envelopeType.Anonymous))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Encrypted votes: %t", envelopeType.EncryptedVotes))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Unique values: %t", envelopeType.UniqueValues))),
+		))
+}
+func renderProcessMode(mode api.ProcessMode) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Process Mode"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Auto start: %t", mode.AutoStart))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Interruptible: %t", mode.Interruptible))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Dynamic census: %t", mode.DynamicCensus))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Encrypted metadata: %t", mode.EncryptedMetaData))),
+		))
+}
+func renderProcessVoteOptions(options api.ProcessVoteOptions) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Vote Options"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Max count: %d", options.MaxCount))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Max value: %d", options.MaxValue))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Max vote overwrites: %d", options.MaxVoteOverwrites))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Max total cost: %d", options.MaxTotalCost))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
+		))
+}
+func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Other Details"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", details.StartBlock))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", details.EndBlock))),
+		))
 }
 
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date

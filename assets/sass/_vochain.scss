@@ -515,6 +515,33 @@ main {
   }
 }
 
+.poll-details {
+  @extend .row;
+  > div {
+    @extend .col-12;
+    @extend .col-md-3;
+    border-bottom: 1px solid $gray-200;
+    margin-bottom: $card-spacer-x;
+  }
+  .detail {
+    display: block;
+    background: lighten($brand-color, 70%);
+    color: $brand-color;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  ol {
+    list-style-type: none;
+    padding-left: .5rem;
+  }
+  @media (min-width: map-get($grid-breakpoints, "md")) {
+    > div {
+      border-bottom: none;
+    }
+  }
+}
+
 .icon-lens::before {
   content: "";
   display: inline-block;

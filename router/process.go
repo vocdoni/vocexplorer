@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/vocdoni/vocexplorer/api"
 	"github.com/vocdoni/vocexplorer/config"
 	"github.com/vocdoni/vocexplorer/db"
 	ptypes "github.com/vocdoni/vocexplorer/proto"
@@ -75,17 +74,13 @@ func GetProcessResultsHandler(d *db.ExplorerDB) func(w http.ResponseWriter, r *h
 			return
 		}
 		id := ids[0]
-		t, state, results, err := d.Vs.GetProcessResults(id)
+		process, err := d.Vs.GetProcessResults(id)
 		if err != nil {
 			log.Warn(err)
 			// http.Error(w, "Cannot get results for process "+id, http.StatusInternalServerError)
 			// return
 		}
-		json.NewEncoder(w).Encode(&api.ProcessResults{
-			Type:    t,
-			State:   state,
-			Results: results,
-		})
+		json.NewEncoder(w).Encode(&process)
 	}
 }
 

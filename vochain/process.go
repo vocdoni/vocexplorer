@@ -82,41 +82,72 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]b
 }
 
 // GetProcessResults gets the results of a given process
-func (vs *VochainService) GetProcessResults(processID string) (string, string, [][]uint64, error) {
+func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResults, error) {
 	var err error
+	var process api.ProcessResults = api.ProcessResults{}
 	processID = util.TrimHex(processID)
 	// Get process info
 	pid, err := hex.DecodeString(processID)
 	if err != nil {
-		return "", "", nil, fmt.Errorf("cannot decode processID")
+		return process, fmt.Errorf("cannot decode processID")
 	}
 	procInfo, err := vs.scrut.ProcessInfo(pid)
 	if err != nil {
-		return "", "", nil, err
+		return process, err
 	}
-	var procType string
-	var state string
 
+	// Set basic readable process type
 	if procInfo.EnvelopeType.EncryptedVotes {
-		procType = "Encrypted"
+		process.Type = "Encrypted"
 	} else {
-		procType = "Open"
+		process.Type = "Open"
 	}
 	if procInfo.EnvelopeType.Anonymous {
-		procType = procType + " anonymous process"
+		process.Type = process.Type + " anonymous process"
 	} else {
-		procType = procType + " poll"
+		process.Type = process.Type + " poll"
 	}
-	state = strings.Title(strings.ToLower(procInfo.Status.String()))
+	// Set readable process state
+	process.State = strings.Title(strings.ToLower(procInfo.Status.String()))
+
+	// Set full-info EnvelopeType
+	process.EnvelopeType = api.EnvelopeType{
+		Serial:         procInfo.EnvelopeType.Serial,
+		Anonymous:      procInfo.EnvelopeType.Anonymous,
+		EncryptedVotes: procInfo.EnvelopeType.EncryptedVotes,
+		UniqueValues:   procInfo.EnvelopeType.UniqueValues}
+
+	// Set full-info ProcessMode
+	process.Mode = api.ProcessMode{
+		AutoStart:         procInfo.Mode.AutoStart,
+		Interruptible:     procInfo.Mode.Interruptible,
+		DynamicCensus:     procInfo.Mode.DynamicCensus,
+		EncryptedMetaData: procInfo.Mode.EncryptedMetaData}
+
+	// Set VoteOptions
+	process.VoteOptions = api.ProcessVoteOptions{
+		MaxCount:          procInfo.VoteOptions.MaxCount,
+		MaxValue:          procInfo.VoteOptions.MaxValue,
+		MaxVoteOverwrites: procInfo.VoteOptions.MaxVoteOverwrites,
+		MaxTotalCost:      procInfo.VoteOptions.MaxTotalCost,
+		CostExponent:      procInfo.VoteOptions.CostExponent}
+
+	// Set census info
+	process.CensusOrigin = procInfo.CensusOrigin.String()
+	process.CensusRoot = procInfo.CensusRoot
+
+	// Set start + end block
+	process.StartBlock = procInfo.StartBlock
+	process.EndBlock = procInfo.StartBlock + procInfo.BlockCount
 
 	// Get results info
 	vr, err := vs.scrut.VoteResult(pid)
 	if err != nil && err != scrutinizer.ErrNoResultsYet {
-		return procType, state, nil, err
+		return process, err
 	}
 	if err == scrutinizer.ErrNoResultsYet {
-		return procType, state, nil, fmt.Errorf(scrutinizer.ErrNoResultsYet.Error())
+		return process, fmt.Errorf(scrutinizer.ErrNoResultsYet.Error())
 	}
-	results := vs.scrut.GetFriendlyResults(vr)
-	return procType, state, results, nil
+	process.Results = vs.scrut.GetFriendlyResults(vr)
+	return process, nil
 }
