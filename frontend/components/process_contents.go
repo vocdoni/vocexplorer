@@ -259,10 +259,12 @@ func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
 			vecty.Text("Other Details"),
 		),
 		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", details.StartBlock))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", details.EndBlock))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
+			vecty.If(details.CensusURI != "",
+				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %X", details.CensusURI)))),
 		))
 }
 

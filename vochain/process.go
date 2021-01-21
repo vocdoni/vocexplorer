@@ -95,6 +95,9 @@ func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResult
 	if err != nil {
 		return process, err
 	}
+	if procInfo == nil {
+		return process, nil
+	}
 
 	// Set basic readable process type
 	if procInfo.EnvelopeType.EncryptedVotes {
@@ -111,30 +114,39 @@ func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResult
 	process.State = strings.Title(strings.ToLower(procInfo.Status.String()))
 
 	// Set full-info EnvelopeType
-	process.EnvelopeType = api.EnvelopeType{
-		Serial:         procInfo.EnvelopeType.Serial,
-		Anonymous:      procInfo.EnvelopeType.Anonymous,
-		EncryptedVotes: procInfo.EnvelopeType.EncryptedVotes,
-		UniqueValues:   procInfo.EnvelopeType.UniqueValues}
+	if procInfo.EnvelopeType != nil {
+		process.EnvelopeType = api.EnvelopeType{
+			Serial:         procInfo.EnvelopeType.Serial,
+			Anonymous:      procInfo.EnvelopeType.Anonymous,
+			EncryptedVotes: procInfo.EnvelopeType.EncryptedVotes,
+			UniqueValues:   procInfo.EnvelopeType.UniqueValues}
+	}
 
 	// Set full-info ProcessMode
-	process.Mode = api.ProcessMode{
-		AutoStart:         procInfo.Mode.AutoStart,
-		Interruptible:     procInfo.Mode.Interruptible,
-		DynamicCensus:     procInfo.Mode.DynamicCensus,
-		EncryptedMetaData: procInfo.Mode.EncryptedMetaData}
+	if procInfo.Mode != nil {
+		process.Mode = api.ProcessMode{
+			AutoStart:         procInfo.Mode.AutoStart,
+			Interruptible:     procInfo.Mode.Interruptible,
+			DynamicCensus:     procInfo.Mode.DynamicCensus,
+			EncryptedMetaData: procInfo.Mode.EncryptedMetaData}
+	}
 
 	// Set VoteOptions
-	process.VoteOptions = api.ProcessVoteOptions{
-		MaxCount:          procInfo.VoteOptions.MaxCount,
-		MaxValue:          procInfo.VoteOptions.MaxValue,
-		MaxVoteOverwrites: procInfo.VoteOptions.MaxVoteOverwrites,
-		MaxTotalCost:      procInfo.VoteOptions.MaxTotalCost,
-		CostExponent:      procInfo.VoteOptions.CostExponent}
+	if procInfo.VoteOptions != nil {
+		process.VoteOptions = api.ProcessVoteOptions{
+			MaxCount:          procInfo.VoteOptions.MaxCount,
+			MaxValue:          procInfo.VoteOptions.MaxValue,
+			MaxVoteOverwrites: procInfo.VoteOptions.MaxVoteOverwrites,
+			MaxTotalCost:      procInfo.VoteOptions.MaxTotalCost,
+			CostExponent:      procInfo.VoteOptions.CostExponent}
+	}
 
 	// Set census info
 	process.CensusOrigin = procInfo.CensusOrigin.String()
 	process.CensusRoot = procInfo.CensusRoot
+	if procInfo.CensusURI != nil {
+		process.CensusURI = *procInfo.CensusURI
+	}
 
 	// Set start + end block
 	process.StartBlock = procInfo.StartBlock

@@ -47,6 +47,7 @@ type VochainStats struct {
 type ProcessResults struct { // Set to mirror proto/build/go/models/vochain.pb.go
 	CensusOrigin string
 	CensusRoot   []byte
+	CensusURI    string
 	EndBlock     uint32
 	EnvelopeType EnvelopeType
 	Mode         ProcessMode
