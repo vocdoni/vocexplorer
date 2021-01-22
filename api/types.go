@@ -51,7 +51,7 @@ type ProcessResults struct { // Set to mirror proto/build/go/models/vochain.pb.g
 	EndBlock     uint32
 	EnvelopeType EnvelopeType
 	Mode         ProcessMode
-	Results      [][]uint64
+	Results      [][]string
 	StartBlock   uint32
 	State        string
 	Type         string

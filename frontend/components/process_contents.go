@@ -157,18 +157,18 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 	}
 }
 
-func renderPollAnswers(answers []uint64) vecty.ComponentOrHTML {
+func renderPollAnswers(answers []string) vecty.ComponentOrHTML {
 	items := vecty.List{}
 	for _, a := range answers {
 		items = append(items, elem.ListItem(
-			vecty.Text(fmt.Sprintf("%d", a)),
+			vecty.Text(fmt.Sprintf("%s", a)),
 		))
 	}
 
 	return items
 }
 
-func renderResults(results [][]uint64) vecty.ComponentOrHTML {
+func renderResults(results [][]string) vecty.ComponentOrHTML {
 	if len(results) <= 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),
@@ -264,7 +264,7 @@ func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
 			vecty.If(details.CensusURI != "",
-				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %X", details.CensusURI)))),
+				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", details.CensusURI)))),
 		))
 }
 
