@@ -195,8 +195,8 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			elem.Description(vecty.Text(
 				util.GetEnvelopeName(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.Type),
 			)),
-			vecty.If(store.Envelopes.CurrentEnvelope.Weight > 0, elem.DefinitionTerm(vecty.Text("Envelope weight"))),
-			vecty.If(store.Envelopes.CurrentEnvelope.Weight > 0, elem.Description(vecty.Text(util.IntToString(store.Envelopes.CurrentEnvelope.Weight)))),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight != "" && store.Envelopes.CurrentEnvelope.Weight != "0", elem.DefinitionTerm(vecty.Text("Envelope weight"))),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight != "" && store.Envelopes.CurrentEnvelope.Weight != "0", elem.Description(vecty.Text(store.Envelopes.CurrentEnvelope.Weight))),
 			elem.DefinitionTerm(vecty.Text("Process status")),
 			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.State))),
 			elem.DefinitionTerm(vecty.Text("Decryption status")),

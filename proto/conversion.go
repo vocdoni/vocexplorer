@@ -50,7 +50,7 @@ func (t *Envelope) Mirror() *dbtypes.Envelope {
 		ProcessHeight:        t.ProcessHeight,
 		GlobalHeight:         t.GlobalHeight,
 		TxHeight:             t.TxHeight,
-		Weight:               weight.Int64(),
+		Weight:               weight.String(),
 	}
 	return m
 }
