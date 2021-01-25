@@ -2,6 +2,7 @@ package proto
 
 import (
 	"encoding/hex"
+	"math/big"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/vocdoni/vocexplorer/api/dbtypes"
@@ -39,6 +40,8 @@ func (t *Height) Mirror() *dbtypes.Height {
 
 // Mirror returns the mirrored type
 func (t *Envelope) Mirror() *dbtypes.Envelope {
+	weight := new(big.Int)
+	weight.SetBytes(t.Weight)
 	m := &dbtypes.Envelope{
 		EncryptionKeyIndexes: t.EncryptionKeyIndexes,
 		Nullifier:            hex.EncodeToString(t.Nullifier),
@@ -47,6 +50,7 @@ func (t *Envelope) Mirror() *dbtypes.Envelope {
 		ProcessHeight:        t.ProcessHeight,
 		GlobalHeight:         t.GlobalHeight,
 		TxHeight:             t.TxHeight,
+		Weight:               weight.Int64(),
 	}
 	return m
 }

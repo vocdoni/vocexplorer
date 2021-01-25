@@ -59,8 +59,6 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	results := store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID]
 	keys := []string{}
 	// If package is encrypted
-	logger.Info(fmt.Sprintf("Indexes %v", store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes))
-
 	if !strings.Contains(strings.ToLower(results.ProcessInfo.Type), "encrypted") {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
@@ -86,7 +84,6 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 			displayPackage = false
 		}
 	}
-	logger.Info(fmt.Sprintf("Keys %v", keys))
 	if len(keys) == len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) {
 		var err error
 		votePackage, err = unmarshalVote(store.Envelopes.CurrentEnvelope.Package, keys)
@@ -198,6 +195,8 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			elem.Description(vecty.Text(
 				util.GetEnvelopeName(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.Type),
 			)),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight > 0, elem.DefinitionTerm(vecty.Text("Envelope weight"))),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight > 0, elem.Description(vecty.Text(util.IntToString(store.Envelopes.CurrentEnvelope.Weight)))),
 			elem.DefinitionTerm(vecty.Text("Process status")),
 			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[store.Envelopes.CurrentEnvelope.ProcessID].ProcessInfo.State))),
 			elem.DefinitionTerm(vecty.Text("Decryption status")),

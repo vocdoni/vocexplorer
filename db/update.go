@@ -577,6 +577,11 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		TxHeight:     tx.TxHeight,
 	}
 
+	// set voteTx weight if it exists
+	if voteTx.Proof != nil && voteTx.Proof.GetEthereumStorage() != nil {
+		votePackage.Weight = voteTx.Proof.GetEthereumStorage().Value
+	}
+
 	// Update height of process env belongs to
 	procHeight, ok := state.processEnvelopeHeightMap.Heights[hex.EncodeToString(votePackage.GetProcessID())]
 	if !ok {

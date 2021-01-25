@@ -97,8 +97,6 @@ func TransactionView() vecty.List {
 	}
 
 	if store.Transactions.CurrentDecodedTransaction != nil {
-		logger.Info("nullifier: " + store.Transactions.CurrentDecodedTransaction.Nullifier)
-		logger.Info("type: " + util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx))
 		contents = append(contents, vecty.List{
 			elem.Div(
 				vecty.Markup(vecty.Class("details")),

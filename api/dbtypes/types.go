@@ -38,6 +38,7 @@ type Envelope struct {
 	ProcessHeight        int64   `json:"ProcessHeight,omitempty"`
 	GlobalHeight         int64   `json:"GlobalHeight,omitempty"`
 	TxHeight             int64   `json:"TxHeight,omitempty"`
+	Weight               int64
 }
 
 // StoreBlock mirrors the StoreBlock proto type
