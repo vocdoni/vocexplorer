@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"sync"
 	"time"
 
 	"github.com/vocdoni/vocexplorer/config"
@@ -38,6 +39,7 @@ func NewDB(cfg *config.MainCfg) *ExplorerDB {
 // Close closes the explorer db
 func (d *ExplorerDB) Close() {
 	d.Vs.Close()
+	d.Db.Close()
 }
 
 // UpdateDB continuously updates the database by calling dvote & tendermint apis
@@ -72,6 +74,7 @@ func (d *ExplorerDB) UpdateDB() {
 	}
 	batch.Write()
 
+	updateMutex := new(sync.Mutex)
 	// Interrupt signal should close clients
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -82,6 +85,7 @@ func (d *ExplorerDB) UpdateDB() {
 				time.Sleep(30 * time.Second)
 				os.Exit(1)
 			}()
+			updateMutex.Lock()
 			pprof.StopCPUProfile()
 			d.Close()
 			os.Exit(1)
@@ -92,6 +96,7 @@ func (d *ExplorerDB) UpdateDB() {
 	for {
 		// If synced, wait.
 		d.waitSync()
+		updateMutex.Lock()
 		d.updateBlockchainInfo()
 		d.updateBlockList()
 		// Update validators less frequently than blocks
@@ -102,6 +107,7 @@ func (d *ExplorerDB) UpdateDB() {
 		d.updateProcessList()
 		time.Sleep(config.DBWaitTime * time.Millisecond)
 		i++
+		updateMutex.Unlock()
 	}
 }
 
