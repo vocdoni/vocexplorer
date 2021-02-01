@@ -7,7 +7,7 @@ import (
 )
 
 // Unavailable renders an "item unavailable" message bar
-func Unavailable(text string) vecty.ComponentOrHTML {
+func Unavailable(text, secondaryText string) vecty.ComponentOrHTML {
 	return Container(
 		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
@@ -17,6 +17,7 @@ func Unavailable(text string) vecty.ComponentOrHTML {
 					elem.Heading2(
 						vecty.Text(text),
 					),
+					elem.Heading4(vecty.Text(secondaryText)),
 				},
 			}),
 		),

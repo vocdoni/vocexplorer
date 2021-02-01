@@ -38,10 +38,10 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	if dash.Unavailable {
-		return Unavailable("Process unavailable")
+		return Unavailable("Process unavailable", "")
 	}
 	if store.Processes.CurrentProcess == nil || store.Processes.CurrentProcess.EntityID == "" {
-		return Unavailable("Loading process...")
+		return Unavailable("Loading process...", "")
 	}
 
 	if store.Processes.CurrentProcessResults.ProcessInfo.Type == "" {

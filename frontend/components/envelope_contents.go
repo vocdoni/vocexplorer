@@ -45,10 +45,10 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	if c.Unavailable {
-		return Unavailable("Envelope unavailable")
+		return Unavailable("Envelope unavailable", "")
 	}
 	if store.Envelopes.CurrentEnvelope == nil || dbtypes.EnvelopeIsEmpty(store.Envelopes.CurrentEnvelope) {
-		return Unavailable("Loading envelope...")
+		return Unavailable("Loading envelope...", "")
 	}
 
 	// Decode vote package

@@ -45,10 +45,10 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	if c.Unavailable {
-		return Unavailable("Block unavailable")
+		return Unavailable("Block unavailable", "")
 	}
 	if store.Blocks.CurrentBlock == nil {
-		return Unavailable("Loading block...")
+		return Unavailable("Loading block...", "")
 	}
 	return Container(
 		vecty.Markup(vecty.Attribute("id", "main")),

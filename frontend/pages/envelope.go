@@ -2,6 +2,7 @@ package pages
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -13,6 +14,8 @@ import (
 	router "marwan.io/vecty-router"
 )
 
+const alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 // EnvelopeView renders the Envelope page
 type EnvelopeView struct {
 	vecty.Core
@@ -21,7 +24,20 @@ type EnvelopeView struct {
 // Render renders the EnvelopeView component
 func (home *EnvelopeView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "envelope"})
-	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
+	id := router.GetNamedVar(home)["id"]
+	// If id contains letters, treat it as nullifier rather than height
+	if strings.ContainsAny(id, alpha) {
+		if strings.HasPrefix(id, "0x") {
+			id = id[2:]
+		}
+		dash := new(components.EnvelopeNullifier)
+		dash.Nullifier = id
+		dash.Rendered = false
+		dash.Unavailable = false
+		go dash.LoadEnvelopeHeight()
+		return elem.Div(&components.Header{}, dash)
+	}
+	height, err := strconv.ParseInt(id, 0, 64)
 	if err != nil {
 		logger.Error(err)
 	}

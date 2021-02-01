@@ -44,10 +44,10 @@ func (t *TxContents) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	if t.Unavailable {
-		return Unavailable("Transaction unavailable")
+		return Unavailable("Transaction unavailable", "")
 	}
 	if store.Transactions.CurrentTransaction == nil {
-		return Unavailable("Loading transaction...")
+		return Unavailable("Loading transaction...", "")
 	}
 	contents := vecty.List{
 		elem.Section(

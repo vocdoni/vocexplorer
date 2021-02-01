@@ -41,10 +41,10 @@ func (contents *ValidatorContents) Render() vecty.ComponentOrHTML {
 		return LoadingBar()
 	}
 	if contents.Unavailable {
-		return Unavailable("Validator unavailable")
+		return Unavailable("Validator unavailable", "")
 	}
 	if store.Validators.CurrentValidator == nil {
-		return Unavailable("Loading validator...")
+		return Unavailable("Loading validator...", "")
 	}
 
 	return Container(
