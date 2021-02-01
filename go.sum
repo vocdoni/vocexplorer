@@ -205,8 +205,6 @@ github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea/go.mod h1:93vs
 github.com/deckarep/golang-set v1.7.1 h1:SCQV0S6gTtp6itiFrTqI+pfmJ4LN85S1YzhDf9rTHJQ=
 github.com/deckarep/golang-set v1.7.1/go.mod h1:93vsz/8Wt4joVM7c2AVqh+YRMiUSc14yDtF28KmMOgQ=
 github.com/decred/dcrd/lru v1.0.0/go.mod h1:mxKOwFd7lFjN2GZYsiz/ecgqR6kkYAl+0pz0tEMk218=
-github.com/deroproject/graviton v0.0.0-20200906044921-89e9e09f9601 h1:B5rxP8kxe23usQKVlspuq0EowreE7JZCE8bHht0G5gY=
-github.com/deroproject/graviton v0.0.0-20200906044921-89e9e09f9601/go.mod h1:lDvhst5GHvKJjUxBztS52sMmXENU5xD5oeqEmz7838Q=
 github.com/dghubble/sling v1.3.0/go.mod h1:XXShWaBWKzNLhu2OxikSNFrlsvowtz4kyRuXUG7oQKY=
 github.com/dgraph-io/badger v1.5.5-0.20190226225317-8115aed38f8f/go.mod h1:VZxzAIRPHRVNRKRo6AXrX9BJegn6il06VMTZVJYCIjQ=
 github.com/dgraph-io/badger v1.6.0-rc1/go.mod h1:zwt7syl517jmP8s94KqSxTlM6IMsdhYy6psNgSztDR4=
@@ -1534,10 +1532,6 @@ github.com/xtaci/kcp-go v5.4.20+incompatible/go.mod h1:bN6vIwHQbfHaHtFpEssmWsN45
 github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae/go.mod h1:gXtu8J62kEgmN++bm9BVICuT/e8yiLI2KFobd/TRFsE=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-gitlab.com/vocdoni/go-dvote v0.6.1-0.20201009163905-60d45cde762f h1:zE5kwGojTUqGlaLJadH9Iofyg+CBzOt3R5fQiI9GcQ4=
-gitlab.com/vocdoni/go-dvote v0.6.1-0.20201009163905-60d45cde762f/go.mod h1:wIeoXaIHjIf9f2+bHxUhvzqYdIyefxTHqJ68sfsxm4U=
-gitlab.com/vocdoni/go-dvote v0.6.3-0.20201008152553-71fdf6c55798 h1:wzkXWCREGeJ891P28MoU2pBx2pSXyYhXtfTSO+EiuFY=
-gitlab.com/vocdoni/go-dvote v0.6.3-0.20201008152553-71fdf6c55798/go.mod h1:Lwv8+BAJrwQifmkRaDnA/TyEUvvUlKr7mHhH16C/76U=
 gitlab.com/vocdoni/go-dvote v0.6.3 h1:2iPTkkiBYO29VvgXd9bigVf1Ml9L8j1Wh7W3wmHOmLg=
 gitlab.com/vocdoni/go-dvote v0.6.3/go.mod h1:Lwv8+BAJrwQifmkRaDnA/TyEUvvUlKr7mHhH16C/76U=
 gitlab.com/vocdoni/go-external-ip v0.0.0-20190919225616-59cf485d00da h1:qEKse/C/gOACneRkXQQZLgXjXEe8aaxzcuS60KwUX78=

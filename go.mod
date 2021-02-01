@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/deroproject/graviton v0.0.0-20200906044921-89e9e09f9601 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
