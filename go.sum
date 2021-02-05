@@ -116,6 +116,8 @@ github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/arnaucube/go-blindsecp256k1 v0.0.0-20210201183224-d09769d51033 h1:FcPnLvyuEiCFzTWEPP4+x+hLm268LxvkEgdARgo0tt0=
 github.com/arnaucube/go-blindsecp256k1 v0.0.0-20210201183224-d09769d51033/go.mod h1:10oM1DQMpukFfSzNsjSQG2rE6UjoGsXT4iIxWIiVbu0=
+github.com/arnaucube/go-blindsecp256k1 v0.0.0-20210203222605-876755a714c3 h1:rj3uUaxO1hlOTD1A04b1Q/cEPf9lyVdwmyujB7etYuA=
+github.com/arnaucube/go-blindsecp256k1 v0.0.0-20210203222605-876755a714c3/go.mod h1:10oM1DQMpukFfSzNsjSQG2rE6UjoGsXT4iIxWIiVbu0=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
@@ -1746,6 +1748,7 @@ github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49u
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
 github.com/vocdoni/blind-ca v0.1.2 h1:mRSzzex4UrSyykaRw+kapPE6oDlblBbFaBH/yBRGr6E=
 github.com/vocdoni/blind-ca v0.1.2/go.mod h1:64koJe05FmHElrrqO3Zzqlm+16BOezBa4uhKMy9wxBY=
+github.com/vocdoni/blind-ca v0.1.4/go.mod h1:4ouWDqlvXrrNS0Csf3hKA3cuDTmKh6nP7kSXF39nT4s=
 github.com/vocdoni/eth-storage-proof v0.1.4-0.20201128112323-de7513ce5e25 h1:UIkbnhAxwQ1Y368UsDsEXV4ue2MwFkmD6pfLF14+Qy4=
 github.com/vocdoni/eth-storage-proof v0.1.4-0.20201128112323-de7513ce5e25/go.mod h1:NLA1A55raZ1VNMmKulPUm+Lu9CVetCDVuDCYk5bSYrE=
 github.com/vocdoni/multirpc v0.1.9 h1:MtIZKoE8NL/WvVYWcJ20cQ0pN+lLMKQknzwWF3u/YHQ=
@@ -1753,8 +1756,12 @@ github.com/vocdoni/multirpc v0.1.9/go.mod h1:SETFzlLbdZq2YFGy0udT1u2ouQUU2cIesop
 github.com/vocdoni/multirpc v0.1.10/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
 github.com/vocdoni/multirpc v0.1.11 h1:t4tthy/pvZI9YDHekaAzRuIBEb0OlMSr8ukNCAhi1fM=
 github.com/vocdoni/multirpc v0.1.11/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
+github.com/vocdoni/multirpc v0.1.12 h1:L70+fgp6p5gajHIBOlW2V+RN1L4+5Alb4cvI+r9KT7E=
+github.com/vocdoni/multirpc v0.1.12/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
 github.com/vocdoni/storage-proofs-eth-go v0.1.4 h1:lRTSciQ8G2dkbj8Jv3X+dxXqpLMIW00AcY+pr1TNAQo=
 github.com/vocdoni/storage-proofs-eth-go v0.1.4/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
+github.com/vocdoni/storage-proofs-eth-go v0.1.5 h1:/QTLeM1tkRIruA0LIB9yIMhBTk5++Pm7t2Zp0gCT1Xs=
+github.com/vocdoni/storage-proofs-eth-go v0.1.5/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
 github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30/go.mod h1:YkocrP2K2tcw938x9gCOmT5G5eCD6jsTz0SZuyAqwIE=
 github.com/warpfork/go-wish v0.0.0-20180510122957-5ad1f5abf436/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/warpfork/go-wish v0.0.0-20190328234359-8b3e70f8e830 h1:8kxMKmKzXXL4Ru1nyhvdms/JjWt+3YLpvRb/bAjO/y0=
@@ -1866,6 +1873,10 @@ go.vocdoni.io/dvote v0.6.1-0.20210129144810-e6ce68464ed2/go.mod h1:7yTzMiJiZY3E9
 go.vocdoni.io/dvote v0.6.1-0.20210130094936-75dbb92de3f0/go.mod h1:NJyERGs2LmEvlevZUtOl36MI0HlOUh0d2I0vJcYh5RE=
 go.vocdoni.io/dvote v0.6.1-0.20210201230753-c10bd8ad093b h1:z4EzWemQ0AjolNGbErQ6GJ3ecEcTiubeMZ12ciMZikM=
 go.vocdoni.io/dvote v0.6.1-0.20210201230753-c10bd8ad093b/go.mod h1:HsEcAtJw7wbhOx4kwlx8wz3dyYLvmKobksHKO4+fMgQ=
+go.vocdoni.io/dvote v0.6.1-0.20210205100305-f00746330f19 h1:nwkMUcleftMOMvtEsKOTQJ3n9M7RT3saU9B42eUpmos=
+go.vocdoni.io/dvote v0.6.1-0.20210205100305-f00746330f19/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
+go.vocdoni.io/dvote v0.6.1-0.20210205111131-f112aab6bcad h1:Jionf04exaXZheyc8iKYIqTOuC9J9xgM+W+1jSzhGkY=
+go.vocdoni.io/dvote v0.6.1-0.20210205111131-f112aab6bcad/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8 h1:WUsshi+7A+RFLd0IbQWmkJiQXPRjxHRbONIg1pDsSHs=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
