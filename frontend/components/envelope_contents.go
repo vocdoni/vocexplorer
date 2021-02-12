@@ -63,7 +63,12 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 		decryptionStatus = "Vote unencrypted"
 		displayPackage = true
 	} else { // process is/was encrypted
-		if pkeys != nil {
+		// If not ended or results, keys must be available
+		if s := strings.ToLower(results.ProcessInfo.State); s != "ended" && s != "results" {
+			decryptionStatus = "Vote cannot be decrypted yet"
+			displayPackage = false
+		} else if pkeys != nil {
+			// If ended or results then check for the keys
 		indexLoop:
 			for _, index := range store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes {
 				for _, key := range pkeys.Priv {
@@ -71,7 +76,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 						keys = append(keys, key.Key)
 						break
 					} else {
-						decryptionStatus = "Process is " + results.ProcessInfo.State + ", vote cannot be decrypted"
+						decryptionStatus = "Vote cannot be decrypted yet"
 						displayPackage = false
 						break indexLoop
 					}
