@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -554,6 +553,7 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, pr
 	batch.Write()
 }
 
+// TODO: this method should return an error message
 func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) []byte {
 	var rawTx models.Tx
 	err := proto.Unmarshal(tx.Tx, &rawTx)
@@ -596,7 +596,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		votePackage.Nullifier = voteTx.Nullifier
 	} else {
 		// Generate nullifier as in go-dvote vochain/transaction.go
-		voteBytes, err := json.Marshal(&voteTx)
+		voteBytes, err := proto.Marshal(voteTx)
 		if err != nil {
 			log.Error(err)
 		}
@@ -610,6 +610,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		}
 		votePackage.Nullifier = vochain.GenerateNullifier(addr, votePackage.ProcessID)
 	}
+	log.Infof("stored envelope %x", votePackage.Nullifier)
 
 	for _, index := range voteTx.EncryptionKeyIndexes {
 		votePackage.EncryptionKeyIndexes = append(votePackage.EncryptionKeyIndexes, int32(index))

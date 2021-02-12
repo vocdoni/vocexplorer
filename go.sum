@@ -1758,6 +1758,8 @@ github.com/vocdoni/multirpc v0.1.11 h1:t4tthy/pvZI9YDHekaAzRuIBEb0OlMSr8ukNCAhi1
 github.com/vocdoni/multirpc v0.1.11/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
 github.com/vocdoni/multirpc v0.1.12 h1:L70+fgp6p5gajHIBOlW2V+RN1L4+5Alb4cvI+r9KT7E=
 github.com/vocdoni/multirpc v0.1.12/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
+github.com/vocdoni/multirpc v0.1.19 h1:qDplldxeOcsPmd4jRjUI3WMeqUZ7Grm/iBIIJu8gu0c=
+github.com/vocdoni/multirpc v0.1.19/go.mod h1:zCx0l/hu/Vdeav44geFJmK4PAawN+qoo1HYT2icU4GM=
 github.com/vocdoni/storage-proofs-eth-go v0.1.4 h1:lRTSciQ8G2dkbj8Jv3X+dxXqpLMIW00AcY+pr1TNAQo=
 github.com/vocdoni/storage-proofs-eth-go v0.1.4/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
 github.com/vocdoni/storage-proofs-eth-go v0.1.5 h1:/QTLeM1tkRIruA0LIB9yIMhBTk5++Pm7t2Zp0gCT1Xs=
@@ -1883,9 +1885,13 @@ go.vocdoni.io/dvote v0.6.1-0.20210208111008-a7bcde9ab443 h1:3SF6ZXwMZ1ZAo1jtJyXs
 go.vocdoni.io/dvote v0.6.1-0.20210208111008-a7bcde9ab443/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
 go.vocdoni.io/dvote v0.6.1-0.20210209190719-f93f3dd49b40 h1:kmNgiScpJzME3uMtIzRxYx9OQqDtN+LeMb5eKTptnpc=
 go.vocdoni.io/dvote v0.6.1-0.20210209190719-f93f3dd49b40/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
+go.vocdoni.io/dvote v0.6.1-0.20210211235146-0ef0110404ff h1:EOvhEMKbvzVL/hOEtC2LjXkvKoUMMJa/poy49SgFFVs=
+go.vocdoni.io/dvote v0.6.1-0.20210211235146-0ef0110404ff/go.mod h1:3fOfdqjOVLojT43u3Y6ZTaaP5mRgKIUzjY0zmgjYsGg=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8 h1:WUsshi+7A+RFLd0IbQWmkJiQXPRjxHRbONIg1pDsSHs=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
+go.vocdoni.io/proto v0.1.9-0.20210202164933-e4f297514ad4 h1:RjjZ+EOanoKweGPGz5MYN8R8toHgTwCCWZD8SK2atPM=
+go.vocdoni.io/proto v0.1.9-0.20210202164933-e4f297514ad4/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go4.org v0.0.0-20180809161055-417644f6feb5/go.mod h1:MkTOUMDaeVYJUOUsaDXIhWPZYa1yOyC1qaOBpL57BhE=
 go4.org v0.0.0-20200411211856-f5505b9728dd h1:BNJlw5kRTzdmyfh5U8F93HA2OwkP7ZGwA51eJ/0wKOU=
 go4.org v0.0.0-20200411211856-f5505b9728dd/go.mod h1:CIiUVy99QCPfoE13bO4EZaz5GZMZXMSBGhxRdsvzbkg=
