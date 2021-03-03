@@ -185,7 +185,7 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 		content = append(content, elem.Div(
 			elem.Span(
 				vecty.Markup(vecty.Class("question")),
-				vecty.Text(fmt.Sprintf("Question %d", i+1)),
+				vecty.Text(fmt.Sprintf("Field %d", i+1)),
 			),
 			res,
 		))
