@@ -4,22 +4,16 @@ import (
 	"encoding/hex"
 	"math/big"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"go.vocdoni.io/dvote/log"
 )
 
 // Mirror returns the mirrored type
 func (t *BlockchainInfo) Mirror() *dbtypes.BlockchainInfo {
-	time, err := ptypes.Timestamp(t.GenesisTimeStamp)
-	if err != nil {
-		log.Error(err)
-	}
-	m := &dbtypes.BlockchainInfo{
+	return &dbtypes.BlockchainInfo{
 		Network:           t.Network,
 		Version:           t.Version,
 		LatestBlockHeight: t.LatestBlockHeight,
-		GenesisTimeStamp:  time,
+		GenesisTimeStamp:  t.GenesisTimeStamp.AsTime(),
 		ChainID:           t.ChainID,
 		BlockTime:         t.BlockTime,
 		BlockTimeStamp:    t.BlockTimeStamp,
@@ -27,22 +21,20 @@ func (t *BlockchainInfo) Mirror() *dbtypes.BlockchainInfo {
 		MaxBytes:          t.MaxBytes,
 		Syncing:           t.Syncing,
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *Height) Mirror() *dbtypes.Height {
-	m := &dbtypes.Height{
+	return &dbtypes.Height{
 		Height: t.Height,
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *Envelope) Mirror() *dbtypes.Envelope {
 	weight := new(big.Int)
 	weight.SetBytes(t.Weight)
-	m := &dbtypes.Envelope{
+	return &dbtypes.Envelope{
 		EncryptionKeyIndexes: t.EncryptionKeyIndexes,
 		Nullifier:            hex.EncodeToString(t.Nullifier),
 		ProcessID:            hex.EncodeToString(t.ProcessID),
@@ -52,28 +44,22 @@ func (t *Envelope) Mirror() *dbtypes.Envelope {
 		TxHeight:             t.TxHeight,
 		Weight:               weight.String(),
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *StoreBlock) Mirror() *dbtypes.StoreBlock {
-	time, err := ptypes.Timestamp(t.Time)
-	if err != nil {
-		log.Error(err)
-	}
-	m := &dbtypes.StoreBlock{
+	return &dbtypes.StoreBlock{
 		Hash:     t.Hash,
 		Height:   t.Height,
 		NumTxs:   t.NumTxs,
-		Time:     time,
+		Time:     t.Time.AsTime(),
 		Proposer: t.Proposer,
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *Transaction) Mirror() *dbtypes.Transaction {
-	m := &dbtypes.Transaction{
+	return &dbtypes.Transaction{
 		Height:    t.Height,
 		Index:     t.Index,
 		Tx:        t.Tx,
@@ -81,43 +67,38 @@ func (t *Transaction) Mirror() *dbtypes.Transaction {
 		Nullifier: hex.EncodeToString(t.Nullifier),
 		Hash:      t.Hash,
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *ItemList) Mirror() *dbtypes.ItemList {
-	m := &dbtypes.ItemList{
+	return &dbtypes.ItemList{
 		Items: t.Items,
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *Validator) Mirror() *dbtypes.Validator {
-	m := &dbtypes.Validator{
+	return &dbtypes.Validator{
 		Address:          t.Address,
 		PubKey:           t.PubKey,
 		VotingPower:      t.VotingPower,
 		ProposerPriority: t.ProposerPriority,
 		Height:           t.Height.Mirror(),
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *Process) Mirror() *dbtypes.Process {
-	m := &dbtypes.Process{
+	return &dbtypes.Process{
 		ID:          t.ID,
 		EntityID:    t.EntityID,
 		LocalHeight: t.LocalHeight.Mirror(),
 	}
-	return m
 }
 
 // Mirror returns the mirrored type
 func (t *HeightMap) Mirror() *dbtypes.HeightMap {
-	m := &dbtypes.HeightMap{
+	return &dbtypes.HeightMap{
 		Heights: t.Heights,
 	}
-	return m
 }
