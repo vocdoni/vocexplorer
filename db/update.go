@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/vocdoni/vocexplorer/config"
 	voctypes "github.com/vocdoni/vocexplorer/proto"
 	"github.com/vocdoni/vocexplorer/util"
@@ -16,6 +15,7 @@ import (
 	"go.vocdoni.io/dvote/vochain"
 	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (d *ExplorerDB) updateBlockchainInfo() {
@@ -165,11 +165,7 @@ func (d *ExplorerDB) fetchBlock(height int64, wg *sync.WaitGroup, myHeight, next
 	block.Hash = res.BlockID.Hash
 	block.Height = res.Block.Header.Height
 	block.Proposer = res.Block.ProposerAddress
-	tm, err := ptypes.TimestampProto(res.Block.Header.Time)
-	if err != nil {
-		log.Error(err)
-	}
-	block.Time = tm
+	block.Time = timestamppb.New(res.Block.Header.Time)
 
 	transactions, err := d.Vs.GetTransactions(block.Height)
 	if err != nil {

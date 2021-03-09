@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	prototypes "github.com/golang/protobuf/ptypes"
 	"github.com/vocdoni/vocexplorer/api"
 	"github.com/vocdoni/vocexplorer/config"
 	"github.com/vocdoni/vocexplorer/db"
@@ -38,11 +37,7 @@ func StatsHandler(d *db.ExplorerDB, cfg *config.Cfg) func(w http.ResponseWriter,
 		if err != nil {
 			log.Warn(err)
 		}
-		genesisTime, err := prototypes.Timestamp(blockchainInfo.GetGenesisTimeStamp())
-		if err != nil {
-			log.Warn(err)
-			genesisTime = time.Unix(1, 0)
-		}
+		genesisTime := blockchainInfo.GetGenesisTimeStamp().AsTime()
 		var blockTime [5]int32
 		copy(blockTime[:], blockchainInfo.GetBlockTime())
 
