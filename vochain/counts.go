@@ -9,7 +9,7 @@ import (
 
 // GetEntityCount gets number of entities
 func (vs *VochainService) GetEntityCount() int64 {
-	list := vs.scrut.EntityList(config.MaxListSize, []byte{})
+	list := vs.scrut.EntityList(config.MaxListSize, 0)
 	return int64(len(list))
 }
 
@@ -33,7 +33,7 @@ func (vs *VochainService) GetEnvelopeCount(processID string) (uint32, error) {
 // GetTotalEnvelopeCount gets number of envelopes
 func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
 	votes := uint32(0)
-	listSize := int64(config.MaxListSize)
+	listSize := config.MaxListSize
 	for {
 		// Get all live processes, sum envelopes
 		newPIDs := vs.GetProcListLiveResults(listSize)
@@ -68,7 +68,7 @@ func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
 // GetEntityProcessCount gets number of processes for a given entity
 func (vs *VochainService) GetEntityProcessCount(eid string) (int64, error) {
 	processes := int64(0)
-	listSize := int64(100)
+	listSize := config.MaxListSize
 	for {
 		// Get all live processes, sum envelopes
 		newPIDs, err := vs.GetProcessList(eid, listSize)

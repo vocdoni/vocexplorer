@@ -31,6 +31,8 @@ const (
 	NumBlockUpdates = 100
 	//DBWaitTime is the number of milliseconds the backend waits before batching another set of blocks
 	DBWaitTime = 0
+	//DefaultNamespace is the default namespace value to get all processes
+	DefaultNamespace = uint32(0)
 	//ProcessHeightPrefix is the key prefix for processes by height
 	ProcessHeightPrefix = "ph_"
 	//EntityHeightPrefix is the key prefix for entity id's by height

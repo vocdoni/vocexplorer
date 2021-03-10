@@ -11,6 +11,7 @@ import (
 	ptypes "github.com/vocdoni/vocexplorer/proto"
 	"github.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/log"
+	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -170,6 +171,14 @@ func packTransaction(raw []byte) []byte {
 	if err != nil {
 		log.Error(err)
 	}
+
+	// Unmarshal signedTx, use signedTx.Tx as new tx
+	var signedTx models.SignedTx
+	err = proto.Unmarshal(item.Tx, &signedTx)
+	if err != nil {
+		log.Error(err)
+	}
+	item.Tx = signedTx.Tx
 	new, err := json.Marshal(item.Mirror())
 	if err != nil {
 		log.Error(err)

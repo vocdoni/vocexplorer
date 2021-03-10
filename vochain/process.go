@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/config"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/dvote/util"
 	"go.vocdoni.io/dvote/vochain/scrutinizer"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // GetProcessKeys gets process keys
@@ -58,27 +60,24 @@ func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
 }
 
 // GetProcListResults gets list of finished processes on the Vochain
-func (vs *VochainService) GetProcListResults(listSize int64) []string {
-	return vs.scrut.ProcessListWithResults(listSize, []byte{})
+func (vs *VochainService) GetProcListResults(listSize int) []string {
+	return vs.scrut.ProcessListWithResults(listSize, 0)
 }
 
 // GetProcListLiveResults gets list of live processes on the Vochain
-func (vs *VochainService) GetProcListLiveResults(listSize int64) []string {
-	return vs.scrut.ProcessListWithLiveResults(listSize, []byte{})
+func (vs *VochainService) GetProcListLiveResults(listSize int) []string {
+	return vs.scrut.ProcessListWithLiveResults(listSize, 0)
 }
 
 // GetProcessList gets list of processes for a given entity
-func (vs *VochainService) GetProcessList(entityID string, listSize int64) ([][]byte, error) {
-	if listSize > MaxListIterations || listSize <= 0 {
-		listSize = MaxListIterations
-	}
+func (vs *VochainService) GetProcessList(entityID string, listSize int) ([][]byte, error) {
 	// check/sanitize eid
 	entityID = util.TrimHex(entityID)
 	eid, err := hex.DecodeString(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode entityID")
 	}
-	return vs.scrut.ProcessList(eid, []byte{}, listSize)
+	return vs.scrut.ProcessList(eid, config.DefaultNamespace, 0, listSize)
 }
 
 // GetProcessResults gets the results of a given process
@@ -100,26 +99,26 @@ func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResult
 	}
 
 	// Set basic readable process type
-	if procInfo.EnvelopeType.EncryptedVotes {
+	if procInfo.Envelope.EncryptedVotes {
 		process.Type = "Encrypted"
 	} else {
 		process.Type = "Open"
 	}
-	if procInfo.EnvelopeType.Anonymous {
+	if procInfo.Envelope.Anonymous {
 		process.Type = process.Type + " anonymous process"
 	} else {
 		process.Type = process.Type + " poll"
 	}
 	// Set readable process state
-	process.State = strings.Title(strings.ToLower(procInfo.Status.String()))
+	process.State = strings.Title(strings.ToLower(models.ProcessStatus_name[procInfo.Status]))
 
 	// Set full-info EnvelopeType
-	if procInfo.EnvelopeType != nil {
+	if procInfo.Envelope != nil {
 		process.EnvelopeType = api.EnvelopeType{
-			Serial:         procInfo.EnvelopeType.Serial,
-			Anonymous:      procInfo.EnvelopeType.Anonymous,
-			EncryptedVotes: procInfo.EnvelopeType.EncryptedVotes,
-			UniqueValues:   procInfo.EnvelopeType.UniqueValues}
+			Serial:         procInfo.Envelope.Serial,
+			Anonymous:      procInfo.Envelope.Anonymous,
+			EncryptedVotes: procInfo.Envelope.EncryptedVotes,
+			UniqueValues:   procInfo.Envelope.UniqueValues}
 	}
 
 	// Set full-info ProcessMode
@@ -132,34 +131,32 @@ func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResult
 	}
 
 	// Set VoteOptions
-	if procInfo.VoteOptions != nil {
+	if procInfo.VoteOpts != nil {
 		process.VoteOptions = api.ProcessVoteOptions{
-			MaxCount:          procInfo.VoteOptions.MaxCount,
-			MaxValue:          procInfo.VoteOptions.MaxValue,
-			MaxVoteOverwrites: procInfo.VoteOptions.MaxVoteOverwrites,
-			MaxTotalCost:      procInfo.VoteOptions.MaxTotalCost,
-			CostExponent:      procInfo.VoteOptions.CostExponent}
+			MaxCount:          procInfo.VoteOpts.MaxCount,
+			MaxValue:          procInfo.VoteOpts.MaxValue,
+			MaxVoteOverwrites: procInfo.VoteOpts.MaxVoteOverwrites,
+			MaxTotalCost:      procInfo.VoteOpts.MaxTotalCost,
+			CostExponent:      procInfo.VoteOpts.CostExponent}
 	}
 
 	// Set census info
-	process.CensusOrigin = procInfo.CensusOrigin.String()
+	process.CensusOrigin = models.CensusOrigin_name[procInfo.CensusOrigin]
 	process.CensusRoot = procInfo.CensusRoot
-	if procInfo.CensusURI != nil {
-		process.CensusURI = *procInfo.CensusURI
-	}
+	process.CensusURI = procInfo.CensusURI
 
 	// Set start + end block
 	process.StartBlock = procInfo.StartBlock
-	process.EndBlock = procInfo.StartBlock + procInfo.BlockCount
+	process.EndBlock = procInfo.EndBlock
 
 	// Get results info
-	vr, err := vs.scrut.VoteResult(pid)
+	vr, err := vs.scrut.GetResults(pid)
 	if err != nil && err != scrutinizer.ErrNoResultsYet {
 		return process, err
 	}
 	if err == scrutinizer.ErrNoResultsYet {
 		return process, fmt.Errorf(scrutinizer.ErrNoResultsYet.Error())
 	}
-	process.Results = vs.scrut.GetFriendlyResults(vr)
+	process.Results = vs.scrut.GetFriendlyResults(vr.Votes)
 	return process, nil
 }

@@ -11,8 +11,6 @@ import (
 	"go.vocdoni.io/dvote/vochain/vochaininfo"
 )
 
-const MaxListIterations = int64(64)
-
 // VochainService contains a scrutinizer node
 type VochainService struct {
 	app   *vochain.BaseApplication
@@ -56,6 +54,6 @@ func (vs *VochainService) Close() {
 	vs.info.Close()
 	vs.app.Node.Stop()
 	vs.app.Node.Wait()
-	vs.scrut.Storage.Close()
+	vs.scrut.VochainState.Store.Close()
 	vs.app.State.Store.Close()
 }

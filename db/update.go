@@ -551,11 +551,18 @@ func (d *ExplorerDB) fetchProcesses(entity string, localHeight, height int64, pr
 
 // TODO: this method should return an error message
 func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) []byte {
-	var rawTx models.Tx
-	err := proto.Unmarshal(tx.Tx, &rawTx)
+	// First unmarshal signedTx to get signature, then unmarshal the contained Tx
+	var signedTx models.SignedTx
+	err := proto.Unmarshal(tx.Tx, &signedTx)
 	if err != nil {
 		log.Error(err)
 	}
+	var rawTx models.Tx
+	err = proto.Unmarshal(signedTx.Tx, &rawTx)
+	if err != nil {
+		log.Error(err)
+	}
+
 	switch rawTx.Payload.(type) {
 	case *models.Tx_Vote:
 		break
@@ -596,7 +603,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		if err != nil {
 			log.Error(err)
 		}
-		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, rawTx.Signature)
+		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, signedTx.Signature)
 		if err != nil {
 			log.Errorf("cannot extract public key from signature (%s)", err)
 		}
