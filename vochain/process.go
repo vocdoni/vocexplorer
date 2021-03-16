@@ -59,16 +59,6 @@ func (vs *VochainService) GetProcessKeys(processID string) (*api.Pkeys, error) {
 	return &pkeys, nil
 }
 
-// GetProcListResults gets list of finished processes on the Vochain
-func (vs *VochainService) GetProcListResults(listSize int) []string {
-	return vs.scrut.ProcessListWithResults(listSize, 0)
-}
-
-// GetProcListLiveResults gets list of live processes on the Vochain
-func (vs *VochainService) GetProcListLiveResults(listSize int) []string {
-	return vs.scrut.ProcessListWithLiveResults(listSize, 0)
-}
-
 // GetProcessList gets list of processes for a given entity
 func (vs *VochainService) GetProcessList(entityID string, listSize int) ([][]byte, error) {
 	// check/sanitize eid
@@ -77,7 +67,7 @@ func (vs *VochainService) GetProcessList(entityID string, listSize int) ([][]byt
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode entityID")
 	}
-	return vs.scrut.ProcessList(eid, config.DefaultNamespace, 0, listSize)
+	return vs.scrut.ProcessList(eid, config.DefaultNamespace, "", false, 0, listSize)
 }
 
 // GetProcessResults gets the results of a given process

@@ -30,41 +30,6 @@ func (vs *VochainService) GetEnvelopeCount(processID string) (uint32, error) {
 	return votes, nil
 }
 
-// GetTotalEnvelopeCount gets number of envelopes
-func (vs *VochainService) GetTotalEnvelopeCount() (uint32, error) {
-	votes := uint32(0)
-	listSize := config.MaxListSize
-	for {
-		// Get all live processes, sum envelopes
-		newPIDs := vs.GetProcListLiveResults(listSize)
-		for _, pid := range newPIDs {
-			rawPid, err := hex.DecodeString(pid)
-			if err != nil {
-				return 0, err
-			}
-			votes += vs.app.State.CountVotes(rawPid, true)
-		}
-		if len(newPIDs) < int(listSize) {
-			break
-		}
-	}
-	for {
-		// Do the same for ended processes
-		newPIDs := vs.GetProcListResults(listSize)
-		for _, pid := range newPIDs {
-			rawPid, err := hex.DecodeString(pid)
-			if err != nil {
-				return 0, err
-			}
-			votes += vs.app.State.CountVotes(rawPid, true)
-		}
-		if len(newPIDs) < int(listSize) {
-			break
-		}
-	}
-	return votes, nil
-}
-
 // GetEntityProcessCount gets number of processes for a given entity
 func (vs *VochainService) GetEntityProcessCount(eid string) (int64, error) {
 	processes := int64(0)
