@@ -45,17 +45,24 @@ type VochainStats struct {
 
 // ProcessResults holds the results of a process
 type ProcessResults struct { // Set to mirror proto/build/go/models/vochain.pb.go
-	CensusOrigin string
-	CensusRoot   []byte
-	CensusURI    string
-	EndBlock     uint32
-	EnvelopeType EnvelopeType
-	Mode         ProcessMode
-	Results      [][]string
-	StartBlock   uint32
-	State        string
-	Type         string
-	VoteOptions  ProcessVoteOptions
+	CensusOrigin  string
+	CensusRoot    []byte
+	CensusURI     string
+	CreationTime  time.Time
+	EndBlock      uint32
+	EnvelopeType  EnvelopeType
+	FinalResults  bool
+	HaveResults   bool
+	Mode          ProcessMode
+	Namespace     uint32
+	PrivateKeys   string
+	PublicKeys    string
+	QuestionIndex uint32
+	Results       [][]string
+	StartBlock    uint32
+	State         string
+	Type          string
+	VoteOptions   ProcessVoteOptions
 }
 
 // EnvelopeType holds the EnvelopeType flags

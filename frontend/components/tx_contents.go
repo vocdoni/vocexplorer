@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"regexp"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -225,7 +227,7 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 		)
 	}
 	return elem.Preformatted(elem.Code(
-		vecty.Text(string(store.Transactions.CurrentDecodedTransaction.RawTxContents)),
+		vecty.Text(store.Transactions.CurrentDecodedTransaction.RawTxContents),
 	))
 }
 
@@ -254,7 +256,7 @@ func UpdateTxContents(d *TxContents) {
 	if err != nil {
 		logger.Error(err)
 	}
-	var txContents []byte
+	var txContents string
 	var processID string
 	var nullifier string
 	var entityID string
@@ -263,40 +265,77 @@ func UpdateTxContents(d *TxContents) {
 	case *models.Tx_Vote:
 		typedTx := rawTx.GetVote()
 		// typedTx.Nullifier = tx.Nullifier
-		txContents, err = json.MarshalIndent(typedTx, "", "\t")
+
+		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
+		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.GetProcessId())
 		nullifier = tx.Nullifier
+		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
+		txContents = convertB64ToHex(txContents, "processId", processID)
+		txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(typedTx.GetProof().GetGraviton().Siblings))
+		txContents = convertB64ToHex(txContents, "votePackage", hex.EncodeToString(typedTx.VotePackage))
+		txContents = convertB64ToHex(txContents, "nullifier", nullifier)
 	case *models.Tx_NewProcess:
 		typedTx := rawTx.GetNewProcess()
-		txContents, err = json.MarshalIndent(typedTx, "", "\t")
+		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
+
 			logger.Error(err)
 		}
+		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.Process.GetProcessId())
 		entityID = hex.EncodeToString(typedTx.Process.GetEntityId())
+		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
+		txContents = convertB64ToHex(txContents, "processId", processID)
+		txContents = convertB64ToHex(txContents, "entityId", entityID)
+		txContents = convertB64ToHex(txContents, "censusRoot", hex.EncodeToString(typedTx.Process.CensusRoot))
+		txContents = convertB64ToHex(txContents, "paramsSignature", hex.EncodeToString(typedTx.Process.ParamsSignature))
 	case *models.Tx_Admin:
 		typedTx := rawTx.GetAdmin()
-		txContents, err = json.MarshalIndent(typedTx, "", "\t")
+		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
+		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.GetProcessId())
+		txContents = convertB64ToHex(txContents, "processId", processID)
+		txContents = convertB64ToHex(txContents, "address", hex.EncodeToString(typedTx.Address))
+		txContents = convertB64ToHex(txContents, "commitmentKey", hex.EncodeToString(typedTx.CommitmentKey))
+		txContents = convertB64ToHex(txContents, "encryptionPrivateKey", hex.EncodeToString(typedTx.EncryptionPrivateKey))
+		txContents = convertB64ToHex(txContents, "encryptionPublicKey", hex.EncodeToString(typedTx.EncryptionPublicKey))
+		txContents = convertB64ToHex(txContents, "publicKey", hex.EncodeToString(typedTx.PublicKey))
+		txContents = convertB64ToHex(txContents, "revealKey", hex.EncodeToString(typedTx.RevealKey))
+		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
 	case *models.Tx_SetProcess:
 		typedTx := rawTx.GetSetProcess()
-		txContents, err = json.MarshalIndent(typedTx, "", "\t")
+		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
+		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.GetProcessId())
+		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
+		txContents = convertB64ToHex(txContents, "processId", processID)
+		txContents = convertB64ToHex(txContents, "censusRoot", hex.EncodeToString(typedTx.CensusRoot))
+		if typedTx.GetResults() != nil {
+			if len(typedTx.GetResults().EntityId) > 0 {
+				entityID = hex.EncodeToString(typedTx.GetResults().EntityId)
+				txContents = convertB64ToHex(txContents, "entityId", entityID)
+			}
+			votesRe, err := regexp.Compile("\"votes\":[^_]*\\],")
+			if err != nil {
+				logger.Warn(err.Error())
+			}
+			txContents = votesRe.ReplaceAllString(txContents, formatQuestions(typedTx.Results.Votes))
+		}
 	}
 
 	entityID = util.TrimHex(entityID)
 	processID = util.TrimHex(processID)
 	nullifier = util.TrimHex(nullifier)
-	logger.Info(fmt.Sprintf("generated Nullifier: %s", nullifier))
 	var envelopeHeight int64
 	if nullifier != "" {
 		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
@@ -315,4 +354,37 @@ func UpdateTxContents(d *TxContents) {
 			Nullifier:      nullifier,
 		},
 	})
+}
+
+func convertB64ToHex(source, key, hex string) string {
+	censusRootRe, err := regexp.Compile("\"" + key + "\": \".*\"")
+	if err != nil {
+		logger.Warn(err.Error())
+	}
+	if len(hex) > 0 {
+		source = censusRootRe.ReplaceAllString(source, "\""+key+"\": \""+hex+"\"")
+	}
+	return source
+}
+
+func formatQuestions(votes []*models.QuestionResult) string {
+	votesString := "\"votes\": [\n"
+	for i, vote := range votes {
+		voteString := "\t\t\t{\n\t\t\t\t\"question\": [\n"
+		for j, question := range vote.Question {
+			val := new(big.Int).SetBytes(question)
+			voteString += "\t\t\t\t\t"
+			voteString += val.String()
+			if j < (len(vote.Question) - 1) {
+				voteString += ",\n"
+			}
+		}
+		voteString += "\n\t\t\t\t]\n\t\t\t}"
+		if i < (len(votes) - 1) {
+			voteString += ",\n"
+		}
+		votesString += voteString
+	}
+	votesString += "\n\t\t],"
+	return votesString
 }

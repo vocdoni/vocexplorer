@@ -135,6 +135,32 @@ func (vs *VochainService) GetProcessResults(processID string) (api.ProcessResult
 	process.CensusRoot = procInfo.CensusRoot
 	process.CensusURI = procInfo.CensusURI
 
+	process.CreationTime = procInfo.CreationTime
+	process.FinalResults = procInfo.FinalResults
+	process.HaveResults = procInfo.HaveResults
+	process.Namespace = procInfo.Namespace
+	// process.PrivateKeys = strings.Join(procInfo.PrivateKeys, ", ")
+	// process.PublicKeys = strings.Join(procInfo.PublicKeys, ", ")
+	process.QuestionIndex = procInfo.QuestionIndex
+
+	for _, key := range procInfo.PrivateKeys {
+		if len(key) > 0 {
+			if len(process.PrivateKeys) > 0 {
+				process.PrivateKeys += ", "
+			}
+			process.PrivateKeys += key
+		}
+	}
+
+	for _, key := range procInfo.PublicKeys {
+		if len(key) > 0 {
+			if len(process.PublicKeys) > 0 {
+				process.PublicKeys += ", "
+			}
+			process.PublicKeys += key
+		}
+	}
+
 	// Set start + end block
 	process.StartBlock = procInfo.StartBlock
 	process.EndBlock = procInfo.EndBlock

@@ -519,7 +519,7 @@ main {
   @extend .row;
   > div {
     @extend .col-12;
-    @extend .col-md-3;
+    @extend .col-md-4;
     border-bottom: 1px solid $gray-200;
     margin-bottom: $card-spacer-x;
   }

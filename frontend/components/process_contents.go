@@ -198,17 +198,26 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 }
 
 func renderProcessDetails(details api.ProcessResults) vecty.ComponentOrHTML {
-	content := vecty.List{}
+	row1 := vecty.List{}
+	row2 := vecty.List{}
 
 	// Add EnvelopeType
-	content = append(content, renderEnvelopeType(details.EnvelopeType))
-	content = append(content, renderProcessMode(details.Mode))
-	content = append(content, renderProcessVoteOptions(details.VoteOptions))
-	content = append(content, renderProcessConfigs(details))
+	row1 = append(row1, renderEnvelopeType(details.EnvelopeType))
+	row1 = append(row1, renderProcessMode(details.Mode))
+	row1 = append(row1, renderProcessVoteOptions(details.VoteOptions))
+	row2 = append(row2, renderProcessConfigs(details))
+	row2 = append(row2, renderTimingDetails(details))
+	row2 = append(row2, renderProcessCensusDetails(details))
 
 	return elem.Div(
-		vecty.Markup(vecty.Class("poll-details")),
-		content,
+		elem.Div(
+			vecty.Markup(vecty.Class("poll-details")),
+			row1,
+		),
+		elem.Div(
+			vecty.Markup(vecty.Class("poll-details")),
+			row2,
+		),
 	)
 }
 
@@ -252,6 +261,34 @@ func renderProcessVoteOptions(options api.ProcessVoteOptions) vecty.ComponentOrH
 			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
 		))
 }
+func renderTimingDetails(details api.ProcessResults) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Timing & Results"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Creation time: %s", details.CreationTime.Format("Mon Jan _2 15:04:05 +3:00 2006")))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", details.StartBlock))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", details.EndBlock))),
+		))
+}
+
+func renderProcessCensusDetails(details api.ProcessResults) vecty.ComponentOrHTML {
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Census"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
+			vecty.If(details.CensusURI != "",
+				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", details.CensusURI)))),
+		))
+}
+
 func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
@@ -259,12 +296,12 @@ func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
 			vecty.Text("Other Details"),
 		),
 		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", details.StartBlock))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", details.EndBlock))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
-			vecty.If(details.CensusURI != "",
-				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", details.CensusURI)))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Namespace: %d", details.Namespace))),
+			vecty.If(len(details.PrivateKeys) > 0,
+				elem.ListItem(vecty.Text(fmt.Sprintf("Private Keys: %s", details.PrivateKeys)))),
+			vecty.If(len(details.PublicKeys) > 0,
+				elem.ListItem(vecty.Text(fmt.Sprintf("Public Keys: %s", details.PublicKeys)))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Question Index: %d", details.QuestionIndex))),
 		))
 }
 

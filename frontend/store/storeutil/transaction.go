@@ -22,7 +22,7 @@ type Transactions struct {
 // DecodedTransaction stores human-readable decoded transaction data
 type DecodedTransaction struct {
 	EnvelopeHeight int64
-	RawTxContents  []byte
+	RawTxContents  string
 	RawTx          models.Tx
 	Time           time.Time
 	ProcessID      string
