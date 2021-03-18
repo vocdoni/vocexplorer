@@ -282,7 +282,6 @@ func renderProcessCensusDetails(details api.ProcessResults) vecty.ComponentOrHTM
 		),
 		elem.OrderedList(
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", details.CensusOrigin))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", details.CensusRoot))),
 			vecty.If(details.CensusURI != "",
 				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", details.CensusURI)))),
