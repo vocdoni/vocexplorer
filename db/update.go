@@ -599,11 +599,7 @@ func (d *ExplorerDB) storeEnvelope(tx *voctypes.Transaction, state *BlockState) 
 		votePackage.Nullifier = voteTx.Nullifier
 	} else {
 		// Generate nullifier as in go-dvote vochain/transaction.go
-		voteBytes, err := proto.Marshal(voteTx)
-		if err != nil {
-			log.Error(err)
-		}
-		pubKey, err := ethereum.PubKeyFromSignature(voteBytes, signedTx.Signature)
+		pubKey, err := ethereum.PubKeyFromSignature(signedTx.Tx, signedTx.Signature)
 		if err != nil {
 			log.Errorf("cannot extract public key from signature (%s)", err)
 		}
