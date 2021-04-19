@@ -7,9 +7,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"github.com/vocdoni/vocexplorer/frontend/store"
-	"github.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //BlockchainInfo is the component to display blockchain information

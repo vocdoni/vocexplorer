@@ -1,9 +1,9 @@
 package actions
 
 import (
-	"github.com/vocdoni/vocexplorer/api"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
 // BlocksIndexChange is the action to set the pagination index

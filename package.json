@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Vochain Explorer",
   "main": "index.html",
-  "repository": "https://github.com/vocdoni/vocexplorer",
+  "repository": "https://gitlab.com/vocdoni/vocexplorer",
   "author": "Vocdoni",
   "license": "ISC",
   "private": true,

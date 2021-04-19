@@ -4,8 +4,8 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/prop"
-	"github.com/vocdoni/vocexplorer/frontend/components"
-	"github.com/vocdoni/vocexplorer/frontend/pages"
+	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/pages"
 	router "marwan.io/vecty-router"
 )
 

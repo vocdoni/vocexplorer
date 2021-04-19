@@ -1,8 +1,8 @@
 package storeutil
 
 import (
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
 // Validators stores all data about blockchain validators
