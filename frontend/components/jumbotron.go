@@ -5,8 +5,8 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/frontend/store"
-	"github.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //Jumbotron is a component for an info banner of statistics

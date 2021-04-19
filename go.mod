@@ -1,4 +1,4 @@
-module github.com/vocdoni/vocexplorer
+module gitlab.com/vocdoni/vocexplorer
 
 go 1.14
 

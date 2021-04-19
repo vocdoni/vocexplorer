@@ -3,10 +3,10 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/config"
-	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"github.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // BlockList is the block list component

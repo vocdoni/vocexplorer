@@ -5,14 +5,14 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api"
-	"github.com/vocdoni/vocexplorer/config"
-	"github.com/vocdoni/vocexplorer/frontend/actions"
-	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"github.com/vocdoni/vocexplorer/frontend/store"
-	"github.com/vocdoni/vocexplorer/frontend/update"
-	"github.com/vocdoni/vocexplorer/logger"
-	"github.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // DashboardView renders the dashboard landing page

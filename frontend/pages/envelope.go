@@ -6,11 +6,11 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/frontend/actions"
-	"github.com/vocdoni/vocexplorer/frontend/components"
-	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"github.com/vocdoni/vocexplorer/frontend/store"
-	"github.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/components"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	router "marwan.io/vecty-router"
 )
 

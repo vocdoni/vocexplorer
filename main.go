@@ -13,9 +13,8 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	"github.com/vocdoni/vocexplorer/config"
-	"github.com/vocdoni/vocexplorer/db"
-	"github.com/vocdoni/vocexplorer/router"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/router"
 	dvotecfg "go.vocdoni.io/dvote/config"
 	"go.vocdoni.io/dvote/log"
 )
@@ -116,8 +115,6 @@ func main() {
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
 		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
 	}
-	d := db.NewDB(cfg)
-	go d.UpdateDB()
 
 	urlR, err := url.Parse(cfg.HostURL)
 	if err != nil {
@@ -127,7 +124,7 @@ func main() {
 	log.Infof("Server on: %v\n", urlR)
 
 	r := mux.NewRouter()
-	router.RegisterRoutes(r, &cfg.Global, d)
+	router.RegisterRoutes(r, &cfg.Global)
 
 	s := &http.Server{
 		Addr:           urlR.Host,

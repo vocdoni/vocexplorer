@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"github.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 // BlockchainVersion is a tiny component showing the blockchain we're connected to and its version

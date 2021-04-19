@@ -8,10 +8,10 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/prop"
-	"github.com/vocdoni/vocexplorer/config"
-	"github.com/vocdoni/vocexplorer/frontend/actions"
-	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"github.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // Pagination holds pages of information (blocks, processes, etc)

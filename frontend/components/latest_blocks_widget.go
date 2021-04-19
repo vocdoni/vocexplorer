@@ -3,9 +3,9 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"github.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 )
 
 //LatestBlocksWidget is a component for a widget of recent blocks

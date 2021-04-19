@@ -1,6 +1,6 @@
 package api
 
-import "github.com/vocdoni/vocexplorer/config"
+import "gitlab.com/vocdoni/vocexplorer/config"
 
 //GetProcessEnvelopeCount returns the height of envelopes belonging to given process stored by the database
 func GetProcessEnvelopeCount(process string) (int64, bool) {

@@ -3,10 +3,10 @@ package api
 import (
 	"encoding/json"
 
-	types "github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/config"
-	"github.com/vocdoni/vocexplorer/logger"
-	"github.com/vocdoni/vocexplorer/util"
+	types "gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //GetTxList returns a list of transactions from the database

@@ -6,15 +6,15 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
-	"github.com/vocdoni/vocexplorer/frontend/actions"
-	"github.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"github.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"github.com/vocdoni/vocexplorer/frontend/store"
-	"github.com/vocdoni/vocexplorer/frontend/update"
-	"github.com/vocdoni/vocexplorer/logger"
-	"github.com/vocdoni/vocexplorer/util"
+	"gitlab.com/vocdoni/vocexplorer/api"
+	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntityContentsView renders the entities dashboard page
