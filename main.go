@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/router"
-	dvotecfg "go.vocdoni.io/dvote/config"
 	"go.vocdoni.io/dvote/log"
 )
 
@@ -28,20 +27,11 @@ func newConfig() (*config.MainCfg, error) {
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
+	cfg.Global.Environment = *flag.String("environment", "", "vochain environment, ie. \"dev\", \"stg\", \"\"")
+	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "0.0.0.0:9090/dvote", "URL for the gateway to query for data")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
-	cfg.Chain = *flag.String("chain", "main", "vochain network to connect to (eg. main, dev")
-
-	// Vochain config
-	cfg.VochainConfig = new(dvotecfg.VochainCfg)
-	cfg.VochainConfig.P2PListen = *flag.String("vochainP2PListen", "0.0.0.0:26656", "p2p host and port to listent for the voting chain")
-	cfg.VochainConfig.CreateGenesis = *flag.Bool("vochainCreateGenesis", false, "create own/testing genesis file on vochain")
-	cfg.VochainConfig.Genesis = *flag.String("vochainGenesis", "", "use alternative genesis file for the voting chain")
-	cfg.VochainConfig.LogLevel = *flag.String("vochainLogLevel", "error", "voting chain node log level")
-	cfg.VochainConfig.Peers = *flag.StringArray("vochainPeers", []string{}, "coma separated list of p2p peers")
-	cfg.VochainConfig.Seeds = *flag.StringArray("vochainSeeds", []string{}, "coma separated list of p2p seed nodes")
-	cfg.VochainConfig.NodeKey = *flag.String("vochainNodeKey", "", "user alternative vochain private key (hexstring[64])")
 	flag.Parse()
 
 	// setting up viper
@@ -60,18 +50,12 @@ func newConfig() (*config.MainCfg, error) {
 	viper.AddConfigPath(cfg.DataDir)
 
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
+	viper.BindPFlag("global.environment", flag.Lookup("environment"))
+	viper.BindPFlag("global.gatewayUrl", flag.Lookup("gatewayUrl"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
 	viper.BindPFlag("chain", flag.Lookup("chain"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
-
-	viper.BindPFlag("vochainConfig.P2PListen", flag.Lookup("vochainP2PListen"))
-	viper.BindPFlag("vochainConfig.CreateGenesis", flag.Lookup("vochainCreateGenesis"))
-	viper.BindPFlag("vochainConfig.Genesis", flag.Lookup("vochainGenesis"))
-	viper.BindPFlag("vochainConfig.LogLevel", flag.Lookup("vochainLogLevel"))
-	viper.BindPFlag("vochainConfig.Peers", flag.Lookup("vochainPeers"))
-	viper.BindPFlag("vochainConfig.Seeds", flag.Lookup("vochainSeeds"))
-	viper.BindPFlag("vochainConfig.NodeKey", flag.Lookup("vochainNodeKey"))
 
 	var cfgError error
 	_, err = os.Stat(cfg.DataDir + "/vocexplorer.yml")
@@ -97,8 +81,6 @@ func newConfig() (*config.MainCfg, error) {
 	if err != nil {
 		cfgError = fmt.Errorf("cannot unmarshal loaded config file: %s", err)
 	}
-
-	cfg.Global.Dev = cfg.Chain == "dev"
 
 	return &cfg, cfgError
 }
@@ -127,10 +109,9 @@ func main() {
 	router.RegisterRoutes(r, &cfg.Global)
 
 	s := &http.Server{
-		Addr:           urlR.Host,
-		ReadTimeout:    20 * time.Second,
-		WriteTimeout:   60 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:         urlR.Host,
+		ReadTimeout:  20 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
 	if cfg.DisableGzip {
