@@ -9,5 +9,6 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.vocdoni.io/dvote v0.6.1-0.20210419193525-c01d136249e6
 	go.vocdoni.io/proto v1.0.3-0.20210419154330-fcff0e12f3bd
+	google.golang.org/protobuf v1.25.0
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
