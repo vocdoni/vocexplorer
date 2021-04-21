@@ -1,7 +1,7 @@
 package storeutil
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
 

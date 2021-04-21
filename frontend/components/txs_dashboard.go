@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+	"gitlab.com/vocdoni/vocexplorer/client"
+
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
