@@ -8,6 +8,23 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func (c *Client) GetStats() (*models.VochainStats, error) {
+	var req types.MetaRequest
+	req.Method = "getStats"
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf(resp.Message)
+	}
+	stats := new(models.VochainStats)
+	if err := proto.Unmarshal(resp.Content, stats); err != nil {
+		return nil, err
+	}
+	return stats, nil
+}
+
 func (c *Client) GetEnvelopeHeight(pid []byte) (uint32, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeHeight"

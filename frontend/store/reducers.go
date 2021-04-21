@@ -120,7 +120,7 @@ func processActions(action interface{}) {
 		Processes.CurrentProcess = a.Process
 
 	case *actions.SetProcessResults:
-		Processes.ProcessResults[a.PID] = a.Process
+		Processes.ProcessResults[a.PID] = a.Results
 
 	default:
 		return // don't fire listeners
@@ -145,19 +145,19 @@ func redirectActions(action interface{}) {
 	Listeners.Fire()
 }
 
-// // statsActions is the handler for all stats-related store actions
-// func statsActions(action interface{}) {
-// 	switch a := action.(type) {
+// statsActions is the handler for all stats-related store actions
+func statsActions(action interface{}) {
+	switch a := action.(type) {
 
-// 	case *actions.SetStats:
-// 		Stats = *a.Stats
+	case *actions.SetStats:
+		Stats = *a.Stats
 
-// 	default:
-// 		return // don't fire listeners
-// 	}
+	default:
+		return // don't fire listeners
+	}
 
-// 	Listeners.Fire()
-// }
+	Listeners.Fire()
+}
 
 // transactionActions is the handler for all transaction-related store actions
 func transactionActions(action interface{}) {
