@@ -2,7 +2,6 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"go.vocdoni.io/proto/build/go/models"
 )
 
 // EntitiesIndexChange is the action to set the pagination index
@@ -47,5 +46,5 @@ type SetProcessHeights struct {
 
 // SetEntityProcessList is the action to set the current entity's process list
 type SetEntityProcessList struct {
-	ProcessList [config.ListSize]*models.Process
+	ProcessList [][]byte
 }

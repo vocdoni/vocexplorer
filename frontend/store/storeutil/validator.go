@@ -1,8 +1,7 @@
 package storeutil
 
 import (
-
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Validators stores all data about blockchain validators
@@ -10,10 +9,10 @@ type Validators struct {
 	BlockHeights       map[string]int64
 	Count              int
 	CurrentBlockCount  int
-	CurrentBlockList   [config.ListSize]*dbtypes.StoreBlock
-	CurrentValidator   *dbtypes.Validator
+	CurrentBlockList   *models.TendermintHeaderList
+	CurrentValidator   *models.Validator
 	CurrentValidatorID string
 	Pagination         PageStore
 	BlockPagination    PageStore
-	Validators         [config.ListSize]*dbtypes.Validator
+	Validators         *models.ValidatorList
 }

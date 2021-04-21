@@ -38,10 +38,6 @@ func initFrontend() {
 	if len(cfg.Environment) > 0 {
 		store.ProcessDomain = "https://app." + cfg.Environment + ".vocdoni.net/processes/#/0x"
 		store.EntityDomain = "https://" + cfg.Environment + ".vocdoni.link/entities/0x"
-	} else {
-		store.ProcessDomain = "https://app.vocdoni.net/processes/#/0x"
-		store.EntityDomain = "https://vocdoni.link/entities/0x"
-
 	}
 	// Wait for store.Config to populate
 	i := 0

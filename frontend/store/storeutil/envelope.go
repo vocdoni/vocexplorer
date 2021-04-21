@@ -1,15 +1,14 @@
 package storeutil
 
 import (
-
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Envelopes stores the current envelopes information
 type Envelopes struct {
 	Count                 int
-	CurrentEnvelope       *dbtypes.Envelope
+	CurrentEnvelope       *models.EnvelopePackage
 	CurrentEnvelopeHeight int64
-	Envelopes             [config.ListSize]*dbtypes.Envelope
+	Envelopes             *models.EnvelopePackageList
 	Pagination            PageStore
 }

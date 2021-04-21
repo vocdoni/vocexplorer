@@ -1,18 +1,15 @@
 package storeutil
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/client"
-
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Blocks stores all data abotu blockchain blocks
 type Blocks struct {
-	Blocks                [config.ListSize]*dbtypes.StoreBlock
+	Blocks                *models.TendermintHeaderList
 	Count                 int
-	CurrentBlock          *api.Block
-	CurrentBlockHeight    int64
-	CurrentTxs            [config.ListSize]*dbtypes.Transaction
+	CurrentBlock          *models.TendermintHeader
+	CurrentTxs            *models.SignedTxList
 	TransactionPagination PageStore
 	Pagination            PageStore
 }

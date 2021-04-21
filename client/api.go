@@ -150,7 +150,7 @@ func (c *Client) GetValidatorList() (*models.ValidatorList, error) {
 	return list, nil
 }
 
-func (c *Client) GetEnvelope(nullifier []byte) (*models.VoteEnvelope, error) {
+func (c *Client) GetEnvelope(nullifier []byte) (*models.EnvelopePackage, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelope"
 	req.Nullifier = nullifier
@@ -161,14 +161,14 @@ func (c *Client) GetEnvelope(nullifier []byte) (*models.VoteEnvelope, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get envelope: (%s)", resp.Message)
 	}
-	envelope := new(models.VoteEnvelope)
+	envelope := new(models.EnvelopePackage)
 	if err := proto.Unmarshal(resp.Content, envelope); err != nil {
 		return nil, err
 	}
 	return envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.VoteEnvelopeList, error) {
+func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.EnvelopePackageList, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
@@ -180,7 +180,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.VoteEnvelope
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get envelope list: (%s)", resp.Message)
 	}
-	list := new(models.VoteEnvelopeList)
+	list := new(models.EnvelopePackageList)
 	if err := proto.Unmarshal(resp.Content, list); err != nil {
 		return nil, err
 	}

@@ -3,8 +3,6 @@ package storeutil
 import (
 	"time"
 
-
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -12,11 +10,11 @@ import (
 type Transactions struct {
 	Count                     int
 	CurrentTransactionHeight  int64
-	CurrentTransaction        *dbtypes.Transaction
+	CurrentTransaction        *models.SignedTx
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *dbtypes.StoreBlock
+	CurrentBlock              []byte
 	Pagination                PageStore
-	Transactions              [config.ListSize]*dbtypes.Transaction
+	Transactions              *models.SignedTxList
 }
 
 // DecodedTransaction stores human-readable decoded transaction data
