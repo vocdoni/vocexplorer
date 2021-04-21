@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 )
 
 // StatsDashboardView renders the dashboard landing page
@@ -64,5 +65,10 @@ func UpdateStatsDashboard(d *StatsDashboardView) {
 func updateStatsDashboard(d *StatsDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
-	actions.UpdateCounts()
+	stats, err := store.Client.GetStats()
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	actions.UpdateCounts(stats)
 }

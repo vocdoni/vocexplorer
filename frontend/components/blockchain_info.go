@@ -26,23 +26,22 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 	rows = append(rows, row(
 		head(vecty.Text("ID")),
 		data(vecty.Text(store.Stats.ChainID)),
-		head(vecty.Text("Version")),
-		data(vecty.Text(store.Stats.Version)),
+		head(vecty.Text("Blockchain genesis timestamp")),
+		data(vecty.Text(
+			fmt.Sprintf(time.Unix(int64(store.Stats.GenesisTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
+		)),
 	))
 	rows = append(rows, row(
-		head(vecty.Text("Max block size")),
-		data(vecty.Text(humanize.Comma(store.Stats.MaxBytes))),
+		head(vecty.Text("Block height")),
+		data(vecty.Text(
+			humanize.Comma(int64(store.Blocks.Count)),
+		)),
 		head(vecty.Text("Latest block timestamp")),
 		data(vecty.Text(
 			fmt.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
 		)),
 	))
-	rows = append(rows, row(
-		head(vecty.Text("Block height")),
-		data(vecty.Text(humanize.Comma(store.Stats.LatestBlockHeight))),
-		head(vecty.Text("Total transactions")),
-		data(vecty.Text(humanize.Comma(int64(store.Transactions.Count)))),
-	))
+	rows = append(rows, row())
 	rows = append(rows, row(
 		head(vecty.Text("Total entities")),
 		data(vecty.Text(humanize.Comma(int64(store.Entities.Count)))),
@@ -54,31 +53,6 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 		data(vecty.Text(humanize.Comma(int64(store.Stats.ValidatorCount)))),
 		head(vecty.Text("Total vote envelopes")),
 		data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
-	))
-	rows = append(rows, row(
-		head(vecty.Text("Average transactions per block")),
-		data(vecty.Text(fmt.Sprintf("%.4f", store.Stats.AvgTxsPerBlock))),
-
-		head(vecty.Text("Max transactions on one block")),
-		data(vecty.Text(humanize.Comma(store.Stats.MaxTxsPerBlock))),
-	))
-	rows = append(rows, row(
-		head(vecty.Text("Average transactions per minute")),
-		data(vecty.Text(fmt.Sprintf("%.4f", store.Stats.AvgTxsPerMinute))),
-		head(vecty.Text("Max transactions in one minute")),
-		data(vecty.Text(humanize.Comma(store.Stats.MaxTxsPerMinute))),
-	))
-	rows = append(rows, row(
-		head(vecty.Text("Block with the most transactions")),
-		data(
-			vecty.Markup(vecty.Class("text-truncate")),
-			Link(
-				"/block/"+util.IntToString(store.Stats.MaxTxsBlockHeight),
-				store.Stats.MaxTxsBlockHash[:util.Min(10, len(store.Stats.MaxTxsBlockHash))]+"...",
-				""),
-		),
-		head(vecty.Text("Minute with the most transactions")),
-		data(vecty.Text(fmt.Sprintf(store.Stats.MaxTxsMinute.Format("Mon Jan _2 15:04 UTC 2006")))),
 	))
 	rows = append(rows, row(
 		spanHead(vecty.Text("Sync status")),

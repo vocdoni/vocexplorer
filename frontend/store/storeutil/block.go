@@ -6,9 +6,9 @@ import (
 
 // Blocks stores all data abotu blockchain blocks
 type Blocks struct {
-	Blocks                *models.TendermintHeaderList
+	Blocks                *models.BlockHeaderList
 	Count                 int
-	CurrentBlock          *models.TendermintHeader
+	CurrentBlock          *models.BlockHeader
 	CurrentTxs            *models.SignedTxList
 	TransactionPagination PageStore
 	Pagination            PageStore

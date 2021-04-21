@@ -8,7 +8,7 @@ import (
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
-	Count                     int
+	// Count                     int
 	CurrentTransactionHeight  int64
 	CurrentTransaction        *models.SignedTx
 	CurrentDecodedTransaction *DecodedTransaction

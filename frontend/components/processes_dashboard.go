@@ -6,7 +6,8 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -124,7 +125,12 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 func updateProcesses(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	if !store.Processes.Pagination.DisableUpdate {
-		actions.UpdateCounts()
+		stats, err := store.Client.GetStats()
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		actions.UpdateCounts(stats)
 		getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
 		update.ProcessResults()
 	}

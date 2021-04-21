@@ -12,7 +12,7 @@ func Reduce() {
 	dispatcher.Register(configActions)
 	dispatcher.Register(validatorActions)
 	dispatcher.Register(transactionActions)
-	// dispatcher.Register(statsActions)
+	dispatcher.Register(statsActions)
 	dispatcher.Register(redirectActions)
 	dispatcher.Register(processActions)
 	dispatcher.Register(envelopeActions)

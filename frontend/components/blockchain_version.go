@@ -17,9 +17,8 @@ type BlockchainVersion struct {
 func (b *BlockchainVersion) Render() vecty.ComponentOrHTML {
 	return &bootstrap.Alert{
 		Contents: fmt.Sprintf(
-			"Connected to blockchain \"<i>%s</i>\" (version %s)",
+			"Connected to blockchain \"<i>%s</i>\"",
 			store.Stats.ChainID,
-			store.Stats.Version,
 		),
 	}
 }

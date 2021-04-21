@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -112,7 +113,12 @@ func updateTxsDashboard(d *TxsDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 
 	if !store.Transactions.Pagination.DisableUpdate {
-		actions.UpdateCounts()
+		stats, err := store.Client.GetStats()
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		actions.UpdateCounts(stats)
 		updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, 1))
 	}
 }

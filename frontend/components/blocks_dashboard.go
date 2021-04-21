@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
+	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -84,28 +85,28 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
 			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 
-		case search := <-store.Blocks.Pagination.SearchChannel:
-			if !update.CheckCurrentPage("blocks", ticker) {
-				return
-			}
-		blocksearch:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case search = <-store.Blocks.Pagination.SearchChannel:
-				default:
-					break blocksearch
-				}
-			}
-			logger.Info("search: " + search)
-			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
-			list, ok := api.GetBlockSearch(search)
-			if ok {
-				reverseBlockList(&list)
-				dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
-			} else {
-				dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
-			}
+			// case search := <-store.Blocks.Pagination.SearchChannel:
+			// 	if !update.CheckCurrentPage("blocks", ticker) {
+			// 		return
+			// 	}
+			// blocksearch:
+			// 	for {
+			// 		// If many indices waiting in buffer, scan to last one.
+			// 		select {
+			// 		case search = <-store.Blocks.Pagination.SearchChannel:
+			// 		default:
+			// 			break blocksearch
+			// 		}
+			// 	}
+			// 	logger.Info("search: " + search)
+			// 	dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
+			// 	list, ok := store.Client.GetBlockSearch(search)
+			// 	if ok {
+			// 		reverseBlockList(&list)
+			// 		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
+			// 	} else {
+			// 		dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
+			// 	}
 		}
 	}
 }
@@ -113,23 +114,31 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 func updateBlocksDashboard(d *BlocksDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	if !store.Blocks.Pagination.DisableUpdate {
-		actions.UpdateCounts()
+		stats, err := store.Client.GetStats()
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		actions.UpdateCounts(stats)
 		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
 	}
 }
 
 func updateBlocks(d *BlocksDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting Blocks from index %d\n", index))
-	list, ok := api.GetBlockList(index)
-	if ok {
-		reverseBlockList(&list)
-		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
+	// list, err := store.Client.GetBlockList(index)
+	list, err := store.Client.GetBlockList(index, config.ListSize)
+	if err != nil {
+		logger.Error(err)
+		return
 	}
+	reverseBlockList(list)
+	dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 }
 
-func reverseBlockList(list *[config.ListSize]*dbtypes.StoreBlock) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
+func reverseBlockList(list *models.BlockHeaderList) {
+	for i := len(list.BlockHeaders)/2 - 1; i >= 0; i-- {
+		opp := len(list.BlockHeaders) - 1 - i
+		list.BlockHeaders[i], list.BlockHeaders[opp] = list.BlockHeaders[opp], list.BlockHeaders[i]
 	}
 }

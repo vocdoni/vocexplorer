@@ -7,6 +7,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/vocdoni/vocexplorer/logger"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -45,12 +46,15 @@ func renderProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
 	for _, process := range store.Processes.Processes {
 		if process != nil {
-			height := store.Processes.EnvelopeHeights[process.ID]
-			info, iok := store.Processes.ProcessResults[process.ID]
+			height, err := store.Client.GetEnvelopeHeight(process.Process.ProcessId)
+			if err != nil {
+				logger.Error(err)
+			}
+			info, iok := store.Processes.ProcessResults[util.HexToString(process.Process.ProcessId)]
 
 			elemList = append(
 				elemList,
-				ProcessBlock(process, iok, height, info),
+				ProcessBlock(process, iok, int64(height), info),
 			)
 		}
 	}
@@ -58,7 +62,7 @@ func renderProcessItems() []vecty.MarkupOrChild {
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(process *dbtypes.Process, ok bool, height int64, info storeutil.Process) vecty.ComponentOrHTML {
+func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeutil.ProcessResults) vecty.ComponentOrHTML {
 	if !ok || process == nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile")),

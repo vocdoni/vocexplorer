@@ -3,9 +3,9 @@ package components
 import (
 	"fmt"
 
-	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -23,7 +23,7 @@ type BlockTransactionsListView struct {
 
 // Render renders the BlockTransactionsListView component
 func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
-	numTxs := len(store.Blocks.CurrentBlock.Data)
+	numTxs := int(store.Blocks.CurrentBlock.NumTxs)
 	if numTxs == 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),
@@ -61,11 +61,8 @@ func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
 func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
 
-	for i := len(store.Blocks.CurrentTxs) - 1; i >= len(store.Blocks.CurrentTxs)-p.ListSize; i-- {
-		if dbtypes.TxIsEmpty(store.Blocks.CurrentTxs[i]) {
-			continue
-		}
-		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i]))
+	for i := len(store.Blocks.CurrentTxs.TxList) - 1; i >= len(store.Blocks.CurrentTxs.TxList)-p.ListSize; i-- {
+		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs.TxList[i], i+(p.ListSize**p.CurrentPage)))
 	}
 	if len(txList) == 0 {
 		if *p.Searching {
@@ -79,7 +76,7 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlockTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
+func renderBlockTx(tx *models.SignedTx, index int) vecty.ComponentOrHTML {
 	var rawTx models.Tx
 	err := proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
@@ -94,7 +91,7 @@ func renderBlockTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("type")),
 				elem.Div(
 					elem.Span(
-						vecty.Text(fmt.Sprintf("#%d", tx.Index+1)),
+						vecty.Text(fmt.Sprintf("#%d", index)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
@@ -107,14 +104,14 @@ func renderBlockTx(tx *dbtypes.Transaction) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						Link(
-							"/transaction/"+util.IntToString(tx.TxHeight),
-							util.HexToString(tx.Hash),
+							"/transaction?block="+util.IntToString(store.Blocks.CurrentBlock.Height)+"&tx="+util.IntToString(index),
+							util.HexToString(tmhash.Sum(tx.Tx)),
 							"",
 						),
 					),
-					vecty.Text(
-						fmt.Sprintf("%s transaction on the blockchain ", humanize.Ordinal(int(tx.TxHeight))),
-					),
+					// vecty.Text(
+					// 	fmt.Sprintf("%s transaction on the blockchain ", humanize.Ordinal(int(tx.TxHeight))),
+					// ),
 				),
 			),
 		),

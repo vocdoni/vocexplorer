@@ -6,7 +6,7 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -86,7 +86,10 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
 			if i < 1 {
-				newVal, _ := api.GetEntityCount()
+				newVal, err := store.Client.GetEntityCount()
+				if err != nil {
+					logger.Error(err)
+				}
 				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
 			if store.Entities.Count > 0 {
@@ -120,7 +123,12 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 func updateEntities(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	if !store.Entities.Pagination.DisableUpdate {
-		actions.UpdateCounts()
+		stats, err := store.Client.GetStats()
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		actions.UpdateCounts(stats)
 		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
 	}
 }
