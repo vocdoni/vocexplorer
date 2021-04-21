@@ -5,7 +5,7 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -67,7 +67,12 @@ func UpdateHomeDashboard(d *DashboardView) {
 
 func updateHomeDashboardInfo(d *DashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	actions.UpdateCounts()
+	stats, err := store.Client.GetStats()
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	actions.UpdateCounts(stats)
 	updateHomeBlocks(d, util.Max(store.Blocks.Count, config.HomeWidgetBlocksListSize))
 }
 

@@ -9,7 +9,7 @@ type Validators struct {
 	BlockHeights       map[string]int64
 	Count              int
 	CurrentBlockCount  int
-	CurrentBlockList   *models.TendermintHeaderList
+	CurrentBlockList   *models.BlockHeaderList
 	CurrentValidator   *models.Validator
 	CurrentValidatorID string
 	Pagination         PageStore

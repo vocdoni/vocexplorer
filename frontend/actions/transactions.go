@@ -20,10 +20,10 @@ type SetTransactionList struct {
 	TransactionList *models.SignedTxList
 }
 
-// SetTransactionCount is the action to set the Transaction count
-type SetTransactionCount struct {
-	Count int
-}
+// // SetTransactionCount is the action to set the Transaction count
+// type SetTransactionCount struct {
+// 	Count int
+// }
 
 // SetCurrentTransactionHeight is the action to set the height of the current transaction
 type SetCurrentTransactionHeight struct {

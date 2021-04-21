@@ -21,7 +21,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList *models.TendermintHeaderList
+	BlockList *models.BlockHeaderList
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -31,7 +31,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *models.TendermintHeader
+	Block *models.BlockHeader
 }
 
 // SetCurrentBlockHeight is the action to set the current block height

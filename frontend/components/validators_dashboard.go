@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -111,7 +112,12 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
 	if !store.Validators.Pagination.DisableUpdate {
-		actions.UpdateCounts()
+		stats, err := store.Client.GetStats()
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		actions.UpdateCounts(stats)
 		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
 	}
 }

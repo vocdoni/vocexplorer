@@ -204,7 +204,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.EnvelopePack
 	return list, nil
 }
 
-func (c *Client) GetBlock(height uint32) (*models.TendermintHeader, error) {
+func (c *Client) GetBlock(height uint32) (*models.BlockHeader, error) {
 	var req types.MetaRequest
 	req.Method = "getBlock"
 	req.BlockHeight = height
@@ -215,14 +215,14 @@ func (c *Client) GetBlock(height uint32) (*models.TendermintHeader, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	block := new(models.TendermintHeader)
+	block := new(models.BlockHeader)
 	if err := proto.Unmarshal(resp.Content, block); err != nil {
 		return nil, err
 	}
 	return block, nil
 }
 
-func (c *Client) GetBlockByHash(hash []byte) (*models.TendermintHeader, error) {
+func (c *Client) GetBlockByHash(hash []byte) (*models.BlockHeader, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockByHash"
 	req.Payload = hash
@@ -233,14 +233,14 @@ func (c *Client) GetBlockByHash(hash []byte) (*models.TendermintHeader, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	block := new(models.TendermintHeader)
+	block := new(models.BlockHeader)
 	if err := proto.Unmarshal(resp.Content, block); err != nil {
 		return nil, err
 	}
 	return block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) (*models.TendermintHeaderList, error) {
+func (c *Client) GetBlockList(from, listSize int) (*models.BlockHeaderList, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from
@@ -252,7 +252,7 @@ func (c *Client) GetBlockList(from, listSize int) (*models.TendermintHeaderList,
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	list := new(models.TendermintHeaderList)
+	list := new(models.BlockHeaderList)
 	if err := proto.Unmarshal(resp.Content, list); err != nil {
 		return nil, err
 	}

@@ -2,18 +2,19 @@ package components
 
 import (
 	"encoding/hex"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *dbtypes.StoreBlock) vecty.ComponentOrHTML {
+func BlockCard(block *models.BlockHeader) vecty.ComponentOrHTML {
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
 			"/block/"+util.IntToString(block.Height),
@@ -25,10 +26,10 @@ func BlockCard(block *dbtypes.StoreBlock) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Span(
 					vecty.Markup(vecty.Class("mr-2")),
-					vecty.Text(humanize.Comma(block.NumTxs)+" transactions"),
+					vecty.Text(humanize.Comma(int64(block.NumTxs))+" transactions"),
 				),
 				elem.Span(
-					vecty.Text(humanize.Time(block.Time)),
+					vecty.Text(humanize.Time(time.Unix(block.Timestamp, 0))),
 				),
 			),
 			elem.DescriptionList(
@@ -37,10 +38,10 @@ func BlockCard(block *dbtypes.StoreBlock) vecty.ComponentOrHTML {
 				),
 				elem.Description(
 					vecty.Markup(
-						vecty.Attribute("title", hex.EncodeToString(block.Hash)),
+						vecty.Attribute("title", hex.EncodeToString(block.BlockHash)),
 						vecty.Markup(vecty.Class("text-truncate")),
 					),
-					vecty.Text(hex.EncodeToString(block.Hash)),
+					vecty.Text(hex.EncodeToString(block.BlockHash)),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Proposer Address"),
@@ -48,11 +49,11 @@ func BlockCard(block *dbtypes.StoreBlock) vecty.ComponentOrHTML {
 				elem.Description(
 					vecty.Markup(
 						vecty.Class("text-truncate"),
-						vecty.Attribute("title", util.HexToString(block.Proposer)),
+						vecty.Attribute("title", util.HexToString(block.ProposerAddress)),
 					),
 					Link(
-						"/validator/"+util.HexToString(block.Proposer),
-						util.HexToString(block.Proposer),
+						"/validator/"+util.HexToString(block.ProposerAddress),
+						util.HexToString(block.ProposerAddress),
 						"",
 					),
 				),
