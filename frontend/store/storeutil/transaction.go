@@ -3,7 +3,7 @@ package storeutil
 import (
 	"time"
 
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
+
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"go.vocdoni.io/proto/build/go/models"
 )

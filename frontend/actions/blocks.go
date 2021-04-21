@@ -1,9 +1,7 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/api"
-	"gitlab.com/vocdoni/vocexplorer/api/dbtypes"
-	"gitlab.com/vocdoni/vocexplorer/config"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // BlocksIndexChange is the action to set the pagination index
@@ -23,7 +21,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList [config.ListSize]*dbtypes.StoreBlock
+	BlockList models.TendermintHeaderList
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -33,7 +31,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *api.Block
+	Block *models.TendermintHeader
 }
 
 // SetCurrentBlockHeight is the action to set the current block height
@@ -43,5 +41,5 @@ type SetCurrentBlockHeight struct {
 
 // SetCurrentBlockTransactionList is the action to set the current list of transactions
 type SetCurrentBlockTransactionList struct {
-	TransactionList [config.ListSize]*dbtypes.Transaction
+	TransactionList models.SignedTxList
 }

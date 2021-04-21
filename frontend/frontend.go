@@ -35,9 +35,13 @@ func initFrontend() {
 	if cfg == nil {
 		logger.Fatal("Unable to get application configuraion")
 	}
-	if cfg.Dev {
-		store.ProcessDomain = "https://app.dev.vocdoni.net/processes/#/0x"
-		store.EntityDomain = "https://dev.vocdoni.link/entities/0x"
+	if len(cfg.Environment) > 0 {
+		store.ProcessDomain = "https://app." + cfg.Environment + ".vocdoni.net/processes/#/0x"
+		store.EntityDomain = "https://" + cfg.Environment + ".vocdoni.link/entities/0x"
+	} else {
+		store.ProcessDomain = "https://app.vocdoni.net/processes/#/0x"
+		store.EntityDomain = "https://vocdoni.link/entities/0x"
+
 	}
 	// Wait for store.Config to populate
 	i := 0
