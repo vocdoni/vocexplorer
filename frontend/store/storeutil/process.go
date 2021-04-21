@@ -8,6 +8,7 @@ import (
 // Processes stores the current processes information
 type Processes struct {
 	Count              int
+	ProcessResults     map[string]ProcessResults
 	Processes          [config.ListSize]*Process
 	Pagination         PageStore
 	EnvelopePagination PageStore
@@ -20,4 +21,10 @@ type Process struct {
 	Envelopes     *models.EnvelopePackageList
 	EnvelopeCount int
 	Process       *models.Process
+}
+
+type ProcessResults struct {
+	Results [][]string
+	State   string
+	Final   bool
 }

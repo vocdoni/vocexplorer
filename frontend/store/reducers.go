@@ -119,6 +119,9 @@ func processActions(action interface{}) {
 	case *actions.SetCurrentProcessStruct:
 		Processes.CurrentProcess = a.Process
 
+	case *actions.SetProcessResults:
+		Processes.ProcessResults[a.PID] = a.Process
+
 	default:
 		return // don't fire listeners
 	}

@@ -39,7 +39,12 @@ type SetEnvelopeHeights struct {
 // SetProcessContents is the action to set a single process contents
 type SetProcessContents struct {
 	Process storeutil.Process
-	ID      string
+}
+
+// SetProcessResults is the action to set a single process results
+type SetProcessResults struct {
+	Results storeutil.ProcessResults
+	PID     string
 }
 
 // SetProcessState is the action to set the current process state
