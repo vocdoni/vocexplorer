@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -17,17 +16,19 @@ import (
 func ProcessResults() {
 	for _, process := range store.Processes.Processes {
 		if process != nil {
-			ID := process.ID
-			if ID != "" {
-				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, ok := api.GetProcessResults(strings.ToLower(ID))
-					if ok && results != nil {
-						dispatcher.Dispatch(&actions.SetProcessContents{
-							ID:      ID,
-							Process: storeutil.Process{ProcessInfo: *results},
-						})
-					}
-				}
+			results, state, final, err := store.Client.GetResults(process.Process.ProcessId)
+			if err != nil {
+				logger.Error(err)
+			}
+			if results != nil && err == nil {
+				dispatcher.Dispatch(&actions.SetProcessResults{
+					PID: util.HexToString(process.Process.ProcessId),
+					Results: storeutil.ProcessResults{
+						Results: results,
+						State:   state,
+						Final:   final,
+					},
+				})
 			}
 		}
 	}
@@ -35,17 +36,23 @@ func ProcessResults() {
 
 // EnvelopeProcessResults updates auxilary info for all process id's belonging to currently displayed envelopes
 func EnvelopeProcessResults() {
-	for _, envelope := range store.Envelopes.Envelopes {
+	for _, envelope := range store.Envelopes.Envelopes.Envelopes {
 		if envelope != nil {
-			ID := strings.ToLower(util.TrimHex(envelope.ProcessID))
+			ID := strings.ToLower(util.TrimHex(util.HexToString(envelope.Envelope.ProcessId)))
 			if ID != "" {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, ok := api.GetProcessResults(strings.ToLower(ID))
-					if ok && results != nil {
-						dispatcher.Dispatch(&actions.SetProcessContents{
-							ID: ID,
-							Process: storeutil.Process{
-								ProcessInfo: *results},
+					results, state, final, err := store.Client.GetResults(envelope.Envelope.ProcessId)
+					if err != nil {
+						logger.Error(err)
+					}
+					if results != nil && err == nil {
+						dispatcher.Dispatch(&actions.SetProcessResults{
+							PID: ID,
+							Results: storeutil.ProcessResults{
+								Results: results,
+								State:   state,
+								Final:   final,
+							},
 						})
 					}
 				}
@@ -56,19 +63,19 @@ func EnvelopeProcessResults() {
 
 // CurrentProcessResults updates current process information
 func CurrentProcessResults() {
-	results, ok := api.GetProcessResults(strings.ToLower(store.Processes.CurrentProcess.ID))
-	if !ok || results == nil {
+	results, state, final, err := store.Client.GetResults(store.Processes.CurrentProcess.Process.ProcessId)
+	if err != nil {
+		logger.Error(err)
 		return
 	}
-	newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
-	if !ok {
-		return
-	}
-	if ok && results != nil {
-		dispatcher.Dispatch(&actions.SetCurrentProcessInfo{
-			Process: storeutil.Process{
-				EnvelopeCount: int(newVal),
-				ProcessInfo:   *results},
+	if results != nil {
+		dispatcher.Dispatch(&actions.SetProcessResults{
+			PID: util.HexToString(store.Processes.CurrentProcess.Process.ProcessId),
+			Results: storeutil.ProcessResults{
+				Results: results,
+				State:   state,
+				Final:   final,
+			},
 		})
 	}
 }
@@ -77,15 +84,22 @@ func CurrentProcessResults() {
 func EntityProcessResults() {
 	for _, process := range store.Entities.CurrentEntity.Processes {
 		if process != nil {
-			ID := process.ID
+			ID := util.HexToString(process)
 			if ID != "" {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, ok := api.GetProcessResults(strings.ToLower(ID))
-					if ok && results != nil {
-						dispatcher.Dispatch(&actions.SetProcessContents{
-							ID: ID,
-							Process: storeutil.Process{
-								ProcessInfo: *results},
+					results, state, final, err := store.Client.GetResults(process)
+					if err != nil {
+						logger.Error(err)
+						return
+					}
+					if results != nil {
+						dispatcher.Dispatch(&actions.SetProcessResults{
+							PID: ID,
+							Results: storeutil.ProcessResults{
+								Results: results,
+								State:   state,
+								Final:   final,
+							},
 						})
 					}
 				}

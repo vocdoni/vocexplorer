@@ -6,6 +6,7 @@ import (
 	"syscall/js"
 
 	"github.com/hexops/vecty"
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -45,6 +46,10 @@ func initFrontend() {
 		if i > 5 {
 			logger.Fatal("Config could not be stored")
 		}
+	}
+	store.Client, err = client.New(store.Config.GatewayUrl)
+	if err != nil {
+		logger.Error(err)
 	}
 }
 

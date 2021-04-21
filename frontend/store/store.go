@@ -1,6 +1,7 @@
 package store
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
@@ -8,6 +9,8 @@ import (
 var (
 	// Config stores the application configuration
 	Config config.Cfg
+
+	Client *client.Client
 
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
