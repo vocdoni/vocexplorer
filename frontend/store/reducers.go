@@ -12,7 +12,7 @@ func Reduce() {
 	dispatcher.Register(configActions)
 	dispatcher.Register(validatorActions)
 	dispatcher.Register(transactionActions)
-	dispatcher.Register(statsActions)
+	// dispatcher.Register(statsActions)
 	dispatcher.Register(redirectActions)
 	dispatcher.Register(processActions)
 	dispatcher.Register(envelopeActions)
@@ -59,9 +59,6 @@ func entityActions(action interface{}) {
 
 	case *actions.SetEntityProcessList:
 		Entities.CurrentEntity.Processes = a.ProcessList
-
-	case *actions.SetEntityProcessCount:
-		Entities.CurrentEntity.ProcessCount = a.Count
 
 	default:
 		return // don't fire listeners
@@ -119,29 +116,8 @@ func processActions(action interface{}) {
 	case *actions.SetEnvelopeHeights:
 		Processes.EnvelopeHeights = a.EnvelopeHeights
 
-	case *actions.SetProcessContents:
-		Processes.ProcessResults[a.ID] = a.Process
-
-	case *actions.SetProcessKeys:
-		Processes.ProcessKeys[a.ID] = a.Keys
-
-	case *actions.SetProcessState:
-		Processes.CurrentProcessResults.ProcessInfo.State = a.State
-
-	case *actions.SetProcessType:
-		Processes.CurrentProcessResults.ProcessInfo.Type = a.Type
-
-	case *actions.SetCurrentProcessEnvelopeHeight:
-		Processes.CurrentProcessResults.EnvelopeCount = a.Height
-
-	case *actions.SetCurrentProcessInfo:
-		Processes.CurrentProcessResults = a.Process
-
 	case *actions.SetCurrentProcessStruct:
 		Processes.CurrentProcess = a.Process
-
-	case *actions.SetCurrentProcessEnvelopes:
-		Processes.CurrentProcessEnvelopes = a.EnvelopeList
 
 	default:
 		return // don't fire listeners
@@ -166,19 +142,19 @@ func redirectActions(action interface{}) {
 	Listeners.Fire()
 }
 
-// statsActions is the handler for all stats-related store actions
-func statsActions(action interface{}) {
-	switch a := action.(type) {
+// // statsActions is the handler for all stats-related store actions
+// func statsActions(action interface{}) {
+// 	switch a := action.(type) {
 
-	case *actions.SetStats:
-		Stats = *a.Stats
+// 	case *actions.SetStats:
+// 		Stats = *a.Stats
 
-	default:
-		return // don't fire listeners
-	}
+// 	default:
+// 		return // don't fire listeners
+// 	}
 
-	Listeners.Fire()
-}
+// 	Listeners.Fire()
+// }
 
 // transactionActions is the handler for all transaction-related store actions
 func transactionActions(action interface{}) {
@@ -202,7 +178,7 @@ func transactionActions(action interface{}) {
 		Transactions.CurrentTransaction = a.Transaction
 
 	case *actions.SetTransactionBlock:
-		Transactions.CurrentBlock = a.Block
+		Transactions.CurrentBlock = a.BlockHash
 
 	case *actions.SetCurrentDecodedTransaction:
 		Transactions.CurrentDecodedTransaction = a.Transaction
@@ -220,9 +196,6 @@ func validatorActions(action interface{}) {
 	case *actions.ValidatorsIndexChange:
 		Validators.Pagination.Index = a.Index
 
-	case *actions.ValidatorBlocksIndexChange:
-		Validators.BlockPagination.Index = a.Index
-
 	case *actions.SetValidatorList:
 		Validators.Validators = a.List
 
@@ -237,12 +210,6 @@ func validatorActions(action interface{}) {
 
 	case *actions.SetCurrentValidatorBlockCount:
 		Validators.CurrentBlockCount = a.Count
-
-	case *actions.SetCurrentValidatorBlockList:
-		Validators.CurrentBlockList = a.BlockList
-
-	case *actions.SetValidatorBlockHeightMap:
-		Validators.BlockHeights = a.HeightMap
 
 	default:
 		return // don't fire listeners
@@ -284,9 +251,6 @@ func blockActions(action interface{}) {
 
 	case *actions.SetCurrentBlock:
 		Blocks.CurrentBlock = a.Block
-
-	case *actions.SetCurrentBlockHeight:
-		Blocks.CurrentBlockHeight = a.Height
 
 	case *actions.SetCurrentBlockTransactionList:
 		Blocks.CurrentTxs = a.TransactionList

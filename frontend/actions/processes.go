@@ -23,7 +23,7 @@ type ProcessTabChange struct {
 
 // SetProcessList is the action to set the process list
 type SetProcessList struct {
-	Processes [config.ListSize]*models.Process
+	Processes [config.ListSize]*storeutil.Process
 }
 
 // SetProcessCount is the action to set the process count
@@ -64,10 +64,10 @@ type SetCurrentProcessInfo struct {
 
 // SetCurrentProcessStruct is the action to set the current process
 type SetCurrentProcessStruct struct {
-	Process *models.Process
+	Process *storeutil.Process
 }
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList *models.VoteEnvelopeList
+	EnvelopeList *models.EnvelopePackageList
 }

@@ -1,7 +1,6 @@
 package storeutil
 
 import (
-
 	"gitlab.com/vocdoni/vocexplorer/config"
 )
 
@@ -18,6 +17,5 @@ type Entities struct {
 
 // Entity holds info about one vochain entity
 type Entity struct {
-	ProcessCount int
-	Processes    [config.ListSize]*dbtypes.Process
+	Processes [][]byte
 }

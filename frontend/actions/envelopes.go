@@ -16,7 +16,7 @@ type EnvelopesIndexChange struct {
 
 // SetEnvelopeList is the action to set the envelope list
 type SetEnvelopeList struct {
-	EnvelopeList *models.VoteEnvelopeList
+	EnvelopeList *models.EnvelopePackageList
 }
 
 // SetEnvelopeCount is the action to set the Envelope count
@@ -26,7 +26,7 @@ type SetEnvelopeCount struct {
 
 // SetCurrentEnvelope is the action to set the current envelope
 type SetCurrentEnvelope struct {
-	Envelope *models.VoteEnvelope
+	Envelope *models.EnvelopePackage
 }
 
 // SetCurrentEnvelopeHeight is the action to set the current envelope height

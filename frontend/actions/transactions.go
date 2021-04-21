@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -41,5 +42,5 @@ type SetTransactionBlock struct {
 
 // SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction
 type SetCurrentDecodedTransaction struct {
-	Transaction *models.Tx
+	Transaction *storeutil.DecodedTransaction
 }
