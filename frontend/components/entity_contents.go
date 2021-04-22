@@ -6,12 +6,13 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -104,13 +105,15 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 // UpdateEntityContents keeps the dashboard data up to date
 func UpdateEntityContents(d *EntityContentsView) {
 	// Set entity process list to nil so previous list is not displayed
-	dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: [10]*dbtypes.Process{}})
+	dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: [10]*storeutil.Process{}})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 
-	newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-	if ok {
+	newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
+	if err != nil {
+		logger.Error(err)
+	} else {
 		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 	}
 	if !update.CheckCurrentPage("entity", ticker) {
@@ -142,20 +145,20 @@ func UpdateEntityContents(d *EntityContentsView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
+			eid := util.StringToHex(store.Entities.CurrentEntityID)
 			if i < 1 {
-				newCount, _ := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
+				newCount, _ := store.Client.GetProcessCount(eid)
 				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 			}
 			index := util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1)
 			logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
-			list, ok := api.GetProcessListByEntity(index-1, store.Entities.CurrentEntityID)
-			if ok {
-				dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
+			list, _, err := store.Client.GetProcessList(eid, "", 0, "", false, index-1, config.ListSize)
+			if err != nil {
+				logger.Error(err)
+			} else {
+				dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 			}
-			newMap, ok := api.GetProcessEnvelopeCountMap()
-			if ok {
-				dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
-			}
+			// TODO actually fetch all the processes, maybe make processList [config.ListSize]
 			update.EntityProcessResults()
 		}
 	}
@@ -163,22 +166,23 @@ func UpdateEntityContents(d *EntityContentsView) {
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
 	index--
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 
 	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.ProcessPagination.DisableUpdate {
-		newCount, ok := api.GetEntityProcessCount(store.Entities.CurrentEntityID)
-		if ok {
+		newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
+		if err != nil {
+			logger.Error(err)
+		} else {
 			dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
 		}
 		logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
-		list, ok := api.GetProcessListByEntity(index, store.Entities.CurrentEntityID)
-		if ok {
-			dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: list})
+		list, _, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, config.ListSize)
+		if err != nil {
+			logger.Error(err)
+		} else {
+			dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 		}
-		newMap, ok := api.GetProcessEnvelopeCountMap()
-		if ok {
-			dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newMap})
-		}
+		// TODO actually fetch all the processes, maybe make processList [config.ListSize]
 		update.EntityProcessResults()
 	}
 }

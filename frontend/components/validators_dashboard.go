@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/api"
 	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -79,7 +78,7 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
 			if i < 1 {
-				newHeight, _ := api.GetValidatorCount()
+				newHeight, _ := store.Client.GetValidatorCount()
 				dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight)})
 			}
 			updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
@@ -98,7 +97,7 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
-			list, ok := api.GetValidatorSearch(search)
+			list, ok := store.Client.GetValidatorSearch(search)
 			if ok {
 				reverseValidatorList(&list)
 				dispatcher.Dispatch(&actions.SetValidatorList{List: list})
@@ -110,7 +109,7 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 }
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Validators.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -124,12 +123,12 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting Validators from index %d\n", index))
-	list, ok := api.GetValidatorList(index)
+	list, ok := store.Client.GetValidatorList(index)
 	if ok {
 		reverseValidatorList(&list)
 		dispatcher.Dispatch(&actions.SetValidatorList{List: list})
 	}
-	blockHeights, ok := api.GetValidatorBlockHeightMap()
+	blockHeights, ok := store.Client.GetValidatorBlockHeightMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetValidatorBlockHeightMap{HeightMap: blockHeights})
 	}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -110,18 +109,19 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: 0})
-			list, ok := api.GetEntitySearch(search)
-			if ok {
-				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+			list, err := store.Client.GetEntityList(search, config.ListSize, 0)
+			if err != nil {
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: []string{}})
+				logger.Error(err)
 			} else {
-				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: [config.ListSize]string{}})
+				dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 			}
 		}
 	}
 }
 
 func updateEntities(d *EntitiesDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Entities.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -136,12 +136,12 @@ func updateEntities(d *EntitiesDashboardView) {
 func getEntities(d *EntitiesDashboardView, index int) {
 	index--
 	logger.Info(fmt.Sprintf("Getting entities from index %d\n", index))
-	list, ok := api.GetEntityList(index)
-	if ok {
+	list, err := store.Client.GetEntityList("", config.ListSize, index)
+	if err != nil {
+		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: []string{}})
+		logger.Error(err)
+	} else {
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 	}
-	newVal, ok := api.GetEntityProcessCountMap()
-	if ok {
-		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
-	}
+	// TODO get entity process heights
 }

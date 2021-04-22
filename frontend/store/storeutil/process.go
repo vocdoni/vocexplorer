@@ -26,5 +26,6 @@ type Process struct {
 type ProcessResults struct {
 	Results [][]string
 	State   string
+	Type    string
 	Final   bool
 }

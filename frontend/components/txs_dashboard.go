@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/api"
 	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -78,7 +77,7 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.TransactionsIndexChange{Index: i})
 			if i < 1 {
-				newHeight, _ := api.GetTxHeight()
+				newHeight, _ := store.Client.GetTxHeight()
 				dispatcher.Dispatch(&actions.SetTransactionCount{Count: int(newHeight) - 1})
 			}
 			updateTxs(d, util.Max(store.Transactions.Count-store.Transactions.Pagination.Index, 1))
@@ -98,7 +97,7 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.TransactionsIndexChange{Index: 0})
-			list, ok := api.GetTransactionSearch(search)
+			list, ok := store.Client.GetTransactionSearch(search)
 			if ok {
 				reverseTxList(&list)
 				dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: list})
@@ -110,7 +109,7 @@ func UpdateTxsDashboard(d *TxsDashboardView) {
 }
 
 func updateTxsDashboard(d *TxsDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 
 	if !store.Transactions.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
@@ -125,7 +124,7 @@ func updateTxsDashboard(d *TxsDashboardView) {
 
 func updateTxs(d *TxsDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting transactions from index %d\n", index))
-	list, ok := api.GetTxList(index)
+	list, ok := store.Client.GetTxList(index)
 	if ok {
 		reverseTxList(&list)
 		dispatcher.Dispatch(&actions.SetTransactionList{TransactionList: list})

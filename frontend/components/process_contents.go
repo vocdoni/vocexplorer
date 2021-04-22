@@ -7,13 +7,14 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // ProcessContentsView renders the processes dashboard page
@@ -221,7 +222,7 @@ func renderProcessDetails(details api.ProcessResults) vecty.ComponentOrHTML {
 	)
 }
 
-func renderEnvelopeType(envelopeType api.EnvelopeType) vecty.ComponentOrHTML {
+func renderEnvelopeType(envelopeType *models.EnvelopeType) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -307,7 +308,7 @@ func renderProcessConfigs(details api.ProcessResults) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	process, ok := api.GetProcess(store.Processes.CurrentProcess.ID)
+	process, ok := store.Client.GetProcess(store.Processes.CurrentProcess.ID)
 	if ok && process != nil {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: process})
@@ -347,7 +348,7 @@ func UpdateProcessContents(d *ProcessContentsView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
 			if i < 1 {
-				newVal, ok := api.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
+				newVal, ok := store.Client.GetProcessEnvelopeCount(store.Processes.CurrentProcess.ID)
 				if ok {
 					dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
 				}
@@ -360,7 +361,7 @@ func UpdateProcessContents(d *ProcessContentsView) {
 }
 
 func updateProcessContents(d *ProcessContentsView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	update.CurrentProcessResults()
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
 		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcessResults.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
@@ -369,7 +370,7 @@ func updateProcessContents(d *ProcessContentsView) {
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {
 	logger.Info(fmt.Sprintf("Getting envelopes from index %d\n", index))
-	list, ok := api.GetEnvelopeListByProcess(index, store.Processes.CurrentProcess.ID)
+	list, ok := store.Client.GetEnvelopeListByProcess(index, store.Processes.CurrentProcess.ID)
 	if ok {
 		reverseEnvelopeList(&list)
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})

@@ -10,7 +10,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -236,7 +236,7 @@ func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
-	tx, ok := api.GetTxByHeight(store.Transactions.CurrentTransactionHeight)
+	tx, ok := store.Client.GetTxByHeight(store.Transactions.CurrentTransactionHeight)
 	if ok && tx != nil {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
@@ -246,7 +246,7 @@ func UpdateTxContents(d *TxContents) {
 		return
 	}
 	// Set block associated with transaction
-	block, ok := api.GetStoreBlock(store.Transactions.CurrentTransaction.Height)
+	block, ok := store.Client.GetStoreBlock(store.Transactions.CurrentTransaction.Height)
 	if ok {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
@@ -338,7 +338,7 @@ func UpdateTxContents(d *TxContents) {
 	nullifier = util.TrimHex(nullifier)
 	var envelopeHeight int64
 	if nullifier != "" {
-		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(nullifier)
+		envelopeHeight, ok = store.Client.GetEnvelopeHeightFromNullifier(nullifier)
 	}
 	if !ok {
 		logger.Error(fmt.Errorf("unable to retrieve envelope height, envelope may not exist"))

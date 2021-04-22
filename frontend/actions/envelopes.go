@@ -29,7 +29,7 @@ type SetCurrentEnvelope struct {
 	Envelope *models.EnvelopePackage
 }
 
-// SetCurrentEnvelopeHeight is the action to set the current envelope height
-type SetCurrentEnvelopeHeight struct {
-	Height int64
+// SetCurrentEnvelopeNullifier is the action to set the current envelope nullifier
+type SetCurrentEnvelopeNullifier struct {
+	Nullifier []byte
 }

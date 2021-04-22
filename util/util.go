@@ -142,7 +142,16 @@ func TrimHex(str string) string {
 
 //HexToString converts an array of hexbytes to a string
 func HexToString(bytes []byte) string {
-	return strings.ToLower(hex.EncodeToString(bytes))
+	return TrimHex(strings.ToLower(hex.EncodeToString(bytes)))
+}
+
+//StringToHex converts an array of hexbytes to a string
+func StringToHex(hexString string) []byte {
+	bz, err := hex.DecodeString(TrimHex(hexString))
+	if err != nil {
+		logger.Error(err)
+	}
+	return bz
 }
 
 // GetTransactionType translates a raw transaction to a type string

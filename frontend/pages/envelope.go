@@ -2,7 +2,6 @@ package pages
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -24,24 +23,18 @@ type EnvelopeView struct {
 // Render renders the EnvelopeView component
 func (home *EnvelopeView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "envelope"})
-	id := router.GetNamedVar(home)["id"]
-	// If id contains letters, treat it as nullifier rather than height
-	if strings.ContainsAny(id, alpha) {
-		if strings.HasPrefix(id, "0x") {
-			id = id[2:]
-		}
-		dash := new(components.EnvelopeNullifier)
-		dash.Nullifier = id
-		dash.Rendered = false
-		dash.Unavailable = false
-		go dash.LoadEnvelopeHeight()
-		return elem.Div(&components.Header{}, dash)
-	}
-	height, err := strconv.ParseInt(id, 0, 64)
+	blockHeight, err := strconv.ParseInt(router.GetNamedVar(home)["block"], 0, 64)
 	if err != nil {
 		logger.Error(err)
 	}
-	dispatcher.Dispatch(&actions.SetCurrentEnvelopeHeight{Height: height})
+	txIndex, err := strconv.ParseInt(router.GetNamedVar(home)["index"], 0, 32)
+	if err != nil {
+		logger.Error(err)
+	}
+	dispatcher.Dispatch(&actions.SetCurrentEnvelopeReference{
+		BlockHeight: uint32(blockHeight),
+		TxIndex:     int32(txIndex),
+	})
 	dash := new(components.EnvelopeContents)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

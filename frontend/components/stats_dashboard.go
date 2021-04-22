@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -63,7 +62,7 @@ func UpdateStatsDashboard(d *StatsDashboardView) {
 }
 
 func updateStatsDashboard(d *StatsDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 
 	stats, err := store.Client.GetStats()
 	if err != nil {

@@ -3,6 +3,7 @@ package store
 import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"go.vocdoni.io/dvote/log"
 )
 
 // Reduce registers all storage actions
@@ -57,6 +58,10 @@ func entityActions(action interface{}) {
 	case *actions.SetProcessHeights:
 		Entities.ProcessHeights = a.ProcessHeights
 
+	case *actions.SetEntityProcessIds:
+		Entities.CurrentEntity.ProcessIds = a.ProcessList
+		Entities.CurrentEntity.ProcessCount = len(a.ProcessList)
+
 	case *actions.SetEntityProcessList:
 		Entities.CurrentEntity.Processes = a.ProcessList
 
@@ -82,8 +87,8 @@ func envelopeActions(action interface{}) {
 	case *actions.SetCurrentEnvelope:
 		Envelopes.CurrentEnvelope = a.Envelope
 
-	case *actions.SetCurrentEnvelopeHeight:
-		Envelopes.CurrentEnvelopeHeight = a.Height
+	case *actions.SetCurrentEnvelopeNullifier:
+		Envelopes.CurrentEnvelopeNullifier = a.Nullifier
 
 	case *actions.EnvelopesTabChange:
 		Envelopes.Pagination.Tab = a.Tab
@@ -171,8 +176,8 @@ func transactionActions(action interface{}) {
 	case *actions.SetTransactionList:
 		Transactions.Transactions = a.TransactionList
 
-	case *actions.SetTransactionCount:
-		Transactions.Count = a.Count
+	// case *actions.SetTransactionCount:
+	// 	Transactions.Count = a.Count
 
 	case *actions.SetCurrentTransactionHeight:
 		Transactions.CurrentTransactionHeight = a.Height
@@ -224,8 +229,13 @@ func validatorActions(action interface{}) {
 // clientActions is the handler for all connection-related store actions
 func clientActions(action interface{}) {
 	switch a := action.(type) {
-	case *actions.ServerConnected:
-		ServerConnected = a.Connected
+	case *actions.GatewayConnected:
+		if a.GatewayErr != nil {
+			ServerConnected = false
+			log.Error(a.GatewayErr)
+		} else {
+			ServerConnected = true
+		}
 
 	default:
 		return // don't fire listeners

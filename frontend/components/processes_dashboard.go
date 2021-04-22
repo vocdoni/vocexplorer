@@ -6,7 +6,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api"
 	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -87,7 +86,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
 			if i < 1 {
-				newVal, ok := api.GetProcessCount()
+				newVal, ok := store.Client.GetProcessCount()
 				if ok {
 					dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
 				}
@@ -111,7 +110,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			list, ok := api.GetProcessSearch(search)
+			list, ok := store.Client.GetProcessSearch(search)
 			if ok {
 				dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 			} else {
@@ -123,7 +122,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcesses(d *ProcessesDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Processes.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -139,15 +138,15 @@ func updateProcesses(d *ProcessesDashboardView) {
 func getProcesses(d *ProcessesDashboardView, index int) {
 	// index--
 	logger.Info(fmt.Sprintf("Getting processes from index %d\n", index))
-	list, ok := api.GetProcessList(index)
+	list, ok := store.Client.GetProcessList(index)
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 	}
-	newVal, ok := api.GetProcessEnvelopeCountMap()
+	newVal, ok := store.Client.GetProcessEnvelopeCountMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newVal})
 	}
-	newVal, ok = api.GetEntityProcessCountMap()
+	newVal, ok = store.Client.GetEntityProcessCountMap()
 	if ok {
 		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
 	}

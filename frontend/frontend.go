@@ -23,7 +23,7 @@ func main() {
 
 func initFrontend() {
 	var cfg *config.Cfg
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: true})
+	// dispatcher.Dispatch(&actions.ServerConnected{Connected: true})
 	resp, err := http.Get("/config")
 	if err != nil {
 		logger.Warn(err.Error())

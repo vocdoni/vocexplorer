@@ -16,7 +16,7 @@ import (
 func ProcessResults() {
 	for _, process := range store.Processes.Processes {
 		if process != nil {
-			results, state, final, err := store.Client.GetResults(process.Process.ProcessId)
+			results, state, tp, final, err := store.Client.GetResults(process.Process.ProcessId)
 			if err != nil {
 				logger.Error(err)
 			}
@@ -26,6 +26,7 @@ func ProcessResults() {
 					Results: storeutil.ProcessResults{
 						Results: results,
 						State:   state,
+						Type:    tp,
 						Final:   final,
 					},
 				})
@@ -41,7 +42,7 @@ func EnvelopeProcessResults() {
 			ID := strings.ToLower(util.TrimHex(util.HexToString(envelope.Envelope.ProcessId)))
 			if ID != "" {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, state, final, err := store.Client.GetResults(envelope.Envelope.ProcessId)
+					results, state, tp, final, err := store.Client.GetResults(envelope.Envelope.ProcessId)
 					if err != nil {
 						logger.Error(err)
 					}
@@ -51,6 +52,7 @@ func EnvelopeProcessResults() {
 							Results: storeutil.ProcessResults{
 								Results: results,
 								State:   state,
+								Type:    tp,
 								Final:   final,
 							},
 						})
@@ -63,7 +65,7 @@ func EnvelopeProcessResults() {
 
 // CurrentProcessResults updates current process information
 func CurrentProcessResults() {
-	results, state, final, err := store.Client.GetResults(store.Processes.CurrentProcess.Process.ProcessId)
+	results, state, tp, final, err := store.Client.GetResults(store.Processes.CurrentProcess.Process.ProcessId)
 	if err != nil {
 		logger.Error(err)
 		return
@@ -74,6 +76,7 @@ func CurrentProcessResults() {
 			Results: storeutil.ProcessResults{
 				Results: results,
 				State:   state,
+				Type:    tp,
 				Final:   final,
 			},
 		})
@@ -84,10 +87,10 @@ func CurrentProcessResults() {
 func EntityProcessResults() {
 	for _, process := range store.Entities.CurrentEntity.Processes {
 		if process != nil {
-			ID := util.HexToString(process)
+			ID := util.HexToString(process.Process.ProcessId)
 			if ID != "" {
 				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, state, final, err := store.Client.GetResults(process)
+					results, state, tp, final, err := store.Client.GetResults(process.Process.ProcessId)
 					if err != nil {
 						logger.Error(err)
 						return
@@ -98,6 +101,7 @@ func EntityProcessResults() {
 							Results: storeutil.ProcessResults{
 								Results: results,
 								State:   state,
+								Type:    tp,
 								Final:   final,
 							},
 						})

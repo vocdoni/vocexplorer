@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/api"
 	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -79,8 +78,11 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
 			if i < 1 { // If on first page, update counts
-				newHeight, _ := api.GetBlockHeight()
-				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(newHeight) - 1})
+				_, newHeight, _, err := store.Client.GetBlockStatus()
+				if err != nil {
+					logger.Error(err)
+				}
+				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(*newHeight) - 1})
 			}
 			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
 			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
@@ -112,7 +114,7 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 }
 
 func updateBlocksDashboard(d *BlocksDashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Blocks.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {

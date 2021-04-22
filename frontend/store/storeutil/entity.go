@@ -17,6 +17,7 @@ type Entities struct {
 
 // Entity holds info about one vochain entity
 type Entity struct {
-	ProcessIds [][]byte
-	Processes  [config.ListSize]*Process
+	ProcessCount int
+	ProcessIds   []string
+	Processes    [config.ListSize]*Process
 }
