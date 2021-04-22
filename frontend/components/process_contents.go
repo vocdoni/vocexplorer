@@ -41,7 +41,7 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 	if dash.Unavailable {
 		return Unavailable("Process unavailable", "")
 	}
-	if store.Processes.CurrentProcess == nil || store.Processes.CurrentProcess.EntityID == "" {
+	if store.Processes.CurrentProcess == nil || store.Processes.CurrentProcess.E == "" {
 		return Unavailable("Loading process...", "")
 	}
 

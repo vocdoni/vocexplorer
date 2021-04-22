@@ -77,9 +77,11 @@ func updateHomeDashboardInfo(d *DashboardView) {
 
 func updateHomeBlocks(d *DashboardView, index int) {
 	logger.Info("Getting blocks from index " + util.IntToString(index))
-	list, ok := store.Client.GetBlockList(index)
-	if ok {
-		reverseBlockList(&list)
-		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
+	list, err := store.Client.GetBlockList(index, config.ListSize)
+	if err != nil {
+		logger.Error(err)
+		return
 	}
+	reverseBlockList(list)
+	dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 }

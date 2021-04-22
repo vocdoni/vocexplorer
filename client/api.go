@@ -171,7 +171,7 @@ func (c *Client) GetEntityCount() (int64, error) {
 	return *resp.Size, nil
 }
 
-func (c *Client) GetValidatorList() (*models.ValidatorList, error) {
+func (c *Client) GetValidatorList() ([]*models.Validator, error) {
 	var req types.MetaRequest
 	req.Method = "getValidatorList"
 	resp, err := c.Request(req)
@@ -185,7 +185,7 @@ func (c *Client) GetValidatorList() (*models.ValidatorList, error) {
 	if err := proto.Unmarshal(resp.ValidatorList, list); err != nil {
 		return nil, err
 	}
-	return list, nil
+	return list.Validators, nil
 }
 
 func (c *Client) GetEnvelope(nullifier []byte) (*models.EnvelopePackage, error) {
@@ -206,7 +206,7 @@ func (c *Client) GetEnvelope(nullifier []byte) (*models.EnvelopePackage, error) 
 	return envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.EnvelopePackageList, error) {
+func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*models.EnvelopePackage, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
@@ -222,7 +222,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) (*models.EnvelopePack
 	if err := proto.Unmarshal(resp.Content, list); err != nil {
 		return nil, err
 	}
-	return list, nil
+	return list.Envelopes, nil
 }
 
 func (c *Client) GetBlock(height uint32) (*models.BlockHeader, error) {
@@ -261,7 +261,7 @@ func (c *Client) GetBlockByHash(hash []byte) (*models.BlockHeader, error) {
 	return block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) (*models.BlockHeaderList, error) {
+func (c *Client) GetBlockList(from, listSize int) ([]*models.BlockHeader, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from
@@ -277,7 +277,7 @@ func (c *Client) GetBlockList(from, listSize int) (*models.BlockHeaderList, erro
 	if err := proto.Unmarshal(resp.Content, list); err != nil {
 		return nil, err
 	}
-	return list, nil
+	return list.BlockHeaders, nil
 }
 
 func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.SignedTx, error) {

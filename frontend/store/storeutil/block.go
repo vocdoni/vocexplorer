@@ -6,7 +6,7 @@ import (
 
 // Blocks stores all data abotu blockchain blocks
 type Blocks struct {
-	Blocks                *models.BlockHeaderList
+	Blocks                []*models.BlockHeader
 	Count                 int
 	CurrentBlock          *models.BlockHeader
 	CurrentTxs            *models.SignedTxList

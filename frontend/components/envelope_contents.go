@@ -224,7 +224,7 @@ func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
 	}}
 
 	contents := c.renderVotePackage()
-	envelopeDetails := elem.Div(vecty.Markup(vecty.Class("poll-details")), renderEnvelopeType(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Envelope.ProcessId)].Type))
+	envelopeDetails := elem.Div(vecty.Markup(vecty.Class("poll-details")), renderEnvelopeType(store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Envelope.ProcessId)].Process.EnvelopeType))
 
 	if contents == nil {
 		return nil

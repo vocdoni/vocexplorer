@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"go.vocdoni.io/proto/build/go/models"
 )
@@ -21,9 +20,15 @@ type ProcessTabChange struct {
 	Tab string
 }
 
-// SetProcessList is the action to set the process list
-type SetProcessList struct {
-	Processes [config.ListSize]*storeutil.Process
+// SetProcess is the action to set a single process
+type SetProcess struct {
+	PID     string
+	Process *models.Process
+}
+
+// SetProcessIds is the action to set the process ids
+type SetProcessIds struct {
+	Processes []string
 }
 
 // SetProcessCount is the action to set the process count

@@ -14,5 +14,5 @@ type Validators struct {
 	CurrentValidatorID string
 	Pagination         PageStore
 	BlockPagination    PageStore
-	Validators         *models.ValidatorList
+	Validators         []*models.Validator
 }
