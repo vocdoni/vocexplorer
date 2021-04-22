@@ -37,7 +37,7 @@ func ProcessResults() {
 
 // EnvelopeProcessResults updates auxilary info for all process id's belonging to currently displayed envelopes
 func EnvelopeProcessResults() {
-	for _, envelope := range store.Envelopes.Envelopes.Envelopes {
+	for _, envelope := range store.Envelopes.Envelopes {
 		if envelope != nil {
 			ID := strings.ToLower(util.TrimHex(util.HexToString(envelope.Envelope.ProcessId)))
 			if ID != "" {

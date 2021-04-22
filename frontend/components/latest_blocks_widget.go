@@ -20,7 +20,7 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 
 	max := 4
 	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-max; i-- {
-		if dbtypes.BlockIsEmpty(store.Blocks.Blocks[i]) {
+		if store.Blocks.Blocks[i] == nil {
 			continue
 		}
 		blockList = append(blockList, elem.Div(

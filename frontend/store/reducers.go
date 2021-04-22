@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"go.vocdoni.io/dvote/log"
@@ -44,7 +45,12 @@ func entityActions(action interface{}) {
 		Entities.ProcessPagination.Index = a.Index
 
 	case *actions.SetEntityIDs:
-		Entities.EntityIDs = a.EntityIDs
+		for i, id := range a.EntityIDs {
+			if i > config.ListSize {
+				break
+			}
+			Entities.EntityIDs[i] = id
+		}
 
 	case *actions.SetCurrentEntityID:
 		Entities.CurrentEntityID = a.EntityID
@@ -109,8 +115,13 @@ func processActions(action interface{}) {
 	case *actions.ProcessEnvelopesIndexChange:
 		Processes.EnvelopePagination.Index = a.Index
 
-	case *actions.SetProcessList:
-		Processes.Processes = a.Processes
+	case *actions.SetProcessIds:
+		for i, id := range a.Processes {
+			if i > config.ListSize {
+				break
+			}
+			Processes.ProcessIds[i] = id
+		}
 
 	case *actions.ProcessTabChange:
 		Processes.Pagination.Tab = a.Tab

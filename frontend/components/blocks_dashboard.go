@@ -138,9 +138,9 @@ func updateBlocks(d *BlocksDashboardView, index int) {
 	dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
 }
 
-func reverseBlockList(list *models.BlockHeaderList) {
-	for i := len(list.BlockHeaders)/2 - 1; i >= 0; i-- {
-		opp := len(list.BlockHeaders) - 1 - i
-		list.BlockHeaders[i], list.BlockHeaders[opp] = list.BlockHeaders[opp], list.BlockHeaders[i]
+func reverseBlockList(list []*models.BlockHeader) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
 	}
 }

@@ -21,7 +21,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList *models.BlockHeaderList
+	BlockList []*models.BlockHeader
 }
 
 // BlocksHeightUpdate is the action to change the current block height

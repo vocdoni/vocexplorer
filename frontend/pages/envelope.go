@@ -1,15 +1,13 @@
 package pages
 
 import (
-	"strconv"
-
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
 
@@ -23,17 +21,9 @@ type EnvelopeView struct {
 // Render renders the EnvelopeView component
 func (home *EnvelopeView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "envelope"})
-	blockHeight, err := strconv.ParseInt(router.GetNamedVar(home)["block"], 0, 64)
-	if err != nil {
-		logger.Error(err)
-	}
-	txIndex, err := strconv.ParseInt(router.GetNamedVar(home)["index"], 0, 32)
-	if err != nil {
-		logger.Error(err)
-	}
-	dispatcher.Dispatch(&actions.SetCurrentEnvelopeReference{
-		BlockHeight: uint32(blockHeight),
-		TxIndex:     int32(txIndex),
+	id := util.StringToHex(router.GetNamedVar(home)["id"])
+	dispatcher.Dispatch(&actions.SetCurrentEnvelopeNullifier{
+		Nullifier: id,
 	})
 	dash := new(components.EnvelopeContents)
 	dash.Rendered = false

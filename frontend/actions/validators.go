@@ -11,7 +11,7 @@ type ValidatorsIndexChange struct {
 
 // SetValidatorList is the action to set the validator list
 type SetValidatorList struct {
-	List *models.ValidatorList
+	List []*models.Validator
 }
 
 // SetValidatorCount is the action to set the Validator count

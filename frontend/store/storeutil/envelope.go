@@ -9,6 +9,6 @@ type Envelopes struct {
 	Count                    int
 	CurrentEnvelope          *models.EnvelopePackage
 	CurrentEnvelopeNullifier []byte
-	Envelopes                *models.EnvelopePackageList
+	Envelopes                []*models.EnvelopePackage
 	Pagination               PageStore
 }

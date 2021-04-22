@@ -16,7 +16,7 @@ type BlockList struct {
 
 // Render renders the block list component
 func (b *BlockList) Render() vecty.ComponentOrHTML {
-	if len(store.Blocks.Blocks.BlockHeaders) > 0 {
+	if len(store.Blocks.Blocks) > 0 {
 		p := &Pagination{
 			TotalPages:      int(store.Blocks.Count) / config.ListSize,
 			TotalItems:      &store.Blocks.Count,
@@ -50,10 +50,10 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
-	for i := len(store.Blocks.Blocks.BlockHeaders) - 1; i >= len(store.Blocks.Blocks.BlockHeaders)-p.ListSize; i-- {
+	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-p.ListSize; i-- {
 		blockList = append(blockList, elem.Div(
 			vecty.Markup(vecty.Class("paginated-card")),
-			BlockCard(store.Blocks.Blocks.BlockHeaders[i]),
+			BlockCard(store.Blocks.Blocks[i]),
 		))
 	}
 	if len(blockList) == 0 {

@@ -9,16 +9,16 @@ import (
 type Processes struct {
 	Count              int
 	ProcessResults     map[string]ProcessResults
-	Processes          [config.ListSize]*Process
+	Processes          map[string]*Process
+	ProcessIds         [config.ListSize]string
 	Pagination         PageStore
 	EnvelopePagination PageStore
 	EnvelopeHeights    map[string]int64
 	CurrentProcess     *Process
 }
 
-// Process holds info about one vochain process, including votes and results
+// Process holds info about one vochain process, including the process and envelope info
 type Process struct {
-	Envelopes     *models.EnvelopePackageList
 	EnvelopeCount int
 	Process       *models.Process
 }

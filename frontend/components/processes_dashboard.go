@@ -110,7 +110,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			list, ok := store.Client.GetProcessSearch(search)
+			list, ok := store.Client.GetProcessList(search)
 			if ok {
 				dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
 			} else {
