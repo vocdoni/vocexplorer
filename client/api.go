@@ -211,6 +211,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*models.EnvelopePa
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
 	req.ListSize = listSize
+	// TODO use from, listsize
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err

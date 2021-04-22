@@ -79,5 +79,5 @@ type SetCurrentProcessStruct struct {
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList *models.EnvelopePackageList
+	EnvelopeList []*models.EnvelopePackage
 }
