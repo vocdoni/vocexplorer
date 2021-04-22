@@ -6,7 +6,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -86,37 +85,40 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
 			if i < 1 {
-				newVal, ok := store.Client.GetProcessCount()
-				if ok {
+				newVal, err := store.Client.GetProcessCount([]byte{})
+				if err == nil {
 					dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
+				} else {
+					logger.Error(err)
 				}
 			}
 			if store.Processes.Count > 0 {
 				getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
 				update.ProcessResults()
 			}
-		case search := <-store.Processes.Pagination.SearchChannel:
-			if !update.CheckCurrentPage("processes", ticker) {
-				return
-			}
-		processSearch:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case search = <-store.Processes.Pagination.SearchChannel:
-				default:
-					break processSearch
-				}
-			}
-			logger.Info("search: " + search)
-			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			list, ok := store.Client.GetProcessList(search)
-			if ok {
-				dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
-			} else {
-				dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*dbtypes.Process{}})
-			}
-			update.ProcessResults()
+			// TODO search
+			// case search := <-store.Processes.Pagination.SearchChannel:
+			// 	if !update.CheckCurrentPage("processes", ticker) {
+			// 		return
+			// 	}
+			// processSearch:
+			// 	for {
+			// 		// If many indices waiting in buffer, scan to last one.
+			// 		select {
+			// 		case search = <-store.Processes.Pagination.SearchChannel:
+			// 		default:
+			// 			break processSearch
+			// 		}
+			// 	}
+			// 	logger.Info("search: " + search)
+			// 	dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
+			// 	list, ok := store.Client.GetProcessList(search)
+			// 	if ok {
+			// 		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
+			// 	} else {
+			// 		dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*dbtypes.Process{}})
+			// 	}
+			// 	update.ProcessResults()
 		}
 	}
 }
@@ -136,18 +138,12 @@ func updateProcesses(d *ProcessesDashboardView) {
 }
 
 func getProcesses(d *ProcessesDashboardView, index int) {
-	// index--
 	logger.Info(fmt.Sprintf("Getting processes from index %d\n", index))
-	list, ok := store.Client.GetProcessList(index)
-	if ok {
-		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
+	list, _, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, config.ListSize)
+	if err == nil {
+		dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
+	} else {
+		logger.Error(err)
 	}
-	newVal, ok := store.Client.GetProcessEnvelopeCountMap()
-	if ok {
-		dispatcher.Dispatch(&actions.SetEnvelopeHeights{EnvelopeHeights: newVal})
-	}
-	newVal, ok = store.Client.GetEntityProcessCountMap()
-	if ok {
-		dispatcher.Dispatch(&actions.SetProcessHeights{ProcessHeights: newVal})
-	}
+	// TODO get process envelope heights, entity process heights
 }

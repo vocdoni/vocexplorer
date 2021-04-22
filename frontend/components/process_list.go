@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/vocdoni/vocexplorer/logger"
@@ -88,9 +87,9 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 			),
 		)
 	}
-	entityHeight := store.Entities.ProcessHeights[process.EntityID]
+	// entityHeight := store.Entities.ProcessHeights[util.HexToString(process.Process.EntityId)]
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(info.ProcessInfo.State))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(info.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -98,11 +97,11 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetProcessName(info.ProcessInfo.Type)),
+						vecty.Text(util.GetProcessName(info.Type)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(strings.Title(info.ProcessInfo.State)),
+						vecty.Text(strings.Title(info.State)),
 					),
 				),
 			),
@@ -110,27 +109,28 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						Link("/process/"+process.ID,
-							process.ID,
+						Link("/process/"+util.HexToString(process.Process.ProcessId),
+							util.HexToString(process.Process.ProcessId),
 							"hash",
 						),
 					),
 					elem.Div(
-						vecty.If(
-							entityHeight < 1,
-							vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" process hosted by entity "),
-						),
-						vecty.If(
-							entityHeight > 1,
-							vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
-						),
-						vecty.If(
-							entityHeight == 1,
-							vecty.Text("only process hosted by entity "),
-						),
+						// vecty.If(
+						// 	entityHeight < 1,
+						// 	vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" process hosted by entity "),
+						// ),
+						// vecty.If(
+						// 	entityHeight > 1,
+						// 	vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
+						// ),
+						// vecty.If(
+						// 	entityHeight == 1,
+						// 	vecty.Text("only process hosted by entity "),
+						// ),
+						vecty.Text("Belongs to entity "),
 						Link(
-							"/entity/"+util.TrimHex(process.EntityID),
-							util.TrimHex(process.EntityID),
+							"/entity/"+util.HexToString(process.Process.EntityId),
+							util.HexToString(process.Process.EntityId),
 							"hash",
 						),
 					),
