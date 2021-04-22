@@ -6,7 +6,7 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -81,8 +81,8 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 	dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	validator, ok := api.GetValidator(store.Validators.CurrentValidatorID)
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
+	validator, ok := store.Client.GetValidator(store.Validators.CurrentValidatorID)
 	if ok && validator != nil {
 		contents.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: validator})
@@ -91,7 +91,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 		dispatcher.Dispatch(&actions.SetCurrentValidator{Validator: nil})
 		return
 	}
-	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+	newVal, ok := store.Client.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
@@ -127,7 +127,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			}
 			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: i})
 			if i < 1 {
-				newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+				newVal, ok := store.Client.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 				if ok {
 					dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 				}
@@ -148,7 +148,7 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 			}
 			logger.Info("search: " + search)
 			dispatcher.Dispatch(&actions.ValidatorBlocksIndexChange{Index: 0})
-			list, ok := api.GetBlocksByValidatorSearch(search, store.Validators.CurrentValidatorID)
+			list, ok := store.Client.GetBlocksByValidatorSearch(search, store.Validators.CurrentValidatorID)
 			if ok {
 				reverseBlockList(&list)
 				dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: list})
@@ -161,13 +161,13 @@ func (contents *ValidatorContents) UpdateValidatorContents() {
 }
 
 func updateValidatorBlocks(contents *ValidatorContents, i int) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
-	newVal, ok := api.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
+	newVal, ok := store.Client.GetValidatorBlockHeight(util.HexToString(store.Validators.CurrentValidator.Address))
 	if ok {
 		dispatcher.Dispatch(&actions.SetCurrentValidatorBlockCount{Count: int(newVal)})
 	}
 	if newVal > 0 {
-		newList, ok := api.GetBlockListByValidator(i, store.Validators.CurrentValidator.Address)
+		newList, ok := store.Client.GetBlockListByValidator(i, store.Validators.CurrentValidator.Address)
 		if ok {
 			reverseBlockList(&newList)
 			dispatcher.Dispatch(&actions.SetCurrentValidatorBlockList{BlockList: newList})

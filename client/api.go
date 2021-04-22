@@ -2,11 +2,31 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
+
+func (c *Client) GetGatewayInfo() error {
+	var req types.MetaRequest
+	req.Method = "getInfo"
+	resp, err := c.Request(req)
+	if err != nil {
+		return err
+	}
+	if !resp.Ok {
+		return fmt.Errorf(resp.Message)
+	}
+	if resp.Health <= 0 {
+		return fmt.Errorf("Gateway %s health is %d", c.Address, resp.Health)
+	}
+	if !strings.Contains(strings.Join(resp.APIList, ""), "voteApi") {
+		return fmt.Errorf("Gateway %s does not enable vote api", c.Address)
+	}
+	return nil
+}
 
 func (c *Client) GetStats() (*models.VochainStats, error) {
 	var req types.MetaRequest
@@ -89,9 +109,10 @@ func (c *Client) GetProcess(pid []byte) (*models.Process, error) {
 	return resp.ProcessInfo.(*models.Process), nil
 }
 
-func (c *Client) GetProcessCount() (int64, error) {
+func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessInfo"
+	req.EntityId = entityId
 	resp, err := c.Request(req)
 	if err != nil {
 		return 0, err
@@ -102,21 +123,21 @@ func (c *Client) GetProcessCount() (int64, error) {
 	return *resp.Size, nil
 }
 
-func (c *Client) GetResults(pid []byte) ([][]string, string, bool, error) {
+func (c *Client) GetResults(pid []byte) ([][]string, string, string, bool, error) {
 	var req types.MetaRequest
 	req.Method = "getResults"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, "", false, err
+		return nil, "", "", false, err
 	}
 	if !resp.Ok {
-		return nil, "", false, fmt.Errorf("cannot get results: (%s)", resp.Message)
+		return nil, "", "", false, fmt.Errorf("cannot get results: (%s)", resp.Message)
 	}
 	if resp.Message == "no results yet" {
-		return nil, resp.State, false, nil
+		return nil, resp.State, "", false, nil
 	}
-	return resp.Results, resp.State, *resp.Final, nil
+	return resp.Results, resp.State, resp.Type, *resp.Final, nil
 }
 
 // r.registerPublic("getResultsWeight", r.getResultsWeight)

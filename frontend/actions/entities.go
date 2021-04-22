@@ -2,6 +2,7 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/config"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 )
 
 // EntitiesIndexChange is the action to set the pagination index
@@ -21,7 +22,7 @@ type EntityTabChange struct {
 
 // SetEntityIDs is the action to set the entity list
 type SetEntityIDs struct {
-	EntityIDs [config.ListSize]string
+	EntityIDs []string
 }
 
 // SetCurrentEntityID is the action to set the current active entity ID
@@ -44,7 +45,12 @@ type SetProcessHeights struct {
 	ProcessHeights map[string]int64
 }
 
-// SetEntityProcessList is the action to set the current entity's process list
+// SetEntityProcessIds is the action to set the current entity's process ids
+type SetEntityProcessIds struct {
+	ProcessList []string
+}
+
+// SetEntityProcessIds is the action to set the current entity's process ids
 type SetEntityProcessList struct {
-	ProcessList [][]byte
+	ProcessList [config.ListSize]*storeutil.Process
 }

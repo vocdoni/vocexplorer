@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"gitlab.com/vocdoni/vocexplorer/client"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -43,7 +43,7 @@ func (c *EnvelopeNullifier) LoadEnvelopeHeight() {
 	var envelopeHeight int64
 	ok := false
 	if c.Nullifier != "" {
-		envelopeHeight, ok = api.GetEnvelopeHeightFromNullifier(c.Nullifier)
+		envelopeHeight, ok = store.Client.GetEnvelopeHeightFromNullifier(c.Nullifier)
 	}
 	if !ok || envelopeHeight == 0 {
 		c.Unavailable = true

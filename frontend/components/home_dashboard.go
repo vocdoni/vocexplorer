@@ -5,7 +5,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -66,7 +65,7 @@ func UpdateHomeDashboard(d *DashboardView) {
 }
 
 func updateHomeDashboardInfo(d *DashboardView) {
-	dispatcher.Dispatch(&actions.ServerConnected{Connected: api.PingServer()})
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	stats, err := store.Client.GetStats()
 	if err != nil {
 		logger.Error(err)
@@ -78,7 +77,7 @@ func updateHomeDashboardInfo(d *DashboardView) {
 
 func updateHomeBlocks(d *DashboardView, index int) {
 	logger.Info("Getting blocks from index " + util.IntToString(index))
-	list, ok := api.GetBlockList(index)
+	list, ok := store.Client.GetBlockList(index)
 	if ok {
 		reverseBlockList(&list)
 		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
