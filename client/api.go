@@ -300,7 +300,7 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.SignedTx, err
 	return tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32) (*models.SignedTxList, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32) ([]*models.SignedTx, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.BlockHeight = blockHeight
@@ -315,5 +315,5 @@ func (c *Client) GetTxListForBlock(blockHeight uint32) (*models.SignedTxList, er
 	if err := proto.Unmarshal(resp.Content, txList); err != nil {
 		return nil, err
 	}
-	return txList, nil
+	return txList.TxList, nil
 }

@@ -26,7 +26,7 @@ func (home *BlockView) Render() vecty.ComponentOrHTML {
 	if err != nil {
 		logger.Error(err)
 	}
-	dispatcher.Dispatch(&actions.SetCurrentBlockHeight{Height: height})
+	dispatcher.Dispatch(&actions.SetCurrentBlockHeight{Height: uint32(height)})
 	dash := new(components.BlockContents)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

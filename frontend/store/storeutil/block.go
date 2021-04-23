@@ -9,7 +9,8 @@ type Blocks struct {
 	Blocks                []*models.BlockHeader
 	Count                 int
 	CurrentBlock          *models.BlockHeader
-	CurrentTxs            *models.SignedTxList
+	CurrentBlockHeight    uint32
+	CurrentTxs            []*models.SignedTx
 	TransactionPagination PageStore
 	Pagination            PageStore
 }
