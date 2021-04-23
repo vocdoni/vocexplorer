@@ -31,7 +31,7 @@ var (
 	// Envelopes holds all entity information
 	Envelopes storeutil.Envelopes
 	// Stats holds all blockchain stats
-	Stats models.VochainStats
+	Stats *models.VochainStats
 	// Blocks holds all blockchain Blocks
 	Blocks storeutil.Blocks
 	// Transactions holds all blockchain transactions

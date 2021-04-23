@@ -167,7 +167,7 @@ func statsActions(action interface{}) {
 	switch a := action.(type) {
 
 	case *actions.SetStats:
-		Stats = *a.Stats
+		Stats = a.Stats
 
 	default:
 		return // don't fire listeners
@@ -201,7 +201,7 @@ func transactionActions(action interface{}) {
 		Transactions.CurrentTransaction = a.Transaction
 
 	case *actions.SetTransactionBlock:
-		Transactions.CurrentBlock = a.BlockHash
+		Transactions.CurrentBlock = a.Block
 
 	case *actions.SetCurrentDecodedTransaction:
 		Transactions.CurrentDecodedTransaction = a.Transaction
