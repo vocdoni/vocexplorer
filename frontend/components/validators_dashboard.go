@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
+	"go.vocdoni.io/proto/build/go/models"
 
-	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -63,47 +62,6 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 				return
 			}
 			updateValidatorsDashboard(d)
-		case i := <-store.Validators.Pagination.PagChannel:
-			if !update.CheckCurrentPage("validators", ticker) {
-				return
-			}
-		loop:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case i = <-store.Validators.Pagination.PagChannel:
-				default:
-					break loop
-				}
-			}
-			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: i})
-			if i < 1 {
-				newHeight, _ := store.Client.GetValidatorCount()
-				dispatcher.Dispatch(&actions.SetValidatorCount{Count: int(newHeight)})
-			}
-			updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
-		case search := <-store.Validators.Pagination.SearchChannel:
-			if !update.CheckCurrentPage("validators", ticker) {
-				return
-			}
-		validatorSearch:
-			for {
-				// If many indices waiting in buffer, scan to last one.
-				select {
-				case search = <-store.Validators.Pagination.SearchChannel:
-				default:
-					break validatorSearch
-				}
-			}
-			logger.Info("search: " + search)
-			dispatcher.Dispatch(&actions.ValidatorsIndexChange{Index: 0})
-			list, ok := store.Client.GetValidatorSearch(search)
-			if ok {
-				reverseValidatorList(&list)
-				dispatcher.Dispatch(&actions.SetValidatorList{List: list})
-			} else {
-				dispatcher.Dispatch(&actions.SetValidatorList{List: [config.ListSize]*dbtypes.Validator{}})
-			}
 		}
 	}
 }
@@ -123,18 +81,16 @@ func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 
 func updateValidators(d *ValidatorsDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting Validators from index %d\n", index))
-	list, ok := store.Client.GetValidatorList(index)
-	if ok {
-		reverseValidatorList(&list)
+	list, err := store.Client.GetValidatorList()
+	if err != nil {
+		logger.Error(err)
+	} else {
+		reverseValidatorList(list)
 		dispatcher.Dispatch(&actions.SetValidatorList{List: list})
-	}
-	blockHeights, ok := store.Client.GetValidatorBlockHeightMap()
-	if ok {
-		dispatcher.Dispatch(&actions.SetValidatorBlockHeightMap{HeightMap: blockHeights})
 	}
 }
 
-func reverseValidatorList(list *[config.ListSize]*dbtypes.Validator) {
+func reverseValidatorList(list []*models.Validator) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]
