@@ -21,11 +21,15 @@ type TxView struct {
 // Render renders the TxView component
 func (home *TxView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "tx"})
-	height, err := strconv.ParseInt(router.GetNamedVar(home)["id"], 0, 64)
+	blockHeight, err := strconv.ParseInt(router.GetNamedVar(home)["block"], 0, 64)
 	if err != nil {
 		logger.Error(err)
 	}
-	dispatcher.Dispatch(&actions.SetCurrentTransactionHeight{Height: height})
+	txIndex, err := strconv.ParseInt(router.GetNamedVar(home)["index"], 0, 64)
+	if err != nil {
+		logger.Error(err)
+	}
+	dispatcher.Dispatch(&actions.SetCurrentTransactionRef{Height: uint32(blockHeight), Index: int32(txIndex)})
 	dash := new(components.TxContents)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered

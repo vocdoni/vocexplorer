@@ -17,7 +17,7 @@ type TransactionsIndexChange struct {
 
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
-	TransactionList *models.SignedTxList
+	TransactionList []*models.SignedTx
 }
 
 // // SetTransactionCount is the action to set the Transaction count
@@ -25,9 +25,10 @@ type SetTransactionList struct {
 // 	Count int
 // }
 
-// SetCurrentTransactionHeight is the action to set the height of the current transaction
-type SetCurrentTransactionHeight struct {
-	Height int64
+// SetCurrentTransactionRef is the action to set the reference of the current transaction
+type SetCurrentTransactionRef struct {
+	Height uint32
+	Index  int32
 }
 
 // SetCurrentTransaction is the action to set the current transaction
@@ -37,7 +38,7 @@ type SetCurrentTransaction struct {
 
 // SetTransactionBlock is the action to set the block associated with the current transaction
 type SetTransactionBlock struct {
-	BlockHash []byte
+	Block *models.BlockHeader
 }
 
 // SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction

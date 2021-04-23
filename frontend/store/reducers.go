@@ -4,6 +4,7 @@ import (
 	"github.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"go.vocdoni.io/dvote/log"
 )
 
@@ -190,8 +191,11 @@ func transactionActions(action interface{}) {
 	// case *actions.SetTransactionCount:
 	// 	Transactions.Count = a.Count
 
-	case *actions.SetCurrentTransactionHeight:
-		Transactions.CurrentTransactionHeight = a.Height
+	case *actions.SetCurrentTransactionRef:
+		Transactions.CurrentTransactionRef = storeutil.TransactionReference{
+			BlockHeight: a.Height,
+			TxIndex:     a.Index,
+		}
 
 	case *actions.SetCurrentTransaction:
 		Transactions.CurrentTransaction = a.Transaction
