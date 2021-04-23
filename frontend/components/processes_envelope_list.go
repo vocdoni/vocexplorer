@@ -1,9 +1,9 @@
 package components
 
 import (
-	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -17,10 +17,10 @@ type ProcessesEnvelopeListView struct {
 
 // Render renders the EnvelopeListView component
 func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
-	if store.Processes.CurrentProcessResults.EnvelopeCount > 0 {
+	if store.Processes.CurrentProcess.EnvelopeCount > 0 {
 		p := &Pagination{
-			TotalPages:      int(store.Processes.CurrentProcessResults.EnvelopeCount) / config.ListSize,
-			TotalItems:      &store.Processes.CurrentProcessResults.EnvelopeCount,
+			TotalPages:      store.Processes.CurrentProcess.EnvelopeCount / config.ListSize,
+			TotalItems:      &store.Processes.CurrentProcess.EnvelopeCount,
 			CurrentPage:     &store.Processes.EnvelopePagination.CurrentPage,
 			RefreshCh:       store.Processes.EnvelopePagination.PagChannel,
 			ListSize:        config.ListSize,
@@ -47,13 +47,9 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	var EnvelopeList []vecty.MarkupOrChild
 
 	empty := p.ListSize
-	for i := len(store.Processes.CurrentProcessEnvelopes) - 1; i >= len(store.Processes.CurrentProcessEnvelopes)-p.ListSize; i-- {
-		if dbtypes.EnvelopeIsEmpty(store.Processes.CurrentProcessEnvelopes[i]) {
-			empty--
-		} else {
-			envelope := store.Processes.CurrentProcessEnvelopes[i]
-			EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
-		}
+	for i := len(store.Processes.CurrentProcess.Envelopes) - 1; i >= len(store.Processes.CurrentProcess.Envelopes)-p.ListSize; i-- {
+		envelope := store.Processes.CurrentProcess.Envelopes[i]
+		EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
 	}
 	if empty == 0 {
 		if *p.Searching {
@@ -67,14 +63,14 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelope(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *models.EnvelopePackage) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
 				Link(
-					"/envelope/"+util.IntToString(envelope.GlobalHeight),
-					util.IntToString(envelope.ProcessHeight),
+					"/envelope/"+util.IntToString(envelope.Envelope.Nullifier),
+					util.HexToString(envelope.Envelope.Nullifier),
 					"",
 				),
 			),
@@ -82,17 +78,27 @@ func renderProcessEnvelope(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("card-body")),
 				elem.Div(
 					vecty.Markup(vecty.Class("block-card-heading")),
+					// elem.Div(
+					// vecty.Text(humanize.Ordinal(int(envelope.GlobalHeight))+" envelope on the blockchain"),
+					// ),
 					elem.Div(
-						vecty.Text(humanize.Ordinal(int(envelope.GlobalHeight))+" envelope on the blockchain"),
+						elem.Div(
+							vecty.Markup(vecty.Class("dt")),
+							vecty.Text("Block"),
+						),
+						elem.Div(
+							vecty.Markup(vecty.Class("dd")),
+							vecty.Text(util.IntToString(envelope.Height)),
+						),
 					),
 					elem.Div(
 						elem.Div(
 							vecty.Markup(vecty.Class("dt")),
-							vecty.Text("Nullifier"),
+							vecty.Text("Index"),
 						),
 						elem.Div(
 							vecty.Markup(vecty.Class("dd")),
-							vecty.Text(envelope.Nullifier),
+							vecty.Text(util.IntToString(envelope.TxIndex)),
 						),
 					),
 					elem.Div(
@@ -101,8 +107,8 @@ func renderProcessEnvelope(envelope *dbtypes.Envelope) vecty.ComponentOrHTML {
 							vecty.Text("Transaction"),
 						),
 						Link(
-							"/transaction/"+util.IntToString(envelope.TxHeight),
-							util.IntToString(envelope.TxHeight),
+							"/transaction/"+util.IntToString(envelope.Height)+"/"+util.IntToString(envelope.TxIndex),
+							util.IntToString(envelope.Height)+"/"+util.IntToString(envelope.TxIndex),
 							"hash",
 						),
 					),

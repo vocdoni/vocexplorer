@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
+	"time"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/api/dbtypes"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -92,9 +92,13 @@ func TransactionView() vecty.List {
 		),
 		elem.Heading2(
 			vecty.Text(fmt.Sprintf(
-				"Transaction height: %d",
-				store.Transactions.CurrentTransaction.TxHeight,
+				"Transaction index: %d on block: ", store.Transactions.CurrentTransactionRef.TxIndex,
 			)),
+			Link(
+				"/block/"+util.IntToString(store.Transactions.CurrentTransactionRef.BlockHeight),
+				"block "+util.IntToString(store.Transactions.CurrentTransactionRef.BlockHeight),
+				"bold-link",
+			),
 		),
 	}
 
@@ -102,17 +106,6 @@ func TransactionView() vecty.List {
 		contents = append(contents, vecty.List{
 			elem.Div(
 				vecty.Markup(vecty.Class("details")),
-				elem.Span(
-					vecty.Text(humanize.Ordinal(int(store.Transactions.CurrentTransaction.Index+1))+" transaction on "),
-					vecty.If(
-						!dbtypes.BlockIsEmpty(store.Transactions.CurrentBlock),
-						Link(
-							"/block/"+util.IntToString(store.Transactions.CurrentTransaction.Height),
-							"block "+util.IntToString(store.Transactions.CurrentTransaction.Height),
-							"bold-link",
-						),
-					),
-				),
 				elem.Span(vecty.Text(fmt.Sprintf(
 					"%s (%s)",
 					humanize.Time(store.Transactions.CurrentDecodedTransaction.Time),
@@ -131,7 +124,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Hash"),
 				),
 				elem.Description(
-					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.Hash)),
+					vecty.Text(util.HexToString(store.Transactions.CurrentDecodedTransaction.Hash)),
 				),
 				vecty.If(
 					store.Transactions.CurrentDecodedTransaction.EntityID != "",
@@ -170,7 +163,7 @@ func TransactionView() vecty.List {
 					),
 					elem.Description(
 						Link(
-							"/envelope/"+util.IntToString(store.Transactions.CurrentDecodedTransaction.EnvelopeHeight),
+							"/envelope/"+store.Transactions.CurrentDecodedTransaction.Nullifier,
 							store.Transactions.CurrentDecodedTransaction.Nullifier,
 							"",
 						),
@@ -236,23 +229,26 @@ func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
-	tx, ok := store.Client.GetTxByHeight(store.Transactions.CurrentTransactionHeight)
-	if ok && tx != nil {
+	tx, err := store.Client.GetTx(store.Transactions.CurrentTransactionRef.BlockHeight, store.Transactions.CurrentTransactionRef.TxIndex)
+	if err == nil {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
 	} else {
+		logger.Error(err)
 		d.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 		return
 	}
 	// Set block associated with transaction
-	block, ok := store.Client.GetStoreBlock(store.Transactions.CurrentTransaction.Height)
-	if ok {
+	block, err := store.Client.GetBlock(store.Transactions.CurrentTransactionRef.BlockHeight)
+	if err != nil {
+		logger.Error(err)
+	} else {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
 	var rawTx models.Tx
-	err := proto.Unmarshal(tx.Tx, &rawTx)
+	err = proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -272,7 +268,7 @@ func UpdateTxContents(d *TxContents) {
 		}
 		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.GetProcessId())
-		nullifier = tx.Nullifier
+		nullifier = util.HexToString(typedTx.Nullifier)
 		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
 		txContents = convertB64ToHex(txContents, "processId", processID)
 		txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(typedTx.GetProof().GetGraviton().Siblings))
@@ -336,22 +332,14 @@ func UpdateTxContents(d *TxContents) {
 	entityID = util.TrimHex(entityID)
 	processID = util.TrimHex(processID)
 	nullifier = util.TrimHex(nullifier)
-	var envelopeHeight int64
-	if nullifier != "" {
-		envelopeHeight, ok = store.Client.GetEnvelopeHeightFromNullifier(nullifier)
-	}
-	if !ok {
-		logger.Error(fmt.Errorf("unable to retrieve envelope height, envelope may not exist"))
-	}
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{
-			RawTxContents:  txContents,
-			RawTx:          rawTx,
-			Time:           block.Time,
-			EnvelopeHeight: envelopeHeight,
-			ProcessID:      processID,
-			EntityID:       entityID,
-			Nullifier:      nullifier,
+			RawTxContents: txContents,
+			RawTx:         rawTx,
+			Time:          time.Unix(store.Transactions.CurrentBlock.Timestamp, 0),
+			ProcessID:     processID,
+			EntityID:      entityID,
+			Nullifier:     nullifier,
 		},
 	})
 }

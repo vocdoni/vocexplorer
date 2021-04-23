@@ -19,6 +19,7 @@ type Processes struct {
 
 // Process holds info about one vochain process, including the process and envelope info
 type Process struct {
+	Envelopes     []*models.EnvelopePackage
 	EnvelopeCount int
 	Process       *models.Process
 }

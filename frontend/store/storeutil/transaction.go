@@ -9,21 +9,26 @@ import (
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
 	// Count                     int
-	CurrentTransactionHeight  int64
+	CurrentTransactionRef     TransactionReference
 	CurrentTransaction        *models.SignedTx
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              []byte
+	CurrentBlock              *models.BlockHeader
 	Pagination                PageStore
-	Transactions              *models.SignedTxList
+	Transactions              []*models.SignedTx
 }
 
 // DecodedTransaction stores human-readable decoded transaction data
 type DecodedTransaction struct {
-	EnvelopeHeight int64
-	RawTxContents  string
-	RawTx          models.Tx
-	Time           time.Time
-	ProcessID      string
-	EntityID       string
-	Nullifier      string
+	Hash          []byte
+	RawTxContents string
+	RawTx         models.Tx
+	Time          time.Time
+	ProcessID     string
+	EntityID      string
+	Nullifier     string
+}
+
+type TransactionReference struct {
+	BlockHeight uint32
+	TxIndex     int32
 }
