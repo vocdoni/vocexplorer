@@ -6,6 +6,7 @@ import (
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //LatestBlocksWidget is a component for a widget of recent blocks
@@ -19,7 +20,7 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	max := 4
-	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-max; i-- {
+	for i := len(store.Blocks.Blocks) - 1; i >= util.Max(len(store.Blocks.Blocks)-max, 0); i-- {
 		if store.Blocks.Blocks[i] == nil {
 			continue
 		}

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
-	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -134,13 +133,5 @@ func updateBlocks(d *BlocksDashboardView, index int) {
 		logger.Error(err)
 		return
 	}
-	reverseBlockList(list)
 	dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
-}
-
-func reverseBlockList(list []*models.BlockHeader) {
-	for i := len(list)/2 - 1; i >= 0; i-- {
-		opp := len(list) - 1 - i
-		list[i], list[opp] = list[opp], list[i]
-	}
 }

@@ -13,6 +13,9 @@ type StatsView struct {
 
 // Render renders the StatsView component
 func (b *StatsView) Render() vecty.ComponentOrHTML {
+	if store.Stats == nil {
+		return LoadingBar()
+	}
 	return elem.Section(
 		&Jumbotron{},
 		Container(
