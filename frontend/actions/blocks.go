@@ -36,10 +36,10 @@ type SetCurrentBlock struct {
 
 // SetCurrentBlockHeight is the action to set the current block height
 type SetCurrentBlockHeight struct {
-	Height int64
+	Height uint32
 }
 
 // SetCurrentBlockTransactionList is the action to set the current list of transactions
 type SetCurrentBlockTransactionList struct {
-	TransactionList *models.SignedTxList
+	TransactionList []*models.SignedTx
 }

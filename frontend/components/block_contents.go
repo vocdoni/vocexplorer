@@ -80,15 +80,15 @@ func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
 	logger.Info("getting block")
-	block, err := store.Client.GetBlock(uint32(store.Blocks.CurrentBlock.Height))
+	block, err := store.Client.GetBlock(uint32(store.Blocks.CurrentBlockHeight))
 	if err != nil {
 		logger.Error(err)
 		d.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
+		return
 	} else {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
-		return
 	}
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	if !update.CheckCurrentPage("block", ticker) {
@@ -122,7 +122,7 @@ func UpdateBlockContents(d *BlockContents) {
 }
 
 func updateBlockTransactions() {
-	if store.Blocks.CurrentBlock != nil && len(store.Blocks.CurrentTxs.TxList) == 0 {
+	if store.Blocks.CurrentBlock != nil && len(store.Blocks.CurrentTxs) == 0 {
 		txs, err := store.Client.GetTxListForBlock(uint32(store.Blocks.CurrentBlock.Height))
 		if err != nil {
 			logger.Error(err)
@@ -144,11 +144,8 @@ func BlockView() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("details")),
 			elem.Span(
-				vecty.Text(fmt.Sprintf("%d transactions", len(store.Blocks.CurrentTxs.TxList))),
+				vecty.Text(fmt.Sprintf("%d transactions", len(store.Blocks.CurrentTxs))),
 			),
-			// elem.Span(
-			// 	vecty.Text(humanize.Bytes(uint64(store.Blocks.CurrentBlock.))),
-			// ),
 			elem.Span(vecty.Text(
 				humanize.Time(time.Unix(store.Blocks.CurrentBlock.Timestamp, 0)),
 			)),
@@ -185,14 +182,8 @@ func BlockView() vecty.List {
 				vecty.Text("Total transactions"),
 			),
 			elem.Description(
-				vecty.Text(fmt.Sprintf("%d", (len(store.Blocks.CurrentTxs.TxList)))),
+				vecty.Text(fmt.Sprintf("%d", store.Blocks.CurrentBlock.NumTxs)),
 			),
-			elem.DefinitionTerm(
-				vecty.Text("Block size"),
-			),
-			// elem.Description(
-			// 	vecty.Text(fmt.Sprintf("%d bytes", block.Size)),
-			// ),
 			elem.DefinitionTerm(
 				vecty.Text("Time"),
 			),
@@ -223,36 +214,19 @@ func (c *BlockContents) BlockDetails() vecty.List {
 		Text:  "Transactions",
 		Alias: "transactions",
 	}}
-	header := &BlockTab{&Tab{
-		Text:  "Header",
-		Alias: "header",
-	}}
-	lastCommit := &BlockTab{&Tab{
-		Text:  "Last commit",
-		Alias: "last-commit",
-	}}
-
 	return vecty.List{
 		elem.Navigation(
 			vecty.Markup(vecty.Class("tabs")),
 			elem.UnorderedList(
 				TabLink(c, transactions),
-				TabLink(c, header),
-				TabLink(c, lastCommit),
 			),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(transactions, &BlockTransactionsListView{}),
-			TabContents(header, preformattedBlockHeader(store.Blocks.CurrentBlock)),
-			// TabContents(lastCommit, preformattedBlockLastCommit(store.Blocks.CurrentBlock)),
 		),
 	}
 }
-
-// func preformattedBlockLastCommit(block *models.BlockHeader) vecty.ComponentOrHTML {
-// 	return elem.Preformatted(elem.Code(vecty.Text(string(block.GetLastCommitHash()))))
-// }
 
 func preformattedBlockHeader(block *models.BlockHeader) vecty.ComponentOrHTML {
 	return elem.Preformatted(elem.Code(vecty.Text(block.String())))

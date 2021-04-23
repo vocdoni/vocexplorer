@@ -277,6 +277,9 @@ func blockActions(action interface{}) {
 	case *actions.SetCurrentBlock:
 		Blocks.CurrentBlock = a.Block
 
+	case *actions.SetCurrentBlockHeight:
+		Blocks.CurrentBlockHeight = a.Height
+
 	case *actions.SetCurrentBlockTransactionList:
 		Blocks.CurrentTxs = a.TransactionList
 

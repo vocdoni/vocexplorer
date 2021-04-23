@@ -61,8 +61,8 @@ func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
 func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
 
-	for i := len(store.Blocks.CurrentTxs.TxList) - 1; i >= len(store.Blocks.CurrentTxs.TxList)-p.ListSize; i-- {
-		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs.TxList[i], i+(p.ListSize**p.CurrentPage)))
+	for i := len(store.Blocks.CurrentTxs) - 1; i >= util.Max(len(store.Blocks.CurrentTxs)-p.ListSize, 0); i-- {
+		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i], int(store.Blocks.CurrentBlock.NumTxs)-(p.ListSize**p.CurrentPage)-i))
 	}
 	if len(txList) == 0 {
 		if *p.Searching {
@@ -104,7 +104,7 @@ func renderBlockTx(tx *models.SignedTx, index int) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						Link(
-							"/transaction?block="+util.IntToString(store.Blocks.CurrentBlock.Height)+"&tx="+util.IntToString(index),
+							"/transaction/"+util.IntToString(store.Blocks.CurrentBlock.Height)+"/"+util.IntToString(index),
 							util.HexToString(tmhash.Sum(tx.Tx)),
 							"",
 						),
