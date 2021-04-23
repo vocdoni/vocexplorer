@@ -13,13 +13,14 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/router"
 	"go.vocdoni.io/dvote/log"
 )
 
 func newConfig() (*config.MainCfg, error) {
-	var cfg config.MainCfg
+	cfg := new(config.MainCfg)
 	home, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -28,7 +29,7 @@ func newConfig() (*config.MainCfg, error) {
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
 	cfg.Global.Environment = *flag.String("environment", "", "vochain environment, ie. \"dev\", \"stg\", \"\"")
-	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "0.0.0.0:9090/dvote", "URL for the gateway to query for data")
+	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "http://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
@@ -54,7 +55,6 @@ func newConfig() (*config.MainCfg, error) {
 	viper.BindPFlag("global.gatewayUrl", flag.Lookup("gatewayUrl"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
-	viper.BindPFlag("chain", flag.Lookup("chain"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
 
 	var cfgError error
@@ -82,7 +82,7 @@ func newConfig() (*config.MainCfg, error) {
 		cfgError = fmt.Errorf("cannot unmarshal loaded config file: %s", err)
 	}
 
-	return &cfg, cfgError
+	return cfg, cfgError
 }
 
 func main() {
@@ -104,6 +104,19 @@ func main() {
 		return
 	}
 	log.Infof("Server on: %v\n", urlR)
+
+	c, err := client.New(cfg.Global.GatewayUrl)
+	if err != nil {
+		log.Errorf("could not connect to gateway %s: %s", cfg.Global.GatewayUrl, err)
+		return
+	}
+	err = c.GetGatewayInfo()
+	if err != nil {
+		log.Errorf("could not use gateway %s: %s", cfg.Global.GatewayUrl, err)
+		return
+	}
+
+	log.Infof("Connected to gateway: %v\n", cfg.Global.GatewayUrl)
 
 	r := mux.NewRouter()
 	router.RegisterRoutes(r, &cfg.Global)
