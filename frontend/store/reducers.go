@@ -231,9 +231,6 @@ func validatorActions(action interface{}) {
 	case *actions.SetCurrentValidatorID:
 		Validators.CurrentValidatorID = a.ID
 
-	case *actions.SetCurrentValidatorBlockCount:
-		Validators.CurrentBlockCount = a.Count
-
 	default:
 		return // don't fire listeners
 	}
@@ -302,7 +299,6 @@ func disableUpdateActions(action interface{}) {
 		Envelopes.Pagination.DisableUpdate = false
 		Transactions.Pagination.DisableUpdate = false
 		Validators.Pagination.DisableUpdate = false
-		Validators.BlockPagination.DisableUpdate = false
 		Processes.Pagination.DisableUpdate = false
 		Processes.EnvelopePagination.DisableUpdate = false
 	}

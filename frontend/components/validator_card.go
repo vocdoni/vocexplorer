@@ -5,19 +5,14 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //ValidatorCard renders a single validator card
-func ValidatorCard(validator *dbtypes.Validator) vecty.ComponentOrHTML {
-	blocks := "none"
-	numBlocks, ok := store.Validators.BlockHeights[util.HexToString(validator.Address)]
-	if ok || numBlocks > 0 {
-		blocks = util.IntToString(numBlocks)
-	}
+func ValidatorCard(validator *models.Validator) vecty.ComponentOrHTML {
 	vLink := func(text string) vecty.ComponentOrHTML {
 		return Link(
 			fmt.Sprintf("/validator/%x", validator.Address),
@@ -26,7 +21,7 @@ func ValidatorCard(validator *dbtypes.Validator) vecty.ComponentOrHTML {
 		)
 	}
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: vLink(fmt.Sprintf("#%d", validator.Height.Height)),
+		Header: vLink(validator.Name),
 		Body: vecty.List{
 			elem.DescriptionList(
 				elem.DefinitionTerm(
@@ -37,12 +32,6 @@ func ValidatorCard(validator *dbtypes.Validator) vecty.ComponentOrHTML {
 					vLink(util.HexToString(validator.Address)),
 				),
 				elem.DefinitionTerm(
-					vecty.Text("Blocks proposed: "),
-				),
-				elem.Description(
-					vecty.Text(blocks),
-				),
-				elem.DefinitionTerm(
 					vecty.Text("PubKey"),
 				),
 				elem.Description(
@@ -51,14 +40,11 @@ func ValidatorCard(validator *dbtypes.Validator) vecty.ComponentOrHTML {
 				elem.DefinitionTerm(
 					vecty.Text("Priority"),
 				),
-				elem.Description(
-					vecty.Text(util.IntToString(validator.ProposerPriority)),
-				),
 				elem.DefinitionTerm(
 					vecty.Text("Voting Power"),
 				),
 				elem.Description(
-					vecty.Text(util.IntToString(validator.VotingPower)),
+					vecty.Text(util.IntToString(validator.Power)),
 				),
 			),
 		},

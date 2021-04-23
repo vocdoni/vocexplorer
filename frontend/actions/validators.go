@@ -28,8 +28,3 @@ type SetCurrentValidator struct {
 type SetCurrentValidatorID struct {
 	ID string
 }
-
-// SetCurrentValidatorBlockCount is the action to set the currently displayed validator's block count
-type SetCurrentValidatorBlockCount struct {
-	Count int
-}

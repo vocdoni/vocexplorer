@@ -61,7 +61,6 @@ func init() {
 	Blocks.TransactionPagination.PagChannel = make(chan int, 50)
 	Transactions.Pagination.PagChannel = make(chan int, 50)
 	Validators.Pagination.PagChannel = make(chan int, 50)
-	Validators.BlockPagination.PagChannel = make(chan int, 50)
 
 	Entities.Pagination.SearchChannel = make(chan string, 50)
 	Entities.ProcessPagination.SearchChannel = make(chan string, 50)
@@ -72,7 +71,6 @@ func init() {
 	Blocks.TransactionPagination.SearchChannel = make(chan string, 50)
 	Transactions.Pagination.SearchChannel = make(chan string, 50)
 	Validators.Pagination.SearchChannel = make(chan string, 50)
-	Validators.BlockPagination.SearchChannel = make(chan string, 50)
 
 	Entities.Pagination.Search = false
 	Entities.ProcessPagination.Search = false
@@ -83,11 +81,9 @@ func init() {
 	Blocks.TransactionPagination.Search = false
 	Transactions.Pagination.Search = false
 	Validators.Pagination.Search = false
-	Validators.BlockPagination.Search = false
 
 	Processes.EnvelopeHeights = make(map[string]int64)
 	Entities.ProcessHeights = make(map[string]int64)
-	Validators.BlockHeights = make(map[string]int64)
 
 	ServerConnected = true
 

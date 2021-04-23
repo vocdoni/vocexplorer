@@ -51,9 +51,6 @@ func renderValidators(p *Pagination, index int) vecty.ComponentOrHTML {
 	var validatorElems []vecty.MarkupOrChild
 
 	for i := len(store.Validators.Validators) - 1; i >= 0; i-- {
-		if dbtypes.ValidatorIsEmpty(store.Validators.Validators[i]) {
-			continue
-		}
 		validatorElems = append(validatorElems, elem.Div(
 			vecty.Markup(vecty.Class("paginated-card")),
 			ValidatorCard(store.Validators.Validators[i]),
