@@ -1,11 +1,8 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/logger"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -24,7 +21,6 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 	max := 4
 	numBlocks := 0
 	for i := len(store.Blocks.Blocks) - 1; i >= 0; i-- {
-		logger.Info(fmt.Sprintf("i: %d, num: %d", i, numBlocks))
 		if numBlocks >= max {
 			break
 		}

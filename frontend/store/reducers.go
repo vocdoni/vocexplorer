@@ -5,7 +5,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"go.vocdoni.io/dvote/log"
+	"gitlab.com/vocdoni/vocexplorer/logger"
 )
 
 // Reduce registers all storage actions
@@ -244,7 +244,7 @@ func clientActions(action interface{}) {
 	case *actions.GatewayConnected:
 		if a.GatewayErr != nil {
 			ServerConnected = false
-			log.Error(a.GatewayErr)
+			logger.Error(a.GatewayErr)
 		} else {
 			ServerConnected = true
 		}

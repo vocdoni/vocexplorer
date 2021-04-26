@@ -7,6 +7,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // BlockList is the block list component
@@ -50,7 +51,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 func renderBlocks(p *Pagination, index int) vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
-	for i := len(store.Blocks.Blocks) - 1; i >= len(store.Blocks.Blocks)-p.ListSize; i-- {
+	for i := len(store.Blocks.Blocks) - 1; i >= util.Max(len(store.Blocks.Blocks)-p.ListSize, 0); i-- {
 		blockList = append(blockList, elem.Div(
 			vecty.Markup(vecty.Class("paginated-card")),
 			BlockCard(store.Blocks.Blocks[i]),
