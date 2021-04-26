@@ -21,7 +21,7 @@ type Transactions struct {
 type DecodedTransaction struct {
 	Hash          []byte
 	RawTxContents string
-	RawTx         models.Tx
+	RawTx         *models.Tx
 	Time          time.Time
 	ProcessID     string
 	EntityID      string
