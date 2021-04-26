@@ -76,8 +76,8 @@ func updateHomeDashboardInfo(d *DashboardView) {
 }
 
 func updateHomeBlocks(d *DashboardView, index int) {
-	logger.Info("Getting blocks from index " + util.IntToString(index+1))
-	list, err := store.Client.GetBlockList(index-3, config.ListSize)
+	logger.Info("Getting blocks from index " + util.IntToString(index+1-config.ListSize))
+	list, err := store.Client.GetBlockList(index+1-config.ListSize, config.ListSize)
 	if err != nil {
 		logger.Error(err)
 		return
