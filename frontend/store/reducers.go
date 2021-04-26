@@ -1,6 +1,8 @@
 package store
 
 import (
+	"fmt"
+
 	"github.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -46,11 +48,12 @@ func entityActions(action interface{}) {
 		Entities.ProcessPagination.Index = a.Index
 
 	case *actions.SetEntityIDs:
-		for i, id := range a.EntityIDs {
-			if i > config.ListSize {
-				break
+		for i := 0; i < len(Entities.EntityIDs); i++ {
+			if i >= len(a.EntityIDs) {
+				Entities.EntityIDs[i] = ""
+				continue
 			}
-			Entities.EntityIDs[i] = id
+			Entities.EntityIDs[i] = a.EntityIDs[i]
 		}
 
 	case *actions.SetCurrentEntityID:
@@ -244,7 +247,7 @@ func clientActions(action interface{}) {
 	case *actions.GatewayConnected:
 		if a.GatewayErr != nil {
 			ServerConnected = false
-			logger.Error(a.GatewayErr)
+			logger.Error(fmt.Errorf("error getting Gateway info: %s", a.GatewayErr))
 		} else {
 			ServerConnected = true
 		}
