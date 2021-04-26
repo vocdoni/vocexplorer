@@ -13,7 +13,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntitiesDashboardView renders the entities dashboard page
@@ -92,7 +91,7 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
 			}
 			if store.Entities.Count > 0 {
-				getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
+				getEntities(d, store.Entities.Count-store.Entities.Pagination.Index-config.ListSize)
 			}
 		case search := <-store.Entities.Pagination.SearchChannel:
 			if !update.CheckCurrentPage("entities", ticker) {
@@ -129,19 +128,32 @@ func updateEntities(d *EntitiesDashboardView) {
 			return
 		}
 		actions.UpdateCounts(stats)
-		getEntities(d, util.Max(store.Entities.Count-store.Entities.Pagination.Index, 1))
+		getEntities(d, store.Entities.Count-store.Entities.Pagination.Index-config.ListSize)
 	}
 }
 
 func getEntities(d *EntitiesDashboardView, index int) {
-	index--
+	listSize := config.ListSize
 	logger.Info(fmt.Sprintf("Getting entities from index %d\n", index))
-	list, err := store.Client.GetEntityList("", config.ListSize, index)
+	if index < 0 {
+		listSize += index
+		index = 0
+	}
+	logger.Info(fmt.Sprintf("Getting %d entities from index %d\n", listSize, index))
+	list, err := store.Client.GetEntityList("", listSize, index)
 	if err != nil {
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: []string{}})
 		logger.Error(err)
 	} else {
+		reverseIDList(list)
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
 	}
 	// TODO get entity process heights
+}
+
+func reverseIDList(list []string) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
 }
