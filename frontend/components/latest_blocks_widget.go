@@ -1,12 +1,14 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/vocdoni/vocexplorer/logger"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //LatestBlocksWidget is a component for a widget of recent blocks
@@ -20,10 +22,16 @@ func (b *LatestBlocksWidget) Render() vecty.ComponentOrHTML {
 	var blockList []vecty.MarkupOrChild
 
 	max := 4
-	for i := len(store.Blocks.Blocks) - 1; i >= util.Max(len(store.Blocks.Blocks)-max, 0); i-- {
+	numBlocks := 0
+	for i := len(store.Blocks.Blocks) - 1; i >= 0; i-- {
+		logger.Info(fmt.Sprintf("i: %d, num: %d", i, numBlocks))
+		if numBlocks >= max {
+			break
+		}
 		if store.Blocks.Blocks[i] == nil {
 			continue
 		}
+		numBlocks++
 		blockList = append(blockList, elem.Div(
 			vecty.Markup(vecty.Class("card-deck-col")),
 			BlockCard(store.Blocks.Blocks[i]),
