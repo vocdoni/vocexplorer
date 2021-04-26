@@ -118,7 +118,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Transaction Type"),
 				),
 				elem.Description(
-					vecty.Text(util.GetTransactionName(util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx))),
+					vecty.Text(util.GetTransactionName(util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx))),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Hash"),
@@ -157,7 +157,7 @@ func TransactionView() vecty.List {
 					},
 				),
 				vecty.If(
-					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(&store.Transactions.CurrentDecodedTransaction.RawTx) == types.TxVote,
+					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx) == types.TxVote,
 					elem.DefinitionTerm(
 						vecty.Text("Contains vote envelope"),
 					),
@@ -335,7 +335,7 @@ func UpdateTxContents(d *TxContents) {
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{
 			RawTxContents: txContents,
-			RawTx:         rawTx,
+			RawTx:         &rawTx,
 			Time:          time.Unix(store.Transactions.CurrentBlock.Timestamp, 0),
 			ProcessID:     processID,
 			EntityID:      entityID,
