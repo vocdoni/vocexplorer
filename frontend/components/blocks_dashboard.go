@@ -84,7 +84,7 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(*newHeight) - 1})
 			}
 			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
-			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
+			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1, 1))
 
 			// case search := <-store.Blocks.Pagination.SearchChannel:
 			// 	if !update.CheckCurrentPage("blocks", ticker) {
@@ -121,13 +121,12 @@ func updateBlocksDashboard(d *BlocksDashboardView) {
 			return
 		}
 		actions.UpdateCounts(stats)
-		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index, 1))
+		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1, 1))
 	}
 }
 
 func updateBlocks(d *BlocksDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting Blocks from index %d\n", index))
-	// list, err := store.Client.GetBlockList(index)
 	list, err := store.Client.GetBlockList(index, config.ListSize)
 	if err != nil {
 		logger.Error(err)

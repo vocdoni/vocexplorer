@@ -15,6 +15,9 @@ import (
 
 //BlockCard renders a single block card
 func BlockCard(block *models.BlockHeader) vecty.ComponentOrHTML {
+	if block == nil {
+		return nil
+	}
 	return bootstrap.Card(bootstrap.CardParams{
 		Header: Link(
 			"/block/"+util.IntToString(block.Height),
