@@ -20,10 +20,10 @@ func (c *Client) GetGatewayInfo() error {
 		return fmt.Errorf(resp.Message)
 	}
 	if resp.Health <= 0 {
-		return fmt.Errorf("Gateway %s health is %d", c.Address, resp.Health)
+		return fmt.Errorf("gateway %s health is %d", c.Address, resp.Health)
 	}
 	if !strings.Contains(strings.Join(resp.APIList, ""), "vote") {
-		return fmt.Errorf("Gateway %s does not enable vote api", c.Address)
+		return fmt.Errorf("gateway %s does not enable vote api", c.Address)
 	}
 	return nil
 }
