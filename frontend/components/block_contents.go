@@ -10,6 +10,7 @@ import (
 	"github.com/hexops/vecty/elem"
 	"go.vocdoni.io/proto/build/go/models"
 
+	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -94,7 +95,7 @@ func UpdateBlockContents(d *BlockContents) {
 	if !update.CheckCurrentPage("block", ticker) {
 		return
 	}
-	updateBlockTransactions()
+	updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs - uint64(store.Blocks.Pagination.Index) - config.ListSize))
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -115,15 +116,22 @@ func UpdateBlockContents(d *BlockContents) {
 				return
 			}
 			dispatcher.Dispatch(&actions.BlockTransactionsIndexChange{Index: i})
-			updateBlockTransactions()
+			updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs - uint64(store.Blocks.Pagination.Index) - config.ListSize))
 			// update the current page of txs
 		}
 	}
 }
 
-func updateBlockTransactions() {
+func updateBlockTransactions(index int) {
+	listSize := config.ListSize
+	if index < 0 {
+		listSize += index
+		index = 0
+	}
+	logger.Info(fmt.Sprintf("Getting %d transactions from index %d\n", listSize, index))
+
 	if store.Blocks.CurrentBlock != nil && len(store.Blocks.CurrentTxs) == 0 {
-		txs, err := store.Client.GetTxListForBlock(uint32(store.Blocks.CurrentBlock.Height))
+		txs, err := store.Client.GetTxListForBlock(uint32(store.Blocks.CurrentBlock.Height), index, listSize)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -144,7 +152,10 @@ func BlockView() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("details")),
 			elem.Span(
-				vecty.Text(fmt.Sprintf("%d transactions", len(store.Blocks.CurrentTxs))),
+				vecty.If(store.Blocks.CurrentBlock.NumTxs == 1,
+					vecty.Text(fmt.Sprintf("%d transaction", store.Blocks.CurrentBlock.NumTxs))),
+				vecty.If(store.Blocks.CurrentBlock.NumTxs != 1,
+					vecty.Text(fmt.Sprintf("%d transactions", store.Blocks.CurrentBlock.NumTxs))),
 			),
 			elem.Span(vecty.Text(
 				humanize.Time(time.Unix(store.Blocks.CurrentBlock.Timestamp, 0)),
