@@ -77,6 +77,9 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 // UpdateBlockContents keeps the block contents up to date
 func UpdateBlockContents(d *BlockContents) {
 	// Set block to nil so previous block is not displayed
+	dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{
+		TransactionList: []*models.SignedTx{},
+	})
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
@@ -130,11 +133,12 @@ func updateBlockTransactions(index int) {
 	}
 	logger.Info(fmt.Sprintf("Getting %d transactions from index %d\n", listSize, index))
 
-	if store.Blocks.CurrentBlock != nil && len(store.Blocks.CurrentTxs) == 0 {
+	if store.Blocks.CurrentBlock != nil {
 		txs, err := store.Client.GetTxListForBlock(uint32(store.Blocks.CurrentBlock.Height), index, listSize)
 		if err != nil {
 			logger.Error(err)
 		}
+		reverseTxList(txs)
 		dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{TransactionList: txs})
 	}
 }
@@ -247,4 +251,11 @@ func txHash(tx []byte) []byte {
 	// Sum returns the SHA256 of the bz.
 	h := sha256.Sum256(tx)
 	return h[:]
+}
+
+func reverseTxList(list []*models.SignedTx) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
+	}
 }
