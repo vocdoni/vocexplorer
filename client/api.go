@@ -304,10 +304,12 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.SignedTx, err
 	return tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32) ([]*models.SignedTx, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*models.SignedTx, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.BlockHeight = blockHeight
+	req.From = from
+	req.ListSize = listSize
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
