@@ -109,16 +109,6 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item"),
 							vecty.MarkupIf(
-								active == "envelopes",
-								vecty.Class("nav-item", "active"),
-							),
-						),
-						NavLink("/envelopes", "Vote Envelopes"),
-					),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.Class("nav-item"),
-							vecty.MarkupIf(
 								active == "validators",
 								vecty.Class("nav-item", "active"),
 							),
