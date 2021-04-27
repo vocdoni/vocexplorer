@@ -13,7 +13,6 @@ type Processes struct {
 	ProcessIds         [config.ListSize]string
 	Pagination         PageStore
 	EnvelopePagination PageStore
-	EnvelopeHeights    map[string]int64
 	CurrentProcess     *Process
 }
 
@@ -22,6 +21,9 @@ type Process struct {
 	Envelopes     []*models.EnvelopePackage
 	EnvelopeCount int
 	Process       *models.Process
+	RHeight       uint32
+	CreationTime  int64
+	FinalResults  bool
 }
 
 type ProcessResults struct {

@@ -23,7 +23,7 @@ type ProcessTabChange struct {
 // SetProcess is the action to set a single process
 type SetProcess struct {
 	PID     string
-	Process *models.Process
+	Process *storeutil.Process
 }
 
 // SetProcessIds is the action to set the process ids
