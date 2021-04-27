@@ -98,10 +98,9 @@ func ValidatorView() vecty.List {
 			vecty.Text("Validator details"),
 		),
 		elem.Heading2(
-			vecty.Text(fmt.Sprintf(
-				"Validator address: %x",
-				store.Validators.CurrentValidator.Address,
-			)),
+			vecty.Text(
+				store.Validators.CurrentValidator.Name,
+			),
 		),
 		elem.HorizontalRule(),
 		elem.DescriptionList(

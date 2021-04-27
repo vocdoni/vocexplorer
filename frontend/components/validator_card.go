@@ -20,25 +20,25 @@ func ValidatorCard(validator *models.Validator) vecty.ComponentOrHTML {
 			"",
 		)
 	}
+	name := validator.Name
+	if name == "" {
+		name = util.HexToString(validator.Address)
+	}
 	return bootstrap.Card(bootstrap.CardParams{
-		Header: vLink(validator.Name),
+		Header: vLink(name),
 		Body: vecty.List{
 			elem.DescriptionList(
 				elem.DefinitionTerm(
 					vecty.Text("Address"),
 				),
 				elem.Description(
-					vecty.Markup(vecty.Attribute("title", util.HexToString(validator.Address))),
-					vLink(util.HexToString(validator.Address)),
+					vecty.Text(util.HexToString(validator.Address)),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("PubKey"),
 				),
 				elem.Description(
 					vecty.Text(util.HexToString(validator.PubKey)),
-				),
-				elem.DefinitionTerm(
-					vecty.Text("Priority"),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Voting Power"),
