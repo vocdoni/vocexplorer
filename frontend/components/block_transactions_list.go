@@ -62,7 +62,7 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
 
 	for i := len(store.Blocks.CurrentTxs) - 1; i >= util.Max(len(store.Blocks.CurrentTxs)-p.ListSize, 0); i-- {
-		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i], int(store.Blocks.CurrentBlock.NumTxs)-(p.ListSize**p.CurrentPage)-i))
+		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i], int(store.Blocks.CurrentBlock.NumTxs)-(p.ListSize**p.CurrentPage)-(len(store.Blocks.CurrentTxs)-i-1)))
 	}
 	if len(txList) == 0 {
 		if *p.Searching {
