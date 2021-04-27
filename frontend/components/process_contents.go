@@ -309,7 +309,7 @@ func renderProcessConfigs(process *models.Process) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	process, err := store.Client.GetProcess(store.Processes.CurrentProcess.Process.ProcessId)
+	process, rheight, creationTime, final, err := store.Client.GetProcess(store.Processes.CurrentProcess.Process.ProcessId)
 	if err != nil {
 		logger.Error(err)
 		d.Unavailable = true
@@ -325,6 +325,9 @@ func UpdateProcessContents(d *ProcessContentsView) {
 		Process: &storeutil.Process{
 			EnvelopeCount: int(envelopeHeight),
 			Process:       process,
+			RHeight:       rheight,
+			CreationTime:  creationTime,
+			FinalResults:  final,
 		},
 	})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)

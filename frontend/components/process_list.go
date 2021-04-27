@@ -6,7 +6,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/vocdoni/vocexplorer/logger"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -43,17 +42,15 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 
 func renderProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
-	for _, process := range store.Processes.Processes {
+	if len(store.Processes.Processes) == 0 {
+		return []vecty.MarkupOrChild{elem.Div(vecty.Text("Loading processes..."))}
+	}
+	for _, pid := range store.Processes.ProcessIds {
+		process := store.Processes.Processes[pid]
 		if process != nil {
-			height, err := store.Client.GetEnvelopeHeight(process.Process.ProcessId)
-			if err != nil {
-				logger.Error(err)
-			}
-			info, iok := store.Processes.ProcessResults[util.HexToString(process.Process.ProcessId)]
-
 			elemList = append(
 				elemList,
-				ProcessBlock(process, iok, int64(height), info),
+				ProcessBlock(process),
 			)
 		}
 	}
@@ -61,8 +58,8 @@ func renderProcessItems() []vecty.MarkupOrChild {
 }
 
 //ProcessBlock renders a single process card
-func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeutil.ProcessResults) vecty.ComponentOrHTML {
-	if !ok || process == nil {
+func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
+	if process == nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile")),
 			elem.Div(
@@ -87,9 +84,26 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 			),
 		)
 	}
+	var tp string
+	if process.Process.EnvelopeType.Anonymous {
+		tp = "anonymous"
+	} else {
+		tp = "poll"
+	}
+	if process.Process.EnvelopeType.EncryptedVotes {
+		tp += " encrypted"
+	} else {
+		tp += " open"
+	}
+	if process.Process.EnvelopeType.Serial {
+		tp += " serial"
+	} else {
+		tp += " single"
+	}
+	state := process.Process.Status.String()
 	// entityHeight := store.Entities.ProcessHeights[util.HexToString(process.Process.EntityId)]
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(info.State))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(state))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -97,11 +111,11 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetProcessName(info.Type)),
+						vecty.Text(util.GetProcessName(tp)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(strings.Title(info.State)),
+						vecty.Text(strings.Title(state)),
 					),
 				),
 			),
@@ -137,7 +151,7 @@ func ProcessBlock(process *storeutil.Process, ok bool, height int64, info storeu
 					elem.Div(
 						vecty.Markup(vecty.Class("envelopes")),
 						vecty.Text(
-							fmt.Sprintf("%d envelopes", height),
+							fmt.Sprintf("%d envelopes", process.EnvelopeCount),
 						),
 					),
 				),

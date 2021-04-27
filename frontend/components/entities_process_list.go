@@ -49,12 +49,9 @@ func renderEntityProcessItems() []vecty.MarkupOrChild {
 		if process != nil {
 			ID := util.HexToString(process.Process.ProcessId)
 			if ID != "" {
-				height := store.Processes.EnvelopeHeights[ID]
-				info, iok := store.Processes.ProcessResults[ID]
-
 				elemList = append(
 					elemList,
-					ProcessBlock(process, iok, height, info),
+					ProcessBlock(process),
 				)
 			}
 		}

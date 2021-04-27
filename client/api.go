@@ -92,26 +92,30 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	if resp.Message == "no results yet" {
 		return nil, 0, nil
 	}
-	return resp.ProcessList, *resp.Size, nil
+	return resp.ProcessList, 0, nil
 }
 
-func (c *Client) GetProcess(pid []byte) (*models.Process, error) {
+func (c *Client) GetProcess(pid []byte) (*models.Process, uint32, int64, bool, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessInfo"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, false, err
 	}
 	if !resp.Ok {
-		return nil, fmt.Errorf(resp.Message)
+		return nil, 0, 0, false, fmt.Errorf(resp.Message)
 	}
-	return resp.ProcessInfo.(*models.Process), nil
+	process := new(models.Process)
+	if err := proto.Unmarshal(resp.Content, process); err != nil {
+		return nil, 0, 0, false, err
+	}
+	return process, *resp.Height, resp.CreationTime, *resp.Final, nil
 }
 
 func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
 	var req types.MetaRequest
-	req.Method = "getProcessInfo"
+	req.Method = "getProcessCount"
 	req.EntityId = entityId
 	resp, err := c.Request(req)
 	if err != nil {

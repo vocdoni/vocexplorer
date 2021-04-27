@@ -134,7 +134,6 @@ func updateEntities(d *EntitiesDashboardView) {
 
 func getEntities(d *EntitiesDashboardView, index int) {
 	listSize := config.ListSize
-	logger.Info(fmt.Sprintf("Getting entities from index %d\n", index))
 	if index < 0 {
 		listSize += index
 		index = 0

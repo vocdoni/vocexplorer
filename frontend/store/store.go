@@ -82,7 +82,8 @@ func init() {
 	Transactions.Pagination.Search = false
 	Validators.Pagination.Search = false
 
-	Processes.EnvelopeHeights = make(map[string]int64)
+	Processes.ProcessResults = make(map[string]storeutil.ProcessResults)
+	Processes.Processes = make(map[string]*storeutil.Process)
 	Entities.ProcessHeights = make(map[string]int64)
 
 	ServerConnected = true

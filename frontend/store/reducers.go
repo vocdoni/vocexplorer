@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 
-	"github.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
@@ -120,21 +119,22 @@ func processActions(action interface{}) {
 		Processes.EnvelopePagination.Index = a.Index
 
 	case *actions.SetProcessIds:
-		for i, id := range a.Processes {
-			if i > config.ListSize {
-				break
+		for i := 0; i < len(Processes.ProcessIds); i++ {
+			if i >= len(a.Processes) {
+				Processes.ProcessIds[i] = ""
+				continue
 			}
-			Processes.ProcessIds[i] = id
+			Processes.ProcessIds[i] = a.Processes[i]
 		}
+
+	case *actions.SetProcess:
+		Processes.Processes[a.PID] = a.Process
 
 	case *actions.ProcessTabChange:
 		Processes.Pagination.Tab = a.Tab
 
 	case *actions.SetProcessCount:
 		Processes.Count = a.Count
-
-	case *actions.SetEnvelopeHeights:
-		Processes.EnvelopeHeights = a.EnvelopeHeights
 
 	case *actions.SetCurrentProcessStruct:
 		Processes.CurrentProcess = a.Process

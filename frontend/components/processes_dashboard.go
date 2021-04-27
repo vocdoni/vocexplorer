@@ -12,6 +12,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
+	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
@@ -93,8 +94,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 				}
 			}
 			if store.Processes.Count > 0 {
-				getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
-				update.ProcessResults()
+				getProcesses(d, store.Processes.Count-store.Processes.Pagination.Index-config.ListSize)
 			}
 			// TODO search
 			// case search := <-store.Processes.Pagination.SearchChannel:
@@ -132,18 +132,48 @@ func updateProcesses(d *ProcessesDashboardView) {
 			return
 		}
 		actions.UpdateCounts(stats)
-		getProcesses(d, util.Max(store.Processes.Count-store.Processes.Pagination.Index, 1))
-		update.ProcessResults()
+		getProcesses(d, store.Processes.Count-store.Processes.Pagination.Index-config.ListSize)
 	}
 }
 
 func getProcesses(d *ProcessesDashboardView, index int) {
-	logger.Info(fmt.Sprintf("Getting processes from index %d\n", index))
-	list, _, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, config.ListSize)
-	if err == nil {
-		dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
-	} else {
-		logger.Error(err)
+	listSize := config.ListSize
+	if index < 0 {
+		listSize += index
+		index = 1
 	}
-	// TODO get process envelope heights, entity process heights
+	index--
+	logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
+	list, _, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, listSize)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	reverseIDList(list)
+	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
+	logger.Info("Set process list")
+	for _, processId := range store.Processes.ProcessIds {
+		go func(pid string) {
+			process, rheight, creationTime, final, err := store.Client.GetProcess(util.StringToHex(pid))
+			if err != nil {
+				logger.Error(err)
+			}
+			envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(pid))
+			if err != nil {
+				logger.Error(err)
+			}
+			if process != nil {
+				dispatcher.Dispatch(&actions.SetProcess{
+					PID: string(pid),
+					Process: &storeutil.Process{
+						EnvelopeCount: int(envelopeHeight),
+						Process:       process,
+						RHeight:       rheight,
+						CreationTime:  creationTime,
+						FinalResults:  final,
+					},
+				})
+			}
+		}(processId)
+	}
 }
