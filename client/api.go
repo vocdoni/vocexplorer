@@ -285,7 +285,7 @@ func (c *Client) GetBlockList(from, listSize int) ([]*models.BlockHeader, error)
 	return list.BlockHeaders, nil
 }
 
-func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.SignedTx, error) {
+func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.TxPackage, error) {
 	var req types.MetaRequest
 	req.Method = "getTx"
 	req.BlockHeight = blockHeight
@@ -297,14 +297,14 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.SignedTx, err
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx: (%s)", resp.Message)
 	}
-	tx := new(models.SignedTx)
+	tx := new(models.TxPackage)
 	if err := proto.Unmarshal(resp.Content, tx); err != nil {
 		return nil, err
 	}
 	return tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*models.SignedTx, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*models.TxPackage, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.BlockHeight = blockHeight
@@ -317,7 +317,7 @@ func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*m
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx list for block %d: (%s)", blockHeight, resp.Message)
 	}
-	txList := new(models.SignedTxList)
+	txList := new(models.TxPackageList)
 	if err := proto.Unmarshal(resp.Content, txList); err != nil {
 		return nil, err
 	}

@@ -5,7 +5,6 @@ import (
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 )
 
@@ -190,15 +189,6 @@ func transactionActions(action interface{}) {
 
 	case *actions.SetTransactionList:
 		Transactions.Transactions = a.TransactionList
-
-	// case *actions.SetTransactionCount:
-	// 	Transactions.Count = a.Count
-
-	case *actions.SetCurrentTransactionRef:
-		Transactions.CurrentTransactionRef = storeutil.TransactionReference{
-			BlockHeight: a.Height,
-			TxIndex:     a.Index,
-		}
 
 	case *actions.SetCurrentTransaction:
 		Transactions.CurrentTransaction = a.Transaction

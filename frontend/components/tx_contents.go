@@ -92,11 +92,11 @@ func TransactionView() vecty.List {
 		),
 		elem.Heading2(
 			vecty.Text(fmt.Sprintf(
-				"Transaction index: %d on block: ", store.Transactions.CurrentTransactionRef.TxIndex,
+				"Transaction index: %d on block: ", store.Transactions.CurrentTransaction.Index,
 			)),
 			Link(
-				"/block/"+util.IntToString(store.Transactions.CurrentTransactionRef.BlockHeight),
-				"block "+util.IntToString(store.Transactions.CurrentTransactionRef.BlockHeight),
+				"/block/"+util.IntToString(store.Transactions.CurrentTransaction.BlockHeight),
+				"block "+util.IntToString(store.Transactions.CurrentTransaction.BlockHeight),
 				"bold-link",
 			),
 		),
@@ -225,11 +225,11 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 }
 
 // UpdateTxContents keeps the transaction contents up to date
-func UpdateTxContents(d *TxContents) {
+func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch transaction contents
-	tx, err := store.Client.GetTx(store.Transactions.CurrentTransactionRef.BlockHeight, store.Transactions.CurrentTransactionRef.TxIndex)
+	tx, err := store.Client.GetTx(blockHeight, index)
 	if err == nil {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
@@ -240,7 +240,7 @@ func UpdateTxContents(d *TxContents) {
 		return
 	}
 	// Set block associated with transaction
-	block, err := store.Client.GetBlock(store.Transactions.CurrentTransactionRef.BlockHeight)
+	block, err := store.Client.GetBlock(store.Transactions.CurrentTransaction.BlockHeight)
 	if err != nil {
 		logger.Error(err)
 	} else {
@@ -248,7 +248,7 @@ func UpdateTxContents(d *TxContents) {
 	}
 
 	var rawTx models.Tx
-	err = proto.Unmarshal(tx.Tx, &rawTx)
+	err = proto.Unmarshal(tx.Tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}

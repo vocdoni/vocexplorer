@@ -29,7 +29,6 @@ func (home *TxView) Render() vecty.ComponentOrHTML {
 	if err != nil {
 		logger.Error(err)
 	}
-	dispatcher.Dispatch(&actions.SetCurrentTransactionRef{Height: uint32(blockHeight), Index: int32(txIndex)})
 	dash := new(components.TxContents)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
@@ -40,7 +39,7 @@ func (home *TxView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateTxContents(dash)
+	go components.UpdateTxContents(dash, uint32(blockHeight), int32(txIndex))
 	return elem.Div(
 		&components.Header{},
 		dash,
