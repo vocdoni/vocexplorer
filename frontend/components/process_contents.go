@@ -65,6 +65,13 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 
 //ProcessDetails renders the details of a process
 func (dash *ProcessContentsView) ProcessDetails() vecty.List {
+	results := store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)]
+	if results.State == "" {
+		results.State = "unknown"
+	}
+	if results.Type == "" {
+		results.Type = "unknown"
+	}
 	return vecty.List{
 		elem.Heading1(
 			vecty.Text("Process details"),
@@ -86,8 +93,8 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
-				vecty.Markup(vecty.Class("badge", store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].State)),
-				vecty.Text(strings.Title(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].State)),
+				vecty.Markup(vecty.Class("badge", results.State)),
+				vecty.Text(strings.Title(results.State)),
 			),
 		),
 		elem.HorizontalRule(),
@@ -101,11 +108,11 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 				),
 			),
 			elem.DefinitionTerm(vecty.Text("Process type")),
-			elem.Description(vecty.Text(util.GetProcessName(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].Type))),
+			elem.Description(vecty.Text(util.GetProcessName(results.Type))),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].State))),
+			elem.Description(vecty.Text(strings.Title(results.State))),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
-			elem.Description(vecty.Text(util.IntToString(store.Processes.Processes[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].EnvelopeCount))),
+			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcess.EnvelopeCount))),
 		),
 	}
 }
@@ -154,7 +161,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(results, renderResults(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].Results)),
 			TabContents(envelopes, &ProcessesEnvelopeListView{}),
-			TabContents(processDetails, renderProcessDetails(store.Processes.Processes[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].Process)),
+			TabContents(processDetails, renderProcessDetails(store.Processes.CurrentProcess.Process)),
 		),
 	}
 }
@@ -224,6 +231,9 @@ func renderProcessDetails(process *models.Process) vecty.ComponentOrHTML {
 }
 
 func renderEnvelopeType(envelopeType *models.EnvelopeType) vecty.ComponentOrHTML {
+	if envelopeType == nil {
+		return vecty.Text("Envelope Type unavailable")
+	}
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -237,6 +247,9 @@ func renderEnvelopeType(envelopeType *models.EnvelopeType) vecty.ComponentOrHTML
 		))
 }
 func renderProcessMode(mode *models.ProcessMode) vecty.ComponentOrHTML {
+	if mode == nil {
+		return vecty.Text("Process Mode unavailable")
+	}
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -250,6 +263,9 @@ func renderProcessMode(mode *models.ProcessMode) vecty.ComponentOrHTML {
 		))
 }
 func renderProcessVoteOptions(options *models.ProcessVoteOptions) vecty.ComponentOrHTML {
+	if options == nil {
+		return vecty.Text("Process Options unavailable")
+	}
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -307,16 +323,16 @@ func renderProcessConfigs(process *models.Process) vecty.ComponentOrHTML {
 }
 
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
-func UpdateProcessContents(d *ProcessContentsView) {
+func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	process, rheight, creationTime, final, err := store.Client.GetProcess(store.Processes.CurrentProcess.Process.ProcessId)
+	process, rheight, creationTime, final, err := store.Client.GetProcess(pid)
 	if err != nil {
 		logger.Error(err)
 		d.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
 		return
 	}
-	envelopeHeight, err := store.Client.GetEnvelopeHeight(store.Processes.CurrentProcess.Process.ProcessId)
+	envelopeHeight, err := store.Client.GetEnvelopeHeight(pid)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -361,9 +377,9 @@ func UpdateProcessContents(d *ProcessContentsView) {
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
 			if i < 1 {
-				newVal, err := store.Client.GetEnvelopeHeight(store.Processes.CurrentProcess.Process.ProcessId)
+				newVal, err := store.Client.GetEnvelopeHeight(pid)
 				if err == nil {
-					dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeHeight{Height: int(newVal)})
+					dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeCount{Count: int(newVal)})
 				} else {
 					logger.Error(err)
 				}

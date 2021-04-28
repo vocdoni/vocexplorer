@@ -36,16 +36,6 @@ type SetProcessCount struct {
 	Count int
 }
 
-// SetEnvelopeHeights is the action to set the envelope heights map
-type SetEnvelopeHeights struct {
-	EnvelopeHeights map[string]int64
-}
-
-// SetProcessContents is the action to set a single process contents
-type SetProcessContents struct {
-	Process storeutil.Process
-}
-
 // SetProcessResults is the action to set a single process results
 type SetProcessResults struct {
 	Results storeutil.ProcessResults
@@ -62,19 +52,14 @@ type SetProcessType struct {
 	Type string
 }
 
-// SetCurrentProcessEnvelopeHeight is the action to set the current process' envelope height
-type SetCurrentProcessEnvelopeHeight struct {
-	Height int
-}
-
-// SetCurrentProcessInfo is the action to set the current process info
-type SetCurrentProcessInfo struct {
-	Process storeutil.Process
-}
-
 // SetCurrentProcessStruct is the action to set the current process
 type SetCurrentProcessStruct struct {
 	Process *storeutil.Process
+}
+
+// SetCurrentProcessEnvelopeCount is the action to set the current process envelope cou t
+type SetCurrentProcessEnvelopeCount struct {
+	Count int
 }
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
