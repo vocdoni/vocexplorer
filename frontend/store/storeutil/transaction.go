@@ -17,7 +17,6 @@ type Transactions struct {
 
 // DecodedTransaction stores human-readable decoded transaction data
 type DecodedTransaction struct {
-	Hash          []byte
 	RawTxContents string
 	RawTx         *models.Tx
 	Time          time.Time

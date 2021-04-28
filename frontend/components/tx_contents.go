@@ -92,7 +92,7 @@ func TransactionView() vecty.List {
 		),
 		elem.Heading2(
 			vecty.Text(fmt.Sprintf(
-				"Transaction index: %d on block: ", store.Transactions.CurrentTransaction.Index,
+				"%s transaction on ", humanize.Ordinal(int(store.Transactions.CurrentTransaction.Index+1)),
 			)),
 			Link(
 				"/block/"+util.IntToString(store.Transactions.CurrentTransaction.BlockHeight),
@@ -124,7 +124,7 @@ func TransactionView() vecty.List {
 					vecty.Text("Hash"),
 				),
 				elem.Description(
-					vecty.Text(util.HexToString(store.Transactions.CurrentDecodedTransaction.Hash)),
+					vecty.Text(util.HexToString(store.Transactions.CurrentTransaction.Hash)),
 				),
 				vecty.If(
 					store.Transactions.CurrentDecodedTransaction.EntityID != "",
@@ -240,7 +240,7 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 		return
 	}
 	// Set block associated with transaction
-	block, err := store.Client.GetBlock(store.Transactions.CurrentTransaction.BlockHeight)
+	block, err := store.Client.GetBlock(blockHeight)
 	if err != nil {
 		logger.Error(err)
 	} else {

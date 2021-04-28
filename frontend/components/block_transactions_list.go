@@ -5,7 +5,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -105,7 +104,7 @@ func renderBlockTx(tx *models.TxPackage) vecty.ComponentOrHTML {
 					elem.Div(
 						Link(
 							"/transaction/"+util.IntToString(tx.BlockHeight)+"/"+util.IntToString(tx.Index),
-							util.HexToString(tmhash.Sum(tx.Tx.Tx)),
+							util.HexToString(tx.Hash),
 							"",
 						),
 					),

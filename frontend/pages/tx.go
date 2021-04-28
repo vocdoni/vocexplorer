@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/hexops/vecty"
@@ -29,6 +30,7 @@ func (home *TxView) Render() vecty.ComponentOrHTML {
 	if err != nil {
 		logger.Error(err)
 	}
+	logger.Info(fmt.Sprintf("Block: %d, index: %d,", blockHeight, txIndex))
 	dash := new(components.TxContents)
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
