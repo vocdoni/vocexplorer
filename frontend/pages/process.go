@@ -3,13 +3,11 @@ package pages
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/components"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	router "marwan.io/vecty-router"
 )
@@ -24,7 +22,6 @@ func (home *ProcessView) Render() vecty.ComponentOrHTML {
 	dispatcher.Dispatch(&actions.SetCurrentPage{Page: "process"})
 	dash := new(components.ProcessContentsView)
 	pid := util.StringToHex(router.GetNamedVar(home)["id"])
-	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: &storeutil.Process{Process: &models.Process{ProcessId: pid}}})
 	dash.Rendered = false
 	// Ensure component rerender is only triggered once component has been rendered
 	if !store.Listeners.Has(dash) {
@@ -34,7 +31,7 @@ func (home *ProcessView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateProcessContents(dash)
+	go components.UpdateProcessContents(dash, pid)
 	return elem.Div(
 		&components.Header{},
 		dash,

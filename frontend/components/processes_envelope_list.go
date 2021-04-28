@@ -46,12 +46,10 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 
 	var EnvelopeList []vecty.MarkupOrChild
 
-	empty := p.ListSize
-	for i := len(store.Processes.CurrentProcess.Envelopes) - 1; i >= len(store.Processes.CurrentProcess.Envelopes)-p.ListSize; i-- {
-		envelope := store.Processes.CurrentProcess.Envelopes[i]
+	for _, envelope := range store.Processes.CurrentProcess.Envelopes {
 		EnvelopeList = append(EnvelopeList, renderProcessEnvelope(envelope))
 	}
-	if empty == 0 {
+	if len(EnvelopeList) == 0 {
 		if *p.Searching {
 			return elem.Div(vecty.Text("No envelopes found"))
 		}
@@ -108,7 +106,7 @@ func renderProcessEnvelope(envelope *models.EnvelopePackage) vecty.ComponentOrHT
 						),
 						Link(
 							"/transaction/"+util.IntToString(envelope.Height)+"/"+util.IntToString(envelope.TxIndex),
-							util.IntToString(envelope.Height)+"/"+util.IntToString(envelope.TxIndex),
+							util.HexToString(envelope.TxHash),
 							"hash",
 						),
 					),

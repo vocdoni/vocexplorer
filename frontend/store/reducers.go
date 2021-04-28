@@ -138,6 +138,16 @@ func processActions(action interface{}) {
 	case *actions.SetCurrentProcessStruct:
 		Processes.CurrentProcess = a.Process
 
+	case *actions.SetCurrentProcessEnvelopeCount:
+		if Processes.CurrentProcess != nil {
+			Processes.CurrentProcess.EnvelopeCount = a.Count
+		}
+
+	case *actions.SetCurrentProcessEnvelopes:
+		if Processes.CurrentProcess != nil {
+			Processes.CurrentProcess.Envelopes = a.EnvelopeList
+		}
+
 	case *actions.SetProcessResults:
 		Processes.ProcessResults[a.PID] = a.Results
 
