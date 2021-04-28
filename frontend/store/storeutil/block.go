@@ -10,7 +10,7 @@ type Blocks struct {
 	Count                 int
 	CurrentBlock          *models.BlockHeader
 	CurrentBlockHeight    uint32
-	CurrentTxs            []*models.SignedTx
+	CurrentTxs            []*models.TxPackage
 	TransactionPagination PageStore
 	Pagination            PageStore
 }

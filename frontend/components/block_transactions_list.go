@@ -62,7 +62,7 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	var txList []vecty.MarkupOrChild
 
 	for i := len(store.Blocks.CurrentTxs) - 1; i >= util.Max(len(store.Blocks.CurrentTxs)-p.ListSize, 0); i-- {
-		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i], int(store.Blocks.CurrentBlock.NumTxs)-(p.ListSize**p.CurrentPage)-(len(store.Blocks.CurrentTxs)-i-1)))
+		txList = append(txList, renderBlockTx(store.Blocks.CurrentTxs[i]))
 	}
 	if len(txList) == 0 {
 		if *p.Searching {
@@ -76,9 +76,9 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlockTx(tx *models.SignedTx, index int) vecty.ComponentOrHTML {
+func renderBlockTx(tx *models.TxPackage) vecty.ComponentOrHTML {
 	var rawTx models.Tx
-	err := proto.Unmarshal(tx.Tx, &rawTx)
+	err := proto.Unmarshal(tx.Tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -91,7 +91,7 @@ func renderBlockTx(tx *models.SignedTx, index int) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("type")),
 				elem.Div(
 					elem.Span(
-						vecty.Text(fmt.Sprintf("#%d", index)),
+						vecty.Text(fmt.Sprintf("#%d", tx.Index+1)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
@@ -104,14 +104,11 @@ func renderBlockTx(tx *models.SignedTx, index int) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Div(
 						Link(
-							"/transaction/"+util.IntToString(store.Blocks.CurrentBlock.Height)+"/"+util.IntToString(index),
-							util.HexToString(tmhash.Sum(tx.Tx)),
+							"/transaction/"+util.IntToString(tx.BlockHeight)+"/"+util.IntToString(tx.Index),
+							util.HexToString(tmhash.Sum(tx.Tx.Tx)),
 							"",
 						),
 					),
-					// vecty.Text(
-					// 	fmt.Sprintf("%s transaction on the blockchain ", humanize.Ordinal(int(tx.TxHeight))),
-					// ),
 				),
 			),
 		),
