@@ -9,7 +9,7 @@ require (
 	github.com/vocdoni/vocexplorer v0.0.0-20210326174540-19b196ebf6e0
 	gitlab.com/vocdoni/vocexplorer v0.0.0-20200903194749-046f8672292b
 	go.vocdoni.io/dvote v0.6.1-0.20210426222834-c2f076fce263
-	go.vocdoni.io/proto v1.0.3-0.20210428163306-376bd6cc28e0
+	go.vocdoni.io/proto v1.0.3-0.20210428183523-218cfc42e53b
 	google.golang.org/protobuf v1.25.0
 	marwan.io/vecty-router v0.0.0-20200914150808-f30c81f0deb5
 )

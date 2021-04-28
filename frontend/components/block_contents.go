@@ -1,7 +1,6 @@
 package components
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -244,10 +243,4 @@ func (c *BlockContents) BlockDetails() vecty.List {
 
 func preformattedBlockHeader(block *models.BlockHeader) vecty.ComponentOrHTML {
 	return elem.Preformatted(elem.Code(vecty.Text(block.String())))
-}
-
-func txHash(tx []byte) []byte {
-	// Sum returns the SHA256 of the bz.
-	h := sha256.Sum256(tx)
-	return h[:]
 }

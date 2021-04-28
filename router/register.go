@@ -22,7 +22,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg) {
 	m.HandleFunc("/blocks", indexHandler)
 	m.HandleFunc("/block/{id}", indexHandler)
 	m.HandleFunc("/transactions", indexHandler)
-	m.HandleFunc("/transaction/{id}", indexHandler)
+	m.HandleFunc("/transaction/{block}/{index}", indexHandler)
 	m.HandleFunc("/stats", indexHandler)
 	m.HandleFunc("/validators", indexHandler)
 	m.HandleFunc("/validator/{id}", indexHandler)
