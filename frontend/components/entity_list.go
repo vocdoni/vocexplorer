@@ -70,8 +70,15 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("envelopes")),
-						vecty.Text(
-							fmt.Sprintf("%d processes", height),
+						vecty.If(height == 1,
+							vecty.Text(
+								fmt.Sprintf("%d process", height),
+							),
+						),
+						vecty.If(height != 1,
+							vecty.Text(
+								fmt.Sprintf("%d processes", height),
+							),
 						),
 					),
 				),

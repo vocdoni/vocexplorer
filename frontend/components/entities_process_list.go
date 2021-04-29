@@ -5,7 +5,6 @@ import (
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntityProcessListView renders the process list pane
@@ -45,15 +44,13 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 
 func renderEntityProcessItems() []vecty.MarkupOrChild {
 	var elemList []vecty.MarkupOrChild
-	for _, process := range store.Entities.CurrentEntity.Processes {
+	for _, pid := range store.Entities.CurrentEntity.ProcessIds {
+		process := store.Processes.Processes[pid]
 		if process != nil {
-			ID := util.HexToString(process.Process.ProcessId)
-			if ID != "" {
-				elemList = append(
-					elemList,
-					ProcessBlock(process),
-				)
-			}
+			elemList = append(
+				elemList,
+				ProcessBlock(process),
+			)
 		}
 	}
 	return elemList

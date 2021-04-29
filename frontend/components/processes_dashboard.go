@@ -151,7 +151,6 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	}
 	reverseIDList(list)
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
-	logger.Info("Set process list")
 	for _, processId := range store.Processes.ProcessIds {
 		go func(pid string) {
 			process, rheight, creationTime, final, err := store.Client.GetProcess(util.StringToHex(pid))

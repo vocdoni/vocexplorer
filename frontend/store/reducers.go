@@ -73,9 +73,6 @@ func entityActions(action interface{}) {
 		Entities.CurrentEntity.ProcessIds = a.ProcessList
 		Entities.CurrentEntity.ProcessCount = len(a.ProcessList)
 
-	case *actions.SetEntityProcessList:
-		Entities.CurrentEntity.Processes = a.ProcessList
-
 	default:
 		return // don't fire listeners
 	}

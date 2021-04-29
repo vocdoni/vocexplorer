@@ -19,5 +19,4 @@ type Entities struct {
 type Entity struct {
 	ProcessCount int
 	ProcessIds   []string
-	Processes    [config.ListSize]*Process
 }
