@@ -13,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
+	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // EntitiesDashboardView renders the entities dashboard page
@@ -143,10 +144,22 @@ func getEntities(d *EntitiesDashboardView, index int) {
 	if err != nil {
 		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: []string{}})
 		logger.Error(err)
-	} else {
-		reverseIDList(list)
-		dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+		return
 	}
+	reverseIDList(list)
+	dispatcher.Dispatch(&actions.SetEntityIDs{EntityIDs: list})
+	for _, eid := range list {
+		count, err := store.Client.GetProcessCount(util.StringToHex(eid))
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+		dispatcher.Dispatch(&actions.SetEntityProcessCount{
+			EntityID: eid,
+			Count:    count,
+		})
+	}
+
 	// TODO get entity process heights
 }
 

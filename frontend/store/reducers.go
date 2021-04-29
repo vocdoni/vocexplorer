@@ -63,8 +63,11 @@ func entityActions(action interface{}) {
 	case *actions.SetEntityCount:
 		Entities.Count = a.Count
 
-	case *actions.SetProcessHeights:
-		Entities.ProcessHeights = a.ProcessHeights
+	case *actions.SetCurrentEntityProcessCount:
+		Entities.CurrentEntity.ProcessCount = a.Count
+
+	case *actions.SetEntityProcessCount:
+		Entities.ProcessHeights[a.EntityID] = a.Count
 
 	case *actions.SetEntityProcessIds:
 		Entities.CurrentEntity.ProcessIds = a.ProcessList
