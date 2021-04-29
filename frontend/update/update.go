@@ -85,28 +85,23 @@ func CurrentProcessResults() {
 
 // EntityProcessResults ensures the given entity's processes' results are all stored
 func EntityProcessResults() {
-	for _, process := range store.Entities.CurrentEntity.Processes {
-		if process != nil {
-			ID := util.HexToString(process.Process.ProcessId)
-			if ID != "" {
-				if _, ok := store.Processes.ProcessResults[ID]; !ok {
-					results, state, tp, final, err := store.Client.GetResults(process.Process.ProcessId)
-					if err != nil {
-						logger.Error(err)
-						return
-					}
-					if results != nil {
-						dispatcher.Dispatch(&actions.SetProcessResults{
-							PID: ID,
-							Results: storeutil.ProcessResults{
-								Results: results,
-								State:   state,
-								Type:    tp,
-								Final:   final,
-							},
-						})
-					}
-				}
+	for _, pid := range store.Entities.CurrentEntity.ProcessIds {
+		if _, ok := store.Processes.ProcessResults[pid]; !ok {
+			results, state, tp, final, err := store.Client.GetResults(util.StringToHex(pid))
+			if err != nil {
+				logger.Error(err)
+				return
+			}
+			if results != nil {
+				dispatcher.Dispatch(&actions.SetProcessResults{
+					PID: pid,
+					Results: storeutil.ProcessResults{
+						Results: results,
+						State:   state,
+						Type:    tp,
+						Final:   final,
+					},
+				})
 			}
 		}
 	}

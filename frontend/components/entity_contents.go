@@ -105,7 +105,7 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 // UpdateEntityContents keeps the dashboard data up to date
 func UpdateEntityContents(d *EntityContentsView) {
 	// Set entity process list to nil so previous list is not displayed
-	dispatcher.Dispatch(&actions.SetEntityProcessList{ProcessList: [10]*storeutil.Process{}})
+	dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: []string{}})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
 	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
@@ -119,7 +119,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 	if !update.CheckCurrentPage("entity", ticker) {
 		return
 	}
-	updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
+	updateEntityProcesses(d, store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index-config.ListSize)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -130,7 +130,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 			if !update.CheckCurrentPage("entity", ticker) {
 				return
 			}
-			updateEntityProcesses(d, util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1))
+			updateEntityProcesses(d, store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index-config.ListSize)
 		case i := <-store.Entities.ProcessPagination.PagChannel:
 			if !update.CheckCurrentPage("entity", ticker) {
 				return
@@ -165,24 +165,52 @@ func UpdateEntityContents(d *EntityContentsView) {
 }
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
-	index--
 	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
+	newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
+	if err != nil {
+		logger.Error(err)
+	} else {
+		dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
+	}
 
 	if store.Entities.CurrentEntity.ProcessCount > 0 && !store.Entities.ProcessPagination.DisableUpdate {
-		newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
+		listSize := config.ListSize
+		if index < 0 {
+			listSize += index
+			index = 0
+		}
+		logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
+		list, _, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, listSize)
 		if err != nil {
 			logger.Error(err)
-		} else {
-			dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
+			return
 		}
-		logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
-		list, _, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, config.ListSize)
-		if err != nil {
-			logger.Error(err)
-		} else {
-			dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
+		reverseIDList(list)
+		dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
+		for _, processId := range store.Entities.CurrentEntity.ProcessIds {
+			go func(pid string) {
+				process, rheight, creationTime, final, err := store.Client.GetProcess(util.StringToHex(pid))
+				if err != nil {
+					logger.Error(err)
+				}
+				envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(pid))
+				if err != nil {
+					logger.Error(err)
+				}
+				if process != nil {
+					dispatcher.Dispatch(&actions.SetProcess{
+						PID: string(pid),
+						Process: &storeutil.Process{
+							EnvelopeCount: int(envelopeHeight),
+							Process:       process,
+							RHeight:       rheight,
+							CreationTime:  creationTime,
+							FinalResults:  final,
+						},
+					})
+				}
+			}(processId)
 		}
-		// TODO actually fetch all the processes, maybe make processList [config.ListSize]
 		update.EntityProcessResults()
 	}
 }
