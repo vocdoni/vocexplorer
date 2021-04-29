@@ -35,9 +35,15 @@ type SetEntityCount struct {
 	Count int
 }
 
-// SetEntityProcessCount is the action to set the current entity's process count
-type SetEntityProcessCount struct {
+// SetCurrentEntityProcessCount is the action to set the current entity's process count
+type SetCurrentEntityProcessCount struct {
 	Count int
+}
+
+// SetEntityProcessCount is the action to set any entity's process count
+type SetEntityProcessCount struct {
+	EntityID string
+	Count    int64
 }
 
 // SetProcessHeights is the action to set the entity count

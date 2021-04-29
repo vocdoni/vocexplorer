@@ -114,7 +114,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 	if err != nil {
 		logger.Error(err)
 	} else {
-		dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+		dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
 	}
 	if !update.CheckCurrentPage("entity", ticker) {
 		return
@@ -148,7 +148,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 			eid := util.StringToHex(store.Entities.CurrentEntityID)
 			if i < 1 {
 				newCount, _ := store.Client.GetProcessCount(eid)
-				dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+				dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
 			}
 			index := util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1)
 			logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
@@ -173,7 +173,7 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 		if err != nil {
 			logger.Error(err)
 		} else {
-			dispatcher.Dispatch(&actions.SetEntityProcessCount{Count: int(newCount)})
+			dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
 		}
 		logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
 		list, _, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, config.ListSize)
