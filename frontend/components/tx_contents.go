@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
-	"time"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -248,7 +247,7 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	}
 
 	var rawTx models.Tx
-	err = proto.Unmarshal(tx.Tx.Tx, &rawTx)
+	err = proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -336,7 +335,7 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 		Transaction: &storeutil.DecodedTransaction{
 			RawTxContents: txContents,
 			RawTx:         &rawTx,
-			Time:          time.Unix(store.Transactions.CurrentBlock.Timestamp, 0),
+			Time:          store.Transactions.CurrentBlock.Time,
 			ProcessID:     processID,
 			EntityID:      entityID,
 			Nullifier:     nullifier,

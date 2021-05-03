@@ -3,16 +3,18 @@ package storeutil
 import (
 	"time"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
-	CurrentTransaction        *models.TxPackage
+	CurrentTransaction        *types.TxPackage
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *models.BlockHeader
+	CurrentBlock              *tmtypes.Block
 	Pagination                PageStore
-	Transactions              []*models.TxPackage
+	Transactions              []*types.TxPackage
 }
 
 // DecodedTransaction stores human-readable decoded transaction data

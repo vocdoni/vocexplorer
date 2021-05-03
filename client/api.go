@@ -91,18 +91,18 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	return resp.ProcessList, 0, nil
 }
 
-func (c *Client) GetProcess(pid []byte) (*types.Process, uint32, int64, bool, error) {
+func (c *Client) GetProcess(pid []byte) (*types.Process, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessInfo"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, 0, false, err
+		return nil, err
 	}
 	if !resp.Ok {
-		return nil, 0, 0, false, fmt.Errorf(resp.Message)
+		return nil, fmt.Errorf(resp.Message)
 	}
-	return resp.Process, *resp.Height, resp.CreationTime, *resp.Final, nil
+	return resp.Process, nil
 }
 
 func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
@@ -199,7 +199,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopePac
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
 	req.ListSize = listSize
-	// TODO use from, listsize
+	// TODO use from
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
