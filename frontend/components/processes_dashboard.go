@@ -153,7 +153,7 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
 	for _, processId := range store.Processes.ProcessIds {
 		go func(pid string) {
-			process, rheight, creationTime, final, err := store.Client.GetProcess(util.StringToHex(pid))
+			process, err := store.Client.GetProcess(util.StringToHex(pid))
 			if err != nil {
 				logger.Error(err)
 			}
@@ -167,9 +167,6 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 					Process: &storeutil.Process{
 						EnvelopeCount: int(envelopeHeight),
 						Process:       process,
-						RHeight:       rheight,
-						CreationTime:  creationTime,
-						FinalResults:  final,
 					},
 				})
 			}

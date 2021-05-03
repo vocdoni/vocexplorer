@@ -1,7 +1,8 @@
 package actions
 
 import (
-	"go.vocdoni.io/proto/build/go/models"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"go.vocdoni.io/dvote/types"
 )
 
 // BlocksIndexChange is the action to set the pagination index
@@ -21,7 +22,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList []*models.BlockHeader
+	BlockList []*tmtypes.Block
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -31,7 +32,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *models.BlockHeader
+	Block *tmtypes.Block
 }
 
 // SetCurrentBlockHeight is the action to set the current block height
@@ -41,5 +42,5 @@ type SetCurrentBlockHeight struct {
 
 // SetCurrentBlockTransactionList is the action to set the current list of transactions
 type SetCurrentBlockTransactionList struct {
-	TransactionList []*models.TxPackage
+	TransactionList []*types.TxPackage
 }

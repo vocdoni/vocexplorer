@@ -15,6 +15,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -46,10 +47,10 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 		return Unavailable("Loading process...", "")
 	}
 
-	if store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].Type == "" {
+	if store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ID)].Type == "" {
 		dispatcher.Dispatch(&actions.SetProcessType{Type: "Unknown"})
 	}
-	if store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].State == "" {
+	if store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ID)].State == "" {
 		dispatcher.Dispatch(&actions.SetProcessState{State: "Unknown"})
 	}
 
@@ -65,7 +66,7 @@ func (dash *ProcessContentsView) Render() vecty.ComponentOrHTML {
 
 //ProcessDetails renders the details of a process
 func (dash *ProcessContentsView) ProcessDetails() vecty.List {
-	results := store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)]
+	results := store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ID)]
 	if results.State == "" {
 		results.State = "unknown"
 	}
@@ -76,16 +77,16 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 		elem.Heading1(
 			vecty.Text("Process details"),
 		),
-		elem.Heading2(vecty.Text(util.HexToString(store.Processes.CurrentProcess.Process.ProcessId))),
+		elem.Heading2(vecty.Text(util.HexToString(store.Processes.CurrentProcess.Process.ID))),
 		elem.Div(
 			elem.Span(
 				vecty.Markup(vecty.Class("title")),
 				elem.Anchor(
 					vecty.Markup(
-						vecty.Attribute("href", store.ProcessDomain+util.HexToString(store.Processes.CurrentProcess.Process.EntityId)+"/0x"+util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)),
-						vecty.Property("target", util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)),
+						vecty.Attribute("href", store.ProcessDomain+util.HexToString(store.Processes.CurrentProcess.Process.EntityID)+"/0x"+util.HexToString(store.Processes.CurrentProcess.Process.ID)),
+						vecty.Property("target", util.HexToString(store.Processes.CurrentProcess.Process.ID)),
 					),
-					vecty.Markup(vecty.Attribute("aria-label", "Link to process "+util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)+"'s profile page")),
+					vecty.Markup(vecty.Attribute("aria-label", "Link to process "+util.HexToString(store.Processes.CurrentProcess.Process.ID)+"'s profile page")),
 					vecty.Text("Process Profile"),
 				),
 			),
@@ -102,8 +103,8 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 			elem.DefinitionTerm(vecty.Text("Host entity")),
 			elem.Description(
 				Link(
-					"/entity/"+util.HexToString(store.Processes.CurrentProcess.Process.EntityId),
-					util.HexToString(store.Processes.CurrentProcess.Process.EntityId),
+					"/entity/"+util.HexToString(store.Processes.CurrentProcess.Process.EntityID),
+					util.HexToString(store.Processes.CurrentProcess.Process.EntityID),
 					"",
 				),
 			),
@@ -159,7 +160,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
-			TabContents(results, renderResults(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ProcessId)].Results)),
+			TabContents(results, renderResults(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ID)].Results)),
 			TabContents(envelopes, &ProcessesEnvelopeListView{}),
 			TabContents(processDetails, renderProcessDetails(store.Processes.CurrentProcess.Process)),
 		),
@@ -206,14 +207,14 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessDetails(process *models.Process) vecty.ComponentOrHTML {
+func renderProcessDetails(process *types.Process) vecty.ComponentOrHTML {
 	row1 := vecty.List{}
 	row2 := vecty.List{}
 
 	// Add EnvelopeType
-	row1 = append(row1, renderEnvelopeType(process.EnvelopeType))
+	row1 = append(row1, renderEnvelopeType(process.Envelope))
 	row1 = append(row1, renderProcessMode(process.Mode))
-	row1 = append(row1, renderProcessVoteOptions(process.VoteOptions))
+	row1 = append(row1, renderProcessVoteOptions(process.VoteOpts))
 	row2 = append(row2, renderProcessConfigs(process))
 	row2 = append(row2, renderTimingDetails(process))
 	row2 = append(row2, renderProcessCensusDetails(process))
@@ -279,7 +280,7 @@ func renderProcessVoteOptions(options *models.ProcessVoteOptions) vecty.Componen
 			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
 		))
 }
-func renderTimingDetails(process *models.Process) vecty.ComponentOrHTML {
+func renderTimingDetails(process *types.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -288,11 +289,11 @@ func renderTimingDetails(process *models.Process) vecty.ComponentOrHTML {
 		elem.OrderedList(
 			// elem.ListItem(vecty.Text(fmt.Sprintf("Creation time: %s", process.Format("Mon Jan _2 15:04:05 +3:00 2006")))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", process.StartBlock))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", process.StartBlock+process.BlockCount))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", process.EndBlock))),
 		))
 }
 
-func renderProcessCensusDetails(process *models.Process) vecty.ComponentOrHTML {
+func renderProcessCensusDetails(process *types.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -301,12 +302,12 @@ func renderProcessCensusDetails(process *models.Process) vecty.ComponentOrHTML {
 		elem.OrderedList(
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", process.CensusOrigin))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", process.CensusRoot))),
-			vecty.If(*process.CensusURI != "",
-				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", *process.CensusURI)))),
+			vecty.If(process.CensusURI != "",
+				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", process.CensusURI)))),
 		))
 }
 
-func renderProcessConfigs(process *models.Process) vecty.ComponentOrHTML {
+func renderProcessConfigs(process *types.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -314,10 +315,10 @@ func renderProcessConfigs(process *models.Process) vecty.ComponentOrHTML {
 		),
 		elem.OrderedList(
 			elem.ListItem(vecty.Text(fmt.Sprintf("Namespace: %d", process.Namespace))),
-			vecty.If(len(process.EncryptionPrivateKeys) > 0,
-				elem.ListItem(vecty.Text(fmt.Sprintf("Private Keys: %s", process.EncryptionPrivateKeys)))),
-			vecty.If(len(process.EncryptionPublicKeys) > 0,
-				elem.ListItem(vecty.Text(fmt.Sprintf("Public Keys: %s", process.EncryptionPublicKeys)))),
+			vecty.If(len(process.PrivateKeys) > 0,
+				elem.ListItem(vecty.Text(fmt.Sprintf("Private Keys: %v", process.PrivateKeys)))),
+			vecty.If(len(process.PublicKeys) > 0,
+				elem.ListItem(vecty.Text(fmt.Sprintf("Public Keys: %v", process.PublicKeys)))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Question Index: %d", process.QuestionIndex))),
 		))
 }
@@ -325,7 +326,7 @@ func renderProcessConfigs(process *models.Process) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	process, rheight, creationTime, final, err := store.Client.GetProcess(pid)
+	process, err := store.Client.GetProcess(pid)
 	if err != nil {
 		logger.Error(err)
 		d.Unavailable = true
@@ -341,9 +342,6 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 		Process: &storeutil.Process{
 			EnvelopeCount: int(envelopeHeight),
 			Process:       process,
-			RHeight:       rheight,
-			CreationTime:  creationTime,
-			FinalResults:  final,
 		},
 	})
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
@@ -401,7 +399,7 @@ func updateProcessContents(d *ProcessContentsView) {
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {
 	logger.Info(fmt.Sprintf("Getting envelopes from index %d\n", index))
-	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ProcessId, config.ListSize)
+	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ID, config.ListSize)
 	if err == nil {
 		// TODO reverseEnvelopeList(list)
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})

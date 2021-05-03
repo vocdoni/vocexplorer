@@ -28,7 +28,7 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 		data(vecty.Text(store.Stats.ChainID)),
 		head(vecty.Text("Blockchain genesis timestamp")),
 		data(vecty.Text(
-			fmt.Sprintf(time.Unix(int64(store.Stats.GenesisTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
+			fmt.Sprintf(store.Stats.GenesisTimeStamp.Format("Mon Jan _2 15:04:05 UTC 2006")),
 		)),
 	))
 	rows = append(rows, row(

@@ -189,7 +189,7 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 		dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 		for _, processId := range store.Entities.CurrentEntity.ProcessIds {
 			go func(pid string) {
-				process, rheight, creationTime, final, err := store.Client.GetProcess(util.StringToHex(pid))
+				process, err := store.Client.GetProcess(util.StringToHex(pid))
 				if err != nil {
 					logger.Error(err)
 				}
@@ -203,9 +203,6 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 						Process: &storeutil.Process{
 							EnvelopeCount: int(envelopeHeight),
 							Process:       process,
-							RHeight:       rheight,
-							CreationTime:  creationTime,
-							FinalResults:  final,
 						},
 					})
 				}

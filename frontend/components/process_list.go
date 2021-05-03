@@ -6,6 +6,7 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -85,22 +86,22 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 		)
 	}
 	var tp string
-	if process.Process.EnvelopeType.Anonymous {
+	if process.Process.Envelope.Anonymous {
 		tp = "anonymous"
 	} else {
 		tp = "poll"
 	}
-	if process.Process.EnvelopeType.EncryptedVotes {
+	if process.Process.Envelope.EncryptedVotes {
 		tp += " encrypted"
 	} else {
 		tp += " open"
 	}
-	if process.Process.EnvelopeType.Serial {
+	if process.Process.Envelope.Serial {
 		tp += " serial"
 	} else {
 		tp += " single"
 	}
-	state := process.Process.Status.String()
+	state := models.ProcessStatus(process.Process.Status).String()
 	// entityHeight := store.Entities.ProcessHeights[util.HexToString(process.Process.EntityId)]
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", strings.ToLower(state))),
@@ -123,8 +124,8 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						Link("/process/"+util.HexToString(process.Process.ProcessId),
-							util.HexToString(process.Process.ProcessId),
+						Link("/process/"+util.HexToString(process.Process.ID),
+							util.HexToString(process.Process.ID),
 							"hash",
 						),
 					),
@@ -143,8 +144,8 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 						// ),
 						vecty.Text("Belongs to entity "),
 						Link(
-							"/entity/"+util.HexToString(process.Process.EntityId),
-							util.HexToString(process.Process.EntityId),
+							"/entity/"+util.HexToString(process.Process.EntityID),
+							util.HexToString(process.Process.EntityID),
 							"hash",
 						),
 					),

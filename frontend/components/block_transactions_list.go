@@ -11,6 +11,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
@@ -22,7 +23,7 @@ type BlockTransactionsListView struct {
 
 // Render renders the BlockTransactionsListView component
 func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
-	numTxs := int(store.Blocks.CurrentBlock.NumTxs)
+	numTxs := len(store.Blocks.CurrentBlock.Txs)
 	if numTxs == 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),
@@ -75,9 +76,9 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlockTx(tx *models.TxPackage) vecty.ComponentOrHTML {
+func renderBlockTx(tx *types.TxPackage) vecty.ComponentOrHTML {
 	var rawTx models.Tx
-	err := proto.Unmarshal(tx.Tx.Tx, &rawTx)
+	err := proto.Unmarshal(tx.Tx, &rawTx)
 	if err != nil {
 		logger.Error(err)
 	}

@@ -1,14 +1,12 @@
 package storeutil
 
-import (
-	"go.vocdoni.io/proto/build/go/models"
-)
+import "go.vocdoni.io/dvote/types"
 
 // Envelopes stores the current envelopes information
 type Envelopes struct {
 	Count                    int
-	CurrentEnvelope          *models.EnvelopePackage
+	CurrentEnvelope          *types.EnvelopePackage
 	CurrentEnvelopeNullifier []byte
-	Envelopes                []*models.EnvelopePackage
+	Envelopes                []*types.EnvelopePackage
 	Pagination               PageStore
 }

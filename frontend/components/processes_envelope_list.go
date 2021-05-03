@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/proto/build/go/models"
+	"go.vocdoni.io/dvote/types"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -61,14 +61,14 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelope(envelope *models.EnvelopePackage) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *types.EnvelopePackage) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
 				vecty.Markup(vecty.Class("card-header")),
 				Link(
-					"/envelope/"+util.IntToString(envelope.Envelope.Nullifier),
-					util.HexToString(envelope.Envelope.Nullifier),
+					"/envelope/"+util.HexToString(envelope.Nullifier),
+					util.HexToString(envelope.Nullifier),
 					"",
 				),
 			),
