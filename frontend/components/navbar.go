@@ -79,16 +79,6 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						vecty.Markup(
 							vecty.Class("nav-item"),
 							vecty.MarkupIf(
-								active == "transactions",
-								vecty.Class("nav-item", "active"),
-							),
-						),
-						NavLink("/transactions", "Transactions"),
-					),
-					elem.ListItem(
-						vecty.Markup(
-							vecty.Class("nav-item"),
-							vecty.MarkupIf(
 								active == "entities",
 								vecty.Class("nav-item", "active"),
 							),
