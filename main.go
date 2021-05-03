@@ -27,9 +27,9 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
+	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "number of seconds between each content refresh")
 	cfg.Global.Environment = *flag.String("environment", "", "vochain environment, ie. \"dev\", \"stg\", \"\"")
-	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "http://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
+	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "http://0.0.0.0:9090/dvote", "vocdoni node URL to query for data")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")

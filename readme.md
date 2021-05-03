@@ -52,25 +52,11 @@ go run main.go
 Then in your favorite web browser navigate to localhost at the specified port.
 
 Options for `main.go`:
-- `--chain` `(string)`               vochain network to connect to (eg. main, dev (default "main")
 - `--dataDir` `(string)`             directory where data is stored (default "/Users/natewilliams/.vocexplorer")
+- `--refreshTime` `(int)`            number of seconds between each content refresh (default 10)
+- `--environment` `(string)`         vochain environment, ie. \"dev\", \"stg\", \"\""
+- `--gatewayUrl` `(string)`          vocdoni node URL to query for data
 - `--disableGzip`                    use to disable gzip compression on web server
 - `--hostURL` `(string)`             url to host block explorer (default "http://localhost:8081")
 - `--logLevel` `(string)`            log level <debug, info, warn, error> (default "error")
-- `--refreshTime` `(int)`            Number of seconds between each content refresh (default 10)
-- `--vochainCreateGenesis`           create own/testing genesis file on vochain
-- `--vochainGenesis` `(string)`      use alternative genesis file for the voting chain
-- `--vochainLogLevel` `(string)`     voting chain node log level (default "error")
-- `--vochainNodeKey` `(string)`      user alternative vochain private key (hexstring[64])
-- `--vochainP2PListen` `(string)`    p2p host and port to listent for the voting chain (default "0.0.0.0:26656")
-- `--vochainPeers` `(stringArray)`   comma separated list of p2p peers
-- `--vochainSeeds` `(stringArray)`   comma separated list of p2p seed nodes
-#### Note: when updating to a new version of this program, you may need to refresh your data store:
-~~~
-rm -rf DBPATH
-~~~ 
-Where DBPATH by default is 
-`~/.vocexplorer/CHAIN_ID`
-and CHAIN_ID is the ID of the blockchain you're exploring, eg. `vocdoni-release-06`
-
 ----
