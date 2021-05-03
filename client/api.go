@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	tmtypes "github.com/tendermint/tendermint/types"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
-	"google.golang.org/protobuf/proto"
 )
 
 func (c *Client) GetGatewayInfo() error {
@@ -28,7 +28,7 @@ func (c *Client) GetGatewayInfo() error {
 	return nil
 }
 
-func (c *Client) GetStats() (*models.VochainStats, error) {
+func (c *Client) GetStats() (*types.VochainStats, error) {
 	var req types.MetaRequest
 	req.Method = "getStats"
 	resp, err := c.Request(req)
@@ -38,11 +38,7 @@ func (c *Client) GetStats() (*models.VochainStats, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf(resp.Message)
 	}
-	stats := new(models.VochainStats)
-	if err := proto.Unmarshal(resp.Content, stats); err != nil {
-		return nil, err
-	}
-	return stats, nil
+	return resp.Stats, nil
 }
 
 func (c *Client) GetEnvelopeHeight(pid []byte) (uint32, error) {
@@ -95,7 +91,7 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	return resp.ProcessList, 0, nil
 }
 
-func (c *Client) GetProcess(pid []byte) (*models.Process, uint32, int64, bool, error) {
+func (c *Client) GetProcess(pid []byte) (*types.Process, uint32, int64, bool, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessInfo"
 	req.ProcessID = pid
@@ -106,11 +102,7 @@ func (c *Client) GetProcess(pid []byte) (*models.Process, uint32, int64, bool, e
 	if !resp.Ok {
 		return nil, 0, 0, false, fmt.Errorf(resp.Message)
 	}
-	process := new(models.Process)
-	if err := proto.Unmarshal(resp.Content, process); err != nil {
-		return nil, 0, 0, false, err
-	}
-	return process, *resp.Height, resp.CreationTime, *resp.Final, nil
+	return resp.Process, *resp.Height, resp.CreationTime, *resp.Final, nil
 }
 
 func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
@@ -185,14 +177,10 @@ func (c *Client) GetValidatorList() ([]*models.Validator, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get validator list: (%s)", resp.Message)
 	}
-	list := new(models.ValidatorList)
-	if err := proto.Unmarshal(resp.ValidatorList, list); err != nil {
-		return nil, err
-	}
-	return list.Validators, nil
+	return resp.ValidatorList, nil
 }
 
-func (c *Client) GetEnvelope(nullifier []byte) (*models.EnvelopePackage, error) {
+func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelope"
 	req.Nullifier = nullifier
@@ -203,14 +191,10 @@ func (c *Client) GetEnvelope(nullifier []byte) (*models.EnvelopePackage, error) 
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get envelope: (%s)", resp.Message)
 	}
-	envelope := new(models.EnvelopePackage)
-	if err := proto.Unmarshal(resp.Content, envelope); err != nil {
-		return nil, err
-	}
-	return envelope, nil
+	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*models.EnvelopePackage, error) {
+func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopePackage, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
@@ -223,14 +207,10 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*models.EnvelopePa
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get envelope list: (%s)", resp.Message)
 	}
-	list := new(models.EnvelopePackageList)
-	if err := proto.Unmarshal(resp.Content, list); err != nil {
-		return nil, err
-	}
-	return list.Envelopes, nil
+	return resp.Envelopes, nil
 }
 
-func (c *Client) GetBlock(height uint32) (*models.BlockHeader, error) {
+func (c *Client) GetBlock(height uint32) (*tmtypes.Block, error) {
 	var req types.MetaRequest
 	req.Method = "getBlock"
 	req.BlockHeight = height
@@ -241,14 +221,10 @@ func (c *Client) GetBlock(height uint32) (*models.BlockHeader, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	block := new(models.BlockHeader)
-	if err := proto.Unmarshal(resp.Content, block); err != nil {
-		return nil, err
-	}
-	return block, nil
+	return resp.Block, nil
 }
 
-func (c *Client) GetBlockByHash(hash []byte) (*models.BlockHeader, error) {
+func (c *Client) GetBlockByHash(hash []byte) (*tmtypes.Block, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockByHash"
 	req.Payload = hash
@@ -259,14 +235,10 @@ func (c *Client) GetBlockByHash(hash []byte) (*models.BlockHeader, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	block := new(models.BlockHeader)
-	if err := proto.Unmarshal(resp.Content, block); err != nil {
-		return nil, err
-	}
-	return block, nil
+	return resp.Block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) ([]*models.BlockHeader, error) {
+func (c *Client) GetBlockList(from, listSize int) ([]*tmtypes.Block, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from
@@ -278,14 +250,10 @@ func (c *Client) GetBlockList(from, listSize int) ([]*models.BlockHeader, error)
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
-	list := new(models.BlockHeaderList)
-	if err := proto.Unmarshal(resp.Content, list); err != nil {
-		return nil, err
-	}
-	return list.BlockHeaders, nil
+	return resp.BlockList, nil
 }
 
-func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.TxPackage, error) {
+func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, error) {
 	var req types.MetaRequest
 	req.Method = "getTx"
 	req.BlockHeight = blockHeight
@@ -297,14 +265,10 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*models.TxPackage, er
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx: (%s)", resp.Message)
 	}
-	tx := new(models.TxPackage)
-	if err := proto.Unmarshal(resp.Content, tx); err != nil {
-		return nil, err
-	}
-	return tx, nil
+	return resp.Tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*models.TxPackage, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*types.TxPackage, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.BlockHeight = blockHeight
@@ -317,9 +281,5 @@ func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*m
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx list for block %d: (%s)", blockHeight, resp.Message)
 	}
-	txList := new(models.TxPackageList)
-	if err := proto.Unmarshal(resp.Content, txList); err != nil {
-		return nil, err
-	}
-	return txList.TxList, nil
+	return resp.TxList, nil
 }
