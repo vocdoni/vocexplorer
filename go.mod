@@ -10,6 +10,6 @@ require (
 	github.com/tendermint/tendermint v0.34.10
 	go.vocdoni.io/dvote v0.6.1-0.20210503201330-54b8ace08106
 	go.vocdoni.io/proto v1.0.3-0.20210427102429-33cf17b307f0
-	google.golang.org/protobuf v1.25.0
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
+	nhooyr.io/websocket v1.8.6
 )

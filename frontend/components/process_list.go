@@ -151,9 +151,12 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("envelopes")),
-						vecty.Text(
+						vecty.If(process.EnvelopeCount == 1, vecty.Text(
+							fmt.Sprintf("%d envelope", process.EnvelopeCount),
+						)),
+						vecty.If(process.EnvelopeCount != 1, vecty.Text(
 							fmt.Sprintf("%d envelopes", process.EnvelopeCount),
-						),
+						)),
 					),
 				),
 			),
