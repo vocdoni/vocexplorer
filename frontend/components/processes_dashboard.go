@@ -152,24 +152,24 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	reverseIDList(list)
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
 	for _, processId := range store.Processes.ProcessIds {
-		go func(pid string) {
-			process, err := store.Client.GetProcess(util.StringToHex(pid))
-			if err != nil {
-				logger.Error(err)
-			}
-			envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(pid))
-			if err != nil {
-				logger.Error(err)
-			}
-			if process != nil {
-				dispatcher.Dispatch(&actions.SetProcess{
-					PID: string(pid),
-					Process: &storeutil.Process{
-						EnvelopeCount: int(envelopeHeight),
-						Process:       process,
-					},
-				})
-			}
-		}(processId)
+		// go func(pid string) {
+		process, err := store.Client.GetProcess(util.StringToHex(processId))
+		if err != nil {
+			logger.Error(err)
+		}
+		envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(processId))
+		if err != nil {
+			logger.Error(err)
+		}
+		if process != nil {
+			dispatcher.Dispatch(&actions.SetProcess{
+				PID: processId,
+				Process: &storeutil.Process{
+					EnvelopeCount: int(envelopeHeight),
+					Process:       process,
+				},
+			})
+		}
+		// }(processId)
 	}
 }
