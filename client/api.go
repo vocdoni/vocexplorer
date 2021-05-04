@@ -193,7 +193,7 @@ func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
 	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopePackage, error) {
+func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopeMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
@@ -267,7 +267,7 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, err
 	return resp.Tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*types.TxPackage, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*types.TxMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.BlockHeight = blockHeight

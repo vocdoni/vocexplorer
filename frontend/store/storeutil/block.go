@@ -10,7 +10,7 @@ type Blocks struct {
 	Count                 int
 	CurrentBlock          *types.BlockMetadata
 	CurrentBlockHeight    uint32
-	CurrentTxs            []*types.TxPackage
+	CurrentTxs            []*types.TxMetadata
 	TransactionPagination PageStore
 	Pagination            PageStore
 }

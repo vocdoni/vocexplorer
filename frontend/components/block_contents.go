@@ -77,7 +77,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 func UpdateBlockContents(d *BlockContents) {
 	// Set block to nil so previous block is not displayed
 	dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{
-		TransactionList: []*types.TxPackage{},
+		TransactionList: []*types.TxMetadata{},
 	})
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})

@@ -144,6 +144,9 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 		dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: envelope})
 	}
 	// Ensure process & results are stored
+	if store.Envelopes.CurrentEnvelope == nil {
+		return
+	}
 	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)]; !ok {
 		process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.ProcessId)
 		if err != nil {
@@ -153,7 +156,7 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 			dispatcher.Dispatch(&actions.SetProcess{
 				PID: util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId),
 				Process: &storeutil.Process{
-					Envelopes:     []*dvotetypes.EnvelopePackage{},
+					Envelopes:     []*dvotetypes.EnvelopeMetadata{},
 					EnvelopeCount: 0,
 					Process:       process,
 				},
@@ -201,7 +204,7 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			elem.DefinitionTerm(vecty.Text("Packaged in transaction")),
 			elem.Description(Link(
 				"/transaction/"+util.IntToString(store.Envelopes.CurrentEnvelope.Height)+"/"+util.IntToString(store.Envelopes.CurrentEnvelope.TxIndex),
-				util.IntToString(store.Envelopes.CurrentEnvelope.TxIndex)+" on block "+util.IntToString(store.Envelopes.CurrentEnvelope.Height),
+				util.IntToString(store.Envelopes.CurrentEnvelope.TxIndex+1)+" on block "+util.IntToString(store.Envelopes.CurrentEnvelope.Height),
 				"hash",
 			)),
 			// elem.DefinitionTerm(vecty.Text("Position in process")),

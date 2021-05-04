@@ -14,7 +14,7 @@ type EnvelopesIndexChange struct {
 
 // SetEnvelopeList is the action to set the envelope list
 type SetEnvelopeList struct {
-	EnvelopeList []*types.EnvelopePackage
+	EnvelopeList []*types.EnvelopeMetadata
 }
 
 // SetEnvelopeCount is the action to set the Envelope count

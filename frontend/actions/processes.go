@@ -64,5 +64,5 @@ type SetCurrentProcessEnvelopeCount struct {
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList []*types.EnvelopePackage
+	EnvelopeList []*types.EnvelopeMetadata
 }
