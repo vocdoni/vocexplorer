@@ -1,7 +1,6 @@
 package actions
 
 import (
-	tmtypes "github.com/tendermint/tendermint/types"
 	"go.vocdoni.io/dvote/types"
 )
 
@@ -22,7 +21,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList []*tmtypes.Block
+	BlockList []*types.BlockMetadata
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -32,7 +31,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *tmtypes.Block
+	Block *types.BlockMetadata
 }
 
 // SetCurrentBlockHeight is the action to set the current block height

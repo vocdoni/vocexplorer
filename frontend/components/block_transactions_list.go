@@ -23,7 +23,7 @@ type BlockTransactionsListView struct {
 
 // Render renders the BlockTransactionsListView component
 func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
-	numTxs := len(store.Blocks.CurrentBlock.Txs)
+	numTxs := int(store.Blocks.CurrentBlock.NumTxs)
 	if numTxs == 0 {
 		return elem.Preformatted(
 			vecty.Markup(vecty.Class("empty")),

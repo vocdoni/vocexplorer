@@ -3,7 +3,6 @@ package storeutil
 import (
 	"time"
 
-	tmtypes "github.com/tendermint/tendermint/types"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
@@ -12,7 +11,7 @@ import (
 type Transactions struct {
 	CurrentTransaction        *types.TxPackage
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *tmtypes.Block
+	CurrentBlock              *types.BlockMetadata
 	Pagination                PageStore
 	Transactions              []*types.TxPackage
 }
