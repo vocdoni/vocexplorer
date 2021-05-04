@@ -193,12 +193,12 @@ func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
 	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopeMetadata, error) {
+func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*types.EnvelopeMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
 	req.ListSize = listSize
-	// TODO use from
+	req.From = from
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err

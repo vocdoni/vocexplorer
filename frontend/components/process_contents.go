@@ -383,7 +383,7 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 				}
 			}
 			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
-				updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
+				updateProcessEnvelopes(d, store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index-config.ListSize)
 			}
 		}
 	}
@@ -393,15 +393,19 @@ func updateProcessContents(d *ProcessContentsView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	update.CurrentProcessResults()
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
-		updateProcessEnvelopes(d, util.Max(store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index, 1))
+		updateProcessEnvelopes(d, store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index-config.ListSize)
 	}
 }
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {
-	logger.Info(fmt.Sprintf("Getting envelopes from index %d\n", index))
-	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ID, config.ListSize)
+	listSize := config.ListSize
+	if index < 0 {
+		listSize += index
+		index = 0
+	}
+	logger.Info(fmt.Sprintf("Getting %d envelopes from index %d\n", listSize, index))
+	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ID, index, config.ListSize)
 	if err == nil {
-		// TODO reverseEnvelopeList(list)
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})
 	} else {
 		logger.Error(err)
