@@ -61,7 +61,7 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelope(envelope *types.EnvelopePackage) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *types.EnvelopeMetadata) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(

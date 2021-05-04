@@ -18,7 +18,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	"go.vocdoni.io/dvote/types"
+	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/proto/build/go/models"
 	"google.golang.org/protobuf/proto"
 )
@@ -156,7 +156,7 @@ func TransactionView() vecty.List {
 					},
 				),
 				vecty.If(
-					store.Transactions.CurrentDecodedTransaction.Nullifier != "" && util.GetTransactionType(store.Transactions.CurrentDecodedTransaction.RawTx) == types.TxVote,
+					store.Transactions.CurrentDecodedTransaction.Nullifier != "",
 					elem.DefinitionTerm(
 						vecty.Text("Contains vote envelope"),
 					),
@@ -259,19 +259,30 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	switch rawTx.Payload.(type) {
 	case *models.Tx_Vote:
 		typedTx := rawTx.GetVote()
-		// typedTx.Nullifier = tx.Nullifier
-
 		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
 		}
 		txContents = string(txBytes)
 		processID = hex.EncodeToString(typedTx.GetProcessId())
-		nullifier = util.HexToString(typedTx.Nullifier)
 		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
 		txContents = convertB64ToHex(txContents, "processId", processID)
 		txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(typedTx.GetProof().GetGraviton().Siblings))
 		txContents = convertB64ToHex(txContents, "votePackage", hex.EncodeToString(typedTx.VotePackage))
+
+		pubKey, err := ethereum.PubKeyFromSignature(tx.Tx, tx.Signature)
+		if err != nil {
+			logger.Error(fmt.Errorf("cannot extract public key from signature: (%w)", err))
+			break
+		}
+		addr, err := ethereum.AddrFromPublicKey(pubKey)
+		if err != nil {
+			logger.Error(fmt.Errorf("cannot extract address from public key: (%w)", err))
+			break
+		}
+
+		// assign a nullifier
+		nullifier = util.HexToString(ethereum.HashRaw([]byte(fmt.Sprintf("%s%s", addr.Bytes(), typedTx.GetProcessId()))))
 		txContents = convertB64ToHex(txContents, "nullifier", nullifier)
 	case *models.Tx_NewProcess:
 		typedTx := rawTx.GetNewProcess()
@@ -331,6 +342,7 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	entityID = util.TrimHex(entityID)
 	processID = util.TrimHex(processID)
 	nullifier = util.TrimHex(nullifier)
+	logger.Info(fmt.Sprintf("Nullifier %s pid %s", nullifier, processID))
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{
 			RawTxContents: txContents,

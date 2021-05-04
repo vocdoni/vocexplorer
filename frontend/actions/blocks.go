@@ -41,5 +41,5 @@ type SetCurrentBlockHeight struct {
 
 // SetCurrentBlockTransactionList is the action to set the current list of transactions
 type SetCurrentBlockTransactionList struct {
-	TransactionList []*types.TxPackage
+	TransactionList []*types.TxMetadata
 }

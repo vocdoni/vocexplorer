@@ -13,7 +13,7 @@ type Transactions struct {
 	CurrentDecodedTransaction *DecodedTransaction
 	CurrentBlock              *types.BlockMetadata
 	Pagination                PageStore
-	Transactions              []*types.TxPackage
+	Transactions              []*types.TxMetadata
 }
 
 // DecodedTransaction stores human-readable decoded transaction data

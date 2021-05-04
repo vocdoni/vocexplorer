@@ -9,11 +9,8 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
-	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/types"
-	"go.vocdoni.io/proto/build/go/models"
-	"google.golang.org/protobuf/proto"
 )
 
 // BlockTransactionsListView renders the transaction pagination for a block
@@ -76,15 +73,9 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlockTx(tx *types.TxPackage) vecty.ComponentOrHTML {
-	var rawTx models.Tx
-	err := proto.Unmarshal(tx.Tx, &rawTx)
-	if err != nil {
-		logger.Error(err)
-	}
-	txType := util.GetTransactionType(&rawTx)
+func renderBlockTx(tx *types.TxMetadata) vecty.ComponentOrHTML {
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", txType)),
+		vecty.Markup(vecty.Class("tile", tx.Type)),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -95,7 +86,7 @@ func renderBlockTx(tx *types.TxPackage) vecty.ComponentOrHTML {
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetTransactionName(txType)),
+						vecty.Text(util.GetTransactionName(tx.Type)),
 					),
 				),
 			),

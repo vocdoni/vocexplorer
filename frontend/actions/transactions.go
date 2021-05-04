@@ -17,7 +17,7 @@ type TransactionsIndexChange struct {
 
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
-	TransactionList []*types.TxPackage
+	TransactionList []*types.TxMetadata
 }
 
 // SetCurrentTransaction is the action to set the current transaction
