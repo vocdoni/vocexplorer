@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	tmtypes "github.com/tendermint/tendermint/types"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
@@ -210,7 +209,7 @@ func (c *Client) GetEnvelopeList(pid []byte, listSize int) ([]*types.EnvelopePac
 	return resp.Envelopes, nil
 }
 
-func (c *Client) GetBlock(height uint32) (*tmtypes.Block, error) {
+func (c *Client) GetBlock(height uint32) (*types.BlockMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getBlock"
 	req.BlockHeight = height
@@ -224,7 +223,7 @@ func (c *Client) GetBlock(height uint32) (*tmtypes.Block, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockByHash(hash []byte) (*tmtypes.Block, error) {
+func (c *Client) GetBlockByHash(hash []byte) (*types.BlockMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockByHash"
 	req.Payload = hash
@@ -238,7 +237,7 @@ func (c *Client) GetBlockByHash(hash []byte) (*tmtypes.Block, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) ([]*tmtypes.Block, error) {
+func (c *Client) GetBlockList(from, listSize int) ([]*types.BlockMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from

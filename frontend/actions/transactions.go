@@ -1,7 +1,6 @@
 package actions
 
 import (
-	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
 	"go.vocdoni.io/dvote/types"
 )
@@ -28,7 +27,7 @@ type SetCurrentTransaction struct {
 
 // SetTransactionBlock is the action to set the block associated with the current transaction
 type SetTransactionBlock struct {
-	Block *tmtypes.Block
+	Block *types.BlockMetadata
 }
 
 // SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction

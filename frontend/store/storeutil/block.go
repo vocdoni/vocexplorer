@@ -1,15 +1,14 @@
 package storeutil
 
 import (
-	tmtypes "github.com/tendermint/tendermint/types"
 	"go.vocdoni.io/dvote/types"
 )
 
 // Blocks stores all data abotu blockchain blocks
 type Blocks struct {
-	Blocks                []*tmtypes.Block
+	Blocks                []*types.BlockMetadata
 	Count                 int
-	CurrentBlock          *tmtypes.Block
+	CurrentBlock          *types.BlockMetadata
 	CurrentBlockHeight    uint32
 	CurrentTxs            []*types.TxPackage
 	TransactionPagination PageStore

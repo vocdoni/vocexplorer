@@ -6,14 +6,14 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"go.vocdoni.io/dvote/types"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *tmtypes.Block) vecty.ComponentOrHTML {
+func BlockCard(block *types.BlockMetadata) vecty.ComponentOrHTML {
 	if block == nil {
 		return nil
 	}
@@ -28,10 +28,10 @@ func BlockCard(block *tmtypes.Block) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("block-card-heading")),
 				elem.Span(
 					vecty.Markup(vecty.Class("mr-2")),
-					vecty.Text(humanize.Comma(int64(len(block.Txs)))+" transactions"),
+					vecty.Text(humanize.Comma(int64(block.NumTxs))+" transactions"),
 				),
 				elem.Span(
-					vecty.Text(humanize.Time(block.Time)),
+					vecty.Text(humanize.Time(block.Timestamp)),
 				),
 			),
 			elem.DescriptionList(
@@ -40,10 +40,10 @@ func BlockCard(block *tmtypes.Block) vecty.ComponentOrHTML {
 				),
 				elem.Description(
 					vecty.Markup(
-						vecty.Attribute("title", hex.EncodeToString(block.Hash())),
+						vecty.Attribute("title", hex.EncodeToString(block.Hash)),
 						vecty.Markup(vecty.Class("text-truncate")),
 					),
-					vecty.Text(hex.EncodeToString(block.Hash())),
+					vecty.Text(hex.EncodeToString(block.Hash)),
 				),
 				elem.DefinitionTerm(
 					vecty.Text("Proposer Address"),

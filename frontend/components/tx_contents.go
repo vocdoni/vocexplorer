@@ -335,7 +335,7 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 		Transaction: &storeutil.DecodedTransaction{
 			RawTxContents: txContents,
 			RawTx:         &rawTx,
-			Time:          store.Transactions.CurrentBlock.Time,
+			Time:          store.Transactions.CurrentBlock.Timestamp,
 			ProcessID:     processID,
 			EntityID:      entityID,
 			Nullifier:     nullifier,

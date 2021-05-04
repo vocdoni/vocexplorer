@@ -9,7 +9,6 @@ import (
 	"github.com/hexops/vecty/elem"
 	"go.vocdoni.io/dvote/types"
 
-	tmtypes "github.com/tendermint/tendermint/types"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
@@ -98,7 +97,7 @@ func UpdateBlockContents(d *BlockContents) {
 	if !update.CheckCurrentPage("block", ticker) {
 		return
 	}
-	updateBlockTransactions(len(store.Blocks.CurrentBlock.Txs) - store.Blocks.TransactionPagination.Index - config.ListSize)
+	updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
 	for {
 		select {
 		case <-store.RedirectChan:
@@ -119,7 +118,7 @@ func UpdateBlockContents(d *BlockContents) {
 				return
 			}
 			dispatcher.Dispatch(&actions.BlockTransactionsIndexChange{Index: i})
-			updateBlockTransactions(len(store.Blocks.CurrentBlock.Txs) - store.Blocks.TransactionPagination.Index - config.ListSize)
+			updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
 			// update the current page of txs
 		}
 	}
@@ -155,13 +154,13 @@ func BlockView() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("details")),
 			elem.Span(
-				vecty.If(len(store.Blocks.CurrentBlock.Txs) == 1,
-					vecty.Text(fmt.Sprintf("%d transaction", len(store.Blocks.CurrentBlock.Txs)))),
-				vecty.If(len(store.Blocks.CurrentBlock.Txs) != 1,
-					vecty.Text(fmt.Sprintf("%d transactions", len(store.Blocks.CurrentBlock.Txs)))),
+				vecty.If(int(store.Blocks.CurrentBlock.NumTxs) == 1,
+					vecty.Text(fmt.Sprintf("%d transaction", int(store.Blocks.CurrentBlock.NumTxs)))),
+				vecty.If(int(store.Blocks.CurrentBlock.NumTxs) != 1,
+					vecty.Text(fmt.Sprintf("%d transactions", int(store.Blocks.CurrentBlock.NumTxs)))),
 			),
 			elem.Span(vecty.Text(
-				humanize.Time(store.Blocks.CurrentBlock.Time),
+				humanize.Time(store.Blocks.CurrentBlock.Timestamp),
 			)),
 		),
 		elem.HorizontalRule(),
@@ -170,7 +169,7 @@ func BlockView() vecty.List {
 				vecty.Text("Hash"),
 			),
 			elem.Description(
-				vecty.Text(util.HexToString(store.Blocks.CurrentBlock.Hash())),
+				vecty.Text(util.HexToString(store.Blocks.CurrentBlock.Hash)),
 			),
 			elem.DefinitionTerm(
 				vecty.Text("Parent hash"),
@@ -178,7 +177,7 @@ func BlockView() vecty.List {
 			elem.Description(
 				Link(
 					fmt.Sprintf("/block/%d", store.Blocks.CurrentBlock.Height-1),
-					util.HexToString(store.Blocks.CurrentBlock.LastBlockID.Hash),
+					util.HexToString(store.Blocks.CurrentBlock.LastBlockHash),
 					"",
 				),
 			),
@@ -196,13 +195,13 @@ func BlockView() vecty.List {
 				vecty.Text("Total transactions"),
 			),
 			elem.Description(
-				vecty.Text(fmt.Sprintf("%d", len(store.Blocks.CurrentBlock.Txs))),
+				vecty.Text(fmt.Sprintf("%d", int(store.Blocks.CurrentBlock.NumTxs))),
 			),
 			elem.DefinitionTerm(
 				vecty.Text("Time"),
 			),
 			elem.Description(
-				vecty.Text(store.Blocks.CurrentBlock.Time.UTC().String()),
+				vecty.Text(store.Blocks.CurrentBlock.Timestamp.String()),
 			),
 		),
 	}
@@ -242,6 +241,6 @@ func (c *BlockContents) BlockDetails() vecty.List {
 	}
 }
 
-func preformattedBlockHeader(block *tmtypes.Block) vecty.ComponentOrHTML {
+func preformattedBlockHeader(block *types.BlockMetadata) vecty.ComponentOrHTML {
 	return elem.Preformatted(elem.Code(vecty.Text(block.String())))
 }
