@@ -58,6 +58,9 @@ func (c *Client) Close() error {
 
 // Request makes a request to the previously connected endpoint
 func (c *Client) Request(req types.MetaRequest) (*types.MetaResponse, error) {
+	if c == nil {
+		return nil, fmt.Errorf("unable to make request %s: client not connected", req.Method)
+	}
 	method := req.Method
 	req.Timestamp = int32(time.Now().Unix())
 	reqInner, err := json.Marshal(req)

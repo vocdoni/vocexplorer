@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
+	"strings"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -259,6 +260,10 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	switch rawTx.Payload.(type) {
 	case *models.Tx_Vote:
 		typedTx := rawTx.GetVote()
+		if typedTx == nil {
+			logger.Error(fmt.Errorf("vote transaction empty"))
+			break
+		}
 		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
 		if err != nil {
 			logger.Error(err)
@@ -267,7 +272,25 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 		processID = hex.EncodeToString(typedTx.GetProcessId())
 		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
 		txContents = convertB64ToHex(txContents, "processId", processID)
-		txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(typedTx.GetProof().GetGraviton().Siblings))
+		// TODO decode more proof types
+		if typedTx.GetProof() != nil {
+			switch typedTx.GetProof().Payload.(type) {
+			case *models.Proof_Graviton:
+				txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(
+					typedTx.GetProof().GetGraviton().Siblings))
+			case *models.Proof_EthereumStorage:
+				siblings := []string{}
+				for _, sibling := range typedTx.GetProof().GetEthereumStorage().Siblings {
+					siblings = append(siblings, util.HexToString(sibling))
+				}
+				txContents = convertB64ToHex(txContents, "siblings", strings.Join(siblings, ", "))
+			case *models.Proof_Iden3:
+				txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(
+					typedTx.GetProof().GetIden3().GetSiblings()))
+			default:
+				logger.Info("Other biscuit")
+			}
+		}
 		txContents = convertB64ToHex(txContents, "votePackage", hex.EncodeToString(typedTx.VotePackage))
 
 		pubKey, err := ethereum.PubKeyFromSignature(tx.Tx, tx.Signature)
@@ -342,7 +365,6 @@ func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	entityID = util.TrimHex(entityID)
 	processID = util.TrimHex(processID)
 	nullifier = util.TrimHex(nullifier)
-	logger.Info(fmt.Sprintf("Nullifier %s pid %s", nullifier, processID))
 	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
 		Transaction: &storeutil.DecodedTransaction{
 			RawTxContents: txContents,
