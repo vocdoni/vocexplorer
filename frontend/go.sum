@@ -1560,6 +1560,8 @@ go.vocdoni.io/dvote v0.6.1-0.20210505020653-035c45244f8a h1:4bfedJ3a3YxM9sfzyMyU
 go.vocdoni.io/dvote v0.6.1-0.20210505020653-035c45244f8a/go.mod h1:ICKviuNuC20gBNqaR4+nDCkImLdObKj2axPLQhjvjg4=
 go.vocdoni.io/dvote v0.6.1-0.20210505130556-4ec05091404f h1:/zhkNBkulovFDdOEXuTcKFdspjUamr4hSzt+eY3Q5Ow=
 go.vocdoni.io/dvote v0.6.1-0.20210505130556-4ec05091404f/go.mod h1:ICKviuNuC20gBNqaR4+nDCkImLdObKj2axPLQhjvjg4=
+go.vocdoni.io/dvote v0.6.1-0.20210505135401-fbe7f3b2dd0e h1:rCzJJ/RcJxEQY4VWP1ttMmQ+veXAP4/8g4C5TKKDz0Q=
+go.vocdoni.io/dvote v0.6.1-0.20210505135401-fbe7f3b2dd0e/go.mod h1:ICKviuNuC20gBNqaR4+nDCkImLdObKj2axPLQhjvjg4=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.9-0.20210304214308-6f7363b52750/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
