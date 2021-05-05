@@ -3,7 +3,6 @@ package components
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"strings"
 
 	"github.com/hexops/vecty"
@@ -54,12 +53,12 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	var decryptionStatus string
 	displayPackage := false
 	var votePackage *dvotetypes.VotePackage
-	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)]
+	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	if process == nil {
 		return Unavailable("Loading envelope...", "")
 	}
 	pkeys := process.Process.PrivateKeys
-	results := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)]
+	results := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	keys := []string{}
 	// If package is encrypted
 	if !strings.Contains(strings.ToLower(results.Type), "encrypted") {
@@ -147,14 +146,14 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 	if store.Envelopes.CurrentEnvelope == nil {
 		return
 	}
-	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)]; !ok {
-		process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.ProcessId)
+	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
+		process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
 		if err != nil {
 			logger.Error(err)
 		}
 		if process != nil {
 			dispatcher.Dispatch(&actions.SetProcess{
-				PID: util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId),
+				PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
 				Process: &storeutil.Process{
 					Envelopes:     []*dvotetypes.EnvelopeMetadata{},
 					EnvelopeCount: 0,
@@ -162,7 +161,7 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 				},
 			})
 		}
-		results, state, tp, final, err := store.Client.GetResults(store.Envelopes.CurrentEnvelope.ProcessId)
+		results, state, tp, final, err := store.Client.GetResults(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
 		if err != nil {
 			logger.Error(err)
 		}
@@ -174,7 +173,7 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 					Type:    tp,
 					Final:   final,
 				},
-				PID: util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId),
+				PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
 			})
 		}
 	}
@@ -197,14 +196,14 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 		elem.DescriptionList(
 			elem.DefinitionTerm(vecty.Text("Belongs to process")),
 			elem.Description(Link(
-				"/process/"+util.TrimHex(util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)),
-				util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId),
+				"/process/"+util.TrimHex(util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)),
+				util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
 				"hash",
 			)),
 			elem.DefinitionTerm(vecty.Text("Packaged in transaction")),
 			elem.Description(Link(
-				"/transaction/"+util.IntToString(store.Envelopes.CurrentEnvelope.Height)+"/"+util.IntToString(store.Envelopes.CurrentEnvelope.TxIndex),
-				util.IntToString(store.Envelopes.CurrentEnvelope.TxIndex+1)+" on block "+util.IntToString(store.Envelopes.CurrentEnvelope.Height),
+				"/transaction/"+util.IntToString(store.Envelopes.CurrentEnvelope.Meta.Height)+"/"+util.IntToString(store.Envelopes.CurrentEnvelope.Meta.TxIndex),
+				util.IntToString(store.Envelopes.CurrentEnvelope.Meta.TxIndex+1)+" on block "+util.IntToString(store.Envelopes.CurrentEnvelope.Meta.Height),
 				"hash",
 			)),
 			// elem.DefinitionTerm(vecty.Text("Position in process")),
@@ -213,17 +212,17 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			// )),
 			elem.DefinitionTerm(vecty.Text("Nullifier")),
 			elem.Description(vecty.Text(
-				util.HexToString(store.Envelopes.CurrentEnvelope.Nullifier),
+				util.HexToString(store.Envelopes.CurrentEnvelope.Meta.Nullifier),
 			)),
 			elem.DefinitionTerm(vecty.Text("Vote type")),
 			elem.Description(vecty.Text(
-				util.GetEnvelopeName(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)].Type),
+				util.GetEnvelopeName(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)].Type),
 			)),
 
-			vecty.If(len(store.Envelopes.CurrentEnvelope.Weight) > 0, elem.DefinitionTerm(vecty.Text("Envelope weight"))),
-			vecty.If(len(store.Envelopes.CurrentEnvelope.Weight) > 0, elem.Description(vecty.Text(new(big.Int).SetBytes(store.Envelopes.CurrentEnvelope.Weight).String()))),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight != nil, elem.DefinitionTerm(vecty.Text("Envelope weight"))),
+			vecty.If(store.Envelopes.CurrentEnvelope.Weight != nil, elem.Description(vecty.Text(store.Envelopes.CurrentEnvelope.Weight.String()))),
 			elem.DefinitionTerm(vecty.Text("Process status")),
-			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)].State))),
+			elem.Description(vecty.Text(strings.Title(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)].State))),
 			elem.DefinitionTerm(vecty.Text("Decryption status")),
 			elem.Description(vecty.Text(
 				c.DecryptionStatus,
@@ -251,7 +250,7 @@ func (c *EnvelopeContents) EnvelopeDetails() vecty.ComponentOrHTML {
 		return nil
 	}
 
-	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.ProcessId)]
+	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	if process == nil {
 		return nil
 	}

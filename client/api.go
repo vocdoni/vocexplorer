@@ -190,6 +190,7 @@ func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get envelope: (%s)", resp.Message)
 	}
+	resp.Envelope.Meta.Nullifier = nullifier
 	return resp.Envelope, nil
 }
 
@@ -212,7 +213,7 @@ func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*types.Envel
 func (c *Client) GetBlock(height uint32) (*types.BlockMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getBlock"
-	req.BlockHeight = height
+	req.Height = height
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
@@ -255,7 +256,7 @@ func (c *Client) GetBlockList(from, listSize int) ([]*types.BlockMetadata, error
 func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, error) {
 	var req types.MetaRequest
 	req.Method = "getTx"
-	req.BlockHeight = blockHeight
+	req.Height = blockHeight
 	req.TxIndex = txIndex
 	resp, err := c.Request(req)
 	if err != nil {
@@ -270,7 +271,7 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, err
 func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*types.TxMetadata, error) {
 	var req types.MetaRequest
 	req.Method = "getTxListForBlock"
-	req.BlockHeight = blockHeight
+	req.Height = blockHeight
 	req.From = from
 	req.ListSize = listSize
 	resp, err := c.Request(req)

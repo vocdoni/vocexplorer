@@ -35,7 +35,7 @@ func (b *Jumbotron) Render() vecty.ComponentOrHTML {
 	colMarkup := vecty.Markup(vecty.Class("col-xs-12", "col-sm-4", "mb-2", "mb-sm-0"))
 	var items vecty.List
 
-	if store.Stats.BlockTime != nil && store.Stats.BlockTime[0] > 0 {
+	if store.Stats.BlockTime[0] > 0 {
 		items = append(items, elem.Div(
 			colMarkup,
 			JumboStatTitle("Average block time"),

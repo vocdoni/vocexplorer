@@ -16,7 +16,7 @@ type AverageBlockTimes struct {
 //Render renders the AverageBlockTimes component
 func (a *AverageBlockTimes) Render() vecty.ComponentOrHTML {
 
-	if store.Stats.BlockTime == nil {
+	if store.Stats == nil {
 		return &bootstrap.Alert{
 			Type:     "warning",
 			Contents: "Waiting for block times",
