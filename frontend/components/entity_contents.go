@@ -152,7 +152,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 			}
 			index := util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1)
 			logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
-			list, _, err := store.Client.GetProcessList(eid, "", 0, "", false, index-1, config.ListSize)
+			list, err := store.Client.GetProcessList(eid, "", 0, "", false, index-1, config.ListSize)
 			if err != nil {
 				logger.Error(err)
 			} else {
@@ -180,7 +180,7 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 			index = 0
 		}
 		logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
-		list, _, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, listSize)
+		list, err := store.Client.GetProcessList(util.StringToHex(store.Entities.CurrentEntityID), "", 0, "", false, index, listSize)
 		if err != nil {
 			logger.Error(err)
 			return

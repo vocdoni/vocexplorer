@@ -96,29 +96,28 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 			if store.Processes.Count > 0 {
 				getProcesses(d, store.Processes.Count-store.Processes.Pagination.Index-config.ListSize)
 			}
-			// TODO search
-			// case search := <-store.Processes.Pagination.SearchChannel:
-			// 	if !update.CheckCurrentPage("processes", ticker) {
-			// 		return
-			// 	}
-			// processSearch:
-			// 	for {
-			// 		// If many indices waiting in buffer, scan to last one.
-			// 		select {
-			// 		case search = <-store.Processes.Pagination.SearchChannel:
-			// 		default:
-			// 			break processSearch
-			// 		}
-			// 	}
-			// 	logger.Info("search: " + search)
-			// 	dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			// 	list, ok := store.Client.GetProcessList(search)
-			// 	if ok {
-			// 		dispatcher.Dispatch(&actions.SetProcessList{Processes: list})
-			// 	} else {
-			// 		dispatcher.Dispatch(&actions.SetProcessList{Processes: [config.ListSize]*dbtypes.Process{}})
-			// 	}
-			// 	update.ProcessResults()
+		case search := <-store.Processes.Pagination.SearchChannel:
+			if !update.CheckCurrentPage("processes", ticker) {
+				return
+			}
+		processSearch:
+			for {
+				// If many indices waiting in buffer, scan to last one.
+				select {
+				case search = <-store.Processes.Pagination.SearchChannel:
+				default:
+					break processSearch
+				}
+			}
+			logger.Info("search: " + search)
+			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
+			list, err := store.Client.GetProcessList([]byte{}, search, 0, "", false, 0, config.ListSize)
+			if err != nil {
+				dispatcher.Dispatch(&actions.SetProcessIds{Processes: []string{}})
+				logger.Error(err)
+			} else {
+				fetchProcesses(list)
+			}
 		}
 	}
 }
@@ -144,15 +143,21 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	}
 	index--
 	logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
-	list, _, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, listSize)
+	list, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, listSize)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
+	fetchProcesses(list)
+}
+
+func fetchProcesses(list []string) {
 	reverseIDList(list)
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
 	for _, processId := range store.Processes.ProcessIds {
-		// go func(pid string) {
+		if processId == "" {
+			break
+		}
 		process, err := store.Client.GetProcess(util.StringToHex(processId))
 		if err != nil {
 			logger.Error(err)
@@ -170,6 +175,6 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 				},
 			})
 		}
-		// }(processId)
 	}
+	update.ProcessResults()
 }

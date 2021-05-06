@@ -116,7 +116,7 @@ func (n *NavBar) Render() vecty.ComponentOrHTML {
 						NavLink("/stats", "Stats"),
 					),
 				),
-				// &SearchBar{},
+				&SearchBar{},
 			),
 		),
 	)
