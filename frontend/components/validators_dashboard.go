@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hexops/vecty"
@@ -12,7 +11,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // ValidatorsDashboardView renders the validators list dashboard
@@ -68,19 +66,16 @@ func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 
 func updateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
-	if !store.Validators.Pagination.DisableUpdate {
-		stats, err := store.Client.GetStats()
-		if err != nil {
-			logger.Error(err)
-			return
-		}
-		actions.UpdateCounts(stats)
-		updateValidators(d, util.Max(store.Validators.Count-store.Validators.Pagination.Index, 1))
+	stats, err := store.Client.GetStats()
+	if err != nil {
+		logger.Error(err)
+		return
 	}
+	actions.UpdateCounts(stats)
+	updateValidators(d)
 }
 
-func updateValidators(d *ValidatorsDashboardView, index int) {
-	logger.Info(fmt.Sprintf("Getting Validators from index %d\n", index))
+func updateValidators(d *ValidatorsDashboardView) {
 	list, err := store.Client.GetValidatorList()
 	if err != nil {
 		logger.Error(err)
