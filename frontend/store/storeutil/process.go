@@ -2,7 +2,7 @@ package storeutil
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/config"
-	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 // Processes stores the current processes information
@@ -18,9 +18,9 @@ type Processes struct {
 
 // Process holds info about one vochain process, including the process and envelope info
 type Process struct {
-	Envelopes     []*types.EnvelopeMetadata
+	Envelopes     []*sctypes.EnvelopeMetadata
 	EnvelopeCount int
-	Process       *types.Process
+	Process       *sctypes.Process
 }
 
 type ProcessResults struct {

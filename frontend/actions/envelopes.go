@@ -1,6 +1,6 @@
 package actions
 
-import "go.vocdoni.io/dvote/types"
+import sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 
 // TransactionTabChange is the action to change between tabs in transaction view details
 type EnvelopesTabChange struct {
@@ -14,7 +14,7 @@ type EnvelopesIndexChange struct {
 
 // SetEnvelopeList is the action to set the envelope list
 type SetEnvelopeList struct {
-	EnvelopeList []*types.EnvelopeMetadata
+	EnvelopeList []*sctypes.EnvelopeMetadata
 }
 
 // SetEnvelopeCount is the action to set the Envelope count
@@ -24,7 +24,7 @@ type SetEnvelopeCount struct {
 
 // SetCurrentEnvelope is the action to set the current envelope
 type SetCurrentEnvelope struct {
-	Envelope *types.EnvelopePackage
+	Envelope *sctypes.EnvelopePackage
 }
 
 // SetCurrentEnvelopeNullifier is the action to set the current envelope nullifier

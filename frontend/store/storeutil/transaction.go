@@ -3,17 +3,17 @@ package storeutil
 import (
 	"time"
 
-	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
-	CurrentTransaction        *types.TxPackage
+	CurrentTransaction        *sctypes.TxPackage
 	CurrentDecodedTransaction *DecodedTransaction
-	CurrentBlock              *types.BlockMetadata
+	CurrentBlock              *sctypes.BlockMetadata
 	Pagination                PageStore
-	Transactions              []*types.TxMetadata
+	Transactions              []*sctypes.TxMetadata
 }
 
 // DecodedTransaction stores human-readable decoded transaction data

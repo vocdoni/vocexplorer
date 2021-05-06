@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"go.vocdoni.io/dvote/api"
 	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
 func (c *Client) GetGatewayInfo() error {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getInfo"
 	resp, err := c.Request(req)
 	if err != nil {
@@ -27,8 +29,8 @@ func (c *Client) GetGatewayInfo() error {
 	return nil
 }
 
-func (c *Client) GetStats() (*types.VochainStats, error) {
-	var req types.MetaRequest
+func (c *Client) GetStats() (*sctypes.VochainStats, error) {
+	var req api.MetaRequest
 	req.Method = "getStats"
 	resp, err := c.Request(req)
 	if err != nil {
@@ -41,7 +43,7 @@ func (c *Client) GetStats() (*types.VochainStats, error) {
 }
 
 func (c *Client) GetEnvelopeHeight(pid []byte) (uint32, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getEnvelopeHeight"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
@@ -55,7 +57,7 @@ func (c *Client) GetEnvelopeHeight(pid []byte) (uint32, error) {
 }
 
 func (c *Client) GetBlockStatus() (*[5]int32, *uint32, int32, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getBlockStatus"
 	resp, err := c.Request(req)
 	if err != nil {
@@ -68,7 +70,7 @@ func (c *Client) GetBlockStatus() (*[5]int32, *uint32, int32, error) {
 }
 
 func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace uint32, status string, withResults bool, from, listSize int) ([]string, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getProcessList"
 	req.EntityId = entityId
 	req.SearchTerm = searchTerm
@@ -90,8 +92,8 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	return resp.ProcessList, nil
 }
 
-func (c *Client) GetProcess(pid []byte) (*types.Process, error) {
-	var req types.MetaRequest
+func (c *Client) GetProcess(pid []byte) (*sctypes.Process, error) {
+	var req api.MetaRequest
 	req.Method = "getProcessInfo"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
@@ -105,7 +107,7 @@ func (c *Client) GetProcess(pid []byte) (*types.Process, error) {
 }
 
 func (c *Client) GetProcessKeys(pid []byte) ([]types.Key, []types.Key, []types.Key, []types.Key, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getProcessKeys"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
@@ -119,7 +121,7 @@ func (c *Client) GetProcessKeys(pid []byte) ([]types.Key, []types.Key, []types.K
 }
 
 func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getProcessCount"
 	req.EntityId = entityId
 	resp, err := c.Request(req)
@@ -133,7 +135,7 @@ func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
 }
 
 func (c *Client) GetResults(pid []byte) ([][]string, string, string, bool, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getResults"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
@@ -152,7 +154,7 @@ func (c *Client) GetResults(pid []byte) ([][]string, string, string, bool, error
 // r.registerPublic("getResultsWeight", r.getResultsWeight)
 
 func (c *Client) GetEntityList(searchTerm string, listSize, from int) ([]string, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getEntityList"
 	req.SearchTerm = searchTerm
 	req.ListSize = listSize
@@ -168,7 +170,7 @@ func (c *Client) GetEntityList(searchTerm string, listSize, from int) ([]string,
 }
 
 func (c *Client) GetEntityCount() (int64, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getEntityCount"
 	resp, err := c.Request(req)
 	if err != nil {
@@ -181,7 +183,7 @@ func (c *Client) GetEntityCount() (int64, error) {
 }
 
 func (c *Client) GetValidatorList() ([]*models.Validator, error) {
-	var req types.MetaRequest
+	var req api.MetaRequest
 	req.Method = "getValidatorList"
 	resp, err := c.Request(req)
 	if err != nil {
@@ -193,8 +195,8 @@ func (c *Client) GetValidatorList() ([]*models.Validator, error) {
 	return resp.ValidatorList, nil
 }
 
-func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
-	var req types.MetaRequest
+func (c *Client) GetEnvelope(nullifier []byte) (*sctypes.EnvelopePackage, error) {
+	var req api.MetaRequest
 	req.Method = "getEnvelope"
 	req.Nullifier = nullifier
 	resp, err := c.Request(req)
@@ -208,8 +210,8 @@ func (c *Client) GetEnvelope(nullifier []byte) (*types.EnvelopePackage, error) {
 	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*types.EnvelopeMetadata, error) {
-	var req types.MetaRequest
+func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*sctypes.EnvelopeMetadata, error) {
+	var req api.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
 	req.ListSize = listSize
@@ -224,8 +226,8 @@ func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*types.Envel
 	return resp.Envelopes, nil
 }
 
-func (c *Client) GetBlock(height uint32) (*types.BlockMetadata, error) {
-	var req types.MetaRequest
+func (c *Client) GetBlock(height uint32) (*sctypes.BlockMetadata, error) {
+	var req api.MetaRequest
 	req.Method = "getBlock"
 	req.Height = height
 	resp, err := c.Request(req)
@@ -238,8 +240,8 @@ func (c *Client) GetBlock(height uint32) (*types.BlockMetadata, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockByHash(hash []byte) (*types.BlockMetadata, error) {
-	var req types.MetaRequest
+func (c *Client) GetBlockByHash(hash []byte) (*sctypes.BlockMetadata, error) {
+	var req api.MetaRequest
 	req.Method = "getBlockByHash"
 	req.Payload = hash
 	resp, err := c.Request(req)
@@ -252,8 +254,8 @@ func (c *Client) GetBlockByHash(hash []byte) (*types.BlockMetadata, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) ([]*types.BlockMetadata, error) {
-	var req types.MetaRequest
+func (c *Client) GetBlockList(from, listSize int) ([]*sctypes.BlockMetadata, error) {
+	var req api.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from
 	req.ListSize = listSize
@@ -267,8 +269,8 @@ func (c *Client) GetBlockList(from, listSize int) ([]*types.BlockMetadata, error
 	return resp.BlockList, nil
 }
 
-func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, error) {
-	var req types.MetaRequest
+func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*sctypes.TxPackage, error) {
+	var req api.MetaRequest
 	req.Method = "getTx"
 	req.Height = blockHeight
 	req.TxIndex = txIndex
@@ -282,8 +284,8 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*types.TxPackage, err
 	return resp.Tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*types.TxMetadata, error) {
-	var req types.MetaRequest
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*sctypes.TxMetadata, error) {
+	var req api.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.Height = blockHeight
 	req.From = from

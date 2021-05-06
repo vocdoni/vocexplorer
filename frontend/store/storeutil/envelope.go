@@ -1,12 +1,12 @@
 package storeutil
 
-import "go.vocdoni.io/dvote/types"
+import sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 
 // Envelopes stores the current envelopes information
 type Envelopes struct {
 	Count                    int
-	CurrentEnvelope          *types.EnvelopePackage
+	CurrentEnvelope          *sctypes.EnvelopePackage
 	CurrentEnvelopeNullifier []byte
-	Envelopes                []*types.EnvelopeMetadata
+	Envelopes                []*sctypes.EnvelopeMetadata
 	Pagination               PageStore
 }

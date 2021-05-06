@@ -2,7 +2,7 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 // ProcessesIndexChange is the action to set the pagination index
@@ -64,5 +64,5 @@ type SetCurrentProcessEnvelopeCount struct {
 
 // SetCurrentProcessEnvelopes is the action to set the envelope list for the current process
 type SetCurrentProcessEnvelopes struct {
-	EnvelopeList []*types.EnvelopeMetadata
+	EnvelopeList []*sctypes.EnvelopeMetadata
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/dvote/types"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -17,6 +16,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 // BlockContents renders block contents
@@ -77,7 +77,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 func UpdateBlockContents(d *BlockContents) {
 	// Set block to nil so previous block is not displayed
 	dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{
-		TransactionList: []*types.TxMetadata{},
+		TransactionList: []*sctypes.TxMetadata{},
 	})
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
@@ -241,6 +241,6 @@ func (c *BlockContents) BlockDetails() vecty.List {
 	}
 }
 
-func preformattedBlockHeader(block *types.BlockMetadata) vecty.ComponentOrHTML {
+func preformattedBlockHeader(block *sctypes.BlockMetadata) vecty.ComponentOrHTML {
 	return elem.Preformatted(elem.Code(vecty.Text(block.String())))
 }
