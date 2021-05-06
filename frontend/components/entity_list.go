@@ -27,6 +27,7 @@ func (b *EntityListView) Render() vecty.ComponentOrHTML {
 			SearchCh:        store.Entities.Pagination.SearchChannel,
 			Searching:       &store.Entities.Pagination.Search,
 			RenderSearchBar: true,
+			SearchPrompt:    "search by entity id, height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderEntityItems()...)

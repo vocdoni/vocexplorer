@@ -30,6 +30,7 @@ type Pagination struct {
 	PageStart       func(e *vecty.Event)
 	TotalItems      *int
 	TotalPages      int
+	SearchPrompt    string
 }
 
 // Render renders the pagination component
@@ -41,7 +42,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 	if p.RenderSearchBar {
 		searchBar = func(self *Pagination) vecty.ComponentOrHTML {
 			return elem.Input(vecty.Markup(
-				vecty.Markup(vecty.Attribute("aria-label", "Search by height, id")),
+				vecty.Markup(vecty.Attribute("aria-label", p.SearchPrompt)),
 				vecty.Markup(vecty.Attribute("type", "search")),
 				// Trigger when 'enter' is pressed
 				event.Change(func(e *vecty.Event) {
@@ -68,7 +69,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 					}
 					vecty.Rerender(self)
 				}),
-				prop.Placeholder("search by height, id"),
+				prop.Placeholder(p.SearchPrompt),
 			))
 		}
 	}

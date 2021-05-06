@@ -12,7 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
 // BlocksDashboardView renders the dashboard landing page
@@ -84,30 +83,7 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(*newHeight) - 1})
 			}
 			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
-			updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1, 1))
-
-			// case search := <-store.Blocks.Pagination.SearchChannel:
-			// 	if !update.CheckCurrentPage("blocks", ticker) {
-			// 		return
-			// 	}
-			// blocksearch:
-			// 	for {
-			// 		// If many indices waiting in buffer, scan to last one.
-			// 		select {
-			// 		case search = <-store.Blocks.Pagination.SearchChannel:
-			// 		default:
-			// 			break blocksearch
-			// 		}
-			// 	}
-			// 	logger.Info("search: " + search)
-			// 	dispatcher.Dispatch(&actions.BlocksIndexChange{Index: 0})
-			// 	list, ok := store.Client.GetBlockSearch(search)
-			// 	if ok {
-			// 		reverseBlockList(&list)
-			// 		dispatcher.Dispatch(&actions.SetBlockList{BlockList: list})
-			// 	} else {
-			// 		dispatcher.Dispatch(&actions.SetBlockList{BlockList: [config.ListSize]*dbtypes.StoreBlock{nil}})
-			// 	}
+			updateBlocks(d, store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1)
 		}
 	}
 }
@@ -121,13 +97,18 @@ func updateBlocksDashboard(d *BlocksDashboardView) {
 			return
 		}
 		actions.UpdateCounts(stats)
-		updateBlocks(d, util.Max(store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1, 1))
+		updateBlocks(d, store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1)
 	}
 }
 
 func updateBlocks(d *BlocksDashboardView, index int) {
-	logger.Info(fmt.Sprintf("Getting Blocks from index %d\n", index))
-	list, err := store.Client.GetBlockList(index, config.ListSize)
+	listSize := config.ListSize
+	if index < 0 {
+		listSize += index
+		index = 0
+	}
+	logger.Info(fmt.Sprintf("Getting %d blocks from index %d\n", listSize, index))
+	list, err := store.Client.GetBlockList(index, listSize)
 	if err != nil {
 		logger.Error(err)
 		return
