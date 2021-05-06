@@ -55,7 +55,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	var votePackage *dvotetypes.VotePackage
 	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	if process == nil {
-		return Unavailable("Loading envelope...", "")
+		return Unavailable("Loading process...", "")
 	}
 	pkeys := process.Process.PrivateKeys
 	results := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
@@ -67,24 +67,22 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	} else { // process is/was encrypted
 		// If not ended or results, keys must be available
 		if s := strings.ToLower(results.State); s != "ended" && s != "results" {
-			decryptionStatus = "Vote cannot be decrypted yet"
+			decryptionStatus = fmt.Sprintf("Vote cannot be decrypted yet: process in state %s", s)
 			displayPackage = false
 		} else if pkeys != nil {
 			// If ended or results then check for the keys
-		indexLoop:
-			for _, index := range store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes {
-				for i, key := range pkeys {
-					if i == int(index) {
-						keys = append(keys, key)
-						break
-					} else {
-						decryptionStatus = "Vote cannot be decrypted yet"
-						displayPackage = false
-						break indexLoop
-					}
+			if len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) > 0 {
+				for _, key := range pkeys {
+					keys = append(keys, key)
 				}
-				decryptionStatus = "Vote decrypted"
-				displayPackage = true
+				if len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes) != len(keys) {
+					decryptionStatus = fmt.Sprintf("Vote cannot be decrypted yet: %d keys expected, %d provided",
+						len(store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes), len(keys))
+					displayPackage = false
+				} else {
+					decryptionStatus = "Vote decrypted"
+					displayPackage = true
+				}
 			}
 		} else {
 			decryptionStatus = "Unable to decrypt: no keys available"
@@ -146,10 +144,20 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 	if store.Envelopes.CurrentEnvelope == nil {
 		return
 	}
-	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
+	if _, ok := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
 		process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
 		if err != nil {
 			logger.Error(err)
+		}
+		pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
+		if err != nil {
+			logger.Error(err)
+		}
+		for _, key := range pubKeys {
+			process.PublicKeys = append(process.PublicKeys, key.Key)
+		}
+		for _, key := range privKeys {
+			process.PrivateKeys = append(process.PrivateKeys, key.Key)
 		}
 		if process != nil {
 			dispatcher.Dispatch(&actions.SetProcess{
@@ -161,6 +169,8 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 				},
 			})
 		}
+	}
+	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
 		results, state, tp, final, err := store.Client.GetResults(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
 		if err != nil {
 			logger.Error(err)
@@ -217,6 +227,10 @@ func (c *EnvelopeContents) EnvelopeView() vecty.List {
 			elem.DefinitionTerm(vecty.Text("Vote type")),
 			elem.Description(vecty.Text(
 				util.GetEnvelopeName(store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)].Type),
+			)),
+			elem.DefinitionTerm(vecty.Text("Encryption key indexes")),
+			elem.Description(vecty.Text(
+				fmt.Sprintf("%v", store.Envelopes.CurrentEnvelope.EncryptionKeyIndexes),
 			)),
 
 			vecty.If(store.Envelopes.CurrentEnvelope.Weight != "", elem.DefinitionTerm(vecty.Text("Envelope weight"))),
