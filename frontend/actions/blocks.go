@@ -1,8 +1,6 @@
 package actions
 
-import (
-	"go.vocdoni.io/dvote/types"
-)
+import sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 
 // BlocksIndexChange is the action to set the pagination index
 type BlocksIndexChange struct {
@@ -21,7 +19,7 @@ type BlocksTabChange struct {
 
 // SetBlockList is the action to set the list of current blocks
 type SetBlockList struct {
-	BlockList []*types.BlockMetadata
+	BlockList []*sctypes.BlockMetadata
 }
 
 // BlocksHeightUpdate is the action to change the current block height
@@ -31,7 +29,7 @@ type BlocksHeightUpdate struct {
 
 // SetCurrentBlock is the action to set the current block
 type SetCurrentBlock struct {
-	Block *types.BlockMetadata
+	Block *sctypes.BlockMetadata
 }
 
 // SetCurrentBlockHeight is the action to set the current block height
@@ -41,5 +39,5 @@ type SetCurrentBlockHeight struct {
 
 // SetCurrentBlockTransactionList is the action to set the current list of transactions
 type SetCurrentBlockTransactionList struct {
-	TransactionList []*types.TxMetadata
+	TransactionList []*sctypes.TxMetadata
 }

@@ -6,14 +6,14 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/dvote/types"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *types.BlockMetadata) vecty.ComponentOrHTML {
+func BlockCard(block *sctypes.BlockMetadata) vecty.ComponentOrHTML {
 	if block == nil {
 		return nil
 	}

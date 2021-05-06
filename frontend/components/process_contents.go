@@ -15,7 +15,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -207,7 +207,7 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessDetails(process *types.Process) vecty.ComponentOrHTML {
+func renderProcessDetails(process *sctypes.Process) vecty.ComponentOrHTML {
 	row1 := vecty.List{}
 	row2 := vecty.List{}
 
@@ -280,7 +280,7 @@ func renderProcessVoteOptions(options *models.ProcessVoteOptions) vecty.Componen
 			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
 		))
 }
-func renderTimingDetails(process *types.Process) vecty.ComponentOrHTML {
+func renderTimingDetails(process *sctypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -293,7 +293,7 @@ func renderTimingDetails(process *types.Process) vecty.ComponentOrHTML {
 		))
 }
 
-func renderProcessCensusDetails(process *types.Process) vecty.ComponentOrHTML {
+func renderProcessCensusDetails(process *sctypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -307,7 +307,7 @@ func renderProcessCensusDetails(process *types.Process) vecty.ComponentOrHTML {
 		))
 }
 
-func renderProcessConfigs(process *types.Process) vecty.ComponentOrHTML {
+func renderProcessConfigs(process *sctypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),

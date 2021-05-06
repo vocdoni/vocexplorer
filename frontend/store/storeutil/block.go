@@ -1,16 +1,14 @@
 package storeutil
 
-import (
-	"go.vocdoni.io/dvote/types"
-)
+import sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 
-// Blocks stores all data abotu blockchain blocks
+// Blocks stores all data about blockchain blocks
 type Blocks struct {
-	Blocks                []*types.BlockMetadata
+	Blocks                []*sctypes.BlockMetadata
 	Count                 int
-	CurrentBlock          *types.BlockMetadata
+	CurrentBlock          *sctypes.BlockMetadata
 	CurrentBlockHeight    uint32
-	CurrentTxs            []*types.TxMetadata
+	CurrentTxs            []*sctypes.TxMetadata
 	TransactionPagination PageStore
 	Pagination            PageStore
 }

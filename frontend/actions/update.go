@@ -2,7 +2,7 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"go.vocdoni.io/dvote/types"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 // DisableUpdate is the action to set the disable update status for given disableupdate boolean
@@ -16,7 +16,7 @@ type EnableAllUpdates struct {
 }
 
 // UpdateCounts updates the values of all item counts (eg. validator count)
-func UpdateCounts(stats *types.VochainStats) {
+func UpdateCounts(stats *sctypes.VochainStats) {
 	dispatcher.Dispatch(&BlocksHeightUpdate{Height: int(stats.BlockHeight) - 1})
 	dispatcher.Dispatch(&SetEntityCount{Count: int(stats.EntityCount)})
 	dispatcher.Dispatch(&SetEnvelopeCount{Count: int(stats.EnvelopeCount)})

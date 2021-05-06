@@ -3,11 +3,11 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/dvote/types"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
+	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
 )
 
 // ProcessesEnvelopeListView renders the envelope list pane
@@ -62,7 +62,7 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelope(envelope *types.EnvelopeMetadata) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *sctypes.EnvelopeMetadata) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(
