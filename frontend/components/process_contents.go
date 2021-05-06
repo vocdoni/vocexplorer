@@ -300,7 +300,7 @@ func renderProcessCensusDetails(process *types.Process) vecty.ComponentOrHTML {
 			vecty.Text("Census"),
 		),
 		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %s", process.CensusOrigin))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %d", process.CensusOrigin))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", process.CensusRoot))),
 			vecty.If(process.CensusURI != "",
 				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", process.CensusURI)))),
@@ -332,6 +332,16 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 		d.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
 		return
+	}
+	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(pid)
+	if err != nil {
+		logger.Error(err)
+	}
+	for _, key := range pubKeys {
+		process.PublicKeys = append(process.PublicKeys, key.Key)
+	}
+	for _, key := range privKeys {
+		process.PrivateKeys = append(process.PrivateKeys, key.Key)
 	}
 	envelopeHeight, err := store.Client.GetEnvelopeHeight(pid)
 	if err != nil {

@@ -104,6 +104,20 @@ func (c *Client) GetProcess(pid []byte) (*types.Process, error) {
 	return resp.Process, nil
 }
 
+func (c *Client) GetProcessKeys(pid []byte) ([]types.Key, []types.Key, []types.Key, []types.Key, error) {
+	var req types.MetaRequest
+	req.Method = "getProcessKeys"
+	req.ProcessID = pid
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	if !resp.Ok {
+		return nil, nil, nil, nil, fmt.Errorf(resp.Message)
+	}
+	return resp.EncryptionPublicKeys, resp.EncryptionPrivKeys, resp.CommitmentKeys, resp.RevealKeys, nil
+}
+
 func (c *Client) GetProcessCount(entityId []byte) (int64, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessCount"
