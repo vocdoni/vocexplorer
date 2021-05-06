@@ -32,6 +32,7 @@ func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 			SearchCh:        store.Processes.Pagination.SearchChannel,
 			Searching:       &store.Processes.Pagination.Search,
 			RenderSearchBar: true,
+			SearchPrompt:    "search by process id, height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderProcessItems()...)

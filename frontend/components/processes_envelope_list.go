@@ -28,6 +28,7 @@ func (b *ProcessesEnvelopeListView) Render() vecty.ComponentOrHTML {
 			SearchCh:        store.Processes.EnvelopePagination.SearchChannel,
 			Searching:       &store.Processes.EnvelopePagination.Search,
 			RenderSearchBar: false,
+			SearchPrompt:    "search by nullifier, height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderProcessEnvelopes(p, index)

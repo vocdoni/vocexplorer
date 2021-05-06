@@ -26,6 +26,7 @@ func (b *EntityProcessListView) Render() vecty.ComponentOrHTML {
 			SearchCh:        store.Entities.ProcessPagination.SearchChannel,
 			Searching:       &store.Entities.ProcessPagination.Search,
 			RenderSearchBar: false,
+			SearchPrompt:    "search by process id, height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderEntityProcessItems()...)

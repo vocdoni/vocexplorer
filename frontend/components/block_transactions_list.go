@@ -37,6 +37,7 @@ func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
 		SearchCh:        store.Blocks.TransactionPagination.SearchChannel,
 		Searching:       &store.Blocks.TransactionPagination.Search,
 		RenderSearchBar: false,
+		SearchPrompt:    "search by tx index",
 	}
 	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 		return renderBlockTxs(p, index)

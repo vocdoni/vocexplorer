@@ -28,6 +28,7 @@ func (b *BlockList) Render() vecty.ComponentOrHTML {
 			SearchCh:        store.Blocks.Pagination.SearchChannel,
 			Searching:       &store.Blocks.Pagination.Search,
 			RenderSearchBar: true,
+			SearchPrompt:    "search by block height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return renderBlocks(p, index)
