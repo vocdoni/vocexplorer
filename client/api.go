@@ -67,7 +67,7 @@ func (c *Client) GetBlockStatus() (*[5]int32, *uint32, int32, error) {
 	return resp.BlockTime, resp.Height, resp.BlockTimestamp, nil
 }
 
-func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace uint32, status string, withResults bool, from, listSize int) ([]string, int64, error) {
+func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace uint32, status string, withResults bool, from, listSize int) ([]string, error) {
 	var req types.MetaRequest
 	req.Method = "getProcessList"
 	req.EntityId = entityId
@@ -79,15 +79,15 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	req.ListSize = listSize
 	resp, err := c.Request(req)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	if !resp.Ok {
-		return nil, 0, fmt.Errorf("cannot get process list: (%s)", resp.Message)
+		return nil, fmt.Errorf("cannot get process list: (%s)", resp.Message)
 	}
 	if resp.Message == "no results yet" {
-		return nil, 0, nil
+		return nil, nil
 	}
-	return resp.ProcessList, 0, nil
+	return resp.ProcessList, nil
 }
 
 func (c *Client) GetProcess(pid []byte) (*types.Process, error) {

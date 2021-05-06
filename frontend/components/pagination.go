@@ -58,7 +58,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 						dispatcher.Dispatch(&actions.DisableUpdate{Updater: p.DisableUpdate, Disabled: true})
 						self.RefreshCh <- int(*self.TotalItems) - index
 					} else { // Search term is not int, is ID
-						if search[:2] == "0x" || search[:2] == "0X" {
+						if len(search) > 1 && (search[:2] == "0x" || search[:2] == "0X") {
 							search = search[2:]
 						}
 						*self.CurrentPage = 0
