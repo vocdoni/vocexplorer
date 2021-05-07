@@ -29,6 +29,7 @@ func (b Body) Render() vecty.ComponentOrHTML {
 		router.NewRoute("/stats", &pages.Stats{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validators", &pages.ValidatorsView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/validator/{id}", &pages.ValidatorView{}, router.NewRouteOpts{ExactMatch: true}),
+		router.NewRoute("/search/{searchTerm}", &pages.SearchView{}, router.NewRouteOpts{ExactMatch: true}),
 		// Note that this handler only works for router.Link and router.Redirect accesses.
 		// Directly accessing a non-existant route won't be handled by this.
 		router.NotFoundHandler(&notFound{}),
