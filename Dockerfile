@@ -1,4 +1,4 @@
-FROM golang:1.15.2-alpine AS builder
+FROM golang:1.16.3-alpine AS builder
 
 ENV GOROOT /usr/local/go
 WORKDIR /src

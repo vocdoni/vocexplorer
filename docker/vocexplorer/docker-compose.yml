@@ -23,6 +23,30 @@ services:
       options:
         max-size: "20m"
         max-file: "10"
+  gateway:
+    image: "ghcr.io/vocdoni/go-dvote:master"
+    env_file: env
+    volumes:
+    - "run:/app/run"
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+      - "4001:4001"
+      - "4171:4171"
+      - "5001:5001"
+      - "9096:9096"
+      - "26656:26656"
+      - "26657:26657"
+      - "61000-61100:61000-61100"
+    sysctls:
+      net.core.somaxconn: 8128
+    restart: ${RESTART:-no}
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
 
 volumes:
   vocexplorer: {}
+  run: {}
