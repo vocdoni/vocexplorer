@@ -210,10 +210,11 @@ func (c *Client) GetEnvelope(nullifier []byte) (*sctypes.EnvelopePackage, error)
 	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, from, listSize int) ([]*sctypes.EnvelopeMetadata, error) {
+func (c *Client) GetEnvelopeList(pid []byte, from, listSize int, searchTerm string) ([]*sctypes.EnvelopeMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
+	req.SearchTerm = searchTerm
 	req.ListSize = listSize
 	req.From = from
 	resp, err := c.Request(req)

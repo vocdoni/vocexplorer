@@ -414,10 +414,18 @@ func updateProcessEnvelopes(d *ProcessContentsView, index int) {
 		index = 0
 	}
 	logger.Info(fmt.Sprintf("Getting %d envelopes from index %d\n", listSize, index))
-	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ID, index, config.ListSize)
+	list, err := store.Client.GetEnvelopeList(store.Processes.CurrentProcess.Process.ID, index, config.ListSize, "")
+	reverseEnvelopeList(list)
 	if err == nil {
 		dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopes{EnvelopeList: list})
 	} else {
 		logger.Error(err)
+	}
+}
+
+func reverseEnvelopeList(list []*sctypes.EnvelopeMetadata) {
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
 	}
 }
