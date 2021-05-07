@@ -15,7 +15,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/nacl"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 // EnvelopeContents renders envelope contents
@@ -24,7 +24,7 @@ type EnvelopeContents struct {
 	vecty.Mounter
 	DecryptionStatus string
 	DisplayPackage   bool
-	VotePackage      *sctypes.VotePackage
+	VotePackage      *indexertypes.VotePackage
 	Rendered         bool
 	Unavailable      bool
 }
@@ -52,7 +52,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	// Decode vote package
 	var decryptionStatus string
 	displayPackage := false
-	var votePackage *sctypes.VotePackage
+	var votePackage *indexertypes.VotePackage
 	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	if process == nil {
 		return Unavailable("Loading process...", "")
@@ -163,7 +163,7 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 			dispatcher.Dispatch(&actions.SetProcess{
 				PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
 				Process: &storeutil.Process{
-					Envelopes:     []*sctypes.EnvelopeMetadata{},
+					Envelopes:     []*indexertypes.EnvelopeMetadata{},
 					EnvelopeCount: 0,
 					Process:       process,
 				},
@@ -302,8 +302,8 @@ func (c *EnvelopeContents) renderVotePackage() vecty.ComponentOrHTML {
 }
 
 // From go-dvote keykeepercli.go
-func unmarshalVote(votePackage []byte, keys []string) (*sctypes.VotePackage, error) {
-	var vote sctypes.VotePackage
+func unmarshalVote(votePackage []byte, keys []string) (*indexertypes.VotePackage, error) {
+	var vote indexertypes.VotePackage
 	rawVote := make([]byte, len(votePackage))
 	copy(rawVote, votePackage)
 	// if encryption keys, decrypt the vote

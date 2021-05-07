@@ -9,11 +9,11 @@ import (
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 //BlockCard renders a single block card
-func BlockCard(block *sctypes.BlockMetadata) vecty.ComponentOrHTML {
+func BlockCard(block *indexertypes.BlockMetadata) vecty.ComponentOrHTML {
 	if block == nil {
 		return nil
 	}

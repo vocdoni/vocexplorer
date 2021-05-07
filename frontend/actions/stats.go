@@ -1,8 +1,8 @@
 package actions
 
-import sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+import "go.vocdoni.io/dvote/api"
 
 //SetStats is the action to set the blockchain statistics
 type SetStats struct {
-	Stats *sctypes.VochainStats
+	Stats *api.VochainStats
 }

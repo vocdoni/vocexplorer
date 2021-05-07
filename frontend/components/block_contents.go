@@ -16,7 +16,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 // BlockContents renders block contents
@@ -77,7 +77,7 @@ func (c *BlockContents) Render() vecty.ComponentOrHTML {
 func UpdateBlockContents(d *BlockContents) {
 	// Set block to nil so previous block is not displayed
 	dispatcher.Dispatch(&actions.SetCurrentBlockTransactionList{
-		TransactionList: []*sctypes.TxMetadata{},
+		TransactionList: []*indexertypes.TxMetadata{},
 	})
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
@@ -241,6 +241,6 @@ func (c *BlockContents) BlockDetails() vecty.List {
 	}
 }
 
-func preformattedBlockHeader(block *sctypes.BlockMetadata) vecty.ComponentOrHTML {
+func preformattedBlockHeader(block *indexertypes.BlockMetadata) vecty.ComponentOrHTML {
 	return elem.Preformatted(elem.Code(vecty.Text(block.String())))
 }

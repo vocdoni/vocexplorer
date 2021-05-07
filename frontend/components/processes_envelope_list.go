@@ -7,7 +7,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 // ProcessesEnvelopeListView renders the envelope list pane
@@ -62,7 +62,7 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessEnvelope(envelope *sctypes.EnvelopeMetadata) vecty.ComponentOrHTML {
+func renderProcessEnvelope(envelope *indexertypes.EnvelopeMetadata) vecty.ComponentOrHTML {
 	return elem.Div(vecty.Markup(vecty.Class("card-deck-col")),
 		elem.Div(vecty.Markup(vecty.Class("card")),
 			elem.Div(

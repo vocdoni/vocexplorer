@@ -10,7 +10,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/bootstrap"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 // BlockTransactionsListView renders the transaction pagination for a block
@@ -74,7 +74,7 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 	)
 }
 
-func renderBlockTx(tx *sctypes.TxMetadata) vecty.ComponentOrHTML {
+func renderBlockTx(tx *indexertypes.TxMetadata) vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", tx.Type)),
 		elem.Div(

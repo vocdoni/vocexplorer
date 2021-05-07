@@ -15,7 +15,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -207,7 +207,7 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 	)
 }
 
-func renderProcessDetails(process *sctypes.Process) vecty.ComponentOrHTML {
+func renderProcessDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
 	row1 := vecty.List{}
 	row2 := vecty.List{}
 
@@ -280,7 +280,7 @@ func renderProcessVoteOptions(options *models.ProcessVoteOptions) vecty.Componen
 			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
 		))
 }
-func renderTimingDetails(process *sctypes.Process) vecty.ComponentOrHTML {
+func renderTimingDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -293,7 +293,7 @@ func renderTimingDetails(process *sctypes.Process) vecty.ComponentOrHTML {
 		))
 }
 
-func renderProcessCensusDetails(process *sctypes.Process) vecty.ComponentOrHTML {
+func renderProcessCensusDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -307,7 +307,7 @@ func renderProcessCensusDetails(process *sctypes.Process) vecty.ComponentOrHTML 
 		))
 }
 
-func renderProcessConfigs(process *sctypes.Process) vecty.ComponentOrHTML {
+func renderProcessConfigs(process *indexertypes.Process) vecty.ComponentOrHTML {
 	return elem.Div(
 		elem.Span(
 			vecty.Markup(vecty.Class("detail")),
@@ -423,7 +423,7 @@ func updateProcessEnvelopes(d *ProcessContentsView, index int) {
 	}
 }
 
-func reverseEnvelopeList(list []*sctypes.EnvelopeMetadata) {
+func reverseEnvelopeList(list []*indexertypes.EnvelopeMetadata) {
 	for i := len(list)/2 - 1; i >= 0; i-- {
 		opp := len(list) - 1 - i
 		list[i], list[opp] = list[opp], list[i]
