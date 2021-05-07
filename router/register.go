@@ -26,6 +26,7 @@ func RegisterRoutes(m *mux.Router, cfg *config.Cfg) {
 	m.HandleFunc("/stats", indexHandler)
 	m.HandleFunc("/validators", indexHandler)
 	m.HandleFunc("/validator/{id}", indexHandler)
+	m.HandleFunc("/search/{searchTerm}", indexHandler)
 
 	// API Routes
 	m.HandleFunc("/ping", pingHandler())

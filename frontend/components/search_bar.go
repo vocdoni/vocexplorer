@@ -3,6 +3,10 @@ package components
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
+	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
+	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
+	router "marwan.io/vecty-router"
 )
 
 //SearchBar is a component for a search bar
@@ -12,29 +16,25 @@ type SearchBar struct {
 
 //Render renders the SearchBar component
 func (s *SearchBar) Render() vecty.ComponentOrHTML {
-	return elem.Form(
-		vecty.Markup(vecty.Class("form-inline", "my-2", "my-lg-0")),
-		elem.Div(
-			vecty.Markup(vecty.Class("input-group")),
-			elem.Div(
-				vecty.Markup(vecty.Class("input-group-append")),
-				elem.Button(
-					vecty.Markup(vecty.Class("btn", "input-group-text")),
-					vecty.Markup(vecty.Attribute("type", "submit")),
-					elem.Span(
-						vecty.Markup(vecty.Class("sr-only")),
-						vecty.Text("Search"),
-					),
-					elem.Span(
-						vecty.Markup(vecty.Class("icon-lens")),
-					),
-				),
-			),
-			elem.Input(
-				vecty.Markup(vecty.Class("form-control", "mr-sm-2")),
-				vecty.Markup(vecty.Attribute("aria-label", "Table of average block times for given time periods.")),
-				vecty.Markup(vecty.Attribute("type", "search")),
-				vecty.Markup(vecty.Attribute("placeholder", "Search by process, entity, transaction, block height or address")),
+	return elem.Div(
+		elem.Input(
+			vecty.Markup(vecty.Class("form-control", "mr-sm-4")),
+			vecty.Markup(vecty.Attribute("aria-label", "Search by vote, process, entity id")),
+			vecty.Markup(vecty.Attribute("placeholder", "Search by vote, process, entity id")),
+			vecty.Markup(vecty.Attribute("type", "search")),
+			// Trigger when 'enter' is pressed
+			vecty.Markup(event.Change(func(e *vecty.Event) {
+				search := e.Target.Get("value").String()
+				if len(search) == 0 {
+					return
+				}
+				if len(search) > 1 && (search[:2] == "0x" || search[:2] == "0X") {
+					search = search[2:]
+				}
+				dispatcher.Dispatch(&actions.SetCurrentPage{Page: ""})
+				dispatcher.Dispatch(&actions.SignalRedirect{})
+				router.Redirect("/search/" + search)
+			}),
 			),
 		),
 	)

@@ -4,3 +4,8 @@ package actions
 type GatewayConnected struct {
 	GatewayErr error
 }
+
+// SetLoading is the action to change the loading status
+type SetLoading struct {
+	Loading bool
+}

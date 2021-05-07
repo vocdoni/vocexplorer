@@ -1,7 +1,6 @@
 package storeutil
 
 import (
-	"gitlab.com/vocdoni/vocexplorer/config"
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
@@ -10,7 +9,7 @@ type Processes struct {
 	Count              int
 	ProcessResults     map[string]ProcessResults
 	Processes          map[string]*Process
-	ProcessIds         [config.ListSize]string
+	ProcessIds         []string
 	Pagination         PageStore
 	EnvelopePagination PageStore
 	CurrentProcess     *Process

@@ -24,6 +24,9 @@ var (
 	// ServerConnected is true if the webserver is connected
 	ServerConnected bool
 
+	// Loading is true if the current page is loading
+	Loading bool
+
 	// Entities holds all entity information
 	Entities storeutil.Entities
 	// Processes holds all entity information

@@ -46,13 +46,7 @@ func entityActions(action interface{}) {
 		Entities.ProcessPagination.Index = a.Index
 
 	case *actions.SetEntityIDs:
-		for i := 0; i < len(Entities.EntityIDs); i++ {
-			if i >= len(a.EntityIDs) {
-				Entities.EntityIDs[i] = ""
-				continue
-			}
-			Entities.EntityIDs[i] = a.EntityIDs[i]
-		}
+		Entities.EntityIDs = a.EntityIDs
 
 	case *actions.SetCurrentEntityID:
 		Entities.CurrentEntityID = a.EntityID
@@ -118,13 +112,7 @@ func processActions(action interface{}) {
 		Processes.EnvelopePagination.Index = a.Index
 
 	case *actions.SetProcessIds:
-		for i := 0; i < len(Processes.ProcessIds); i++ {
-			if i >= len(a.Processes) {
-				Processes.ProcessIds[i] = ""
-				continue
-			}
-			Processes.ProcessIds[i] = a.Processes[i]
-		}
+		Processes.ProcessIds = a.Processes
 
 	case *actions.SetProcess:
 		Processes.Processes[a.PID] = a.Process
@@ -251,6 +239,9 @@ func clientActions(action interface{}) {
 		} else {
 			ServerConnected = true
 		}
+
+	case *actions.SetLoading:
+		Loading = a.Loading
 
 	default:
 		return // don't fire listeners
