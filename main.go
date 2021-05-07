@@ -27,9 +27,9 @@ func newConfig() (*config.MainCfg, error) {
 	}
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
-	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "number of seconds between each content refresh")
+	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
 	cfg.Global.Environment = *flag.String("environment", "", "vochain environment, ie. \"dev\", \"stg\", \"\"")
-	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "ws://0.0.0.0:9090/dvote", "vocdoni node URL to query for data")
+	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "http://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
@@ -110,10 +110,18 @@ func main() {
 		log.Errorf("could not connect to gateway %s: %s", cfg.Global.GatewayUrl, err)
 		return
 	}
-	err = c.GetGatewayInfo()
-	if err != nil {
-		log.Errorf("could not use gateway %s: %s", cfg.Global.GatewayUrl, err)
-		return
+
+	for i := 0; i < 10; i++ {
+		print("lifff")
+		err = c.GetGatewayInfo()
+		if err == nil {
+			break
+		}
+		if i == 9 {
+			log.Errorf("could not use gateway %s: %s", cfg.Global.GatewayUrl, err)
+			return
+		}
+		time.Sleep(5 * time.Second)
 	}
 
 	log.Infof("Connected to gateway: %v\n", cfg.Global.GatewayUrl)
