@@ -2,7 +2,7 @@ package actions
 
 import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
 // TransactionTabChange is the action to change between tabs in transaction view details
@@ -17,17 +17,17 @@ type TransactionsIndexChange struct {
 
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
-	TransactionList []*sctypes.TxMetadata
+	TransactionList []*indexertypes.TxMetadata
 }
 
 // SetCurrentTransaction is the action to set the current transaction
 type SetCurrentTransaction struct {
-	Transaction *sctypes.TxPackage
+	Transaction *indexertypes.TxPackage
 }
 
 // SetTransactionBlock is the action to set the block associated with the current transaction
 type SetTransactionBlock struct {
-	Block *sctypes.BlockMetadata
+	Block *indexertypes.BlockMetadata
 }
 
 // SetCurrentDecodedTransaction is the action to set the decoded contents associated with the current transaction

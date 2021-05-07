@@ -5,8 +5,7 @@ import (
 	"strings"
 
 	"go.vocdoni.io/dvote/api"
-	"go.vocdoni.io/dvote/types"
-	sctypes "go.vocdoni.io/dvote/vochain/scrutinizer/types"
+	"go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 	"go.vocdoni.io/proto/build/go/models"
 )
 
@@ -29,7 +28,7 @@ func (c *Client) GetGatewayInfo() error {
 	return nil
 }
 
-func (c *Client) GetStats() (*sctypes.VochainStats, error) {
+func (c *Client) GetStats() (*api.VochainStats, error) {
 	var req api.MetaRequest
 	req.Method = "getStats"
 	resp, err := c.Request(req)
@@ -92,7 +91,7 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	return resp.ProcessList, nil
 }
 
-func (c *Client) GetProcess(pid []byte) (*sctypes.Process, error) {
+func (c *Client) GetProcess(pid []byte) (*indexertypes.Process, error) {
 	var req api.MetaRequest
 	req.Method = "getProcessInfo"
 	req.ProcessID = pid
@@ -106,7 +105,7 @@ func (c *Client) GetProcess(pid []byte) (*sctypes.Process, error) {
 	return resp.Process, nil
 }
 
-func (c *Client) GetProcessKeys(pid []byte) ([]types.Key, []types.Key, []types.Key, []types.Key, error) {
+func (c *Client) GetProcessKeys(pid []byte) ([]api.Key, []api.Key, []api.Key, []api.Key, error) {
 	var req api.MetaRequest
 	req.Method = "getProcessKeys"
 	req.ProcessID = pid
@@ -195,7 +194,7 @@ func (c *Client) GetValidatorList() ([]*models.Validator, error) {
 	return resp.ValidatorList, nil
 }
 
-func (c *Client) GetEnvelope(nullifier []byte) (*sctypes.EnvelopePackage, error) {
+func (c *Client) GetEnvelope(nullifier []byte) (*indexertypes.EnvelopePackage, error) {
 	var req api.MetaRequest
 	req.Method = "getEnvelope"
 	req.Nullifier = nullifier
@@ -210,7 +209,7 @@ func (c *Client) GetEnvelope(nullifier []byte) (*sctypes.EnvelopePackage, error)
 	return resp.Envelope, nil
 }
 
-func (c *Client) GetEnvelopeList(pid []byte, from, listSize int, searchTerm string) ([]*sctypes.EnvelopeMetadata, error) {
+func (c *Client) GetEnvelopeList(pid []byte, from, listSize int, searchTerm string) ([]*indexertypes.EnvelopeMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getEnvelopeList"
 	req.ProcessID = pid
@@ -227,7 +226,7 @@ func (c *Client) GetEnvelopeList(pid []byte, from, listSize int, searchTerm stri
 	return resp.Envelopes, nil
 }
 
-func (c *Client) GetBlock(height uint32) (*sctypes.BlockMetadata, error) {
+func (c *Client) GetBlock(height uint32) (*indexertypes.BlockMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getBlock"
 	req.Height = height
@@ -241,7 +240,7 @@ func (c *Client) GetBlock(height uint32) (*sctypes.BlockMetadata, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockByHash(hash []byte) (*sctypes.BlockMetadata, error) {
+func (c *Client) GetBlockByHash(hash []byte) (*indexertypes.BlockMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getBlockByHash"
 	req.Payload = hash
@@ -255,7 +254,7 @@ func (c *Client) GetBlockByHash(hash []byte) (*sctypes.BlockMetadata, error) {
 	return resp.Block, nil
 }
 
-func (c *Client) GetBlockList(from, listSize int) ([]*sctypes.BlockMetadata, error) {
+func (c *Client) GetBlockList(from, listSize int) ([]*indexertypes.BlockMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getBlockList"
 	req.From = from
@@ -270,7 +269,7 @@ func (c *Client) GetBlockList(from, listSize int) ([]*sctypes.BlockMetadata, err
 	return resp.BlockList, nil
 }
 
-func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*sctypes.TxPackage, error) {
+func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*indexertypes.TxPackage, error) {
 	var req api.MetaRequest
 	req.Method = "getTx"
 	req.Height = blockHeight
@@ -285,7 +284,7 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*sctypes.TxPackage, e
 	return resp.Tx, nil
 }
 
-func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*sctypes.TxMetadata, error) {
+func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*indexertypes.TxMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.Height = blockHeight
