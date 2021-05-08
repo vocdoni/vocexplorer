@@ -1,19 +1,12 @@
 version: "3.4"
 
 services:
-  vocexplorer:
+  explorer:
     image: "vocdoni/vocexplorer:latest"
     build:
       context: ../..
     ports:
-      - "26656:26656"      
-      - "9090:9090"
-      - "9091:9091"
-      - "4001:4001"
-      - "4171:4171"
-      - "5001:5001"
-      - "9096:9096"
-      - "8081:8081"
+     - "8081:8081"
     env_file: env
     volumes:
       - "vocexplorer:/data/vocexplorer"
@@ -23,6 +16,13 @@ services:
       options:
         max-size: "20m"
         max-file: "10"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.explorer.entrypoints=web"
+      - "traefik.http.routers.explorer.service=explorer"
+      - "traefik.http.routers.explorer.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.services.explorer.loadbalancer.server.port=8081"
+
   gateway:
     image: "ghcr.io/vocdoni/go-dvote:master"
     env_file: env
@@ -47,6 +47,25 @@ services:
         max-size: "20m"
         max-file: "10"
 
+  traefik:
+    image: traefik:2.3
+    env_file: env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    restart: always
+
 volumes:
   vocexplorer: {}
   run: {}
+  traefik: {}
+

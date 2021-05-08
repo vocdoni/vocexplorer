@@ -13,7 +13,6 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/router"
 	"go.vocdoni.io/dvote/log"
@@ -28,8 +27,8 @@ func newConfig() (*config.MainCfg, error) {
 
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
-	cfg.Global.Environment = *flag.String("environment", "", "vochain environment, ie. \"dev\", \"stg\", \"\"")
-	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "http://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
+	cfg.Global.Environment = *flag.String("environment", "", "vochain environment (dev, stg, main)")
+	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "ws://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
@@ -87,44 +86,27 @@ func newConfig() (*config.MainCfg, error) {
 
 func main() {
 	cfg, err := newConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 	if cfg == nil {
 		log.Fatal("cannot read configuration")
 	}
-	if err != nil {
-		log.Error(err)
-	}
 	log.Init(cfg.LogLevel, "stdout")
 	if _, err := os.Stat("./static/wasm_exec.js"); os.IsNotExist(err) {
-		panic("File not found ./static/wasm_exec.js : find it in $GOROOT/misc/wasm/ note it must be from the same version of go used during compiling")
+		panic(`
+		Required webassembly file not found at ./static/wasm_exec.js  
+		You might find it in $GOROOT/misc/wasm/ 
+		The binary file must be compiled for the same go version
+	`)
 	}
 
 	urlR, err := url.Parse(cfg.HostURL)
 	if err != nil {
-		log.Error(err)
-		return
+		log.Fatal(err)
 	}
-	log.Infof("Server on: %v\n", urlR)
-
-	c, err := client.New(cfg.Global.GatewayUrl)
-	if err != nil {
-		log.Errorf("could not connect to gateway %s: %s", cfg.Global.GatewayUrl, err)
-		return
-	}
-
-	for i := 0; i < 10; i++ {
-		print("lifff")
-		err = c.GetGatewayInfo()
-		if err == nil {
-			break
-		}
-		if i == 9 {
-			log.Errorf("could not use gateway %s: %s", cfg.Global.GatewayUrl, err)
-			return
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	log.Infof("Connected to gateway: %v\n", cfg.Global.GatewayUrl)
+	log.Infof("Server on: %v", *urlR)
+	log.Infof("Gateway %s", cfg.Global.GatewayUrl)
 
 	r := mux.NewRouter()
 	router.RegisterRoutes(r, &cfg.Global)
@@ -132,7 +114,7 @@ func main() {
 	s := &http.Server{
 		Addr:         urlR.Host,
 		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 60 * time.Second,
+		WriteTimeout: 20 * time.Second,
 	}
 
 	if cfg.DisableGzip {
