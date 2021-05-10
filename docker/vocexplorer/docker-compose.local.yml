@@ -6,15 +6,16 @@ services:
     build:
       context: ../..
     env_file: .env
+    environment:
+      - "VOCEXPLORER_GLOBAL_GATEWAYURL=http://localhost:8080/dvote"
     volumes:
       - "vocexplorer:/data/vocexplorer"
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.explorer.entrypoints=websecure"
-      - "traefik.http.routers.explorer.tls.certresolver=le"
+      - "traefik.http.routers.explorer.entrypoints=web"
       - "traefik.http.routers.explorer.service=explorer"
-      - "traefik.http.routers.explorer.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.explorer.rule=Host(`localhost`)"
       - "traefik.http.services.explorer.loadbalancer.server.port=8081"
     logging:
       driver: json-file
@@ -28,7 +29,7 @@ services:
     volumes:
     - "run:/app/run"
     ports:
-      # - "9090:9090"
+      - "9090:9090"
       - "9091:9091"
       - "4001:4001"
       - "4171:4171"
@@ -42,10 +43,9 @@ services:
     restart: ${RESTART:-no}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gateway.entrypoints=websecure"
-      - "traefik.http.routers.gateway.tls.certresolver=le"
+      - "traefik.http.routers.gateway.entrypoints=web"
       - "traefik.http.routers.gateway.service=gateway"
-      - "traefik.http.routers.gateway.rule=(Host(`${DOMAIN}`) && PathPrefix(`/dvote`))"
+      - "traefik.http.routers.gateway.rule=(Host(`localhost`) && PathPrefix(`/dvote`))"
       - "traefik.http.services.gateway.loadbalancer.server.port=9090"
     logging:
       driver: json-file
@@ -56,23 +56,13 @@ services:
   traefik:
     image: traefik:2.3
     ports:
-      - 80:80
-      - 443:443
+      - 8080:80
     volumes:
-      - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.le.acme.httpchallenge=true"
-      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.le.acme.email=${LE_EMAIL}"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
     restart: always
     logging:
       driver: json-file
