@@ -47,10 +47,13 @@ func initFrontend() {
 			logger.Fatal("Config could not be stored")
 		}
 	}
-	store.Client, err = client.New(store.Config.GatewayUrl)
-	if err != nil {
-		logger.Error(err)
-	}
+	// Asyncronously attempt to connect to client so UI is not frozen
+	go func() {
+		store.Client, err = client.New(store.Config.GatewayUrl)
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
 }
 
 // Beforeunload cleans up before page unload

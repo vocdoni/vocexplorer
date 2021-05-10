@@ -23,6 +23,8 @@ var (
 
 	// ServerConnected is true if the webserver is connected
 	ServerConnected bool
+	// GatewayError holds whatever gateway error may have occurred
+	GatewayError string
 
 	// Loading is true if the current page is loading
 	Loading bool

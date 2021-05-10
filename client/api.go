@@ -22,8 +22,12 @@ func (c *Client) GetGatewayInfo() error {
 	if resp.Health <= 0 {
 		return fmt.Errorf("gateway %s health is %d", c.Address, resp.Health)
 	}
-	if !strings.Contains(strings.Join(resp.APIList, ""), "vote") {
+	apiList := strings.Join(resp.APIList, "")
+	if !strings.Contains(apiList, "vote") {
 		return fmt.Errorf("gateway %s does not enable vote api", c.Address)
+	}
+	if !strings.Contains(apiList, "indexer") {
+		return fmt.Errorf("gateway %s does not enable indexer api", c.Address)
 	}
 	return nil
 }
