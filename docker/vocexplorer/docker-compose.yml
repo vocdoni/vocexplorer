@@ -2,34 +2,33 @@ version: "3.4"
 
 services:
   explorer:
-    image: "vocdoni/vocexplorer:latest"
+    image: "vocdoni/vocexplorer:${EXPLORER_TAG}"
     build:
       context: ../..
-    ports:
-     - "8081:8081"
-    env_file: env
+    env_file: .env
     volumes:
       - "vocexplorer:/data/vocexplorer"
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.explorer.entrypoints=websecure"
+      - "traefik.http.routers.explorer.tls.certresolver=le"
+      - "traefik.http.routers.explorer.service=explorer"
+      - "traefik.http.routers.explorer.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.services.explorer.loadbalancer.server.port=8081"
     logging:
       driver: json-file
       options:
         max-size: "20m"
         max-file: "10"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.explorer.entrypoints=web"
-      - "traefik.http.routers.explorer.service=explorer"
-      - "traefik.http.routers.explorer.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.services.explorer.loadbalancer.server.port=8081"
 
   gateway:
-    image: "ghcr.io/vocdoni/go-dvote:master"
-    env_file: env
+    image: "ghcr.io/vocdoni/go-dvote:${GATEWAY_TAG}"
+    env_file: .env
     volumes:
     - "run:/app/run"
     ports:
-      - "9090:9090"
+      # - "9090:9090"
       - "9091:9091"
       - "4001:4001"
       - "4171:4171"
@@ -41,6 +40,13 @@ services:
     sysctls:
       net.core.somaxconn: 8128
     restart: ${RESTART:-no}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.entrypoints=websecure"
+      - "traefik.http.routers.gateway.tls.certresolver=le"
+      - "traefik.http.routers.gateway.service=gateway"
+      - "traefik.http.routers.gateway.rule=(Host(`${DOMAIN}`) && PathPrefix(`/dvote`))"
+      - "traefik.http.services.gateway.loadbalancer.server.port=9090"
     logging:
       driver: json-file
       options:
@@ -49,7 +55,6 @@ services:
 
   traefik:
     image: traefik:2.3
-    env_file: env
     ports:
       - 80:80
       - 443:443
@@ -57,15 +62,25 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     command:
-      - "--log.level=DEBUG"
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.httpchallenge=true"
+      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.le.acme.email=${LE_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "10"
 
 volumes:
   vocexplorer: {}
   run: {}
-  traefik: {}
 
