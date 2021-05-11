@@ -30,7 +30,7 @@ func (home *SearchView) Render() vecty.ComponentOrHTML {
 			}
 		})
 	}
-	go components.UpdateSearchItems(searchTerm)
+	go dash.UpdateSearchItems(searchTerm)
 	return elem.Div(
 		&components.Header{},
 		dash,

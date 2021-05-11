@@ -1,6 +1,8 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"gitlab.com/vocdoni/vocexplorer/config"
@@ -17,7 +19,6 @@ type SearchItemsView struct {
 	vecty.Core
 	vecty.Mounter
 	Rendered bool
-	Loading  bool
 }
 
 // Mount is called after the component renders to signal that it can be rerendered safely
@@ -36,6 +37,9 @@ func (dash *SearchItemsView) Render() vecty.ComponentOrHTML {
 	if store.Loading {
 		return Unavailable("Loading search...", "")
 	}
+	envelopes := len(store.Envelopes.Envelopes) > 0
+	processes := len(store.Processes.ProcessIds) > 0
+	entities := len(store.Entities.EntityIDs) > 0
 	return Container(
 		vecty.Markup(vecty.Attribute("id", "main")),
 		renderServerConnectionBanner(),
@@ -45,9 +49,14 @@ func (dash *SearchItemsView) Render() vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("row")),
 				elem.Div(
 					vecty.Markup(vecty.Class("main-column")),
-					dash.EnvelopeList(),
-					dash.ProcessList(),
-					dash.EntityList(),
+					vecty.If(envelopes || processes || entities, elem.Heading1(vecty.Text(fmt.Sprintf("Search results for \"%s\"", store.SearchTerm)))),
+					vecty.If(envelopes, dash.EnvelopeList()),
+					vecty.If(processes, dash.ProcessList()),
+					vecty.If(entities, dash.EntityList()),
+					vecty.If(!envelopes && !processes && !entities,
+						bootstrap.Card(bootstrap.CardParams{
+							Body: elem.Heading1(vecty.Text(fmt.Sprintf("No search results found for \"%s\"", store.SearchTerm))),
+						})),
 				),
 			),
 		),
@@ -122,13 +131,13 @@ func (d *SearchItemsView) EntityList() vecty.ComponentOrHTML {
 }
 
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
-func UpdateSearchItems(searchTerm string) {
+func (dash *SearchItemsView) UpdateSearchItems(searchTerm string) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	dispatcher.Dispatch(&actions.SetLoading{Loading: true})
 	if len(searchTerm) > 1 && (searchTerm[:2] == "0x" || searchTerm[:2] == "0X") {
 		searchTerm = searchTerm[2:]
 	}
-	logger.Info(searchTerm)
+	dispatcher.Dispatch(&actions.SetSearchTerm{SearchTerm: searchTerm})
 	updateEnvelopeSearch(searchTerm)
 	updateProcessSearch(searchTerm)
 	updateEntitySearch(searchTerm)

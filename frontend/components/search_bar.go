@@ -1,6 +1,8 @@
 package components
 
 import (
+	"strings"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
@@ -28,6 +30,7 @@ func (s *SearchBar) Render() vecty.ComponentOrHTML {
 				if len(search) == 0 {
 					return
 				}
+				search = strings.ToLower(search)
 				if len(search) > 1 && (search[:2] == "0x" || search[:2] == "0X") {
 					search = search[2:]
 				}

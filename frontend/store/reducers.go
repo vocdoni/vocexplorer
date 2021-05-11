@@ -248,6 +248,9 @@ func clientActions(action interface{}) {
 	case *actions.SetLoading:
 		Loading = a.Loading
 
+	case *actions.SetSearchTerm:
+		SearchTerm = a.SearchTerm
+
 	default:
 		return // don't fire listeners
 	}

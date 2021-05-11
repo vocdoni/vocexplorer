@@ -9,3 +9,8 @@ type GatewayConnected struct {
 type SetLoading struct {
 	Loading bool
 }
+
+// SetSearchTerm is the action to set the current search term
+type SetSearchTerm struct {
+	SearchTerm string
+}

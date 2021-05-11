@@ -28,6 +28,8 @@ var (
 
 	// Loading is true if the current page is loading
 	Loading bool
+	// SearchTerm is the current active search term
+	SearchTerm string
 
 	// Entities holds all entity information
 	Entities storeutil.Entities
