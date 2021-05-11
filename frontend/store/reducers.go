@@ -236,7 +236,10 @@ func clientActions(action interface{}) {
 		if a.GatewayErr != nil {
 			ServerConnected = false
 			logger.Error(fmt.Errorf("error getting Gateway info: %s", a.GatewayErr))
-			GatewayError = a.GatewayErr.Error()
+			if GatewayError == "" {
+				// Don't override first gatewayError if connection hasn't been fixed
+				GatewayError = a.GatewayErr.Error()
+			}
 		} else {
 			ServerConnected = true
 			GatewayError = ""

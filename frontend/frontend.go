@@ -47,13 +47,24 @@ func initFrontend() {
 			logger.Fatal("Config could not be stored")
 		}
 	}
-	// Asyncronously attempt to connect to client so UI is not frozen
-	go func() {
-		store.Client, err = client.New(store.Config.GatewayUrl)
-		if err != nil {
-			logger.Error(err)
-		}
-	}()
+	store.Client, err = client.New(store.Config.GatewayUrl)
+	if err != nil {
+		// If first connection fails, record the error and return so the UI is not frozen.
+		// Then attempt to connect 5 more times before giving up.
+		logger.Error(err)
+		dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: err})
+		go func() {
+			for i := 0; i < 5; i++ {
+				store.Client, err = client.New(store.Config.GatewayUrl)
+				if err != nil {
+					logger.Error(err)
+				} else {
+					return
+				}
+
+			}
+		}()
+	}
 }
 
 // Beforeunload cleans up before page unload

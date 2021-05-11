@@ -20,6 +20,9 @@ type BlockchainInfo struct {
 
 //Render renders the BlockchainInfo component
 func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
+	if store.Stats == nil {
+		return LoadingBar()
+	}
 	syncing := store.Stats.Syncing
 
 	rows := []vecty.MarkupOrChild{vecty.Markup(vecty.Class("stats"))}

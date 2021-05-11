@@ -29,16 +29,9 @@ func New(addr string) (*Client, error) {
 	var err error
 	if strings.HasPrefix(addr, "ws") {
 		log.Infof("Connecting to gateway: %v", addr)
-		for i := 0; i < 10; i++ {
-			print("one")
-			cli.ws, _, err = websocket.Dial(context.Background(), addr, nil)
-			if err == nil {
-				break
-			}
-			if i == 9 {
-				return nil, err
-			}
-			time.Sleep(5 * time.Second)
+		cli.ws, _, err = websocket.Dial(context.Background(), addr, nil)
+		if err != nil {
+			return nil, err
 		}
 	} else if strings.HasPrefix(addr, "http") {
 		tr := &http.Transport{
@@ -47,6 +40,9 @@ func New(addr string) (*Client, error) {
 			DisableCompression: false,
 		}
 		cli.http = &http.Client{Transport: tr, Timeout: time.Second * 20}
+		if cli.http == nil {
+			return nil, fmt.Errorf("unable to connect to %s", addr)
+		}
 	} else {
 		return nil, fmt.Errorf("address is not websockets nor http: %s", addr)
 	}
