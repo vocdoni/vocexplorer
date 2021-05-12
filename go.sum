@@ -1462,7 +1462,7 @@ github.com/vocdoni/blind-ca v0.1.4/go.mod h1:4ouWDqlvXrrNS0Csf3hKA3cuDTmKh6nP7kS
 github.com/vocdoni/eth-storage-proof v0.1.4-0.20201128112323-de7513ce5e25/go.mod h1:NLA1A55raZ1VNMmKulPUm+Lu9CVetCDVuDCYk5bSYrE=
 github.com/vocdoni/multirpc v0.1.9/go.mod h1:SETFzlLbdZq2YFGy0udT1u2ouQUU2cIesopAIgyAjOU=
 github.com/vocdoni/multirpc v0.1.12/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
-github.com/vocdoni/multirpc v0.1.22/go.mod h1:zCx0l/hu/Vdeav44geFJmK4PAawN+qoo1HYT2icU4GM=
+github.com/vocdoni/multirpc v0.1.23/go.mod h1:zCx0l/hu/Vdeav44geFJmK4PAawN+qoo1HYT2icU4GM=
 github.com/vocdoni/storage-proofs-eth-go v0.1.4/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
 github.com/vocdoni/storage-proofs-eth-go v0.1.5/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
 github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30/go.mod h1:YkocrP2K2tcw938x9gCOmT5G5eCD6jsTz0SZuyAqwIE=
@@ -1553,8 +1553,10 @@ go.vocdoni.io/dvote v0.6.1-0.20210125120603-df82783bb500/go.mod h1:Kf3LwprU/2MhE
 go.vocdoni.io/dvote v0.6.1-0.20210129144810-e6ce68464ed2/go.mod h1:7yTzMiJiZY3E9djQAuEsjEuDhflLcVJKqd1chYC1GVI=
 go.vocdoni.io/dvote v0.6.1-0.20210130094936-75dbb92de3f0/go.mod h1:NJyERGs2LmEvlevZUtOl36MI0HlOUh0d2I0vJcYh5RE=
 go.vocdoni.io/dvote v0.6.1-0.20210206210936-a0407e833753/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
-go.vocdoni.io/dvote v0.6.1-0.20210507150452-19f103372abe h1:4DDztlk6STyZ5mfKvfZOxq3DBCOpLb2J1mLjObZOoTo=
-go.vocdoni.io/dvote v0.6.1-0.20210507150452-19f103372abe/go.mod h1:ICKviuNuC20gBNqaR4+nDCkImLdObKj2axPLQhjvjg4=
+go.vocdoni.io/dvote v0.6.1-0.20210511210209-cafc0c41ede6 h1:Jn6PuEa6ZdMqMn/S7U4JoF7luyWMIn+cYb73gLcVR2c=
+go.vocdoni.io/dvote v0.6.1-0.20210511210209-cafc0c41ede6/go.mod h1:pZqimCpKD46QUejKzNLSkVnAW5o88Eik/d2ODC2lgkc=
+go.vocdoni.io/dvote v0.6.1-0.20210511215612-07f6432029aa h1:IqUgfNgvtvBnzvjvMpRL2QdM4+3kQL6eGT9JELvZo/o=
+go.vocdoni.io/dvote v0.6.1-0.20210511215612-07f6432029aa/go.mod h1:pZqimCpKD46QUejKzNLSkVnAW5o88Eik/d2ODC2lgkc=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v1.0.3-0.20210427102429-33cf17b307f0 h1:LKNoGM9SDCDiUZwPxnRVt/ykPAQB0sFAGJumZNNYed0=
