@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/api"
 	"go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 	"go.vocdoni.io/proto/build/go/models"
@@ -80,7 +81,7 @@ func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace ui
 	req.Namespace = namespace
 	req.Status = status
 	req.WithResults = withResults
-	req.From = from
+	req.From = util.Max(from, 0)
 	req.ListSize = listSize
 	resp, err := c.Request(req)
 	if err != nil {
@@ -161,7 +162,7 @@ func (c *Client) GetEntityList(searchTerm string, listSize, from int) ([]string,
 	req.Method = "getEntityList"
 	req.SearchTerm = searchTerm
 	req.ListSize = listSize
-	req.From = from
+	req.From = util.Max(from, 0)
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
@@ -219,7 +220,7 @@ func (c *Client) GetEnvelopeList(pid []byte, from, listSize int, searchTerm stri
 	req.ProcessID = pid
 	req.SearchTerm = searchTerm
 	req.ListSize = listSize
-	req.From = from
+	req.From = util.Max(from, 0)
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
@@ -261,7 +262,7 @@ func (c *Client) GetBlockByHash(hash []byte) (*indexertypes.BlockMetadata, error
 func (c *Client) GetBlockList(from, listSize int) ([]*indexertypes.BlockMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getBlockList"
-	req.From = from
+	req.From = util.Max(from, 0)
 	req.ListSize = listSize
 	resp, err := c.Request(req)
 	if err != nil {
@@ -292,7 +293,7 @@ func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*i
 	var req api.MetaRequest
 	req.Method = "getTxListForBlock"
 	req.Height = blockHeight
-	req.From = from
+	req.From = util.Max(from, 0)
 	req.ListSize = listSize
 	resp, err := c.Request(req)
 	if err != nil {

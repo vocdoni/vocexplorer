@@ -139,9 +139,8 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 	listSize := config.ListSize
 	if index < 0 {
 		listSize += index
-		index = 1
+		index = 0
 	}
-	index--
 	logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
 	list, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, listSize)
 	if err != nil {
