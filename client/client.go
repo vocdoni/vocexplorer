@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.com/vocdoni/vocexplorer/logger"
 	"go.vocdoni.io/dvote/api"
-	"go.vocdoni.io/dvote/log"
 	"nhooyr.io/websocket"
 )
 
@@ -28,7 +28,7 @@ func New(addr string) (*Client, error) {
 	cli := &Client{Address: addr}
 	var err error
 	if strings.HasPrefix(addr, "ws") {
-		log.Infof("Connecting to gateway: %v", addr)
+		logger.Info(fmt.Sprintf("Connecting to gateway: %v", addr))
 		cli.ws, _, err = websocket.Dial(context.Background(), addr, nil)
 		if err != nil {
 			return nil, err
@@ -81,7 +81,7 @@ func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 
-	log.Debugf("request: %s", reqBody)
+	logger.Info(fmt.Sprintf("request: %s", reqBody))
 
 	message := []byte{}
 	if c.ws != nil {
@@ -106,7 +106,7 @@ func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
 		}
 		resp.Body.Close()
 	}
-	log.Debugf("response: %s", message)
+	logger.Info(fmt.Sprintf("response: %s", message))
 	var respOuter api.ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
