@@ -287,10 +287,15 @@ func renderTimingDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
 			vecty.Text("Timing & Results"),
 		),
 		elem.OrderedList(
-			// elem.ListItem(vecty.Text(fmt.Sprintf("Creation time: %s", process.Format("Mon Jan _2 15:04:05 +3:00 2006")))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", process.StartBlock))),
 			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", process.EndBlock))),
-		))
+			vecty.If(process.SourceBlockHeight > 0,
+				elem.ListItem(
+					vecty.Text(fmt.Sprintf("Ethereum source block height: %d", process.SourceBlockHeight)),
+				),
+			),
+		),
+	)
 }
 
 func renderProcessCensusDetails(process *indexertypes.Process) vecty.ComponentOrHTML {

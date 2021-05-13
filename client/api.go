@@ -242,19 +242,25 @@ func (c *Client) GetBlock(height uint32) (*indexertypes.BlockMetadata, error) {
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
 	}
+	if resp.Block.Height == 0 {
+		resp.Block.Height = height
+	}
 	return resp.Block, nil
 }
 
 func (c *Client) GetBlockByHash(hash []byte) (*indexertypes.BlockMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getBlockByHash"
-	req.Payload = hash
+	req.Hash = hash
 	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
 	}
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get block: (%s)", resp.Message)
+	}
+	if len(resp.Block.Hash) == 0 {
+		resp.Block.Hash = hash
 	}
 	return resp.Block, nil
 }
@@ -286,6 +292,9 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*indexertypes.TxPacka
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx: (%s)", resp.Message)
 	}
+	if resp.Tx.BlockHeight == 0 {
+		resp.Tx.BlockHeight = blockHeight
+	}
 	return resp.Tx, nil
 }
 
@@ -301,6 +310,11 @@ func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*i
 	}
 	if !resp.Ok {
 		return nil, fmt.Errorf("cannot get tx list for block %d: (%s)", blockHeight, resp.Message)
+	}
+	for _, tx := range resp.TxList {
+		if tx.BlockHeight == 0 {
+			tx.BlockHeight = blockHeight
+		}
 	}
 	return resp.TxList, nil
 }
