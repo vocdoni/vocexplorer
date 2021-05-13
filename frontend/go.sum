@@ -1,4 +1,5 @@
 bazil.org/fuse v0.0.0-20200117225306-7b5117fecadc/go.mod h1:FbcW6z/2VytnFDhZfumh8Ss8zxHE6qpMP5sHTRe0EaM=
+bazil.org/fuse v0.0.0-20200407214033-5883e5a4b512/go.mod h1:FbcW6z/2VytnFDhZfumh8Ss8zxHE6qpMP5sHTRe0EaM=
 bazil.org/fuse v0.0.0-20200524192727-fb710f7dfd05/go.mod h1:h0h5FBYpXThbvSfTqthw+0I4nmHnhTHkO5BoOHsBWqg=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.31.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
@@ -1557,6 +1558,8 @@ go.vocdoni.io/dvote v0.6.1-0.20210511210209-cafc0c41ede6 h1:Jn6PuEa6ZdMqMn/S7U4J
 go.vocdoni.io/dvote v0.6.1-0.20210511210209-cafc0c41ede6/go.mod h1:pZqimCpKD46QUejKzNLSkVnAW5o88Eik/d2ODC2lgkc=
 go.vocdoni.io/dvote v0.6.1-0.20210511215612-07f6432029aa h1:IqUgfNgvtvBnzvjvMpRL2QdM4+3kQL6eGT9JELvZo/o=
 go.vocdoni.io/dvote v0.6.1-0.20210511215612-07f6432029aa/go.mod h1:pZqimCpKD46QUejKzNLSkVnAW5o88Eik/d2ODC2lgkc=
+go.vocdoni.io/dvote v0.6.1-0.20210513175234-a4cce3626f04 h1:2PbCiO2iNPQMg2luBJkwiB0jaDmn3n9Sn2YW5oB0f9w=
+go.vocdoni.io/dvote v0.6.1-0.20210513175234-a4cce3626f04/go.mod h1:BfnrpK7SKQsVHf24MfPxq3G92LdY6sj7t+Dui8CO7jk=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.9-0.20210304214308-6f7363b52750/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
