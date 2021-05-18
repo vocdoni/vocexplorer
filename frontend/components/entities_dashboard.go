@@ -54,7 +54,7 @@ func (dash *EntitiesDashboardView) Render() vecty.ComponentOrHTML {
 func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("entities", ticker) {
 		return
 	}

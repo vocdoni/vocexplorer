@@ -44,7 +44,7 @@ func (dash *ValidatorsDashboardView) Render() vecty.ComponentOrHTML {
 func UpdateValidatorsDashboard(d *ValidatorsDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("validators", ticker) {
 		return
 	}

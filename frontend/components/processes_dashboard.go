@@ -56,7 +56,7 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	updateProcesses(d)
 	for {
 

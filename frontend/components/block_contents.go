@@ -93,7 +93,7 @@ func UpdateBlockContents(d *BlockContents) {
 		d.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	}
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("block", ticker) {
 		return
 	}

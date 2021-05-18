@@ -359,7 +359,7 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 			Process:       process,
 		},
 	})
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("process", ticker) {
 		return
 	}

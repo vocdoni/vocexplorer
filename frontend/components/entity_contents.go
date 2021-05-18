@@ -107,7 +107,7 @@ func UpdateEntityContents(d *EntityContentsView) {
 	// Set entity process list to nil so previous list is not displayed
 	dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: []string{}})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 
 	newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
