@@ -53,12 +53,12 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	var decryptionStatus string
 	displayPackage := false
 	var votePackage *indexertypes.VotePackage
-	process := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
-	if process == nil {
+	process, pok := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
+	results, rok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
+	if process == nil || !pok || !rok {
 		return Unavailable("Loading process...", "")
 	}
 	pkeys := process.Process.PrivateKeys
-	results := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	keys := []string{}
 	// If package is encrypted
 	if !strings.Contains(strings.ToLower(results.Type), "encrypted") {
