@@ -150,7 +150,7 @@ func (c *Client) GetResults(pid []byte) ([][]string, string, string, bool, error
 		return nil, "", "", false, fmt.Errorf("cannot get results: (%s)", resp.Message)
 	}
 	if resp.Message == "no results yet" {
-		return nil, resp.State, "", false, nil
+		return nil, resp.State, resp.Type, false, nil
 	}
 	return resp.Results, resp.State, resp.Type, *resp.Final, nil
 }

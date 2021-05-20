@@ -95,7 +95,7 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 			vecty.Markup(vecty.Class("badges")),
 			elem.Span(
 				vecty.Markup(vecty.Class("badge", results.State)),
-				vecty.Text(strings.Title(results.State)),
+				vecty.Text(strings.Title(util.GetProcessStatus(results.State))),
 			),
 		),
 		elem.HorizontalRule(),
@@ -111,7 +111,7 @@ func (dash *ProcessContentsView) ProcessDetails() vecty.List {
 			elem.DefinitionTerm(vecty.Text("Process type")),
 			elem.Description(vecty.Text(util.GetProcessName(results.Type))),
 			elem.DefinitionTerm(vecty.Text("State")),
-			elem.Description(vecty.Text(strings.Title(results.State))),
+			elem.Description(vecty.Text(strings.Title(util.GetProcessStatus(results.State)))),
 			elem.DefinitionTerm(vecty.Text("Registered votes")),
 			elem.Description(vecty.Text(util.IntToString(store.Processes.CurrentProcess.EnvelopeCount))),
 		),

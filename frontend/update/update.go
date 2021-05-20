@@ -70,17 +70,16 @@ func CurrentProcessResults() {
 		logger.Error(err)
 		return
 	}
-	if results != nil {
-		dispatcher.Dispatch(&actions.SetProcessResults{
-			PID: util.HexToString(store.Processes.CurrentProcess.Process.ID),
-			Results: storeutil.ProcessResults{
-				Results: results,
-				State:   state,
-				Type:    tp,
-				Final:   final,
-			},
-		})
-	}
+	dispatcher.Dispatch(&actions.SetProcessResults{
+		PID: util.HexToString(store.Processes.CurrentProcess.Process.ID),
+		Results: storeutil.ProcessResults{
+			Results: results,
+			State:   state,
+			Type:    tp,
+			Final:   final,
+		},
+	})
+
 }
 
 // EntityProcessResults ensures the given entity's processes' results are all stored

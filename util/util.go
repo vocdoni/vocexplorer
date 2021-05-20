@@ -180,11 +180,16 @@ func GetTransactionName(raw string) string {
 
 // GetProcessName translates a raw process type to a name
 func GetProcessName(raw string) string {
-	name, ok := config.ProcessTypeMap[raw]
-	if ok {
-		return name
-	}
-	return raw
+	// name, ok := config.ProcessTypeMap[raw]
+	// if ok {
+	// 	return name
+	// }
+	return strings.ToTitle(raw[:1]) + raw[1:]
+}
+
+// GetProcessStatus translates a raw process status to a name
+func GetProcessStatus(raw string) string {
+	return strings.ToTitle(raw[:1]) + strings.ToLower(raw[1:])
 }
 
 // GetEnvelopeName translates a raw envelope type to a name
