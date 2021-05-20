@@ -158,8 +158,6 @@ func UpdateEntityContents(d *EntityContentsView) {
 			} else {
 				dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 			}
-			// TODO actually fetch all the processes, maybe make processList [config.ListSize]
-			update.EntityProcessResults()
 		}
 	}
 }
@@ -188,24 +186,20 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 		reverseIDList(list)
 		dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 		for _, processId := range store.Entities.CurrentEntity.ProcessIds {
-			process, err := store.Client.GetProcess(util.StringToHex(processId))
+			tp, state, entityId, height, err := store.Client.GetProcessMeta(util.StringToHex(processId))
 			if err != nil {
 				logger.Error(err)
 			}
-			envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(processId))
-			if err != nil {
-				logger.Error(err)
-			}
-			if process != nil {
-				dispatcher.Dispatch(&actions.SetProcess{
-					PID: processId,
-					Process: &storeutil.Process{
-						EnvelopeCount: int(envelopeHeight),
-						Process:       process,
-					},
-				})
-			}
+			dispatcher.Dispatch(&actions.SetProcess{
+				PID: processId,
+				Process: &storeutil.Process{
+					EnvelopeCount: int(height),
+					Type:          tp,
+					State:         state,
+					EntityID:      entityId,
+					ProcessID:     processId,
+				},
+			})
 		}
-		update.EntityProcessResults()
 	}
 }

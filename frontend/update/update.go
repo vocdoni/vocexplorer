@@ -59,30 +59,6 @@ func CurrentProcessResults() {
 
 }
 
-// EntityProcessResults ensures the given entity's processes' results are all stored
-func EntityProcessResults() {
-	for _, pid := range store.Entities.CurrentEntity.ProcessIds {
-		if _, ok := store.Processes.ProcessResults[pid]; !ok {
-			results, state, tp, final, err := store.Client.GetResults(util.StringToHex(pid))
-			if err != nil {
-				logger.Error(err)
-				return
-			}
-			if results != nil {
-				dispatcher.Dispatch(&actions.SetProcessResults{
-					PID: pid,
-					Results: storeutil.ProcessResults{
-						Results: results,
-						State:   state,
-						Type:    tp,
-						Final:   final,
-					},
-				})
-			}
-		}
-	}
-}
-
 // CheckCurrentPage returns true and stops ticker if the current page is title
 func CheckCurrentPage(title string, ticker *time.Ticker) bool {
 	if store.CurrentPage != title {
