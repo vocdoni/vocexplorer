@@ -116,7 +116,7 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 				dispatcher.Dispatch(&actions.SetProcessIds{Processes: []string{}})
 				logger.Error(err)
 			} else {
-				fetchProcesses(list)
+				fetchProcessMetas(list)
 			}
 		}
 	}
@@ -147,33 +147,29 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 		logger.Error(err)
 		return
 	}
-	fetchProcesses(list)
+	fetchProcessMetas(list)
 }
 
-func fetchProcesses(list []string) {
+func fetchProcessMetas(list []string) {
 	reverseIDList(list)
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
 	for _, processId := range store.Processes.ProcessIds {
 		if processId == "" {
 			break
 		}
-		process, err := store.Client.GetProcess(util.StringToHex(processId))
+		tp, state, entityId, height, err := store.Client.GetProcessMeta(util.StringToHex(processId))
 		if err != nil {
 			logger.Error(err)
 		}
-		envelopeHeight, err := store.Client.GetEnvelopeHeight(util.StringToHex(processId))
-		if err != nil {
-			logger.Error(err)
-		}
-		if process != nil {
-			dispatcher.Dispatch(&actions.SetProcess{
-				PID: processId,
-				Process: &storeutil.Process{
-					EnvelopeCount: int(envelopeHeight),
-					Process:       process,
-				},
-			})
-		}
+		dispatcher.Dispatch(&actions.SetProcess{
+			PID: processId,
+			Process: &storeutil.Process{
+				EnvelopeCount: int(height),
+				Type:          tp,
+				State:         state,
+				EntityID:      entityId,
+				ProcessID:     processId,
+			},
+		})
 	}
-	update.ProcessResults()
 }

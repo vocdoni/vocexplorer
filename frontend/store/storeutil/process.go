@@ -20,6 +20,10 @@ type Process struct {
 	Envelopes     []*indexertypes.EnvelopeMetadata
 	EnvelopeCount int
 	Process       *indexertypes.Process
+	Type          string
+	State         string
+	EntityID      string
+	ProcessID     string
 }
 
 type ProcessResults struct {
