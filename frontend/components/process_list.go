@@ -6,7 +6,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"go.vocdoni.io/proto/build/go/models"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
@@ -61,6 +60,7 @@ func renderProcessItems() []vecty.MarkupOrChild {
 
 //ProcessBlock renders a single process card
 func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
+	// Assume we only have access to process metadata: state, type, envelope height, enitity id
 	if process == nil {
 		return elem.Div(
 			vecty.Markup(vecty.Class("tile")),
@@ -86,26 +86,9 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 			),
 		)
 	}
-	var tp string
-	if process.Process.Envelope.Anonymous {
-		tp = "anonymous"
-	} else {
-		tp = "poll"
-	}
-	if process.Process.Envelope.EncryptedVotes {
-		tp += " encrypted"
-	} else {
-		tp += " open"
-	}
-	if process.Process.Envelope.Serial {
-		tp += " serial"
-	} else {
-		tp += " single"
-	}
-	state := models.ProcessStatus(process.Process.Status).String()
-	// entityHeight := store.Entities.ProcessHeights[util.HexToString(process.Process.EntityId)]
+
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(state))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(process.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -113,11 +96,11 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetProcessName(tp)),
+						vecty.Text(util.GetProcessName(process.Type)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(strings.Title(state)),
+						vecty.Text(strings.Title(process.State)),
 					),
 				),
 			),
@@ -125,28 +108,16 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(
-						Link("/process/"+util.HexToString(process.Process.ID),
-							util.HexToString(process.Process.ID),
+						Link("/process/"+process.ProcessID,
+							process.ProcessID,
 							"hash",
 						),
 					),
 					elem.Div(
-						// vecty.If(
-						// 	entityHeight < 1,
-						// 	vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" process hosted by entity "),
-						// ),
-						// vecty.If(
-						// 	entityHeight > 1,
-						// 	vecty.Text(humanize.Ordinal(int(process.LocalHeight.Height+1))+" of "+util.IntToString(entityHeight)+" processes hosted by entity "),
-						// ),
-						// vecty.If(
-						// 	entityHeight == 1,
-						// 	vecty.Text("only process hosted by entity "),
-						// ),
 						vecty.Text("Belongs to entity "),
 						Link(
-							"/entity/"+util.HexToString(process.Process.EntityID),
-							util.HexToString(process.Process.EntityID),
+							"/entity/"+process.EntityID,
+							process.EntityID,
 							"hash",
 						),
 					),

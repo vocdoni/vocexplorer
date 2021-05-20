@@ -12,29 +12,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 )
 
-// ProcessResults updates auxilary info for all currently displayed process id's
-func ProcessResults() {
-	for _, process := range store.Processes.Processes {
-		if process != nil {
-			results, state, tp, final, err := store.Client.GetResults(process.Process.ID)
-			if err != nil {
-				logger.Error(err)
-			}
-			if results != nil && err == nil {
-				dispatcher.Dispatch(&actions.SetProcessResults{
-					PID: util.HexToString(process.Process.ID),
-					Results: storeutil.ProcessResults{
-						Results: results,
-						State:   state,
-						Type:    tp,
-						Final:   final,
-					},
-				})
-			}
-		}
-	}
-}
-
 // EnvelopeProcessResults updates auxilary info for all process id's belonging to currently displayed envelopes
 func EnvelopeProcessResults() {
 	for _, envelope := range store.Envelopes.Envelopes {

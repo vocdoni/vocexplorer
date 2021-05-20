@@ -115,7 +115,33 @@ func processActions(action interface{}) {
 		Processes.ProcessIds = a.Processes
 
 	case *actions.SetProcess:
-		Processes.Processes[a.PID] = a.Process
+		if proc, ok := Processes.Processes[a.PID]; ok {
+			// If process exists, only update relevant fields
+			if a.Process.EntityID != "" {
+				proc.EntityID = a.Process.EntityID
+			}
+			if a.Process.ProcessID != "" {
+				proc.ProcessID = a.Process.ProcessID
+			}
+			if a.Process.Type != "" {
+				proc.Type = a.Process.Type
+			}
+			if a.Process.State != "" {
+				proc.State = a.Process.State
+			}
+			if len(a.Process.Envelopes) > 0 {
+				proc.Envelopes = a.Process.Envelopes
+			}
+			if a.Process.Process != nil {
+				proc.Process = a.Process.Process
+			}
+			if a.Process.EnvelopeCount > proc.EnvelopeCount {
+				proc.EnvelopeCount = a.Process.EnvelopeCount
+			}
+			Processes.Processes[a.PID] = proc
+		} else { // Otherwise set whatever we have
+			Processes.Processes[a.PID] = a.Process
+		}
 
 	case *actions.ProcessTabChange:
 		Processes.Pagination.Tab = a.Tab

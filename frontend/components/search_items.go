@@ -160,7 +160,7 @@ func updateProcessSearch(searchTerm string) {
 		logger.Error(err)
 		return
 	}
-	fetchProcesses(list)
+	fetchProcessMetas(list)
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: list})
 }
 func updateEntitySearch(searchTerm string) {

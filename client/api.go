@@ -110,6 +110,24 @@ func (c *Client) GetProcess(pid []byte) (*indexertypes.Process, error) {
 	return resp.Process, nil
 }
 
+func (c *Client) GetProcessMeta(pid []byte) (string, string, string, uint32, error) {
+	var req api.MetaRequest
+	req.Method = "getProcessMeta"
+	req.ProcessID = pid
+	resp, err := c.Request(req)
+	if err != nil {
+		return "", "", "", 0, err
+	}
+	if !resp.Ok {
+		return "", "", "", 0, fmt.Errorf(resp.Message)
+	}
+	var height uint32
+	if resp.Height != nil {
+		height = *resp.Height
+	}
+	return resp.Type, resp.State, resp.EntityID, height, nil
+}
+
 func (c *Client) GetProcessKeys(pid []byte) ([]api.Key, []api.Key, []api.Key, []api.Key, error) {
 	var req api.MetaRequest
 	req.Method = "getProcessKeys"
