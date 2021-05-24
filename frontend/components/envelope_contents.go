@@ -175,17 +175,15 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 		if err != nil {
 			logger.Error(err)
 		}
-		if results != nil {
-			dispatcher.Dispatch(&actions.SetProcessResults{
-				Results: storeutil.ProcessResults{
-					Results: results,
-					State:   state,
-					Type:    tp,
-					Final:   final,
-				},
-				PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
-			})
-		}
+		dispatcher.Dispatch(&actions.SetProcessResults{
+			Results: storeutil.ProcessResults{
+				Results: results,
+				State:   state,
+				Type:    tp,
+				Final:   final,
+			},
+			PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
+		})
 	}
 }
 

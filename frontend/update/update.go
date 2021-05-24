@@ -23,7 +23,7 @@ func EnvelopeProcessResults() {
 					if err != nil {
 						logger.Error(err)
 					}
-					if results != nil && err == nil {
+					if err == nil {
 						dispatcher.Dispatch(&actions.SetProcessResults{
 							PID: ID,
 							Results: storeutil.ProcessResults{
