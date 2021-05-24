@@ -84,13 +84,6 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.EntitiesIndexChange{Index: i})
-			if i < 1 {
-				newVal, err := store.Client.GetEntityCount()
-				if err != nil {
-					logger.Error(err)
-				}
-				dispatcher.Dispatch(&actions.SetEntityCount{Count: int(newVal)})
-			}
 			if store.Entities.Count > 0 {
 				getEntities(d, store.Entities.Count-store.Entities.Pagination.Index-config.ListSize)
 			}
@@ -121,7 +114,6 @@ func UpdateEntitiesDashboard(d *EntitiesDashboardView) {
 }
 
 func updateEntities(d *EntitiesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Entities.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -131,6 +123,7 @@ func updateEntities(d *EntitiesDashboardView) {
 		actions.UpdateCounts(stats)
 		getEntities(d, store.Entities.Count-store.Entities.Pagination.Index-config.ListSize)
 	}
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 }
 
 func getEntities(d *EntitiesDashboardView, index int) {

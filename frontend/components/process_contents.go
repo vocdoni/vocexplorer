@@ -389,14 +389,6 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ProcessEnvelopesIndexChange{Index: i})
-			if i < 1 {
-				newVal, err := store.Client.GetEnvelopeHeight(pid)
-				if err == nil {
-					dispatcher.Dispatch(&actions.SetCurrentProcessEnvelopeCount{Count: int(newVal)})
-				} else {
-					logger.Error(err)
-				}
-			}
 			if store.Processes.CurrentProcess.EnvelopeCount > 0 {
 				updateProcessEnvelopes(d, store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index-config.ListSize)
 			}
@@ -405,11 +397,11 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 }
 
 func updateProcessContents(d *ProcessContentsView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	update.CurrentProcessResults()
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
 		updateProcessEnvelopes(d, store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index-config.ListSize)
 	}
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 }
 
 func updateProcessEnvelopes(d *ProcessContentsView, index int) {

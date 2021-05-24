@@ -85,14 +85,6 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: i})
-			if i < 1 {
-				newVal, err := store.Client.GetProcessCount([]byte{})
-				if err == nil {
-					dispatcher.Dispatch(&actions.SetProcessCount{Count: int(newVal)})
-				} else {
-					logger.Error(err)
-				}
-			}
 			if store.Processes.Count > 0 {
 				getProcesses(d, store.Processes.Count-store.Processes.Pagination.Index-config.ListSize)
 			}
@@ -123,7 +115,6 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 }
 
 func updateProcesses(d *ProcessesDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Processes.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -133,6 +124,7 @@ func updateProcesses(d *ProcessesDashboardView) {
 		actions.UpdateCounts(stats)
 		getProcesses(d, store.Processes.Count-store.Processes.Pagination.Index-config.ListSize)
 	}
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 }
 
 func getProcesses(d *ProcessesDashboardView, index int) {

@@ -75,13 +75,6 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 				}
 			}
 			dispatcher.Dispatch(&actions.BlocksIndexChange{Index: i})
-			if i < 1 { // If on first page, update counts
-				_, newHeight, _, err := store.Client.GetBlockStatus()
-				if err != nil {
-					logger.Error(err)
-				}
-				dispatcher.Dispatch(&actions.BlocksHeightUpdate{Height: int(*newHeight) - 1})
-			}
 			logger.Info(fmt.Sprintf("update blocks to index %d\n", i))
 			updateBlocks(d, store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1)
 		}
@@ -89,7 +82,6 @@ func UpdateBlocksDashboard(d *BlocksDashboardView) {
 }
 
 func updateBlocksDashboard(d *BlocksDashboardView) {
-	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	if !store.Blocks.Pagination.DisableUpdate {
 		stats, err := store.Client.GetStats()
 		if err != nil {
@@ -99,6 +91,7 @@ func updateBlocksDashboard(d *BlocksDashboardView) {
 		actions.UpdateCounts(stats)
 		updateBlocks(d, store.Blocks.Count-store.Blocks.Pagination.Index-config.ListSize+1)
 	}
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 }
 
 func updateBlocks(d *BlocksDashboardView, index int) {

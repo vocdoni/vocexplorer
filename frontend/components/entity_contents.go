@@ -146,10 +146,6 @@ func UpdateEntityContents(d *EntityContentsView) {
 			}
 			dispatcher.Dispatch(&actions.EntityProcessesIndexChange{Index: i})
 			eid := util.StringToHex(store.Entities.CurrentEntityID)
-			if i < 1 {
-				newCount, _ := store.Client.GetProcessCount(eid)
-				dispatcher.Dispatch(&actions.SetCurrentEntityProcessCount{Count: int(newCount)})
-			}
 			index := util.Max(store.Entities.CurrentEntity.ProcessCount-store.Entities.ProcessPagination.Index, 1)
 			logger.Info(fmt.Sprintf("Getting processes from entity %s, index %d\n", store.Entities.CurrentEntityID, index))
 			list, err := store.Client.GetProcessList(eid, "", 0, "", false, index-1, config.ListSize)
@@ -163,7 +159,6 @@ func UpdateEntityContents(d *EntityContentsView) {
 }
 
 func updateEntityProcesses(d *EntityContentsView, index int) {
-	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 	newCount, err := store.Client.GetProcessCount(util.StringToHex(store.Entities.CurrentEntityID))
 	if err != nil {
 		logger.Error(err)
@@ -202,4 +197,5 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 			})
 		}
 	}
+	dispatcher.Dispatch(&actions.GatewayConnected{GatewayErr: store.Client.GetGatewayInfo()})
 }
