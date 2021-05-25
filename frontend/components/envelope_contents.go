@@ -16,6 +16,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/nacl"
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
+	"go.vocdoni.io/proto/build/go/models"
 )
 
 // EnvelopeContents renders envelope contents
@@ -321,4 +322,21 @@ func unmarshalVote(votePackage []byte, keys []string) (*indexertypes.VotePackage
 		return nil, fmt.Errorf("cannot unmarshal vote: %w", err)
 	}
 	return &vote, nil
+}
+
+func renderEnvelopeType(envelopeType *models.EnvelopeType) vecty.ComponentOrHTML {
+	if envelopeType == nil {
+		return vecty.Text("Envelope Type unavailable")
+	}
+	return elem.Div(
+		elem.Span(
+			vecty.Markup(vecty.Class("detail")),
+			vecty.Text("Envelope Type"),
+		),
+		elem.OrderedList(
+			elem.ListItem(vecty.Text(fmt.Sprintf("Serial: %t", envelopeType.Serial))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Anonymous: %t", envelopeType.Anonymous))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Encrypted votes: %t", envelopeType.EncryptedVotes))),
+			elem.ListItem(vecty.Text(fmt.Sprintf("Unique values: %t", envelopeType.UniqueValues))),
+		))
 }

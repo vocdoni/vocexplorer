@@ -1,6 +1,7 @@
 package components
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
-	"go.vocdoni.io/proto/build/go/models"
 )
 
 // ProcessContentsView renders the processes dashboard page
@@ -208,124 +208,14 @@ func renderResults(results [][]string) vecty.ComponentOrHTML {
 }
 
 func renderProcessDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
-	row1 := vecty.List{}
-	row2 := vecty.List{}
-
-	// Add EnvelopeType
-	row1 = append(row1, renderEnvelopeType(process.Envelope))
-	row1 = append(row1, renderProcessMode(process.Mode))
-	row1 = append(row1, renderProcessVoteOptions(process.VoteOpts))
-	row2 = append(row2, renderProcessConfigs(process))
-	row2 = append(row2, renderTimingDetails(process))
-	row2 = append(row2, renderProcessCensusDetails(process))
-
-	return elem.Div(
-		elem.Div(
-			vecty.Markup(vecty.Class("poll-details")),
-			row1,
-		),
-		elem.Div(
-			vecty.Markup(vecty.Class("poll-details")),
-			row2,
-		),
-	)
-}
-
-func renderEnvelopeType(envelopeType *models.EnvelopeType) vecty.ComponentOrHTML {
-	if envelopeType == nil {
-		return vecty.Text("Envelope Type unavailable")
+	detailsBytes, err := json.MarshalIndent(store.Processes.CurrentProcess.Process, "", "\t")
+	if err != nil {
+		logger.Error(err)
 	}
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Envelope Type"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Serial: %t", envelopeType.Serial))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Anonymous: %t", envelopeType.Anonymous))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Encrypted votes: %t", envelopeType.EncryptedVotes))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Unique values: %t", envelopeType.UniqueValues))),
-		))
-}
-func renderProcessMode(mode *models.ProcessMode) vecty.ComponentOrHTML {
-	if mode == nil {
-		return vecty.Text("Process Mode unavailable")
+	if len(detailsBytes) > 0 {
+		return elem.Preformatted(vecty.Text(string(detailsBytes)))
 	}
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Process Mode"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Auto start: %t", mode.AutoStart))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Interruptible: %t", mode.Interruptible))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Dynamic census: %t", mode.DynamicCensus))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Encrypted metadata: %t", mode.EncryptedMetaData))),
-		))
-}
-func renderProcessVoteOptions(options *models.ProcessVoteOptions) vecty.ComponentOrHTML {
-	if options == nil {
-		return vecty.Text("Process Options unavailable")
-	}
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Vote Options"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Max count: %d", options.MaxCount))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Max value: %d", options.MaxValue))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Max vote overwrites: %d", options.MaxVoteOverwrites))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Max total cost: %d", options.MaxTotalCost))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Cost exponent: %d", options.CostExponent))),
-		))
-}
-func renderTimingDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Timing & Results"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Start block: %d", process.StartBlock))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("End block: %d", process.EndBlock))),
-			vecty.If(process.SourceBlockHeight > 0,
-				elem.ListItem(
-					vecty.Text(fmt.Sprintf("Ethereum source block height: %d", process.SourceBlockHeight)),
-				),
-			),
-		),
-	)
-}
-
-func renderProcessCensusDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Census"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census origin: %d", process.CensusOrigin))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Census root: %X", process.CensusRoot))),
-			vecty.If(process.CensusURI != "",
-				elem.ListItem(vecty.Text(fmt.Sprintf("Census URI: %s", process.CensusURI)))),
-		))
-}
-
-func renderProcessConfigs(process *indexertypes.Process) vecty.ComponentOrHTML {
-	return elem.Div(
-		elem.Span(
-			vecty.Markup(vecty.Class("detail")),
-			vecty.Text("Other Details"),
-		),
-		elem.OrderedList(
-			elem.ListItem(vecty.Text(fmt.Sprintf("Namespace: %d", process.Namespace))),
-			vecty.If(len(process.PrivateKeys) > 0,
-				elem.ListItem(vecty.Text(fmt.Sprintf("Private Keys: %v", process.PrivateKeys)))),
-			vecty.If(len(process.PublicKeys) > 0,
-				elem.ListItem(vecty.Text(fmt.Sprintf("Public Keys: %v", process.PublicKeys)))),
-			elem.ListItem(vecty.Text(fmt.Sprintf("Question Index: %d", process.QuestionIndex))),
-		))
+	return vecty.Text("Details unavailable")
 }
 
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
