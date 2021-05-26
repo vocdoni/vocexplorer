@@ -42,6 +42,9 @@ func EnvelopeProcessResults() {
 
 // CurrentProcessResults updates current process information
 func CurrentProcessResults() {
+	if store.Processes.CurrentProcess == nil || store.Processes.CurrentProcess.Process == nil {
+		return
+	}
 	results, state, tp, final, err := store.Client.GetResults(store.Processes.CurrentProcess.Process.ID)
 	if err != nil {
 		logger.Error(err)

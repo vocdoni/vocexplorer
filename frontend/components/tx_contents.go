@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"regexp"
 	"strings"
+	"time"
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
@@ -17,6 +18,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/ethereum"
@@ -228,14 +230,38 @@ func preformattedTransactionContents() vecty.ComponentOrHTML {
 func UpdateTxContents(d *TxContents, blockHeight uint32, index int32) {
 	dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
+	d.fetchTransaction(blockHeight, index)
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("tx", ticker) {
+		return
+	}
+	for {
+		select {
+		case <-store.RedirectChan:
+			if !update.CheckCurrentPage("tx", ticker) {
+				return
+			}
+		case <-ticker.C:
+			if !update.CheckCurrentPage("tx", ticker) {
+				return
+			}
+			// If transaction never loaded, load it
+			if d.Unavailable {
+				d.fetchTransaction(blockHeight, index)
+			}
+		}
+	}
+}
+
+func (t *TxContents) fetchTransaction(blockHeight uint32, index int32) {
 	// Fetch transaction contents
 	tx, err := store.Client.GetTx(blockHeight, index)
 	if err == nil {
-		d.Unavailable = false
+		t.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: tx})
 	} else {
 		logger.Error(err)
-		d.Unavailable = true
+		t.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentTransaction{Transaction: nil})
 		return
 	}

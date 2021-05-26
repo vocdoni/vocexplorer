@@ -295,6 +295,9 @@ func (dash *ProcessContentsView) fetchProcess(pid []byte) {
 }
 
 func updateProcessContents(d *ProcessContentsView) {
+	if store.Processes.CurrentProcess == nil {
+		return
+	}
 	update.CurrentProcessResults()
 	if !store.Envelopes.Pagination.DisableUpdate && store.Processes.CurrentProcess.EnvelopeCount > 0 {
 		updateProcessEnvelopes(d, store.Processes.CurrentProcess.EnvelopeCount-store.Processes.EnvelopePagination.Index-config.ListSize)

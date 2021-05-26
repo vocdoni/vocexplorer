@@ -171,31 +171,27 @@ func (c *EnvelopeContents) fetchEnvelope() {
 	if store.Envelopes.CurrentEnvelope == nil {
 		return
 	}
-	if _, ok := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
-		process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
-		if err != nil {
-			logger.Error(err)
-		}
-		pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
-		if err != nil {
-			logger.Error(err)
-		}
-		for _, key := range pubKeys {
-			process.PublicKeys = append(process.PublicKeys, key.Key)
-		}
-		for _, key := range privKeys {
-			process.PrivateKeys = append(process.PrivateKeys, key.Key)
-		}
-		if process != nil {
-			dispatcher.Dispatch(&actions.SetProcess{
-				PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
-				Process: &storeutil.Process{
-					Envelopes:     []*indexertypes.EnvelopeMetadata{},
-					EnvelopeCount: 0,
-					Process:       process,
-				},
-			})
-		}
+	process, err := store.Client.GetProcess(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
+	if err != nil {
+		logger.Error(err)
+	}
+	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
+	if err != nil {
+		logger.Error(err)
+	}
+	for _, key := range pubKeys {
+		process.PublicKeys = append(process.PublicKeys, key.Key)
+	}
+	for _, key := range privKeys {
+		process.PrivateKeys = append(process.PrivateKeys, key.Key)
+	}
+	if process != nil {
+		dispatcher.Dispatch(&actions.SetProcess{
+			PID: util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId),
+			Process: &storeutil.Process{
+				Process: process,
+			},
+		})
 	}
 	if _, ok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]; !ok {
 		results, state, tp, final, err := store.Client.GetResults(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
