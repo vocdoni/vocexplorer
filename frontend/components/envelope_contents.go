@@ -58,7 +58,7 @@ func (c *EnvelopeContents) Render() vecty.ComponentOrHTML {
 	var votePackage *indexertypes.VotePackage
 	process, pok := store.Processes.Processes[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
 	results, rok := store.Processes.ProcessResults[util.HexToString(store.Envelopes.CurrentEnvelope.Meta.ProcessId)]
-	if process == nil || !pok || !rok {
+	if process == nil || process.Process == nil || !pok || !rok {
 		return Unavailable("Loading process...", "")
 	}
 	pkeys := process.Process.PrivateKeys

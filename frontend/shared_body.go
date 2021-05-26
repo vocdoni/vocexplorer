@@ -15,7 +15,7 @@ type Body struct {
 }
 
 // Render body simply renders routes for application
-func (b Body) Render() vecty.ComponentOrHTML {
+func (b *Body) Render() vecty.ComponentOrHTML {
 	return components.SectionMain(
 		router.NewRoute("/", &pages.HomeView{}, router.NewRouteOpts{ExactMatch: true}),
 		router.NewRoute("/processes", &pages.ProcessesView{}, router.NewRouteOpts{ExactMatch: true}),
