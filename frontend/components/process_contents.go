@@ -161,7 +161,7 @@ func (dash *ProcessContentsView) ProcessTabs() vecty.List {
 		elem.Div(
 			vecty.Markup(vecty.Class("tabs-content")),
 			TabContents(results, renderResults(store.Processes.ProcessResults[util.HexToString(store.Processes.CurrentProcess.Process.ID)].Results)),
-			TabContents(envelopes, &ProcessesEnvelopeListView{}),
+			TabContents(envelopes, renderEnvelopes()),
 			TabContents(processDetails, renderProcessDetails(store.Processes.CurrentProcess.Process)),
 		),
 	}
@@ -176,6 +176,22 @@ func renderPollAnswers(answers []string) vecty.ComponentOrHTML {
 	}
 
 	return items
+}
+
+func renderEnvelopes() vecty.ComponentOrHTML {
+	if store.Processes.CurrentProcess.EnvelopeCount == 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("This process has no envelopes"),
+		)
+	}
+	if len(store.Processes.CurrentProcess.Envelopes) == 0 {
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("Loading envelopes..."),
+		)
+	}
+	return &ProcessesEnvelopeListView{}
 }
 
 func renderResults(results [][]string) vecty.ComponentOrHTML {
@@ -230,6 +246,7 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 	for {
 		select {
 		case <-store.RedirectChan:
+			store.Processes.EnvelopePagination = storeutil.PageStore{}
 			if !update.CheckCurrentPage("process", ticker) {
 				return
 			}

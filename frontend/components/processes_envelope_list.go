@@ -13,6 +13,7 @@ import (
 // ProcessesEnvelopeListView renders the envelope list pane
 type ProcessesEnvelopeListView struct {
 	vecty.Core
+	loadingEnvelopes bool
 }
 
 // Render renders the EnvelopeListView component
@@ -54,7 +55,10 @@ func renderProcessEnvelopes(p *Pagination, index int) vecty.ComponentOrHTML {
 		if *p.Searching {
 			return elem.Div(vecty.Text("No envelopes found"))
 		}
-		return elem.Div(vecty.Text("No envelopes available"))
+		return elem.Preformatted(
+			vecty.Markup(vecty.Class("empty")),
+			vecty.Text("Loading envelopes..."),
+		)
 	}
 	EnvelopeList = append(EnvelopeList, vecty.Markup(vecty.Class("responsive-card-deck")))
 	return elem.Div(
