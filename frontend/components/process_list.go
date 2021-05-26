@@ -86,7 +86,9 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 			),
 		)
 	}
-
+	if process.State == "" {
+		process.State = "Unknown"
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", strings.ToLower(process.State))),
 		elem.Div(

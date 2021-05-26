@@ -75,6 +75,9 @@ func renderBlockTxs(p *Pagination, index int) vecty.ComponentOrHTML {
 }
 
 func renderBlockTx(tx *indexertypes.TxMetadata) vecty.ComponentOrHTML {
+	if tx.Type == "" {
+		tx.Type = "Unknown"
+	}
 	return elem.Div(
 		vecty.Markup(vecty.Class("tile", tx.Type)),
 		elem.Div(
