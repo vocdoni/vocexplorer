@@ -82,27 +82,27 @@ func UpdateBlockContents(d *BlockContents) {
 	dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	// Fetch block contents
-	logger.Info("getting block")
-	block, err := store.Client.GetBlock(uint32(store.Blocks.CurrentBlockHeight))
-	if err != nil {
-		logger.Error(err)
-		d.Unavailable = true
-		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
-		return
-	} else {
-		d.Unavailable = false
-		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
-	}
+	d.fetchBlock()
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("block", ticker) {
 		return
 	}
-	updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
+	if !d.Unavailable {
+		updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
+	}
 	for {
 		select {
 		case <-store.RedirectChan:
 			if !update.CheckCurrentPage("block", ticker) {
 				return
+			}
+		case <-ticker.C:
+			if !update.CheckCurrentPage("block", ticker) {
+				return
+			}
+			// If block never loaded, load it
+			if d.Unavailable {
+				d.fetchBlock()
 			}
 		case i := <-store.Blocks.TransactionPagination.PagChannel:
 		txloop:
@@ -117,10 +117,24 @@ func UpdateBlockContents(d *BlockContents) {
 			if !update.CheckCurrentPage("block", ticker) {
 				return
 			}
-			dispatcher.Dispatch(&actions.BlockTransactionsIndexChange{Index: i})
-			updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
-			// update the current page of txs
+			if !d.Unavailable {
+				// update the current page of txs
+				dispatcher.Dispatch(&actions.BlockTransactionsIndexChange{Index: i})
+				updateBlockTransactions(int(store.Blocks.CurrentBlock.NumTxs) - store.Blocks.TransactionPagination.Index - config.ListSize)
+			}
 		}
+	}
+}
+
+func (c *BlockContents) fetchBlock() {
+	block, err := store.Client.GetBlock(uint32(store.Blocks.CurrentBlockHeight))
+	if err != nil {
+		logger.Error(err)
+		c.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: nil})
+	} else {
+		c.Unavailable = false
+		dispatcher.Dispatch(&actions.SetCurrentBlock{Block: block})
 	}
 }
 

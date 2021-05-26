@@ -221,34 +221,7 @@ func renderProcessDetails(process *indexertypes.Process) vecty.ComponentOrHTML {
 // UpdateProcessContents keeps the data for the processes dashboard up-to-date
 func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
-	process, err := store.Client.GetProcess(pid)
-	if err != nil {
-		logger.Error(err)
-		d.Unavailable = true
-		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
-		return
-	}
-	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(pid)
-	if err != nil {
-		logger.Error(err)
-	}
-	for _, key := range pubKeys {
-		process.PublicKeys = append(process.PublicKeys, key.Key)
-	}
-	for _, key := range privKeys {
-		process.PrivateKeys = append(process.PrivateKeys, key.Key)
-	}
-	envelopeHeight, err := store.Client.GetEnvelopeHeight(pid)
-	if err != nil {
-		logger.Error(err)
-	}
-	d.Unavailable = false
-	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{
-		Process: &storeutil.Process{
-			EnvelopeCount: int(envelopeHeight),
-			Process:       process,
-		},
-	})
+	d.fetchProcess(pid)
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	if !update.CheckCurrentPage("process", ticker) {
 		return
@@ -263,6 +236,10 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 		case <-ticker.C:
 			if !update.CheckCurrentPage("process", ticker) {
 				return
+			}
+			// If process never loaded, load it
+			if d.Unavailable {
+				d.fetchProcess(pid)
 			}
 			updateProcessContents(d)
 		case i := <-store.Processes.EnvelopePagination.PagChannel:
@@ -284,6 +261,37 @@ func UpdateProcessContents(d *ProcessContentsView, pid []byte) {
 			}
 		}
 	}
+}
+
+func (dash *ProcessContentsView) fetchProcess(pid []byte) {
+	process, err := store.Client.GetProcess(pid)
+	if err != nil {
+		logger.Error(err)
+		dash.Unavailable = true
+		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
+		return
+	}
+	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(pid)
+	if err != nil {
+		logger.Error(err)
+	}
+	for _, key := range pubKeys {
+		process.PublicKeys = append(process.PublicKeys, key.Key)
+	}
+	for _, key := range privKeys {
+		process.PrivateKeys = append(process.PrivateKeys, key.Key)
+	}
+	envelopeHeight, err := store.Client.GetEnvelopeHeight(pid)
+	if err != nil {
+		logger.Error(err)
+	}
+	dash.Unavailable = false
+	dispatcher.Dispatch(&actions.SetCurrentProcessStruct{
+		Process: &storeutil.Process{
+			EnvelopeCount: int(envelopeHeight),
+			Process:       process,
+		},
+	})
 }
 
 func updateProcessContents(d *ProcessContentsView) {

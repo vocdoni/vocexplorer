@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -12,6 +13,7 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
+	"gitlab.com/vocdoni/vocexplorer/frontend/update"
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/nacl"
@@ -131,14 +133,38 @@ func UpdateEnvelopeContents(d *EnvelopeContents) {
 	// Set current envelope to nil so previous one is not displayed
 	dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: nil})
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
+	d.fetchEnvelope()
+	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * time.Second)
+	if !update.CheckCurrentPage("envelope", ticker) {
+		return
+	}
+	for {
+		select {
+		case <-store.RedirectChan:
+			if !update.CheckCurrentPage("envelope", ticker) {
+				return
+			}
+		case <-ticker.C:
+			if !update.CheckCurrentPage("envelope", ticker) {
+				return
+			}
+			// If envelope never loaded, load it
+			if d.Unavailable {
+				d.fetchEnvelope()
+			}
+		}
+	}
+}
+
+func (c *EnvelopeContents) fetchEnvelope() {
 	// Fetch actual envelope contents
 	envelope, err := store.Client.GetEnvelope(store.Envelopes.CurrentEnvelopeNullifier)
 	if err != nil {
-		d.Unavailable = true
+		c.Unavailable = true
 		dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: nil})
 		logger.Error(err)
 	} else {
-		d.Unavailable = false
+		c.Unavailable = false
 		dispatcher.Dispatch(&actions.SetCurrentEnvelope{Envelope: envelope})
 	}
 	// Ensure process & results are stored
