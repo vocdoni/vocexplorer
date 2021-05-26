@@ -149,7 +149,7 @@ func fetchProcessMetas(list []string) {
 		if processId == "" {
 			break
 		}
-		tp, state, entityId, height, err := store.Client.GetProcessMeta(util.StringToHex(processId))
+		tp, state, entityId, height, err := store.Client.GetProcessSummary(util.StringToHex(processId))
 		if err != nil {
 			logger.Error(err)
 		}
