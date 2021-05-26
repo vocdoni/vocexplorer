@@ -121,12 +121,15 @@ func (c *Client) GetProcessSummary(pid []byte) (string, string, string, uint32, 
 	if !resp.Ok {
 		return "", "", "", 0, fmt.Errorf(resp.Message)
 	}
+	if resp.ProcessSummary == nil {
+		return "", "", "", 0, fmt.Errorf("no ProcessSummary provided")
+	}
 	var height uint32
 	if resp.ProcessSummary.EnvelopeHeight != nil {
 		height = *resp.ProcessSummary.EnvelopeHeight
 	}
 
-	return decodeProcessType(resp.ProcessSummary.Type), resp.ProcessSummary.Status, resp.ProcessSummary.EntityID, height, nil
+	return decodeProcessType(resp.ProcessSummary.EnvelopeType), resp.ProcessSummary.State, resp.ProcessSummary.EntityID, height, nil
 }
 
 func (c *Client) GetProcessKeys(pid []byte) ([]api.Key, []api.Key, []api.Key, []api.Key, error) {
