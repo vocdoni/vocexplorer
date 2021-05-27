@@ -47,8 +47,6 @@ var (
 	Validators storeutil.Validators
 	// ProcessDomain is the link for process profiles
 	ProcessDomain string
-	// EntityDomain is the link for entity profiles
-	EntityDomain string
 )
 
 func init() {
@@ -95,8 +93,7 @@ func init() {
 
 	ServerConnected = true
 
-	ProcessDomain = "https://app.vocdoni.net/processes/#/0x"
-	EntityDomain = "https://vocdoni.link/entities/0x"
+	ProcessDomain = "https://vocdoni.app/pub/votes/#/0x"
 
 	Reduce()
 }

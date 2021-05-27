@@ -4,7 +4,6 @@ package config
 type Cfg struct {
 	// RefreshTime is the number of seconds between page data refresh
 	RefreshTime int    `json:"refreshTime"`
-	Environment string `json:"environment"`
 	GatewayUrl  string `json:"gatewayUrl"`
 }
 

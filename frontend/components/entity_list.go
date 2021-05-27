@@ -44,22 +44,6 @@ func EntityBlock(ID string, height int64) vecty.ComponentOrHTML {
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
-				vecty.Markup(vecty.Class("type")),
-				elem.Div(
-					elem.Span(
-						vecty.Markup(vecty.Class("title")),
-						elem.Anchor(
-							vecty.Markup(
-								vecty.Attribute("href", store.EntityDomain+ID),
-								vecty.Property("target", ID),
-							),
-							vecty.Markup(vecty.Attribute("aria-label", "Link to entity "+store.Entities.CurrentEntityID+"'s profile page")),
-							vecty.Text("Entity Profile"),
-						),
-					),
-				),
-			),
-			elem.Div(
 				vecty.Markup(vecty.Class("contents")),
 				elem.Div(
 					elem.Div(

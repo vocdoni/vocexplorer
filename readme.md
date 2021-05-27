@@ -54,7 +54,6 @@ Then in your favorite web browser navigate to localhost at the specified port.
 Options for `main.go`:
 - `--dataDir` `(string)`             directory where data is stored (default "/Users/natewilliams/.vocexplorer")
 - `--refreshTime` `(int)`            number of seconds between each content refresh (default 10)
-- `--environment` `(string)`         vochain environment, ie. \"dev\", \"stg\", \"\""
 - `--gatewayUrl` `(string)`          vocdoni node URL to query for data
 - `--disableGzip`                    use to disable gzip compression on web server
 - `--hostURL` `(string)`             url to host block explorer (default "http://localhost:8081")
