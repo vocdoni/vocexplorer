@@ -110,26 +110,24 @@ func (c *Client) GetProcess(pid []byte) (*indexertypes.Process, error) {
 	return resp.Process, nil
 }
 
-func (c *Client) GetProcessSummary(pid []byte) (string, string, string, uint32, error) {
+func (c *Client) GetProcessSummary(pid []byte) (*api.ProcessSummary, error) {
 	var req api.MetaRequest
 	req.Method = "getProcessSummary"
 	req.ProcessID = pid
 	resp, err := c.Request(req)
 	if err != nil {
-		return "", "", "", 0, err
+		return nil, err
 	}
 	if !resp.Ok {
-		return "", "", "", 0, fmt.Errorf(resp.Message)
+		return nil, fmt.Errorf(resp.Message)
 	}
-	if resp.ProcessSummary == nil {
-		return "", "", "", 0, fmt.Errorf("no ProcessSummary provided")
+	// Remove need to null-check envelope height
+	if resp.ProcessSummary != nil {
+		if resp.ProcessSummary.EnvelopeHeight == nil {
+			resp.ProcessSummary.EnvelopeHeight = new(uint32)
+		}
 	}
-	var height uint32
-	if resp.ProcessSummary.EnvelopeHeight != nil {
-		height = *resp.ProcessSummary.EnvelopeHeight
-	}
-
-	return decodeProcessType(resp.ProcessSummary.EnvelopeType), resp.ProcessSummary.State, resp.ProcessSummary.EntityID, height, nil
+	return resp.ProcessSummary, nil
 }
 
 func (c *Client) GetProcessKeys(pid []byte) ([]api.Key, []api.Key, []api.Key, []api.Key, error) {
@@ -339,27 +337,4 @@ func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*i
 		}
 	}
 	return resp.TxList, nil
-}
-
-func decodeProcessType(tp *models.EnvelopeType) string {
-	if tp == nil {
-		return "unknown"
-	}
-	processType := ""
-	if tp.Anonymous {
-		processType = "anonymous"
-	} else {
-		processType = "poll"
-	}
-	if tp.EncryptedVotes {
-		processType += " encrypted"
-	} else {
-		processType += " open"
-	}
-	if tp.Serial {
-		processType += " serial"
-	} else {
-		processType += " single"
-	}
-	return processType
 }

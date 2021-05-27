@@ -86,11 +86,11 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 			),
 		)
 	}
-	if process.State == "" {
-		process.State = "Unknown"
+	if process.ProcessSummary.State == "" {
+		process.ProcessSummary.State = "Unknown"
 	}
 	return elem.Div(
-		vecty.Markup(vecty.Class("tile", strings.ToLower(process.State))),
+		vecty.Markup(vecty.Class("tile", strings.ToLower(process.ProcessSummary.State))),
 		elem.Div(
 			vecty.Markup(vecty.Class("tile-body")),
 			elem.Div(
@@ -98,11 +98,11 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 				elem.Div(
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
-						vecty.Text(util.GetProcessName(process.Type)),
+						vecty.Text(util.GetProcessName(util.DecodeEnvelopeType(process.ProcessSummary.EnvelopeType))),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("status")),
-						vecty.Text(strings.Title(process.State)),
+						vecty.Text(strings.Title(process.ProcessSummary.State)),
 					),
 				),
 			),
@@ -118,17 +118,17 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 					elem.Div(
 						vecty.Text("Belongs to entity "),
 						Link(
-							"/entity/"+process.EntityID,
-							process.EntityID,
+							"/entity/"+process.ProcessSummary.EntityID,
+							process.ProcessSummary.EntityID,
 							"hash",
 						),
 					),
 					elem.Div(
 						vecty.Markup(vecty.Class("envelopes")),
-						vecty.If(process.EnvelopeCount == 1, vecty.Text(
+						vecty.If(*process.ProcessSummary.EnvelopeHeight == 1, vecty.Text(
 							fmt.Sprintf("%d envelope", process.EnvelopeCount),
 						)),
-						vecty.If(process.EnvelopeCount != 1, vecty.Text(
+						vecty.If(*process.ProcessSummary.EnvelopeHeight != 1, vecty.Text(
 							fmt.Sprintf("%d envelopes", process.EnvelopeCount),
 						)),
 					),

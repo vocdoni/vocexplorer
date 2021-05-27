@@ -1384,6 +1384,8 @@ go.vocdoni.io/dvote v0.6.1-0.20210526145926-c864afb061c7 h1:i8FRCCF2aHb+ZuHhK3zl
 go.vocdoni.io/dvote v0.6.1-0.20210526145926-c864afb061c7/go.mod h1:IaRFZq2ErAV8GTkXBG1bDutdvwS9MQblj0pSUM+HkxY=
 go.vocdoni.io/dvote v0.6.1-0.20210526152026-c89a6c420669 h1:TTj/9+llze2se+CCObiw8/MdyOWDUAAgrNf4pBrkNDs=
 go.vocdoni.io/dvote v0.6.1-0.20210526152026-c89a6c420669/go.mod h1:IaRFZq2ErAV8GTkXBG1bDutdvwS9MQblj0pSUM+HkxY=
+go.vocdoni.io/dvote v0.6.1-0.20210527071627-898e863e2f22 h1:wIvIIMT9eV9ZpNWbS7q7l6eXDsrSKDH5KrVkwff89FA=
+go.vocdoni.io/dvote v0.6.1-0.20210527071627-898e863e2f22/go.mod h1:IaRFZq2ErAV8GTkXBG1bDutdvwS9MQblj0pSUM+HkxY=
 go.vocdoni.io/proto v1.0.4-0.20210525130734-c9e1ff675866 h1:MS1jVvLFMzQZ6bSqdnbOaWqvvWoeZQXg2mpGPhEjpv8=
 go.vocdoni.io/proto v1.0.4-0.20210525130734-c9e1ff675866/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go4.org v0.0.0-20180809161055-417644f6feb5/go.mod h1:MkTOUMDaeVYJUOUsaDXIhWPZYa1yOyC1qaOBpL57BhE=

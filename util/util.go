@@ -202,3 +202,26 @@ func GetEnvelopeName(raw string) string {
 	}
 	return raw
 }
+
+func DecodeEnvelopeType(tp *models.EnvelopeType) string {
+	if tp == nil {
+		return "unknown"
+	}
+	processType := ""
+	if tp.Anonymous {
+		processType = "anonymous"
+	} else {
+		processType = "poll"
+	}
+	if tp.EncryptedVotes {
+		processType += " encrypted"
+	} else {
+		processType += " open"
+	}
+	if tp.Serial {
+		processType += " serial"
+	} else {
+		processType += " single"
+	}
+	return processType
+}

@@ -117,17 +117,8 @@ func processActions(action interface{}) {
 	case *actions.SetProcess:
 		if proc, ok := Processes.Processes[a.PID]; ok {
 			// If process exists, only update relevant fields
-			if a.Process.EntityID != "" {
-				proc.EntityID = a.Process.EntityID
-			}
-			if a.Process.ProcessID != "" {
-				proc.ProcessID = a.Process.ProcessID
-			}
-			if a.Process.Type != "" {
-				proc.Type = a.Process.Type
-			}
-			if a.Process.State != "" {
-				proc.State = a.Process.State
+			if a.Process.ProcessSummary != nil {
+				proc.ProcessSummary = a.Process.ProcessSummary
 			}
 			if len(a.Process.Envelopes) > 0 {
 				proc.Envelopes = a.Process.Envelopes

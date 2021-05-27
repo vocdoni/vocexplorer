@@ -1,6 +1,7 @@
 package storeutil
 
 import (
+	"go.vocdoni.io/dvote/api"
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
@@ -17,13 +18,11 @@ type Processes struct {
 
 // Process holds info about one vochain process, including the process and envelope info
 type Process struct {
-	Envelopes     []*indexertypes.EnvelopeMetadata
-	EnvelopeCount int
-	Process       *indexertypes.Process
-	Type          string
-	State         string
-	EntityID      string
-	ProcessID     string
+	Envelopes      []*indexertypes.EnvelopeMetadata
+	EnvelopeCount  int
+	Process        *indexertypes.Process
+	ProcessSummary *api.ProcessSummary
+	ProcessID      string
 }
 
 type ProcessResults struct {

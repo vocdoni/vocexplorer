@@ -172,18 +172,19 @@ func updateEntityProcesses(d *EntityContentsView, index int) {
 		reverseIDList(list)
 		dispatcher.Dispatch(&actions.SetEntityProcessIds{ProcessList: list})
 		for _, processId := range store.Entities.CurrentEntity.ProcessIds {
-			tp, state, entityId, height, err := store.Client.GetProcessSummary(util.StringToHex(processId))
+			summary, err := store.Client.GetProcessSummary(util.StringToHex(processId))
 			if err != nil {
 				logger.Error(err)
+			}
+			if summary == nil {
+				return
 			}
 			dispatcher.Dispatch(&actions.SetProcess{
 				PID: processId,
 				Process: &storeutil.Process{
-					EnvelopeCount: int(height),
-					Type:          tp,
-					State:         state,
-					EntityID:      entityId,
-					ProcessID:     processId,
+					EnvelopeCount:  int(*summary.EnvelopeHeight),
+					ProcessSummary: summary,
+					ProcessID:      processId,
 				},
 			})
 		}
