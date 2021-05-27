@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 
@@ -116,7 +117,9 @@ func ProcessBlock(process *storeutil.Process) vecty.ComponentOrHTML {
 						),
 					),
 					elem.Div(
-						vecty.Text("Belongs to entity "),
+						vecty.Text(fmt.Sprintf(
+							"%s process for entity ", humanize.Ordinal(int(process.ProcessSummary.EntityIndex)),
+						)),
 						Link(
 							"/entity/"+process.ProcessSummary.EntityID,
 							process.ProcessSummary.EntityID,
