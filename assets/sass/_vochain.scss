@@ -104,21 +104,36 @@ main {
   border: 1px solid $gray-400;
   border-left: 4px solid $green;
 
-  &.addProcessKeys,
+  &.ADD_PROCESS_KEYS, 
+  &.SET_PROCESS_STATUS, 
+  &.SET_PROCESS_CENSUS, 
+  &.SET_PROCESS_QUESTION_INDEX, 
+  &.ADD_ORACLE, 
+  &.REMOVE_ORACLE, 
+  &.ADD_VALIDATOR, 
+  &.REMOVE_VALIDATOR, 
+  &.addProcessKeys, 
+  &.setProcess, 
   &.results {
     @include tile-color($cyan);
   }
 
-  &.revealProcessKeys,
+  &.REVEAL_PROCESS_KEYS, 
+  &.SET_PROCESS_RESULTS, 
+  &.revealProcessKeys, 
   &.ended {
     @include tile-color($teal);
   }
 
   &.newProcess,
+  &.NEW_PROCESS,
   &.paused {
     @include tile-color(lighten($gray-600, 5%));
   }
   &.cancelProcess,
+  &.CANCEL_PROCESS,
+  &.unknown,
+  &.TX_UNKNOWN,
   &.canceled {
     @include tile-color($yellow);
   }
@@ -143,15 +158,18 @@ main {
     &.ADD_VALIDATOR, 
     &.REMOVE_VALIDATOR, 
     &.addProcessKeys, 
+    &.setProcess, 
     &.results {
       @include desktop-tile-color($cyan);
     }
+
     &.REVEAL_PROCESS_KEYS, 
     &.SET_PROCESS_RESULTS, 
     &.revealProcessKeys, 
     &.ended {
       @include desktop-tile-color($teal);
     }
+
     &.cancelProcess,
     &.CANCEL_PROCESS,
     &.unknown,
@@ -159,6 +177,7 @@ main {
     &.canceled {
       @include desktop-tile-color($yellow);
     }
+
     &.newProcess,
     &.NEW_PROCESS,
     &.paused {
