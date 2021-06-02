@@ -37,7 +37,6 @@ func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
 		SearchCh:        store.Blocks.TransactionPagination.SearchChannel,
 		Searching:       &store.Blocks.TransactionPagination.Search,
 		RenderSearchBar: false,
-		SearchPrompt:    "search by tx index",
 	}
 	p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 		return renderBlockTxs(p, index)
@@ -47,9 +46,6 @@ func (b *BlockTransactionsListView) Render() vecty.ComponentOrHTML {
 		vecty.Markup(vecty.Class("list", "paginated")),
 		bootstrap.Card(bootstrap.CardParams{
 			Body: vecty.List{
-				elem.Heading2(
-					vecty.Text("Transactions"),
-				),
 				p,
 			},
 		}),

@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
-	go.vocdoni.io/dvote v0.6.1-0.20210527071627-898e863e2f22
+	go.vocdoni.io/dvote v0.6.1-0.20210601185941-537ca63eac12
 	go.vocdoni.io/proto v1.0.4-0.20210525130734-c9e1ff675866
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	nhooyr.io/websocket v1.8.6

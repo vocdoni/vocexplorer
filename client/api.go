@@ -318,6 +318,23 @@ func (c *Client) GetTx(blockHeight uint32, txIndex int32) (*indexertypes.TxPacka
 	return resp.Tx, nil
 }
 
+func (c *Client) GetTxByHeight(height uint32) (*indexertypes.TxPackage, error) {
+	var req api.MetaRequest
+	req.Method = "getTxByHeight"
+	req.Height = height
+	resp, err := c.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	if !resp.Ok {
+		return nil, fmt.Errorf("cannot get tx: (%s)", resp.Message)
+	}
+	if resp.Tx != nil {
+		resp.Tx.Height = height
+	}
+	return resp.Tx, nil
+}
+
 func (c *Client) GetTxListForBlock(blockHeight uint32, from, listSize int) ([]*indexertypes.TxMetadata, error) {
 	var req api.MetaRequest
 	req.Method = "getTxListForBlock"

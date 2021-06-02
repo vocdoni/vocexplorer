@@ -10,10 +10,11 @@ import (
 // Transactions stores all data about blockchain transactions
 type Transactions struct {
 	CurrentTransaction        *indexertypes.TxPackage
+	Count                     int
 	CurrentDecodedTransaction *DecodedTransaction
 	CurrentBlock              *indexertypes.BlockMetadata
 	Pagination                PageStore
-	Transactions              []*indexertypes.TxMetadata
+	Transactions              []*FullTransaction
 }
 
 // DecodedTransaction stores human-readable decoded transaction data
@@ -24,4 +25,10 @@ type DecodedTransaction struct {
 	ProcessID     string
 	EntityID      string
 	Nullifier     string
+}
+
+// FullTransaction stores a TxPackage and DecodedTransaction
+type FullTransaction struct {
+	Decoded *DecodedTransaction
+	Package *indexertypes.TxPackage
 }

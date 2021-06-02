@@ -134,19 +134,33 @@ main {
       margin-bottom: -1px;
     }
 
+    &.ADD_PROCESS_KEYS, 
+    &.SET_PROCESS_STATUS, 
+    &.SET_PROCESS_CENSUS, 
+    &.SET_PROCESS_QUESTION_INDEX, 
+    &.ADD_ORACLE, 
+    &.REMOVE_ORACLE, 
+    &.ADD_VALIDATOR, 
+    &.REMOVE_VALIDATOR, 
     &.addProcessKeys, 
     &.results {
       @include desktop-tile-color($cyan);
     }
+    &.REVEAL_PROCESS_KEYS, 
+    &.SET_PROCESS_RESULTS, 
     &.revealProcessKeys, 
     &.ended {
       @include desktop-tile-color($teal);
     }
     &.cancelProcess,
+    &.CANCEL_PROCESS,
+    &.unknown,
+    &.TX_UNKNOWN,
     &.canceled {
       @include desktop-tile-color($yellow);
     }
     &.newProcess,
+    &.NEW_PROCESS,
     &.paused {
       @include desktop-tile-color(lighten($gray-600, 5%));
     }
