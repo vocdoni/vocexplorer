@@ -114,7 +114,6 @@ func updateTransactions(d *TransactionsDashboardView, index int) {
 		tx, err := store.Client.GetTxByHeight(uint32(index + i))
 		if err != nil {
 			logger.Error(err)
-			return
 		}
 		if tx == nil {
 			continue
