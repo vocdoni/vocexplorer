@@ -44,22 +44,23 @@ func (b *BlockchainInfo) Render() vecty.ComponentOrHTML {
 			fmt.Sprintf(time.Unix(int64(store.Stats.BlockTimeStamp), 0).Format("Mon Jan _2 15:04:05 UTC 2006")),
 		)),
 	))
-	rows = append(rows, row())
 	rows = append(rows, row(
+		head(vecty.Text("Total transactions")),
+		data(vecty.Text(humanize.Comma(int64(store.Stats.TransactionCount)))),
 		head(vecty.Text("Total entities")),
 		data(vecty.Text(humanize.Comma(int64(store.Entities.Count)))),
+	))
+	rows = append(rows, row(
 		head(vecty.Text("Total processes")),
 		data(vecty.Text(humanize.Comma(int64(store.Processes.Count)))),
-	))
-	rows = append(rows, row(
 		head(vecty.Text("Number of validators")),
 		data(vecty.Text(humanize.Comma(int64(store.Stats.ValidatorCount)))),
-		head(vecty.Text("Total vote envelopes")),
-		data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
 	))
 	rows = append(rows, row(
-		spanHead(vecty.Text("Sync status")),
-		spanData(
+		head(vecty.Text("Total vote envelopes")),
+		data(vecty.Text(humanize.Comma(int64(store.Envelopes.Count)))),
+		head(vecty.Text("Sync status")),
+		data(
 			vecty.If(syncing, elem.Span(
 				vecty.Markup(vecty.Class("badge", "badge-warning")),
 				vecty.Markup(

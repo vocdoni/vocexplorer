@@ -196,6 +196,9 @@ func statsActions(action interface{}) {
 // transactionActions is the handler for all transaction-related store actions
 func transactionActions(action interface{}) {
 	switch a := action.(type) {
+	case *actions.SetTransactionCount:
+		Transactions.Count = a.Count
+
 	case *actions.TransactionTabChange:
 		Transactions.Pagination.Tab = a.Tab
 

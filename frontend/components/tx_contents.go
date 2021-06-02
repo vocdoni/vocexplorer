@@ -1,12 +1,9 @@
 package components
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"regexp"
-	"strings"
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
@@ -23,7 +20,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/util"
 	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/proto/build/go/models"
-	"google.golang.org/protobuf/proto"
 )
 
 // TxContents renders tx contents
@@ -273,134 +269,19 @@ func (t *TxContents) fetchTransaction(blockHeight uint32, index int32) {
 		dispatcher.Dispatch(&actions.SetTransactionBlock{Block: block})
 	}
 
-	var rawTx models.Tx
-	err = proto.Unmarshal(tx.Tx, &rawTx)
-	if err != nil {
-		logger.Error(err)
+	// decoded the transaction
+	decoded := decodeTransaction(tx.Tx)
+	if decoded == nil {
+		dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{Transaction: nil})
+		return
 	}
-	var txContents string
-	var processID string
-	var nullifier string
-	var entityID string
-
-	switch rawTx.Payload.(type) {
+	// If vote type, generate the nullifier as well
+	switch decoded.RawTx.Payload.(type) {
 	case *models.Tx_Vote:
-		typedTx := rawTx.GetVote()
-		if typedTx == nil {
-			logger.Error(fmt.Errorf("vote transaction empty"))
-			break
-		}
-		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
-		if err != nil {
-			logger.Error(err)
-		}
-		txContents = string(txBytes)
-		processID = hex.EncodeToString(typedTx.GetProcessId())
-		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
-		txContents = convertB64ToHex(txContents, "processId", processID)
-		// TODO decode more proof types
-		if typedTx.GetProof() != nil {
-			switch typedTx.GetProof().Payload.(type) {
-			case *models.Proof_Graviton:
-				txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(
-					typedTx.GetProof().GetGraviton().Siblings))
-			case *models.Proof_EthereumStorage:
-				siblings := []string{}
-				for _, sibling := range typedTx.GetProof().GetEthereumStorage().Siblings {
-					siblings = append(siblings, util.HexToString(sibling))
-				}
-				txContents = convertB64ToHex(txContents, "siblings", strings.Join(siblings, ", "))
-			case *models.Proof_Iden3:
-				txContents = convertB64ToHex(txContents, "siblings", hex.EncodeToString(
-					typedTx.GetProof().GetIden3().GetSiblings()))
-			default:
-				logger.Info("Other biscuit")
-			}
-		}
-		txContents = convertB64ToHex(txContents, "votePackage", hex.EncodeToString(typedTx.VotePackage))
-
-		pubKey, err := ethereum.PubKeyFromSignature(tx.Tx, tx.Signature)
-		if err != nil {
-			logger.Error(fmt.Errorf("cannot extract public key from signature: (%w)", err))
-			break
-		}
-		addr, err := ethereum.AddrFromPublicKey(pubKey)
-		if err != nil {
-			logger.Error(fmt.Errorf("cannot extract address from public key: (%w)", err))
-			break
-		}
-
-		// assign a nullifier
-		nullifier = util.HexToString(ethereum.HashRaw([]byte(fmt.Sprintf("%s%s", addr.Bytes(), typedTx.GetProcessId()))))
-		txContents = convertB64ToHex(txContents, "nullifier", nullifier)
-	case *models.Tx_NewProcess:
-		typedTx := rawTx.GetNewProcess()
-		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
-		if err != nil {
-
-			logger.Error(err)
-		}
-		txContents = string(txBytes)
-		processID = hex.EncodeToString(typedTx.Process.GetProcessId())
-		entityID = hex.EncodeToString(typedTx.Process.GetEntityId())
-		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
-		txContents = convertB64ToHex(txContents, "processId", processID)
-		txContents = convertB64ToHex(txContents, "entityId", entityID)
-		txContents = convertB64ToHex(txContents, "censusRoot", hex.EncodeToString(typedTx.Process.CensusRoot))
-		txContents = convertB64ToHex(txContents, "paramsSignature", hex.EncodeToString(typedTx.Process.ParamsSignature))
-	case *models.Tx_Admin:
-		typedTx := rawTx.GetAdmin()
-		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
-		if err != nil {
-			logger.Error(err)
-		}
-		txContents = string(txBytes)
-		processID = hex.EncodeToString(typedTx.GetProcessId())
-		txContents = convertB64ToHex(txContents, "processId", processID)
-		txContents = convertB64ToHex(txContents, "address", hex.EncodeToString(typedTx.Address))
-		txContents = convertB64ToHex(txContents, "commitmentKey", hex.EncodeToString(typedTx.CommitmentKey))
-		txContents = convertB64ToHex(txContents, "encryptionPrivateKey", hex.EncodeToString(typedTx.EncryptionPrivateKey))
-		txContents = convertB64ToHex(txContents, "encryptionPublicKey", hex.EncodeToString(typedTx.EncryptionPublicKey))
-		txContents = convertB64ToHex(txContents, "publicKey", hex.EncodeToString(typedTx.PublicKey))
-		txContents = convertB64ToHex(txContents, "revealKey", hex.EncodeToString(typedTx.RevealKey))
-		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
-	case *models.Tx_SetProcess:
-		typedTx := rawTx.GetSetProcess()
-		txBytes, err := json.MarshalIndent(typedTx, "", "\t")
-		if err != nil {
-			logger.Error(err)
-		}
-		txContents = string(txBytes)
-		processID = hex.EncodeToString(typedTx.GetProcessId())
-		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
-		txContents = convertB64ToHex(txContents, "processId", processID)
-		txContents = convertB64ToHex(txContents, "censusRoot", hex.EncodeToString(typedTx.CensusRoot))
-		if typedTx.GetResults() != nil {
-			if len(typedTx.GetResults().EntityId) > 0 {
-				entityID = hex.EncodeToString(typedTx.GetResults().EntityId)
-				txContents = convertB64ToHex(txContents, "entityId", entityID)
-			}
-			votesRe, err := regexp.Compile("\"votes\":[^_]*\\],")
-			if err != nil {
-				logger.Warn(err.Error())
-			}
-			txContents = votesRe.ReplaceAllString(txContents, formatQuestions(typedTx.Results.Votes))
-		}
+		generateNullifier(decoded, tx.Tx, tx.Signature)
 	}
-
-	entityID = util.TrimHex(entityID)
-	processID = util.TrimHex(processID)
-	nullifier = util.TrimHex(nullifier)
-	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{
-		Transaction: &storeutil.DecodedTransaction{
-			RawTxContents: txContents,
-			RawTx:         &rawTx,
-			Time:          store.Transactions.CurrentBlock.Timestamp,
-			ProcessID:     processID,
-			EntityID:      entityID,
-			Nullifier:     nullifier,
-		},
-	})
+	decoded.Time = store.Transactions.CurrentBlock.Timestamp
+	dispatcher.Dispatch(&actions.SetCurrentDecodedTransaction{Transaction: decoded})
 }
 
 func convertB64ToHex(source, key, hex string) string {
@@ -434,4 +315,21 @@ func formatQuestions(votes []*models.QuestionResult) string {
 	}
 	votesString += "\n\t\t],"
 	return votesString
+}
+
+func generateNullifier(decoded *storeutil.DecodedTransaction, tx, signature []byte) {
+	pubKey, err := ethereum.PubKeyFromSignature(tx, signature)
+	if err != nil {
+		logger.Error(fmt.Errorf("cannot extract public key from signature: (%w)", err))
+		return
+	}
+	addr, err := ethereum.AddrFromPublicKey(pubKey)
+	if err != nil {
+		logger.Error(fmt.Errorf("cannot extract address from public key: (%w)", err))
+		return
+	}
+
+	// assign a nullifier
+	decoded.Nullifier = util.HexToString(ethereum.HashRaw([]byte(fmt.Sprintf("%s%s", addr.Bytes(), decoded.ProcessID))))
+	decoded.RawTxContents = convertB64ToHex(decoded.RawTxContents, "nullifier", decoded.Nullifier)
 }

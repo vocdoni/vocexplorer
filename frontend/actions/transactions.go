@@ -5,6 +5,11 @@ import (
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
+// SetTransactionCount is the action to set the transaction count
+type SetTransactionCount struct {
+	Count int
+}
+
 // TransactionTabChange is the action to change between tabs in transaction view details
 type TransactionTabChange struct {
 	Tab string
@@ -17,7 +22,7 @@ type TransactionsIndexChange struct {
 
 // SetTransactionList is the action to set the transaction list
 type SetTransactionList struct {
-	TransactionList []*indexertypes.TxMetadata
+	TransactionList []*storeutil.FullTransaction
 }
 
 // SetCurrentTransaction is the action to set the current transaction
