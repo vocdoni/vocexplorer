@@ -2,10 +2,13 @@ package components
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
+	"github.com/hexops/vecty/prop"
 
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
@@ -55,6 +58,9 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 // UpdateProcessesDashboard continuously updates the information needed by the Processes dashboard
 func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
+	dispatcher.Dispatch(&actions.SetProcessStatusFilter{})
+	dispatcher.Dispatch(&actions.SetProcessResultsFilter{})
+	dispatcher.Dispatch(&actions.SetProcessNamespaceFilter{})
 
 	ticker := time.NewTicker(time.Duration(store.Config.RefreshTime) * 5 * time.Second)
 	updateProcesses(d)
@@ -101,9 +107,9 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 					break processSearch
 				}
 			}
-			logger.Info("search: " + search)
+			logger.Info(fmt.Sprintf("search: %s, %d, %s, %t", search, store.Processes.NamespaceFilter, store.Processes.StatusFilter, store.Processes.ResultsFilter))
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			list, err := store.Client.GetProcessList([]byte{}, search, 0, "", false, 0, config.ListSize)
+			list, err := store.Client.GetProcessList([]byte{}, search, uint32(store.Processes.NamespaceFilter), store.Processes.StatusFilter, store.Processes.ResultsFilter, 0, config.ListSize)
 			if err != nil {
 				dispatcher.Dispatch(&actions.SetProcessIds{Processes: []string{}})
 				logger.Error(err)
@@ -165,4 +171,100 @@ func fetchProcessMetas(list []string) {
 			},
 		})
 	}
+}
+
+// dropdown menus for pagination
+
+func generateNamespaceDropdown() vecty.ComponentOrHTML {
+	options := []vecty.MarkupOrChild{}
+	options = append(options, elem.Option(vecty.Text("")))
+	for i := 0; i < 500; i++ {
+		options = append(options, elem.Option(vecty.Text(strconv.Itoa(i))))
+	}
+	return elem.Div(
+		vecty.Markup(vecty.Class("dropdown")),
+		elem.Div(
+			vecty.Markup(vecty.Class("description")),
+			vecty.Text("namespace"),
+		),
+		elem.Div(
+			vecty.Markup(
+				event.Change(
+					func(e *vecty.Event) {
+						filter, err := strconv.Atoi(e.Target.Get("value").String())
+						if err != nil {
+							logger.Error(fmt.Errorf("cannot parse namespace filter" + e.Target.Get("value").String()))
+						}
+						dispatcher.Dispatch(&actions.SetProcessNamespaceFilter{NamespaceFilter: filter})
+					},
+				),
+			),
+			vecty.Markup(vecty.Class("contents")),
+			elem.Select(
+				options...,
+			),
+		),
+	)
+}
+func generateStatusDropdown() vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("dropdown")),
+		elem.Div(
+			vecty.Markup(vecty.Class("description")),
+			vecty.Text("status"),
+		),
+		elem.Div(
+			vecty.Markup(
+				event.Change(
+					func(e *vecty.Event) {
+						filter := e.Target.Get("value").String()
+						if filter == "unknown" {
+							filter = "process_unknown"
+						}
+						dispatcher.Dispatch(&actions.SetProcessStatusFilter{StatusFilter: filter})
+					},
+				),
+			),
+			vecty.Markup(vecty.Class("contents")),
+			elem.Select(
+				elem.Option(vecty.Text("")),
+				elem.Option(vecty.Text("ready")),
+				elem.Option(vecty.Text("ended")),
+				elem.Option(vecty.Text("canceled")),
+				elem.Option(vecty.Text("paused")),
+				elem.Option(vecty.Text("results")),
+				elem.Option(vecty.Text("unknown")),
+			),
+		),
+	)
+}
+func generateResultsCheckbox() vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("dropdown")),
+		elem.Div(
+			vecty.Markup(vecty.Class("description")),
+			vecty.Text("has results"),
+		),
+		elem.Div(
+			vecty.Markup(
+				event.Change(
+					func(e *vecty.Event) {
+						filter, err := strconv.ParseBool(e.Target.Get("value").String())
+						if err != nil {
+							logger.Error(fmt.Errorf("cannot parse results filter" + e.Target.Get("value").String()))
+						}
+						dispatcher.Dispatch(&actions.SetProcessResultsFilter{ResultsFilter: filter})
+					},
+				),
+			),
+			vecty.Markup(vecty.Class("contents")),
+			elem.Input(
+				vecty.Markup(
+					prop.Value("results available"),
+					prop.Type("checkbox"),
+				),
+				vecty.Text("results available"),
+			),
+		),
+	)
 }

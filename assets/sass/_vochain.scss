@@ -243,6 +243,49 @@ main {
   }
 }
 
+.dropdown-wrapper {
+  @extend .flex-row;
+  @extend .flex-md-row;
+  @extend .d-flex;
+  @extend .flex-nowrap;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+
+// dropdown is a dropdown menu with a description
+.dropdown {
+  @extend .row;
+  @extend .d-flex;
+    
+  margin: 0px;
+  min-height: 36px;
+  border-radius: 3px;
+  font-size: $font-size-xs;
+  border: 1px solid $gray-400;
+  background-color: $gray-100;
+  margin-right: 0.4rem;
+
+
+  
+  .description {
+    word-wrap: normal;
+    @extend .d-flex;
+    margin-right: 4px;
+    margin-left: 4px;
+    @extend .align-items-md-center;
+  }
+  
+  .contents {
+    word-wrap: normal;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    margin-right: 4px;
+    @extend .d-flex;
+    @extend .justify-content-md-center;
+  }
+}
+
 .pagination-wrapper {
   @extend .flex-row;
   @extend .flex-column;
@@ -264,9 +307,13 @@ main {
     order: 2;
   }
 
-  .pagination-searchbar input {
+  .pagination-searchbar {
     order: 1;
-    @extend .form-control;
+    
+    .searchbar input {
+      word-wrap: normal;
+      @extend .form-control;
+    }
   }
 
   .pagination {
