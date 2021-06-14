@@ -66,3 +66,18 @@ type SetCurrentProcessEnvelopeCount struct {
 type SetCurrentProcessEnvelopes struct {
 	EnvelopeList []*indexertypes.EnvelopeMetadata
 }
+
+// SetProcessStatusFilter sets the status filter for processes
+type SetProcessStatusFilter struct {
+	StatusFilter string
+}
+
+// SetProcessResultsFilter sets the results filter for processes
+type SetProcessResultsFilter struct {
+	ResultsFilter bool
+}
+
+// SetProcessNamespaceFilter sets the status filter for namespaces
+type SetProcessNamespaceFilter struct {
+	NamespaceFilter int
+}

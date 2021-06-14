@@ -17,20 +17,22 @@ import (
 // Pagination holds pages of information (blocks, processes, etc)
 type Pagination struct {
 	vecty.Core
-	CurrentPage     *int
-	ListSize        int
-	RefreshCh       chan int
-	SearchCh        chan string
-	RenderFunc      func(int) vecty.ComponentOrHTML
-	RenderSearchBar bool
-	Searching       *bool
-	DisableUpdate   *bool
-	PageLeft        func(e *vecty.Event)
-	PageRight       func(e *vecty.Event)
-	PageStart       func(e *vecty.Event)
-	TotalItems      *int
-	TotalPages      int
-	SearchPrompt    string
+	CurrentPage          *int
+	ListSize             int
+	RefreshCh            chan int
+	SearchCh             chan string
+	RenderFunc           func(int) vecty.ComponentOrHTML
+	RenderSearchBar      bool
+	RenderProcessFilters bool
+	Searching            *bool
+	DisableUpdate        *bool
+	PageLeft             func(e *vecty.Event)
+	PageRight            func(e *vecty.Event)
+	PageStart            func(e *vecty.Event)
+	TotalItems           *int
+	TotalPages           int
+	SearchPrompt         string
+	searchTerm           string
 }
 
 // Render renders the pagination component
@@ -68,6 +70,9 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 						self.SearchCh <- search
 					}
 					vecty.Rerender(self)
+				}),
+				event.Input(func(e *vecty.Event) {
+					self.searchTerm = e.Target.Get("value").String()
 				}),
 				prop.Placeholder(p.SearchPrompt),
 			))
@@ -121,10 +126,16 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 					),
 				),
 			),
-			vecty.If(p.RenderSearchBar, elem.Div(
-				vecty.Markup(vecty.Class("pagination-searchbar")),
-				searchBar(p),
-			)),
+			vecty.If(
+				p.RenderSearchBar,
+				elem.Div(
+					vecty.Markup(vecty.Class("pagination-searchbar")),
+					elem.Div(
+						vecty.Markup(vecty.Class("searchbar")),
+						searchBar(p),
+					),
+				),
+			),
 			elem.UnorderedList(
 				vecty.Markup(vecty.Class("pagination")),
 				elem.ListItem(
@@ -216,6 +227,58 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 				),
 			),
 		),
+		vecty.If(
+			p.RenderProcessFilters,
+			elem.Form(
+				vecty.Markup(vecty.Class("dropdown-wrapper")),
+				generateStatusDropdown(),
+				generateNamespaceDropdown(),
+				generateResultsCheckbox(),
+				p.applyButton(),
+				p.resetButton(),
+			)),
 		p.RenderFunc(*p.CurrentPage),
+	)
+}
+
+func (p *Pagination) applyButton() vecty.ComponentOrHTML {
+	return elem.Input(
+		vecty.Markup(
+			prop.Value("apply"),
+			prop.Type("button"),
+			vecty.Class("page-link"),
+			event.Click(
+				func(e *vecty.Event) {
+					*p.CurrentPage = 0
+					dispatcher.Dispatch(&actions.DisableUpdate{Updater: p.DisableUpdate, Disabled: true})
+					*p.Searching = true
+					p.SearchCh <- p.searchTerm
+				},
+			),
+		),
+		vecty.Text("apply"),
+	)
+}
+
+func (p *Pagination) resetButton() vecty.ComponentOrHTML {
+	return elem.Input(
+		vecty.Markup(
+			prop.Value("reset"),
+			prop.Type("reset"),
+			vecty.Class("page-link"),
+			event.Click(
+				func(e *vecty.Event) {
+					dispatcher.Dispatch(&actions.SetProcessStatusFilter{})
+					dispatcher.Dispatch(&actions.SetProcessResultsFilter{})
+					dispatcher.Dispatch(&actions.SetProcessNamespaceFilter{})
+					*p.CurrentPage = 0
+					*p.DisableUpdate = false
+					*p.Searching = false
+					p.RefreshCh <- *p.CurrentPage * p.ListSize
+					vecty.Rerender(p)
+				},
+			),
+		),
+		vecty.Text("reset"),
 	)
 }

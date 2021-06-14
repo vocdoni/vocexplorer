@@ -14,6 +14,9 @@ type Processes struct {
 	Pagination         PageStore
 	EnvelopePagination PageStore
 	CurrentProcess     *Process
+	StatusFilter       string
+	ResultsFilter      bool
+	NamespaceFilter    int
 }
 
 // Process holds info about one vochain process, including the process and envelope info

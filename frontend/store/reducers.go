@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
 	"gitlab.com/vocdoni/vocexplorer/frontend/actions"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
@@ -155,6 +156,15 @@ func processActions(action interface{}) {
 
 	case *actions.SetProcessResults:
 		Processes.ProcessResults[a.PID] = a.Results
+
+	case *actions.SetProcessStatusFilter:
+		Processes.StatusFilter = strings.ToUpper(a.StatusFilter)
+
+	case *actions.SetProcessResultsFilter:
+		Processes.ResultsFilter = a.ResultsFilter
+
+	case *actions.SetProcessNamespaceFilter:
+		Processes.NamespaceFilter = a.NamespaceFilter
 
 	default:
 		return // don't fire listeners

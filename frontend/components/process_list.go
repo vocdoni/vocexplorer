@@ -23,16 +23,17 @@ type ProcessListView struct {
 func (b *ProcessListView) Render() vecty.ComponentOrHTML {
 	if store.Processes.Count > 0 {
 		p := &Pagination{
-			TotalPages:      int(store.Processes.Count) / config.ListSize,
-			TotalItems:      &store.Processes.Count,
-			CurrentPage:     &store.Processes.Pagination.CurrentPage,
-			RefreshCh:       store.Processes.Pagination.PagChannel,
-			ListSize:        config.ListSize,
-			DisableUpdate:   &store.Processes.Pagination.DisableUpdate,
-			SearchCh:        store.Processes.Pagination.SearchChannel,
-			Searching:       &store.Processes.Pagination.Search,
-			RenderSearchBar: true,
-			SearchPrompt:    "search by process id, height",
+			TotalPages:           int(store.Processes.Count) / config.ListSize,
+			TotalItems:           &store.Processes.Count,
+			CurrentPage:          &store.Processes.Pagination.CurrentPage,
+			RefreshCh:            store.Processes.Pagination.PagChannel,
+			ListSize:             config.ListSize,
+			DisableUpdate:        &store.Processes.Pagination.DisableUpdate,
+			SearchCh:             store.Processes.Pagination.SearchChannel,
+			Searching:            &store.Processes.Pagination.Search,
+			RenderSearchBar:      true,
+			RenderProcessFilters: true,
+			SearchPrompt:         "search by process id, height",
 		}
 		p.RenderFunc = func(index int) vecty.ComponentOrHTML {
 			return elem.Div(renderProcessItems()...)
