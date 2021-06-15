@@ -249,10 +249,7 @@ func generateResultsCheckbox() vecty.ComponentOrHTML {
 			vecty.Markup(
 				event.Change(
 					func(e *vecty.Event) {
-						filter, err := strconv.ParseBool(e.Target.Get("value").String())
-						if err != nil {
-							logger.Error(fmt.Errorf("cannot parse results filter" + e.Target.Get("value").String()))
-						}
+						filter := e.Target.Get("checked").Bool()
 						dispatcher.Dispatch(&actions.SetProcessResultsFilter{ResultsFilter: filter})
 					},
 				),
@@ -260,7 +257,7 @@ func generateResultsCheckbox() vecty.ComponentOrHTML {
 			vecty.Markup(vecty.Class("contents")),
 			elem.Input(
 				vecty.Markup(
-					prop.Value("results available"),
+					prop.Value("checked_value"),
 					prop.Type("checkbox"),
 				),
 				vecty.Text("results available"),
