@@ -104,9 +104,9 @@ func updateTransactionsDashboard(d *TransactionsDashboardView) {
 
 func updateTransactions(d *TransactionsDashboardView, index int) {
 	listSize := config.ListSize
-	if index < 0 {
-		listSize += index
-		index = 0
+	if index < 1 {
+		listSize += index - 1
+		index = 1
 	}
 	logger.Info(fmt.Sprintf("Getting %d Transactions from index %d\n", listSize, index))
 	list := []*storeutil.FullTransaction{}
