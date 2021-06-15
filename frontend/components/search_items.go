@@ -155,7 +155,7 @@ func updateEnvelopeSearch(searchTerm string) {
 }
 func updateProcessSearch(searchTerm string) {
 	dispatcher.Dispatch(&actions.SetProcessIds{Processes: []string{}})
-	list, err := store.Client.GetProcessList([]byte{}, searchTerm, 0, "", false, 0, config.ListSize)
+	list, err := store.Client.GetProcessList([]byte{}, searchTerm, 0, "", false, "", 0, config.ListSize)
 	if err != nil {
 		logger.Error(err)
 		return

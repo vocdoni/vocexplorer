@@ -15,6 +15,7 @@ type Processes struct {
 	EnvelopePagination PageStore
 	CurrentProcess     *Process
 	StatusFilter       string
+	SrcNetworkIDFilter string
 	ResultsFilter      bool
 	NamespaceFilter    int
 }

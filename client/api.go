@@ -73,12 +73,13 @@ func (c *Client) GetBlockStatus() (*[5]int32, *uint32, int32, error) {
 	return resp.BlockTime, resp.Height, resp.BlockTimestamp, nil
 }
 
-func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace uint32, status string, withResults bool, from, listSize int) ([]string, error) {
+func (c *Client) GetProcessList(entityId []byte, searchTerm string, namespace uint32, status string, withResults bool, srcNetId string, from, listSize int) ([]string, error) {
 	var req api.MetaRequest
 	req.Method = "getProcessList"
 	req.EntityId = entityId
 	req.SearchTerm = searchTerm
 	req.Namespace = namespace
+	req.SrcNetId = srcNetId
 	req.Status = status
 	req.WithResults = withResults
 	req.From = util.Max(from, 0)

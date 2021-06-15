@@ -72,6 +72,11 @@ type SetProcessStatusFilter struct {
 	StatusFilter string
 }
 
+// SetProcessSrcNetworkIDFilter sets the source network id filter for processes
+type SetProcessSrcNetworkIDFilter struct {
+	SrcNetworkIDFilter string
+}
+
 // SetProcessResultsFilter sets the results filter for processes
 type SetProcessResultsFilter struct {
 	ResultsFilter bool

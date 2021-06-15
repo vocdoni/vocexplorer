@@ -59,6 +59,7 @@ func (dash *ProcessesDashboardView) Render() vecty.ComponentOrHTML {
 func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 	dispatcher.Dispatch(&actions.EnableAllUpdates{})
 	dispatcher.Dispatch(&actions.SetProcessStatusFilter{})
+	dispatcher.Dispatch(&actions.SetProcessSrcNetworkIDFilter{})
 	dispatcher.Dispatch(&actions.SetProcessResultsFilter{})
 	dispatcher.Dispatch(&actions.SetProcessNamespaceFilter{})
 
@@ -107,9 +108,9 @@ func UpdateProcessesDashboard(d *ProcessesDashboardView) {
 					break processSearch
 				}
 			}
-			logger.Info(fmt.Sprintf("search: %s, %d, %s, %t", search, store.Processes.NamespaceFilter, store.Processes.StatusFilter, store.Processes.ResultsFilter))
+			logger.Info(fmt.Sprintf("search: %s, %d, %s, %s, %t", search, store.Processes.NamespaceFilter, store.Processes.StatusFilter, store.Processes.SrcNetworkIDFilter, store.Processes.ResultsFilter))
 			dispatcher.Dispatch(&actions.ProcessesIndexChange{Index: 0})
-			list, err := store.Client.GetProcessList([]byte{}, search, uint32(store.Processes.NamespaceFilter), store.Processes.StatusFilter, store.Processes.ResultsFilter, 0, config.ListSize)
+			list, err := store.Client.GetProcessList([]byte{}, search, uint32(store.Processes.NamespaceFilter), store.Processes.StatusFilter, store.Processes.ResultsFilter, store.Processes.SrcNetworkIDFilter, 0, config.ListSize)
 			if err != nil {
 				dispatcher.Dispatch(&actions.SetProcessIds{Processes: []string{}})
 				logger.Error(err)
@@ -140,7 +141,7 @@ func getProcesses(d *ProcessesDashboardView, index int) {
 		index = 0
 	}
 	logger.Info(fmt.Sprintf("Getting %d processes from index %d\n", listSize, index))
-	list, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, index, listSize)
+	list, err := store.Client.GetProcessList([]byte{}, "", 0, "", false, "", index, listSize)
 	if err != nil {
 		logger.Error(err)
 		return
@@ -206,6 +207,7 @@ func generateNamespaceDropdown() vecty.ComponentOrHTML {
 		),
 	)
 }
+
 func generateStatusDropdown() vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("dropdown")),
@@ -238,6 +240,41 @@ func generateStatusDropdown() vecty.ComponentOrHTML {
 		),
 	)
 }
+
+func generateSourceNetworkIDDropdown() vecty.ComponentOrHTML {
+	return elem.Div(
+		vecty.Markup(vecty.Class("dropdown")),
+		elem.Div(
+			vecty.Markup(vecty.Class("description")),
+			vecty.Text("source network id"),
+		),
+		elem.Div(
+			vecty.Markup(
+				event.Change(
+					func(e *vecty.Event) {
+						filter := e.Target.Get("value").String()
+						dispatcher.Dispatch(&actions.SetProcessSrcNetworkIDFilter{SrcNetworkIDFilter: filter})
+					},
+				),
+			),
+			vecty.Markup(vecty.Class("contents")),
+			elem.Select(
+				elem.Option(vecty.Text("")),
+				elem.Option(vecty.Text("unknown")),
+				elem.Option(vecty.Text("eth mainnet")),
+				elem.Option(vecty.Text("eth rinkeby")),
+				elem.Option(vecty.Text("eth goerli")),
+				elem.Option(vecty.Text("poa xdai")),
+				elem.Option(vecty.Text("poa sokol")),
+				elem.Option(vecty.Text("polygon")),
+				elem.Option(vecty.Text("bcd")),
+				elem.Option(vecty.Text("eth mainnet signaling")),
+				elem.Option(vecty.Text("eth rinkeby signaling")),
+			),
+		),
+	)
+}
+
 func generateResultsCheckbox() vecty.ComponentOrHTML {
 	return elem.Div(
 		vecty.Markup(vecty.Class("dropdown")),

@@ -233,6 +233,7 @@ func (p *Pagination) Render() vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("dropdown-wrapper")),
 				generateStatusDropdown(),
 				generateNamespaceDropdown(),
+				generateSourceNetworkIDDropdown(),
 				generateResultsCheckbox(),
 				p.applyButton(),
 				p.resetButton(),
@@ -269,6 +270,7 @@ func (p *Pagination) resetButton() vecty.ComponentOrHTML {
 			event.Click(
 				func(e *vecty.Event) {
 					dispatcher.Dispatch(&actions.SetProcessStatusFilter{})
+					dispatcher.Dispatch(&actions.SetProcessSrcNetworkIDFilter{})
 					dispatcher.Dispatch(&actions.SetProcessResultsFilter{})
 					dispatcher.Dispatch(&actions.SetProcessNamespaceFilter{})
 					*p.CurrentPage = 0

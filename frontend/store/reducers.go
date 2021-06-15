@@ -160,6 +160,9 @@ func processActions(action interface{}) {
 	case *actions.SetProcessStatusFilter:
 		Processes.StatusFilter = strings.ToUpper(a.StatusFilter)
 
+	case *actions.SetProcessSrcNetworkIDFilter:
+		Processes.SrcNetworkIDFilter = strings.ReplaceAll(strings.ToUpper(a.SrcNetworkIDFilter), " ", "_")
+
 	case *actions.SetProcessResultsFilter:
 		Processes.ResultsFilter = a.ResultsFilter
 

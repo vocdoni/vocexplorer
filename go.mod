@@ -5,7 +5,6 @@ go 1.14
 require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/gorilla/mux v1.7.3
-	github.com/iden3/go-iden3-core v0.0.8-0.20200325104031-1ed04a261b78 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	go.vocdoni.io/dvote v0.6.1-0.20210614152518-02aa5537c3df
