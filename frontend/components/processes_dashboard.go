@@ -161,7 +161,7 @@ func fetchProcessMetas(list []string) {
 			logger.Error(err)
 		}
 		if summary == nil {
-			return
+			continue
 		}
 		dispatcher.Dispatch(&actions.SetProcess{
 			PID: processId,
