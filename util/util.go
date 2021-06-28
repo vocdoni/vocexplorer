@@ -160,11 +160,11 @@ func GetTransactionType(raw *models.Tx) string {
 	case *models.Tx_Vote:
 		return types.TxVote
 	case *models.Tx_NewProcess:
-		return types.TxNewProcess
+		return raw.Payload.(*models.Tx_NewProcess).NewProcess.GetTxtype().String()
 	case *models.Tx_Admin:
 		return raw.Payload.(*models.Tx_Admin).Admin.GetTxtype().String()
 	case *models.Tx_SetProcess:
-		return "setProcess"
+		return raw.Payload.(*models.Tx_SetProcess).SetProcess.GetTxtype().String()
 	}
 	return "unknown"
 }
