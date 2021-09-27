@@ -45,8 +45,10 @@ var (
 	Transactions storeutil.Transactions
 	// Validators holds all blockchain Validators
 	Validators storeutil.Validators
-	// ProcessDomain is the link for process profiles
-	ProcessDomain string
+	// ProcessURL is the URL for process profiles
+	ProcessURL string
+	// EntityURL is the URL for entity profiles
+	EntityURL string
 )
 
 func init() {
@@ -92,8 +94,6 @@ func init() {
 	Entities.ProcessHeights = make(map[string]int64)
 
 	ServerConnected = true
-
-	ProcessDomain = "https://vocdoni.app/pub/votes/#/0x"
 
 	Reduce()
 }

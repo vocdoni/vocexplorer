@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"syscall/js"
 
 	"github.com/hexops/vecty"
@@ -42,6 +43,13 @@ func initFrontend() {
 		if i > 5 {
 			logger.Fatal("Config could not be stored")
 		}
+	}
+	if cfg.Network == "dev" {
+		dispatcher.Dispatch(&actions.SetLinkURLs{ProcessURL: strings.ReplaceAll(config.ProcessURL, config.DomainKey, config.DevDomain), EntityURL: strings.ReplaceAll(config.EntityURL, config.DomainKey, config.DevDomain)})
+	} else if cfg.Network == "stg" {
+		dispatcher.Dispatch(&actions.SetLinkURLs{ProcessURL: strings.ReplaceAll(config.ProcessURL, config.DomainKey, config.StgDomain), EntityURL: strings.ReplaceAll(config.EntityURL, config.DomainKey, config.StgDomain)})
+	} else {
+		dispatcher.Dispatch(&actions.SetLinkURLs{ProcessURL: strings.ReplaceAll(config.ProcessURL, config.DomainKey, config.MainDomain), EntityURL: strings.ReplaceAll(config.EntityURL, config.DomainKey, config.MainDomain)})
 	}
 	store.Client, err = client.New(store.Config.GatewayUrl)
 	if err != nil {

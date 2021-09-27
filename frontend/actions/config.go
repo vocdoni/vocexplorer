@@ -8,3 +8,9 @@ import (
 type StoreConfig struct {
 	Config config.Cfg
 }
+
+// SetLinkURLs is the action to set the vocdoni.app link domains
+type SetLinkURLs struct {
+	ProcessURL string
+	EntityURL  string
+}

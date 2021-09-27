@@ -29,6 +29,9 @@ func configActions(action interface{}) {
 	switch a := action.(type) {
 	case *actions.StoreConfig:
 		Config = a.Config
+	case *actions.SetLinkURLs:
+		ProcessURL = a.ProcessURL
+		EntityURL = a.EntityURL
 
 	default:
 		return // don't fire listeners

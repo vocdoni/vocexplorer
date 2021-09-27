@@ -5,6 +5,7 @@ type Cfg struct {
 	// RefreshTime is the number of seconds between page data refresh
 	RefreshTime int    `json:"refreshTime"`
 	GatewayUrl  string `json:"gatewayUrl"`
+	Network     string `json:"network"`
 }
 
 //MainCfg includes backend and frontend config
@@ -25,4 +26,10 @@ const (
 	HomeWidgetBlocksListSize = 4
 	//DefaultNamespace is the default namespace value to get all processes
 	DefaultNamespace = uint32(0)
+	DomainKey        = "{DOMAIN}"
+	ProcessURL       = "https://" + DomainKey + "/pub/votes/#/0x"
+	EntityURL        = "https://" + DomainKey + "/entity/#/0x"
+	MainDomain       = "vocdoni.app"
+	StgDomain        = "stg.vocdoni.app"
+	DevDomain        = "plaza.dev.vocdoni.net"
 )

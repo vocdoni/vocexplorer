@@ -90,6 +90,19 @@ func (dash *EntityContentsView) EntityDetails() vecty.List {
 			vecty.Text("Entity details"),
 		),
 		elem.Heading2(vecty.Text(store.Entities.CurrentEntityID)),
+		elem.Div(
+			elem.Span(
+				vecty.Markup(vecty.Class("title")),
+				elem.Anchor(
+					vecty.Markup(
+						vecty.Attribute("href", store.EntityURL+store.Entities.CurrentEntityID),
+						vecty.Property("target", store.EntityURL+store.Entities.CurrentEntityID),
+					),
+					vecty.Markup(vecty.Attribute("aria-label", "Link to entity "+store.EntityURL+store.Entities.CurrentEntityID+"'s public profile")),
+					vecty.Text("Entity Profile"),
+				),
+			),
+		),
 	}
 }
 

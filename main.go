@@ -28,6 +28,7 @@ func newConfig() (*config.MainCfg, error) {
 	flag.StringVar(&cfg.DataDir, "dataDir", home+"/.vocexplorer", "directory where data is stored")
 	cfg.Global.RefreshTime = *flag.Int("refreshTime", 10, "Number of seconds between each content refresh")
 	cfg.Global.GatewayUrl = *flag.String("gatewayUrl", "ws://0.0.0.0:9090/dvote", "URL for the gateway to query for data")
+	cfg.Global.GatewayUrl = *flag.String("network", "main", "vochain network <main, dev, stg>")
 	cfg.DisableGzip = *flag.Bool("disableGzip", false, "use to disable gzip compression on web server")
 	cfg.HostURL = *flag.String("hostURL", "http://localhost:8081", "url to host block explorer")
 	cfg.LogLevel = *flag.String("logLevel", "error", "log level <debug, info, warn, error>")
@@ -50,6 +51,7 @@ func newConfig() (*config.MainCfg, error) {
 
 	viper.BindPFlag("global.refreshTime", flag.Lookup("refreshTime"))
 	viper.BindPFlag("global.gatewayUrl", flag.Lookup("gatewayUrl"))
+	viper.BindPFlag("global.network", flag.Lookup("network"))
 	viper.BindPFlag("disableGzip", flag.Lookup("disableGzip"))
 	viper.BindPFlag("hostURL", flag.Lookup("hostURL"))
 	viper.BindPFlag("logLevel", flag.Lookup("logLevel"))
