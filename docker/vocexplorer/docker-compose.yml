@@ -23,7 +23,7 @@ services:
         max-file: "10"
 
   gateway:
-    image: "ghcr.io/vocdoni/go-dvote:${GATEWAY_TAG}"
+    image: "vocdoni/go-dvote:${GATEWAY_TAG}"
     env_file: .env
     volumes:
     - "run:/app/run"
