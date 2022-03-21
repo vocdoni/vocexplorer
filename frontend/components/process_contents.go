@@ -288,7 +288,7 @@ func (dash *ProcessContentsView) fetchProcess(pid []byte) {
 		dispatcher.Dispatch(&actions.SetCurrentProcessStruct{Process: nil})
 		return
 	}
-	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(pid)
+	pubKeys, privKeys, err := store.Client.GetProcessKeys(pid)
 	if err != nil {
 		logger.Error(err)
 	}

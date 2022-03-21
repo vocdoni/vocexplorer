@@ -4,13 +4,12 @@ go 1.14
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/mux v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.7.1
-	go.vocdoni.io/dvote v0.6.1-0.20210614152518-02aa5537c3df
-	go.vocdoni.io/proto v1.0.4-0.20210525130734-c9e1ff675866
-	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
-	nhooyr.io/websocket v1.8.6
+	github.com/spf13/viper v1.10.1
+	go.vocdoni.io/dvote v1.0.4-0.20220321130928-65cfa3e0ac55
+	go.vocdoni.io/proto v1.13.3-0.20220203130255-cbdb9679ec7c
+	nhooyr.io/websocket v1.8.7
 )
 
 // Newer versions of the fuse module removed support for MacOS.

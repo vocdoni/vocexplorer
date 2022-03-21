@@ -111,7 +111,7 @@ func updateTransactions(d *TransactionsDashboardView, index int) {
 	logger.Info(fmt.Sprintf("Getting %d Transactions from index %d\n", listSize, index))
 	list := []*storeutil.FullTransaction{}
 	for i := 0; i < listSize; i++ {
-		tx, err := store.Client.GetTxByHeight(uint32(index + i))
+		tx, err := store.Client.GetTxByID(uint32(index + i))
 		if err != nil {
 			logger.Error(err)
 		}

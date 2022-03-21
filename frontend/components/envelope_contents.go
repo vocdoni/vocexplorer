@@ -175,7 +175,7 @@ func (c *EnvelopeContents) fetchEnvelope() {
 	if err != nil {
 		logger.Error(err)
 	}
-	pubKeys, privKeys, _, _, err := store.Client.GetProcessKeys(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
+	pubKeys, privKeys, err := store.Client.GetProcessKeys(store.Envelopes.CurrentEnvelope.Meta.ProcessId)
 	if err != nil {
 		logger.Error(err)
 	}

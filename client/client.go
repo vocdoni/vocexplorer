@@ -13,6 +13,7 @@ import (
 
 	"gitlab.com/vocdoni/vocexplorer/logger"
 	"go.vocdoni.io/dvote/api"
+	"go.vocdoni.io/dvote/httprouter/jsonrpcapi"
 	"nhooyr.io/websocket"
 )
 
@@ -61,7 +62,7 @@ func (c *Client) Close() error {
 }
 
 // Request makes a request to the previously connected endpoint
-func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
+func (c *Client) Request(req api.APIrequest) (*api.APIresponse, error) {
 	if c == nil {
 		return nil, fmt.Errorf("unable to make request %s: client not connected", req.Method)
 	}
@@ -72,9 +73,9 @@ func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 
-	reqOuter := api.RequestMessage{
-		ID:          fmt.Sprintf("%d", rand.Intn(1000)),
-		MetaRequest: reqInner,
+	reqOuter := jsonrpcapi.RequestMessage{
+		ID:         fmt.Sprintf("%d", rand.Intn(1000)),
+		MessageAPI: reqInner,
 	}
 	reqBody, err := json.Marshal(reqOuter)
 	if err != nil {
@@ -104,7 +105,7 @@ func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
 		}
 		resp.Body.Close()
 	}
-	var respOuter api.ResponseMessage
+	var respOuter jsonrpcapi.ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
@@ -114,8 +115,8 @@ func (c *Client) Request(req api.MetaRequest) (*api.MetaResponse, error) {
 	if len(respOuter.Signature) == 0 {
 		return nil, fmt.Errorf("%s: empty signature in response: %s", method, message)
 	}
-	var respInner api.MetaResponse
-	if err := json.Unmarshal(respOuter.MetaResponse, &respInner); err != nil {
+	var respInner api.APIresponse
+	if err := json.Unmarshal(respOuter.MessageAPI, &respInner); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}
 	return &respInner, nil
