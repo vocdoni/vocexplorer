@@ -197,11 +197,9 @@ func decodeTransaction(tx []byte) *storeutil.DecodedTransaction {
 		processID = hex.EncodeToString(typedTx.GetProcessId())
 		txContents = convertB64ToHex(txContents, "processId", processID)
 		txContents = convertB64ToHex(txContents, "address", hex.EncodeToString(typedTx.Address))
-		txContents = convertB64ToHex(txContents, "commitmentKey", hex.EncodeToString(typedTx.CommitmentKey))
 		txContents = convertB64ToHex(txContents, "encryptionPrivateKey", hex.EncodeToString(typedTx.EncryptionPrivateKey))
 		txContents = convertB64ToHex(txContents, "encryptionPublicKey", hex.EncodeToString(typedTx.EncryptionPublicKey))
 		txContents = convertB64ToHex(txContents, "publicKey", hex.EncodeToString(typedTx.PublicKey))
-		txContents = convertB64ToHex(txContents, "revealKey", hex.EncodeToString(typedTx.RevealKey))
 		txContents = convertB64ToHex(txContents, "nonce", hex.EncodeToString(typedTx.Nonce))
 	case *models.Tx_SetProcess:
 		typedTx := rawTx.GetSetProcess()

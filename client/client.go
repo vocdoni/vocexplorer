@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"gitlab.com/vocdoni/vocexplorer/logger"
-	"go.vocdoni.io/dvote/api"
 	"go.vocdoni.io/dvote/httprouter/jsonrpcapi"
 	"nhooyr.io/websocket"
 )
@@ -62,7 +61,7 @@ func (c *Client) Close() error {
 }
 
 // Request makes a request to the previously connected endpoint
-func (c *Client) Request(req api.APIrequest) (*api.APIresponse, error) {
+func (c *Client) Request(req APIrequest) (*APIresponse, error) {
 	if c == nil {
 		return nil, fmt.Errorf("unable to make request %s: client not connected", req.Method)
 	}
@@ -115,7 +114,7 @@ func (c *Client) Request(req api.APIrequest) (*api.APIresponse, error) {
 	if len(respOuter.Signature) == 0 {
 		return nil, fmt.Errorf("%s: empty signature in response: %s", method, message)
 	}
-	var respInner api.APIresponse
+	var respInner APIresponse
 	if err := json.Unmarshal(respOuter.MessageAPI, &respInner); err != nil {
 		return nil, fmt.Errorf("%s: %v", method, err)
 	}

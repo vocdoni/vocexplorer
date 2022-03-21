@@ -1,7 +1,7 @@
 package storeutil
 
 import (
-	"go.vocdoni.io/dvote/api"
+	"gitlab.com/vocdoni/vocexplorer/client"
 	indexertypes "go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 )
 
@@ -25,7 +25,7 @@ type Process struct {
 	Envelopes      []*indexertypes.EnvelopeMetadata
 	EnvelopeCount  int
 	Process        *indexertypes.Process
-	ProcessSummary *api.ProcessSummary
+	ProcessSummary *client.ProcessSummary
 	ProcessID      string
 }
 

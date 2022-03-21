@@ -1,8 +1,8 @@
 package actions
 
 import (
+	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/frontend/dispatcher"
-	"go.vocdoni.io/dvote/api"
 )
 
 // DisableUpdate is the action to set the disable update status for given disableupdate boolean
@@ -16,7 +16,7 @@ type EnableAllUpdates struct {
 }
 
 // UpdateCounts updates the values of all item counts (eg. validator count)
-func UpdateCounts(stats *api.VochainStats) {
+func UpdateCounts(stats *client.VochainStats) {
 	dispatcher.Dispatch(&BlocksHeightUpdate{Height: int(stats.BlockHeight) - 1})
 	dispatcher.Dispatch(&SetTransactionCount{Count: int(stats.TransactionCount)})
 	dispatcher.Dispatch(&SetEntityCount{Count: int(stats.EntityCount)})

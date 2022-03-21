@@ -1,8 +1,8 @@
 package actions
 
-import "go.vocdoni.io/dvote/api"
+import "gitlab.com/vocdoni/vocexplorer/client"
 
 //SetStats is the action to set the blockchain statistics
 type SetStats struct {
-	Stats *api.VochainStats
+	Stats *client.VochainStats
 }

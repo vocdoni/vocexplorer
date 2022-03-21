@@ -4,7 +4,6 @@ import (
 	"gitlab.com/vocdoni/vocexplorer/client"
 	"gitlab.com/vocdoni/vocexplorer/config"
 	"gitlab.com/vocdoni/vocexplorer/frontend/store/storeutil"
-	"go.vocdoni.io/dvote/api"
 )
 
 var (
@@ -38,7 +37,7 @@ var (
 	// Envelopes holds all entity information
 	Envelopes storeutil.Envelopes
 	// Stats holds all blockchain stats
-	Stats *api.VochainStats
+	Stats *client.VochainStats
 	// Blocks holds all blockchain Blocks
 	Blocks storeutil.Blocks
 	// Transactions holds all blockchain transactions

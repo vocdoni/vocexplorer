@@ -85,7 +85,7 @@ func renderTx(tx *storeutil.FullTransaction) vecty.ComponentOrHTML {
 				vecty.Markup(vecty.Class("type")),
 				elem.Div(
 					elem.Span(
-						vecty.Text(fmt.Sprintf("#%d", tx.Package.Height)),
+						vecty.Text(fmt.Sprintf("#%d", tx.Package.ID)),
 					),
 					elem.Span(
 						vecty.Markup(vecty.Class("title")),
