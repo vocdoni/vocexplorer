@@ -3,7 +3,6 @@ package client
 import (
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"go.vocdoni.io/dvote/types"
 	"go.vocdoni.io/dvote/vochain/scrutinizer/indexertypes"
 	"go.vocdoni.io/proto/build/go/models"
@@ -48,8 +47,6 @@ type APIrequest struct {
 	Weights      []*types.BigInt    `json:"weights,omitempty"`
 	WithResults  bool               `json:"withResults,omitempty"`
 	VoterAddress types.HexBytes     `json:"voterAddress,omitempty"`
-
-	address *common.Address `json:"-"`
 }
 
 // APIresponse contains all of the possible request fields.
